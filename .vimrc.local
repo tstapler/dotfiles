@@ -1,0 +1,9 @@
+color badwolf
+let g:airline_theme = 'badwolf'
+
+cd C:/Devel
+
+map <F3> :cn<Enter>
+map <S-F3> :cp<Enter>
+
+nnoremap <buffer> <F9> :exec '!python' shellescape(@%, 1)<cr>
