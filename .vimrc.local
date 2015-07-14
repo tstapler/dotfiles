@@ -1,9 +1,26 @@
+"
+"Tyler Stapler's vimrc file
+"
+"author: Tyler Stapler
+"
 color badwolf
 let g:airline_theme = 'badwolf'
 
+"Begin in home directory
 cd ~/
 
-"Cycle through Quickfix list 
+"Set map leader
+let mapleader=","
+
+"Folding options
+set foldenable
+set foldnestmax=10
+set foldmethod=indent
+
+"Use the space bar to open/close folds
+nnoremap <space> za
+
+"Cycle through Quickfix list with F3 
 map <F3> :cn<Enter>
 map <S-F3> :cp<Enter>
 
@@ -12,5 +29,5 @@ map <leader>n :bn<Enter>
 map <leader>p :bp<Enter>
 map <leader>d :bd<Enter>
 
-"Drop to python shell
+"When editing python F9 to drop to python shell
 nnoremap <buffer> <F9> :exec '!python' shellescape(@%, 1)<cr>
