@@ -1,0 +1,16 @@
+[user]
+	email = tstapler@iastate.edu
+	name = Tyler Stapler
+[core]
+    editor = vim
+    excludesfile = ~/.gitignore
+[web]
+    browser = google-chrome
+[push]
+    default = matching
+[color]
+    ui = auto
+[diff]
+    tool = vimdiff
+[github]
+    user = tstapler
