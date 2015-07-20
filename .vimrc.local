@@ -31,3 +31,7 @@ map <leader>d :bd<Enter>
 
 "When editing python F9 to drop to python shell
 nnoremap <buffer> <F9> :exec '!python' shellescape(@%, 1)<cr>
+
+if !exists("b:color_pattern")
+    let b:color_pattern = {}
+endif
