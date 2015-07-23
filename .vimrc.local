@@ -38,3 +38,4 @@ endif
 
 "Show ex commands as they are being typed
 set showcmd
+
