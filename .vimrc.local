@@ -6,9 +6,6 @@
 color badwolf
 let g:airline_theme = 'badwolf'
 
-"Begin in home directory
-cd ~/
-
 "Set map leader
 let mapleader=","
 
@@ -37,3 +34,4 @@ if exists('colorcolumn')
     set colorcolum=80
 else
     au BufWinEnter * let w:m2=matchadd('ErrorMsg', '\%>80v.\+', -1)
+endif
