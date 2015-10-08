@@ -39,3 +39,8 @@ endif
 "Show ex commands as they are being typed
 set showcmd
 
+"Vundle Bundles!
+
+Bundle 'tapichu/asm2d-vim'
+
+
