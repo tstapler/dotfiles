@@ -5,6 +5,14 @@ echo "Installing Tyler's Config"
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 echo $DIR 
 
+#Install spf-13 vim
+if [ -z "${VIMRUNTIME+x}" ]
+then 
+    sh <(curl https://j.mp/spf13-vim3 -L)
+else
+    echo "You need vim installed to install spf-13 vim"
+
+
 #Switch to the install directory
 cd $DIR
 
