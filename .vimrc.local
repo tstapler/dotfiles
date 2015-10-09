@@ -42,5 +42,6 @@ set showcmd
 "Vundle Bundles!
 
 Bundle 'tapichu/asm2d-vim'
+Bundle 'rking/ag.vim'
 
 
