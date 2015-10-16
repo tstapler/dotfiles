@@ -39,6 +39,9 @@ endif
 "Show ex commands as they are being typed
 set showcmd
 
+"Use "Magic" aka regex during searches
+set magic
+
 "Vundle Bundles!
 
 Bundle 'tapichu/asm2d-vim'
