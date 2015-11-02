@@ -1,0 +1,46 @@
+"
+"Tyler Stapler's vimrc file
+"
+"author: Tyler Stapler
+"
+color badwolf
+let g:airline_theme = 'badwolf'
+
+"Set map leader
+let mapleader=","
+
+"Folding options
+set foldnestmax=10
+set foldmethod=indent
+
+"Use the space bar to open/close folds
+nnoremap <space> za
+
+"Cycle through Quickfix list with F3 
+map <F3> :cn<Enter>
+map <S-F3> :cp<Enter>
+
+"Change Buffers
+map <leader>n :bn<Enter>
+map <leader>p :bp<Enter>
+map <leader>d :bd<Enter>
+
+"When editing python F9 to drop to python shell
+nnoremap <buffer> <F9> :exec '!python' shellescape(@%, 1)<cr>
+
+"Help enforce 80 column code if available
+if exists('colorcolumn')
+    set colorcolum=80
+else
+    au BufWinEnter * let w:m2=matchadd('ErrorMsg', '\%>80v.\+', -1)
+endif
+
+"Show ex commands as they are being typed
+set showcmd
+
+"Vundle Bundles!
+
+Bundle 'tapichu/asm2d-vim'
+Bundle 'rking/ag.vim'
+
+
