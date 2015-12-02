@@ -10,6 +10,6 @@ cd $DIR
 
 #Create links to the files in the user's home directory
 echo "Linking the following files to the home directory"
-bash -O extglob -c 'echo !(*-setup.sh*|.git|.|..)'
-bash -O extglob -c 'ln -s !(*-setup.sh*|.git|.|..) ~/'
-
+bash -O extglob -c 'echo '"$DIR"'/!(*-setup.sh*|.git|.|..)'
+bash -O extglob -c 'ln -s '"$DIR"'/!(*-setup.sh*|.git|.|..|.config) ~/'
+cp -rs $DIR/.config/ ~/
