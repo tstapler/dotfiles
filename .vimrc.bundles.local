@@ -3,5 +3,8 @@
 Bundle 'tapichu/asm2d-vim'
 Bundle 'rking/ag.vim'
 Bundle 'Valloric/YouCompleteMe'
-
-
+Bundle 'Chiel92/vim-autoformat'
+"TODO: Add Unite Vim
+"TODO: Add eclim
+Bundle 'dansomething/vim-eclim'
+"TODO: Add Vimshell
