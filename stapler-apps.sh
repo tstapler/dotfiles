@@ -18,10 +18,10 @@ sudo apt-get install eclipse vim-gtk
 sudo apt-get install nodejs
 
 #Install Node Packages
-npm install -g js-beautify
+sudo npm install -g js-beautify
 
 #Install Ruby Gems
-gem install ruby-beautify
+sudo gem install ruby-beautify
 
 #Install Libraries and Build Utilities
 sudo apt-get install dnf automake gcc gcc-c++ kernel-devel cmake python-devel openjdk-7-jdk exuberant-ctags
@@ -47,9 +47,9 @@ if [ ! -d ~/.spf13-vim-3/ ]; then
     sudo apt-get astyle clang-format ack-grep silversearcher-ag python-autopep8 tidy
 fi
 
-echo "Installing tmux/wemux \n"
 
 if [ ! -d /usr/local/share/wemux ]; then
+    echo "Installing tmux/wemux"
     sudo git clone git://github.com/zolrath/wemux.git /usr/local/share/wemux
     sudo ln -s /usr/local/share/wemux/wemux /usr/local/bin/wemux
     sudo cp -rs $DIR/wemux.conf /usr/local/etc/wemux.conf
@@ -60,5 +60,6 @@ fi
 
 #Install pyenv
 if [ ! -d ~/.pyenv ]; then
+    echo "Installing pyenv"
     curl -L https://raw.githubusercontent.com/yyuu/pyenv-installer/master/bin/pyenv-installer | bash
 fi
