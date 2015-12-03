@@ -3,7 +3,7 @@
 #Set Fish as the default script for future runs if available
 if [ -a /usr/bin/fish ] && [ "$SHELL" != "/usr/bin/fish" ]; then
     echo "Setting Fish as Default Shell"
-    chsh -s 'which fish'
+    chsh -s /usr/bin/fish $USER
 fi
 
 #Store the directory of the script
@@ -24,7 +24,7 @@ npm install -g js-beautify
 gem install ruby-beautify
 
 #Install Libraries and Build Utilities
-sudo apt-get install dnf automake gcc gcc-c++ kernel-devel cmake python-devel openjdk-7-jdk
+sudo apt-get install dnf automake gcc gcc-c++ kernel-devel cmake python-devel openjdk-7-jdk exuberant-ctags
 
 #Install spf-13 vim
 if [ ! -d ~/.spf13-vim-3/ ]; then
