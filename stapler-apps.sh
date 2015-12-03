@@ -1,10 +1,11 @@
 #!/bin/bash
 
 #Set Fish as the default script for future runs if available
-if [ ! -d /usr/bin/fish ]; then
+if [ -a /usr/bin/fish ]; then
     echo "Setting Fish as Default Shell"
     chsh -s 'which fish'
 fi
+
 #Store the directory of the script
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 echo $DIR 
