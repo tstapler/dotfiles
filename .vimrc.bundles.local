@@ -5,6 +5,7 @@ Bundle 'rking/ag.vim'
 Bundle 'Valloric/YouCompleteMe'
 Bundle 'Chiel92/vim-autoformat'
 "TODO: Add Unite Vim
+Bundle 'Shougo/unite'
 "TODO: Add eclim
 Bundle 'dansomething/vim-eclim'
 "TODO: Add Vimshell
