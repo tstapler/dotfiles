@@ -24,7 +24,7 @@ sudo npm install -g js-beautify
 sudo gem install ruby-beautify
 
 #Install Libraries and Build Utilities
-sudo apt-get install dnf automake gcc gcc-c++ kernel-devel cmake python-devel openjdk-7-jdk exuberant-ctags
+sudo apt-get install automake gcc cmake openjdk-7-jdk exuberant-ctags
 
 #Install spf-13 vim
 if [ ! -d ~/.spf13-vim-3/ ]; then
