@@ -24,7 +24,7 @@ sudo npm install -g js-beautify
 sudo gem install ruby-beautify
 
 #Install Libraries and Build Utilities
-sudo apt-get install automake gcc cmake openjdk-7-jdk exuberant-ctags
+sudo apt-get install automake gcc cmake openjdk-7-jdk exuberant-ctags pylint
 
 #Install spf-13 vim
 if [ ! -d ~/.spf13-vim-3/ ]; then
@@ -44,7 +44,7 @@ if [ ! -d ~/.spf13-vim-3/ ]; then
     else
         echo "You need vim installed to install spf-13 vim"
     fi
-    sudo apt-get astyle clang-format ack-grep silversearcher-ag python-autopep8 tidy
+    sudo apt-get astyle clang-format ack-grep silversearcher-ag python-autopep8 tidy 
 fi
 
 
