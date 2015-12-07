@@ -26,33 +26,33 @@ sudo gem install ruby-beautify
 #Install Libraries and Build Utilities
 sudo apt-get install automake gcc cmake openjdk-7-jdk exuberant-ctags pylint
 
-#Install spf-13 vim
-if [ ! -d ~/.spf13-vim-3/ ]; then
-    echo "Installing vim, spf-13, and related files"
+#Install Neobundle and vim plugins
+if [ ! -d ~/.vim/bundle/neobundle.vim ]; then
+    echo "Installing neobundle, and related vim files"
     if [ -z "${VIMRUNTIME+x}" ];
     then 
-        sh <(curl https://j.mp/spf13-vim3 -L)
-
-        echo "Compiling YouCompleteMe"
-        cd ~/.vim/bundle/YouCompleteMe
-        ./install.py --clang-completer
+        #Install Neobundle
+        if [ ! -d ~/.vim/bundle ]; then
+        mkdir -p ~/.vim/bundle
+        fi
+        git clone https://github.com/Shougo/neobundle.vim ~/.vim/bundle/neobundle.vim
 
         #TODO:Install Eclim Support
         #TODO:Install Eclipse 4.5 (Mars)
 
-
     else
         echo "You need vim installed to install spf-13 vim"
     fi
-    sudo apt-get astyle clang-format ack-grep silversearcher-ag python-autopep8 tidy 
+    sudo apt-get install astyle clang-format ack-grep silversearcher-ag python-autopep8 tidy 
 fi
+
 
 
 if [ ! -d /usr/local/share/wemux ]; then
     echo "Installing tmux/wemux"
     sudo git clone git://github.com/zolrath/wemux.git /usr/local/share/wemux
-    sudo ln -s /usr/local/share/wemux/wemux /usr/local/bin/wemux
-    sudo cp -rs $DIR/wemux.conf /usr/local/etc/wemux.conf
+    sudo ln -sv /usr/local/share/wemux/wemux /usr/local/bin/wemux
+    sudo cp -rvs $DIR/wemux.conf /usr/local/etc/wemux.conf
 
     echo "Installing wemux-pair"
     gem install wemux-pair

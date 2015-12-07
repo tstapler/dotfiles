@@ -1,11 +1,24 @@
-"Vundle Bundles!
-
-Bundle 'tapichu/asm2d-vim'
-Bundle 'rking/ag.vim'
-Bundle 'Valloric/YouCompleteMe'
-Bundle 'Chiel92/vim-autoformat'
-"TODO: Add Unite Vim
-Bundle 'Shougo/unite.vim'
-"TODO: Add eclim
-Bundle 'dansomething/vim-eclim'
+"
+" vim-colorschemes
+NeoBundle 'Chiel92/vim-autoformat'
+NeoBundle 'Shougo/neocomplete.vim.git'
+NeoBundle 'Shougo/neosnippet'
+NeoBundle 'Shougo/neosnippet-snippets'
+NeoBundle 'Shougo/unite.vim'
+NeoBundle 'bling/vim-airline'
+NeoBundle 'briancollins/vim-jst'
+NeoBundle 'elzr/vim-json'
+NeoBundle 'godlygeek/tabular'
+NeoBundle 'groenewege/vim-less'
+NeoBundle 'mattn/gist-vim'
+NeoBundle 'tpope/vim-fugitive'
+NeoBundle 'tpope/vim-surround'
+NeoBundle 'flazz/vim-colorschemes'
+"TODO: Add vimproc
 "TODO: Add Vimshell
+"TODO: Add eclim
+"Vundle NeoBundles!
+NeoBundle 'Chiel92/vim-autoformat'
+NeoBundle 'dansomething/vim-eclim'
+NeoBundle 'rking/ag.vim'
+NeoBundle 'tapichu/asm2d-vim'
