@@ -58,9 +58,8 @@ augroup END
 iunmap <Esc>
 
 "Disable the neocomplete plugin added by spf-13 vim"
-let g:neocomplcache_disable_auto_complete = 1
-let g:neocomplete#enable_at_startup = 0
+let g:neocomplete#enable_at_startup = 1
 let g:neocomplete#enable_auto_select = 0
-let g:neocomplcache_enable_at_startup = 1
+let g:neocomplcache_enable_at_startup = 0
 
 let g:airline#extensions#virtualenv#enabled = 1
