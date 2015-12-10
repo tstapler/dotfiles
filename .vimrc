@@ -4,6 +4,8 @@
 "author: Tyler Stapler
 "
 
+"Vim not vi
+set nocompatible
 set t_Co=256
 
 "Change the shell from fish to support NeoBundle
@@ -15,6 +17,8 @@ let mapleader=","
 "Folding options
 set foldnestmax=10
 set foldmethod=indent
+
+"Mappings 
 
 "Use the space bar to open/close folds
 nnoremap <space> za
@@ -47,22 +51,25 @@ set magic
 "Set vim menu completion
 set wildmenu
 set wildmode=longest:list,full
-set wildoptions
 
-set nocompatible
+"Vim master race
+
+"Show search results as typing
+set incsearch
+"Show line numbers
+set number
+
+"Show the status line even with just one window
+set laststatus=2
 
 "Enable YouCompleteMe"
 filetype plugin indent on
 
 set omnifunc=syntaxcomplete#Complete
 
-"Auto Refresh Config if updated
-augroup myvimrc
-	au!
-	au BufWritePost .vimrc,_vimrc,vimrc,.gvimrc,_gvimrc,gvimrc,.vimrc.local,.vimrc.bundle.local so $MYVIMRC | if has('gui_running') | so $MYGVIMRC | endif
-augroup END
 
 
+"Neobundle Config
 "Note: Skip initialization for vim-tiny or vim-small.
 if 0 | endif
 
@@ -150,12 +157,75 @@ let g:neocomplcache_enable_at_startup = 0
 let g:airline#extensions#tabline#enabled = 1
 let g:airline#extensions#virtualenv#enabled = 1
 
-  if !exists('g:airline_symbols')
-    let g:airline_symbols = {}
-  endif
+if !exists('g:airline_symbols')
+	let g:airline_symbols = {}
+endif
 
-  let g:airline_left_sep = '▶'
-  let g:airline_right_sep = '«'
+let g:airline_left_sep = '▶'
+let g:airline_right_sep = '«'
 
+"Colorscheme
 colorscheme badwolf
 let g:airline_theme = 'badwolf'
+
+"Ag vim settings
+let g:ag_working_path_mode='r'
+
+"Tagbar settings
+let g:tagbar_type_vimwiki = {
+			\ 'ctagstype' : 'wiki',
+			\ 'kinds'     : [
+			\ 'h:headers'
+			\ ]
+			\ }
+let g:tagbar_type_mkd= {
+			\ 'ctagstype' : 'md',
+			\ 'kinds' : [
+			\ 'h:headings'
+			\ ],
+			\ 'sort' : 0,
+			\ }
+let g:tagbar_type_css= {
+			\ 'ctagstype' : 'css',
+			\ 'kinds' : [
+			\ 'c:classes',
+			\ 'i:ids',
+			\ 't:tags',
+			\ 'm:media',
+			\ 'f:fonts',
+			\ 'k:keyframes'
+			\ ],
+			\ 'sort' : 0,
+			\ }
+let g:tagbar_type_html= {
+			\ 'ctagstype' : 'html',
+			\ 'kinds'     : [
+			\ 'i:ids',
+			\ 'c:classes',
+			\ ]
+			\ }
+let g:tagbar_type_vhdl = {
+			\ 'ctagstype': 'vhdl',
+			\ 'kinds' : [
+			\'d:prototypes',
+			\'b:package bodies',
+			\'e:entities',
+			\'a:architectures',
+			\'t:types',
+			\'p:processes',
+			\'f:functions',
+			\'r:procedures',
+			\'c:constants',
+			\'T:subtypes',
+			\'r:records',
+			\'C:components',
+			\'P:packages',
+			\'l:locals'
+			\]
+			\}
+let g:gitgutter_max_signs = 1000
+"Auto Refresh Config if updated
+augroup myvimrc
+	au!
+	au BufWritePost .vimrc,_vimrc,vimrc,.gvimrc,_gvimrc,gvimrc,.vimrc.local,.vimrc.bundle.local so $MYVIMRC | if has('gui_running') | so $MYGVIMRC | endif
+	augroup END
