@@ -35,6 +35,8 @@ map <leader>d :bd<Enter>
 "When editing python F9 to drop to python shell
 nnoremap <buffer> <F9> :exec '!python' shellescape(@%, 1)<cr>
 
+nnoremap <leader>t :TagbarToggle<cr>
+
 "Help enforce 80 column code if available
 if exists('colorcolumn')
 	set colorcolum=80
@@ -96,8 +98,12 @@ NeoBundleFetch 'Shougo/neobundle.vim'
 "
 NeoBundle 'Chiel92/vim-autoformat'
 NeoBundle 'Shougo/neocomplete.vim.git'
+NeoBundle 'Shougo/context_filetype.vim'
+NeoBundle 'Shougo/neoinclude.vim'
 NeoBundle 'Shougo/neosnippet'
 NeoBundle 'Shougo/neosnippet-snippets'
+NeoBundle 'Shougo/neco-syntax'
+NeoBundle 'Shougo/neopairs.vim'
 NeoBundle 'Shougo/unite.vim'
 NeoBundle 'bling/vim-airline'
 NeoBundle 'briancollins/vim-jst'
@@ -112,16 +118,25 @@ NeoBundle 'Chiel92/vim-autoformat'
 NeoBundle 'dansomething/vim-eclim'
 NeoBundle 'rking/ag.vim'
 NeoBundle 'tapichu/asm2d-vim'
+NeoBundle 'Shougo/vimfiler.vim'
 NeoBundle 'Shougo/vimproc.vim', {
-\ 'build' : {
-\     'windows' : 'tools\\update-dll-mingw',
-\     'cygwin' : 'make -f make_cygwin.mak',
-\     'mac' : 'make',
-\     'linux' : 'make',
-\     'unix' : 'gmake',
-\    },
-\ }
+			\ 'build' : {
+			\     'windows' : 'tools\\update-dll-mingw',
+			\     'cygwin' : 'make -f make_cygwin.mak',
+			\     'mac' : 'make',
+			\     'linux' : 'make',
+			\     'unix' : 'gmake',
+			\    },
+			\ }
 "TODO: Add Vimshell
+NeoBundle 'Shougo/vimshell.vim'
+NeoBundle 'Shougo/neossh.vim'
+NeoBundle 'majutsushi/tagbar'
+NeoBundle 'xolox/vim-misc'
+NeoBundle 'xolox/vim-easytags'
+NeoBundle 'airblade/vim-gitgutter'
+NeoBundle 'Cognoscan/vim-vhdl'
+NeoBundle 'dbakker/vim-projectroot'
 "TODO: Add eclim
 
 call neobundle#end()
@@ -139,19 +154,70 @@ NeoBundleCheck
 "Unite Vim
 call unite#filters#matcher_default#use(['matcher_fuzzy'])
 call unite#filters#sorter_default#use(['sorter_rank'])
-call unite#custom#source('file,file/new,buffer,file_rec,line', 'matchers', 'matcher_fuzzy')
+call unite#custom#source('file,file/new,buffer,te -buffer-name=search -start-insert -auto-preview grep -custom-grep-command file_rec,line', 'matchers', 'matcher_fuzzy')
 
-"Fuzzy Search like Ctrl-P
-nnoremap <C-p> :Unite -start-insert tab file_rec/async<cr>
+" Build the ctrlp function, using projectroot to define the 
+" working directory.
+function! Unite_ctrlp()
+  execute ':Unite  -buffer-name=files -start-insert -match-input buffer file_rec/async:'.ProjectRootGuess().'/'
+endfunction
+
+"Fuzzy search like ctrl-p
+nnoremap <C-P> :call Unite_ctrlp()<cr>
+
+"Select Search
+if executable('Ag')
+  " Use ag (the silver searcher)
+  " https://github.com/ggreer/the_silver_searcher
+  let g:unite_source_grep_command = 'Ag'
+  let g:unite_source_grep_default_opts =
+  \ '-i --hidden --ignore ' .
+  \ '''.hg'' --ignore ''.svn'' --ignore ''.git'' --ignore ''.bzr'''
+  let g:unite_source_grep_recursive_opt = ''
+elseif executable('ack-grep')
+  " Use ack
+  " http://beyondgrep.com/
+  let g:unite_source_grep_command = 'ack-grep'
+  let g:unite_source_grep_default_opts =
+  \ '-i --no-heading --no-color -k -H'
+  let g:unite_source_grep_recursive_opt = ''
+endif
+nnoremap <leader>f :Unite -buffer-name=search -start-insert -auto-preview grep:.<CR>
+
+"File explorer like NerdTree
+nnoremap <C-e> :VimFilerExplorer<cr>
+
+" Enable file operation commands.
+" Edit file by tabedit.
+call vimfiler#custom#profile('default', 'context', {
+			\ 'safe' : 0,
+			\ 'edit_action' : 'tabopen',
+			\ })
+
+nnoremap <F5> !vcom %<CR>
+" Like Textmate icons.
+let g:vimfiler_tree_leaf_icon = ' '
+let g:vimfiler_tree_opened_icon = '▾'
+let g:vimfiler_tree_closed_icon = '▸'
+let g:vimfiler_file_icon = '-'
+let g:vimfiler_marked_file_icon = '*'
+
 
 let g:unite_source_history_yank_enable=1
 let g:unite_enable_start_insert=1
 nnoremap <space>y :Unite history/yank<cr>
 
+let g:vimfiler_as_default_explorer = 1
+
 "Neocomplete config
 let g:neocomplete#enable_at_startup = 1
 let g:neocomplete#enable_auto_select = 0
 let g:neocomplcache_enable_at_startup = 0
+let g:neocomplete#use_vimproc = 1
+
+" <TAB>: completion.
+inoremap <expr><TAB>  pumvisible() ? "\<C-n>" : "\<TAB>"
+" Recommended key-mappings.
 
 "Airline Config
 let g:airline#extensions#tabline#enabled = 1
