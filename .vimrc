@@ -77,6 +77,9 @@ set laststatus=2
 "Enable YouCompleteMe"
 filetype plugin indent on
 
+"Yaml filetype commands
+au FileType yml setl indentkeys-=<:> tabstop=2 softtabstop=2 expandtab
+
 set omnifunc=syntaxcomplete#Complete
 
 
@@ -147,13 +150,11 @@ NeoBundle 'airblade/vim-gitgutter'
 NeoBundle 'Cognoscan/vim-vhdl'
 NeoBundle 'dbakker/vim-projectroot'
 NeoBundle 'pangloss/vim-javascript'
-NeoBundle 'mhinz/vim-signify'
+NeoBundle 'avakhov/vim-yaml'
 
 call neobundle#end()
 
-" Required:
 filetype plugin indent on
-
 " If there are uninstalled bundles found on
 "startup,
 " this will conveniently prompt you to
