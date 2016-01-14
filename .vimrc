@@ -128,7 +128,6 @@ NeoBundle 'Shougo/vimproc.vim', {
 			\     'unix' : 'gmake',
 			\    },
 			\ }
-"TODO: Add Vimshell
 NeoBundle 'Shougo/vimshell.vim'
 NeoBundle 'Shougo/neossh.vim'
 NeoBundle 'majutsushi/tagbar'
@@ -137,7 +136,7 @@ NeoBundle 'xolox/vim-easytags'
 NeoBundle 'airblade/vim-gitgutter'
 NeoBundle 'Cognoscan/vim-vhdl'
 NeoBundle 'dbakker/vim-projectroot'
-"TODO: Add eclim
+NeoBundle 'pangloss/vim-javascript'
 
 call neobundle#end()
 
@@ -290,6 +289,9 @@ let g:tagbar_type_vhdl = {
 			\]
 			\}
 let g:gitgutter_max_signs = 1000
+
+"Easytags Settings
+let g:easytags_async = 1
 "Auto Refresh Config if updated
 augroup myvimrc
 	au!
