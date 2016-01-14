@@ -1,0 +1,18 @@
+# Apps - Things installed with apt-get
+---
+standalone: 
+  - vim-gtk
+  - nodejs
+  - automake
+  - gcc
+  - cmake
+  - openjdk-7-jdk
+  - exuberant-ctags
+  - pylint
+vim:
+  - astyle
+  - clang-format
+  - ack-grep
+  - silversearcher-ag
+  - python-autopep8
+  - tidy
