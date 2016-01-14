@@ -18,6 +18,10 @@ let mapleader=","
 set foldnestmax=10
 set foldmethod=indent
 
+"Set the default encoding to fix windows bug where not all
+"symbols are displayed by default.
+set encoding=utf-8
+
 "Mappings 
 
 "Use the space bar to open/close folds
@@ -137,6 +141,7 @@ NeoBundle 'airblade/vim-gitgutter'
 NeoBundle 'Cognoscan/vim-vhdl'
 NeoBundle 'dbakker/vim-projectroot'
 NeoBundle 'pangloss/vim-javascript'
+NeoBundle 'mhinz/vim-signify'
 
 call neobundle#end()
 
