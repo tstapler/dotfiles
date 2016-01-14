@@ -35,7 +35,13 @@ map <leader>d :bd<Enter>
 "When editing python F9 to drop to python shell
 nnoremap <buffer> <F9> :exec '!python' shellescape(@%, 1)<cr>
 
+"Mapping for Tagbar
 nnoremap <leader>t :TagbarToggle<cr>
+
+"Mappings for Eclim
+nnoremap <silent> <buffer> <leader>i :JavaImport<cr>
+nnoremap <silent> <buffer> <leader>d :JavaDocSearch -x declarations<cr>
+nnoremap <silent> <buffer> <cr> :JavaSearchContext<cr>
 
 "Help enforce 80 column code if available
 if exists('colorcolumn')
@@ -292,6 +298,7 @@ let g:gitgutter_max_signs = 1000
 
 "Easytags Settings
 let g:easytags_async = 1
+
 "Auto Refresh Config if updated
 augroup myvimrc
 	au!
