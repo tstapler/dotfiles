@@ -21,16 +21,44 @@ def cli(install_all, uninstall):
         pass
 
 @cli.command()
-def apps():
+@click.argument('groups', nargs=-1)
+def apps(groups):
     apt_get = sudo[local["apt-get"]]
     apps = load(open(os.path.join(config_dir, "apps.yml"), "r"))
-    for app in apps["standalone"]:
-        print(apt_get("install", app))
+    if len(groups) == 0:
+        for app in apps["standalone"]:
+            print(apt_get("install", app))
+    else:
+        for group in groups:
+            if group in apps:
+                for app in apps[group]:
+                    print(apt_get("install", app))
+            else:
+                print("There is no group called " + group)
         
 @cli.command()
-def node_packages():
+@click.argument('groups', nargs=-1)
+def node_packages(groups):
+    print("Node Packages")
     npm = local["npm"]
-    pass
+    node_packages = load(open(os.path.join(config_dir, "node_packages.yml"), "r"))
+    print(node_packages)
+    if len(groups) == 0:
+        for gen_type in node_packages["standalone"]:
+            if gen_type is not None:
+                print("Gen Type: " + gen_type)
+                for node_package in node_packages["standalone"][gen_type]:
+                    print(npm("install", node_package))
+    else:
+        for group in groups:
+            if group in node_packages:
+                for gen_type in node_packages[group]:
+                    if gen_type == "generate":
+                        npm = sudo[npm]
+                    for node_package in node_packages[group][gen_type]:
+                        print(npm("install", gen_type, node_package))
+            else:
+                print("There is no group called " + group)
 
 @cli.command()
 def perl_packages():
