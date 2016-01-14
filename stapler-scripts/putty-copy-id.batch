@@ -1,0 +1,1 @@
+cat %PUB_FILE% | plink.exe -ssh %USERNAME%@%HOST% -pw %PASSWORD% -P %PORT% "cat >> .ssh/authorized_keys"
