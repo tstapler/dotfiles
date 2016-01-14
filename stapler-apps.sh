@@ -6,7 +6,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 echo $DIR 
 
 #Install Applications
-sudo apt-get install eclipse vim-gtk
+sudo apt-get install vim-gtk
 
 
 #Install Development Tools
