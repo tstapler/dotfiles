@@ -4,3 +4,4 @@ standalone:
   generators:
     - js-beautify
     - bower
+    - js-yaml
