@@ -16,3 +16,9 @@ vim:
   - silversearcher-ag
   - python-autopep8
   - tidy
+i3:
+  - i3
+  - dunst
+  - i3lock
+  - i3status
+  - suckless-tools
