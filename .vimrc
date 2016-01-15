@@ -160,6 +160,7 @@ NeoBundle 'pangloss/vim-javascript'
 NeoBundle 'mattn/emmet-vim'
 NeoBundle 'heavenshell/vim-jsdoc'
 NeoBundle 'tpope/vim-repeat'
+NeoBundle 'klen/python-mode'
 
 call neobundle#end()
 
