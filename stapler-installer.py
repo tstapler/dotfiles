@@ -2,6 +2,7 @@ import glob, os, sys, click, subprocess
 from yaml import load, dump
 from plumbum import local, FG
 from plumbum.cmd import sudo
+from itertools import chain
 
 install_platform = sys.platform
 config_dir = os.path.dirname(os.path.realpath(__file__))
@@ -23,40 +24,41 @@ def cli(install_all, uninstall):
 @cli.command()
 @click.argument('groups', nargs=-1)
 def apps(groups):
+    npm = local["npm"]
     apt_get = sudo[local["apt-get"]]
     apps = load(open(os.path.join(config_dir, "apps.yml"), "r"))
     if len(groups) == 0:
-        for app in apps["standalone"]:
-            print(apt_get("install", app))
+        print(apt_get("install", *[app for app in apps["standalone"]]))
     else:
         for group in groups:
             if group in apps:
-                for app in apps[group]:
-                    print(apt_get("install", app))
+                print(apt_get("install", *[app for app in apps[group]]))
             else:
                 print("There is no group called " + group)
         
 @cli.command()
 @click.argument('groups', nargs=-1)
 def node_packages(groups):
-    print("Node Packages")
     npm = local["npm"]
     node_packages = load(open(os.path.join(config_dir, "node_packages.yml"), "r"))
-    print(node_packages)
+    print(groups)
     if len(groups) == 0:
         for gen_type in node_packages["standalone"]:
-            if gen_type is not None:
-                print("Gen Type: " + gen_type)
-                for node_package in node_packages["standalone"][gen_type]:
-                    print(npm("install", node_package))
+            if gen_type == "generators":
+                npm = sudo[npm["-g"]]
+            else:
+                npm = local["npm"]
+            npm["install", [package for package in node_packages["standalone"][gen_type]]] & FG
     else:
         for group in groups:
             if group in node_packages:
                 for gen_type in node_packages[group]:
-                    if gen_type == "generate":
-                        npm = sudo[npm]
-                    for node_package in node_packages[group][gen_type]:
-                        print(npm("install", gen_type, node_package))
+                    print(npm)
+                    if gen_type == "generators":
+                        npm = sudo[npm["-g"]]
+                    else:
+                        npm = local["npm"]
+                    npm["install", [package for package in node_packages[group][gen_type]]] & FG
             else:
                 print("There is no group called " + group)
 

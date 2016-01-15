@@ -4,4 +4,3 @@ standalone:
   generators:
     - js-beautify
     - bower
-    - yeoman
