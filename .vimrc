@@ -126,6 +126,7 @@ NeoBundle 'groenewege/vim-less'
 NeoBundle 'mattn/gist-vim'
 NeoBundle 'tpope/vim-fugitive'
 NeoBundle 'tpope/vim-surround'
+NeoBundle 'tpope/vim-commentary'
 NeoBundle 'flazz/vim-colorschemes'
 NeoBundle 'Chiel92/vim-autoformat'
 NeoBundle 'dansomething/vim-eclim'
@@ -151,6 +152,14 @@ NeoBundle 'Cognoscan/vim-vhdl'
 NeoBundle 'dbakker/vim-projectroot'
 NeoBundle 'pangloss/vim-javascript'
 NeoBundle 'avakhov/vim-yaml'
+NeoBundle 'scrooloose/syntastic'
+NeoBundle 'heavenshell/vim-pydocstring'
+NeoBundle 'ternjs/tern_for_vim'
+NeoBundle 'Raimondi/delimitMate'
+NeoBundle 'pangloss/vim-javascript'
+NeoBundle 'mattn/emmet-vim'
+NeoBundle 'heavenshell/vim-jsdoc'
+NeoBundle 'tpope/vim-repeat'
 
 call neobundle#end()
 
@@ -161,6 +170,14 @@ filetype plugin indent on
 "install them.
 NeoBundleCheck
 
+"Makefile autocmd
+autocmd FileType make setlocal noexpandtab
+
+"Python autocmd
+autocmd FileType python setlocal tabstop=4 shiftwidth=4 softtabstop=4 expandtab
+
+"Javascript autocmd
+autocmd FileType javascript setlocal omnifunc=tern#Complete
 
 "Unite Vim
 call unite#filters#matcher_default#use(['matcher_fuzzy'])
@@ -201,8 +218,7 @@ nnoremap <C-e> :VimFilerExplorer<cr>
 " Enable file operation commands.
 " Edit file by tabedit.
 call vimfiler#custom#profile('default', 'context', {
-			\ 'safe' : 0,
-			\ 'edit_action' : 'tabopen',
+			\ 'safe' : 0
 			\ })
 
 nnoremap <F5> !vcom %<CR>
@@ -247,6 +263,21 @@ let g:airline_theme = 'badwolf'
 
 "Ag vim settings
 let g:ag_working_path_mode='r'
+
+"Syntastic
+set statusline+=%#warningmsg#
+set statusline+=%{SyntasticStatuslineFlag()}
+set statusline+=%*
+
+let g:syntastic_always_populate_loc_list = 1
+let g:syntastic_auto_loc_list = 2
+let g:syntastic_check_on_open = 0
+let g:syntastic_check_on_wq = 0
+let g:syntastic_aggregate_errors = 1
+let g:syntastic_error_symbol = "✗"
+let g:syntastic_id_checkers = 1
+let g:syntastic_auto_jump = 3
+let g:syntastic_quiet_messages = { "level": "warnings" }
 
 "Tagbar settings
 let g:tagbar_type_vimwiki = {
@@ -304,6 +335,34 @@ let g:gitgutter_max_signs = 1000
 
 "Easytags Settings
 let g:easytags_async = 1
+
+"Eclim settings
+let g:EclimFileTypeValidate = 0
+
+"Neosnippet Settings
+" Plugin key-mappings.
+imap <C-k>     <Plug>(neosnippet_expand_or_jump)
+smap <C-k>     <Plug>(neosnippet_expand_or_jump)
+xmap <C-k>     <Plug>(neosnippet_expand_target)
+
+" SuperTab like snippets behavior.
+"imap <expr><TAB>
+" \ pumvisible() ? "\<C-n>" :
+" \ neosnippet#expandable_or_jumpable() ?
+" \    "\<Plug>(neosnippet_expand_or_jump)" : "\<TAB>"
+smap <expr><TAB> neosnippet#expandable_or_jumpable() ?
+\ "\<Plug>(neosnippet_expand_or_jump)" : "\<TAB>"
+
+"EasyTags settings
+let g:easytags_async = 1
+let g:easytags_always_enabled = 1
+
+"Vim-Javascript settings
+let g:javascript_enable_domhtmlcss = 1
+" For conceal markers.
+if has('conceal')
+  set conceallevel=2 concealcursor=niv
+endif
 
 "Auto Refresh Config if updated
 augroup myvimrc
