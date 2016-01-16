@@ -47,6 +47,27 @@ nnoremap <silent> <buffer> <leader>i :JavaImport<cr>
 nnoremap <silent> <buffer> <leader>d :JavaDocSearch -x declarations<cr>
 nnoremap <silent> <buffer> <cr> :JavaSearchContext<cr>
 
+"Unite mappings
+nnoremap <leader>f :Unite -buffer-name=search -start-insert -auto-preview grep:.<CR>
+nnoremap <space>y :Unite history/yank<cr>
+
+"File explorer like NerdTree
+nnoremap <C-e> :VimFilerExplorer<cr>
+
+"Neosnippet Settings
+" Plugin key-mappings.
+imap <C-k>     <Plug>(neosnippet_expand_or_jump)
+smap <C-k>     <Plug>(neosnippet_expand_or_jump)
+xmap <C-k>     <Plug>(neosnippet_expand_target)
+
+" SuperTab like snippets behavior.
+imap <expr><TAB>
+			\ pumvisible() ? "\<C-n>" :
+			\ neosnippet#expandable_or_jumpable() ?
+			\    "\<Plug>(neosnippet_expand_or_jump)" : "\<TAB>"
+smap <expr><TAB> neosnippet#expandable_or_jumpable() ?
+			\ "\<Plug>(neosnippet_expand_or_jump)" : "\<TAB>"
+
 "Help enforce 80 column code if available
 if exists('colorcolumn')
 	set colorcolum=80
@@ -153,6 +174,7 @@ NeoBundle 'dbakker/vim-projectroot'
 NeoBundle 'pangloss/vim-javascript'
 NeoBundle 'avakhov/vim-yaml'
 NeoBundle 'scrooloose/syntastic'
+NeoBundle 'myint/syntastic-extras'
 NeoBundle 'heavenshell/vim-pydocstring'
 NeoBundle 'ternjs/tern_for_vim'
 NeoBundle 'Raimondi/delimitMate'
@@ -181,6 +203,10 @@ autocmd FileType python setlocal tabstop=4 shiftwidth=4 softtabstop=4 expandtab
 "Javascript autocmd
 autocmd FileType javascript setlocal omnifunc=tern#Complete
 
+"vim autocmd
+autocmd FileType vim setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab
+
+
 "Unite Vim
 call unite#filters#matcher_default#use(['matcher_fuzzy'])
 call unite#filters#sorter_default#use(['sorter_rank'])
@@ -189,7 +215,7 @@ call unite#custom#source('file,file/new,buffer,te -buffer-name=search -start-ins
 " Build the ctrlp function, using projectroot to define the 
 " working directory.
 function! Unite_ctrlp()
-  execute ':Unite  -buffer-name=files -start-insert -match-input buffer file_rec/async:'.ProjectRootGuess().'/'
+	execute ':Unite  -buffer-name=files -start-insert -match-input buffer file_rec/async:'.ProjectRootGuess().'/'
 endfunction
 
 "Fuzzy search like ctrl-p
@@ -197,25 +223,21 @@ nnoremap <C-P> :call Unite_ctrlp()<cr>
 
 "Select Search
 if executable('Ag')
-  " Use ag (the silver searcher)
-  " https://github.com/ggreer/the_silver_searcher
-  let g:unite_source_grep_command = 'Ag'
-  let g:unite_source_grep_default_opts =
-  \ '-i --hidden --ignore ' .
-  \ '''.hg'' --ignore ''.svn'' --ignore ''.git'' --ignore ''.bzr'''
-  let g:unite_source_grep_recursive_opt = ''
+	" Use ag (the silver searcher)
+	" https://github.com/ggreer/the_silver_searcher
+	let g:unite_source_grep_command = 'Ag'
+	let g:unite_source_grep_default_opts =
+				\ '-i --hidden --ignore ' .
+				\ '''.hg'' --ignore ''.svn'' --ignore ''.git'' --ignore ''.bzr'''
+	let g:unite_source_grep_recursive_opt = ''
 elseif executable('ack-grep')
-  " Use ack
-  " http://beyondgrep.com/
-  let g:unite_source_grep_command = 'ack-grep'
-  let g:unite_source_grep_default_opts =
-  \ '-i --no-heading --no-color -k -H'
-  let g:unite_source_grep_recursive_opt = ''
+	" Use ack
+	" http://beyondgrep.com/
+	let g:unite_source_grep_command = 'ack-grep'
+	let g:unite_source_grep_default_opts =
+				\ '-i --no-heading --no-color -k -H'
+	let g:unite_source_grep_recursive_opt = ''
 endif
-nnoremap <leader>f :Unite -buffer-name=search -start-insert -auto-preview grep:.<CR>
-
-"File explorer like NerdTree
-nnoremap <C-e> :VimFilerExplorer<cr>
 
 " Enable file operation commands.
 " Edit file by tabedit.
@@ -223,7 +245,6 @@ call vimfiler#custom#profile('default', 'context', {
 			\ 'safe' : 0
 			\ })
 
-nnoremap <F5> !vcom %<CR>
 " Like Textmate icons.
 let g:vimfiler_tree_leaf_icon = ' '
 let g:vimfiler_tree_opened_icon = '▾'
@@ -231,10 +252,8 @@ let g:vimfiler_tree_closed_icon = '▸'
 let g:vimfiler_file_icon = '-'
 let g:vimfiler_marked_file_icon = '*'
 
-
 let g:unite_source_history_yank_enable=1
 let g:unite_enable_start_insert=1
-nnoremap <space>y :Unite history/yank<cr>
 
 let g:vimfiler_as_default_explorer = 1
 
@@ -266,7 +285,7 @@ let g:airline_theme = 'badwolf'
 "Ag vim settings
 let g:ag_working_path_mode='r'
 
-"Syntastic
+"Syntastic settings
 set statusline+=%#warningmsg#
 set statusline+=%{SyntasticStatuslineFlag()}
 set statusline+=%*
@@ -280,6 +299,16 @@ let g:syntastic_error_symbol = "✗"
 let g:syntastic_id_checkers = 1
 let g:syntastic_auto_jump = 3
 let g:syntastic_quiet_messages = { "level": "warnings" }
+
+let g:syntastic_text_checkers = ['language_check']
+let g:syntastic_language_check_args = '--language=en-US'
+
+"Syntastic Extras Settings
+let g:syntastic_make_checkers = ['gnumake']
+let g:syntastic_javascript_checkers = ['json_tool']
+let g:syntastic_yaml_checkers = ['pyyaml']
+let g:syntastic_gitcommit_checkers = ['language_check']
+let g:syntastic_svn_checkers = ['language_check']
 
 "Tagbar settings
 let g:tagbar_type_vimwiki = {
@@ -341,29 +370,19 @@ let g:easytags_async = 1
 "Eclim settings
 let g:EclimFileTypeValidate = 0
 
-"Neosnippet Settings
-" Plugin key-mappings.
-imap <C-k>     <Plug>(neosnippet_expand_or_jump)
-smap <C-k>     <Plug>(neosnippet_expand_or_jump)
-xmap <C-k>     <Plug>(neosnippet_expand_target)
-
-" SuperTab like snippets behavior.
-"imap <expr><TAB>
-" \ pumvisible() ? "\<C-n>" :
-" \ neosnippet#expandable_or_jumpable() ?
-" \    "\<Plug>(neosnippet_expand_or_jump)" : "\<TAB>"
-smap <expr><TAB> neosnippet#expandable_or_jumpable() ?
-\ "\<Plug>(neosnippet_expand_or_jump)" : "\<TAB>"
-
 "EasyTags settings
 let g:easytags_async = 1
 let g:easytags_always_enabled = 1
 
 "Vim-Javascript settings
 let g:javascript_enable_domhtmlcss = 1
+
+"Vim-Session
+let g:session_autosave='no'
+
 " For conceal markers.
 if has('conceal')
-  set conceallevel=2 concealcursor=niv
+	set conceallevel=2 concealcursor=niv
 endif
 
 "Auto Refresh Config if updated
