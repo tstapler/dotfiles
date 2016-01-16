@@ -161,6 +161,7 @@ NeoBundle 'mattn/emmet-vim'
 NeoBundle 'heavenshell/vim-jsdoc'
 NeoBundle 'tpope/vim-repeat'
 NeoBundle 'klen/python-mode'
+NeoBundle 'xolox/vim-session'
 
 call neobundle#end()
 
