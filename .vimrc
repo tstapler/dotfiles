@@ -95,14 +95,9 @@ set number
 "Show the status line even with just one window
 set laststatus=2
 
-"Enable YouCompleteMe"
-filetype plugin indent on
-
-"Yaml filetype commands
-au FileType yml setl indentkeys-=<:> tabstop=2 softtabstop=2 expandtab
-
 set omnifunc=syntaxcomplete#Complete
 
+filetype plugin indent on
 
 
 "Neobundle Config
@@ -184,6 +179,7 @@ NeoBundle 'heavenshell/vim-jsdoc'
 NeoBundle 'tpope/vim-repeat'
 NeoBundle 'klen/python-mode'
 NeoBundle 'xolox/vim-session'
+NeoBundle 'dag/vim-fish'
 
 call neobundle#end()
 
@@ -206,7 +202,10 @@ autocmd FileType javascript setlocal omnifunc=tern#Complete
 "vim autocmd
 autocmd FileType vim setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
+"Yaml filetype commands
+autocmd FileType yml setl indentkeys-=<:> tabstop=2 softtabstop=2 expandtab
 
+autocmd Filetype fish compiler fish setlocal textwidth=79  foldmethod=expr
 "Unite Vim
 call unite#filters#matcher_default#use(['matcher_fuzzy'])
 call unite#filters#sorter_default#use(['sorter_rank'])
