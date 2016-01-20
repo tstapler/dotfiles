@@ -12,7 +12,13 @@ local.cwd.chdir(config_dir)
 @click.option('--install_all', is_flag=True)
 @click.option('--uninstall', is_flag=True)
 def installer(install_all, uninstall):
-    """Tyler Stapler's Dev environment installer. Currently for *nix and soon for Windows"""
+    """Tyler Stapler's Dev environment installer. Currently for *nix and soon for Windows
+
+        Installs various dev tools, namely vim and supporting apps
+
+        The intent is to be able to run this anywhere python is installed
+        and forget about the rest
+    """
 
     if install_all :
         pass
@@ -24,6 +30,7 @@ def installer(install_all, uninstall):
 @installer.command()
 @click.argument('groups', nargs=-1)
 def apps(groups):
+    """Installs applications using apt-get on debian"""
     npm = local["npm"]
     apt_get = sudo[local["apt-get"]]
     apps = load(open(os.path.join(config_dir, "apps.yml"), "r"))
@@ -35,10 +42,11 @@ def apps(groups):
                 print(apt_get("install", *[app for app in apps[group]]))
             else:
                 print("There is no group called " + group)
-        
+
 @installer.command()
 @click.argument('groups', nargs=-1)
 def node_packages(groups):
+    """Installs nodejs packages using npm"""
     npm = local["npm"]
     node_packages = load(open(os.path.join(config_dir, "node_packages.yml"), "r"))
     print(groups)
@@ -64,37 +72,52 @@ def node_packages(groups):
 
 @installer.command()
 def perl_packages():
+    """Installs perl packages using cpan (Not Implemented)"""
     pass
 
 @installer.command()
 def ruby_gems():
+    """Installs ruby gems using gem install (Not Implemented)"""
     pass
 
 @installer.command()
 def link_configs():
-    """Command for moving configuration files to the home directory
-    
+    """Symlinks configuration files to the home directory
+
         Parses the ignore file for regexes and then generates a list of files
         which need to be simulinked"""
-    local.cwd.chdir(local.env.home) 
+    local.cwd.chdir(local.env.home)
     ignored = load(open(config_dir.join("installer-ignore.yml")))
     ignore_patterns = "(" + ")|(".join(ignored) + ")"
-    to_link = [path for path in (local.path(config_dir) // "*") if not local.path(local.env.home.join(path.name)).exists() and not re.match(ignore_patterns, path.name)]
+    to_link = [path for path in local.path(config_dir).list()
+               if not local.path(local.env.home.join(path.name)).exists()
+               and not re.match(ignore_patterns, path.name)
+               or path.is_dir() and not re.match(ignore_patterns, path.name)]
 
     if len(to_link) == 0:
         print("No files to move")
         return
-    print("To Link: " + str(to_link))
     print("Preparing to symlink the following files")
 
     print("\n".join(path.name for path in to_link ))
     if click.confirm("Are these the correct files?"):
-        for item in to_link: 
-            if not local.path(local.env.home.join(item.name)).exists():
-                local.path(item).symlink(local.env.home.join(item.name))
+        symlink_paths(to_link)
+
+def symlink_paths(to_link, prefix=local.env.home):
+        for item in to_link:
+            #If the file doesnt on the home directory
+            target = local.path(prefix.join(item.name))
+            if not target.exists():
+                print("Copying " + target)
+                local.path(item).symlink(target)
+            elif item.is_dir:
+                print("Directory: " + target)
+                symlink_paths(item, prefix=target)
+
 
 @installer.command()
 def uninstall():
+    "Uninstall parts or all of the config"
     pass
 
 if __name__ == '__main__':
