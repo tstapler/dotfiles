@@ -6,3 +6,5 @@
 - .*\.swp
 - .*\.yml
 - env
+- .*\.txt
+- .ropeproject
