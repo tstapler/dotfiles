@@ -110,8 +110,7 @@ def symlink_paths(to_link, prefix=local.env.home):
             if not target.exists():
                 print("Copying " + target)
                 local.path(item).symlink(target)
-            elif item.is_dir:
-                print("Directory: " + target)
+            elif item.is_dir():
                 symlink_paths(item, prefix=target)
 
 
