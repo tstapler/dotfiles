@@ -1,3 +1,8 @@
+#Python Files
+###################
+env
+.ropeproject
+
 #Compiled source #
 ###################
 *.com
