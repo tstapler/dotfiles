@@ -67,6 +67,12 @@ zstyle ':predict' verbose true
 # User configuration
 export PATH="/home/tstapler/stapler-config/env/bin:/home/tstapler/.pyenv/shims:/home/tstapler/.pyenv/shims:/home/tstapler/.pyenv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games"
 
+#Set GOPATH
+export GOPATH=$HOME/Programming/go
+
+#Add GO to PATH
+export PATH=$PATH:$GOPATH/bin
+
 # Preferred editor for local and remote sessions
 if [[ -n $SSH_CONNECTION ]]; then
 	export EDITOR='vim'

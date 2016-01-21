@@ -7,15 +7,18 @@ standalone:
   - gcc
   - cmake
   - openjdk-7-jdk
-  - exuberant-ctags
-  - pylint
-vim:
+  #Shells
+  - fish
+  - zsh
+vim-plugins:
   - astyle
   - clang-format
   - ack-grep
   - silversearcher-ag
   - python-autopep8
   - tidy
+  - pylint
+  - exuberant-ctags
 i3:
   - i3
   - dunst
