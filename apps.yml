@@ -1,16 +1,25 @@
 # Apps - Things installed with apt-get
 ---
 standalone: 
-  - vim-gtk
+  #Languages
   - nodejs
+  - golang
+  - openjdk-7-jdk
+  #Dev Tools
+  - vim-gtk
   - automake
   - gcc
   - cmake
-  - openjdk-7-jdk
+  - gdb
+  - valgrind
+  - exuberant-ctags
+  - pylint
   #Shells
   - fish
   - zsh
-vim-plugins:
+  #CLI Utilities
+  - toilet
+vim:
   - astyle
   - clang-format
   - ack-grep
