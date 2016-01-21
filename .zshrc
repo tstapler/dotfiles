@@ -15,22 +15,25 @@ source ~/.zplug/zplug
 
 #Let zplug manage itself
 zplug "b4b4r07/zplug"
+
+#oh-my-zsh pack
 zplug "robbyrussell/oh-my-zsh", of:oh-my-zsh.sh, nice:-10
-zplug "themes/robbyrussell", from:oh-my-zsh
+
+#Theme
+export TERM="xterm-256color"
+zplug "bhilburn/powerlevel9k"
+POWERLEVEL9k_MODE='awesome-fontconfig'
+
 zplug "zsh-users/zsh-completions"
 zplug "b4b4r07/enhancd", of:enhancd.sh
 zplug "zsh-users/zaw"
 
-#The fzf file searching command
 zplug "zsh-users/zsh-syntax-highlighting"
 zplug "tarruda/zsh-autosuggestions"
 
-zplug "junegunn/fzf-bin", \
-	as:command, \
-	from:gh-r, \
-	file:fzf, \
-	of:"*linux*64*"
-zplug "peco/peco", as:command, from:gh-r, of:"*linux_amd64*"
+#The file searchers 
+zplug "junegunn/fzf-bin", as:command, from:gh-r, file:fzf, of:"*linux*64*"
+zplug "peco/peco", as:command, from:gh-r, file:peco, of:"*linux_amd64*"
 
 # Install plugins if there are plugins that have not been installed
 if ! zplug check --verbose; then
@@ -61,8 +64,17 @@ bindkey '^Z'   predict-toggle
 zstyle ':predict' toggle true
 zstyle ':predict' verbose true
 
+#Powerlevel 9k config
+POWERLEVEL9K_PROMPT_ON_NEWLINE=true
+POWERLEVEL9K_MULTILINE_FIRST_PROMPT_PREFIX="↱"
+POWERLEVEL9K_MULTILINE_SECOND_PROMPT_PREFIX="↳ "
+POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(context dir rbenv vcs)
+POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status history time)
+POWERLEVEL9K_SHORTEN_DIR_LENGTH=1
+POWERLEVEL9K_SHORTEN_DELIMITER=""
+POWERLEVEL9K_SHORTEN_STRATEGY="truncate_from_right"
 # User configuration
-export PATH="/home/tstapler/stapler-config/env/bin:/home/tstapler/.pyenv/shims:/home/tstapler/.pyenv/shims:/home/tstapler/.pyenv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games"
+export PATH=$PATH:"/home/tstapler/stapler-config/env/bin:/home/tstapler/.pyenv/shims:/home/tstapler/.pyenv/shims:/home/tstapler/.pyenv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games"
 
 #Set GOPATH
 export GOPATH=$HOME/Programming/go
@@ -83,7 +95,7 @@ alias ohmyzsh="$EDITOR ~/.oh-my-zsh"
 alias vimrc="$EDITOR ~/.vimrc"
 
 #Set environment varibles
-export ENHANCD_FILTER=peco:fzf
+export ENHANCD_FILTER=fzf
 
 #Setup RVM
 export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
