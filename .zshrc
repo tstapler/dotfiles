@@ -24,48 +24,52 @@ if ! zgen saved; then
     # completions
     zgen load zsh-users/zsh-completions src
 
+
+    zgen load chrissicool/zsh-256color
+
+    #File browser
+    zgen load Vifon/deer
+
+
     # syntax highlighting
     zgen load zsh-users/zsh-syntax-highlighting
+    
+    # fish like history search
     zgen load zsh-users/zsh-history-substring-search
+
+    #Bind Keys for zsh-history-substring-search
+    ###########################################
+
+    # bind UP and DOWN arrow keys
+    zmodload zsh/terminfo
+    bindkey "$terminfo[kcuu1]" history-substring-search-up
+    bindkey "$terminfo[kcud1]" history-substring-search-down
+
+    # bind k and j for VI mode
+    bindkey -M vicmd 'k' history-substring-search-up
+    bindkey -M vicmd 'j' history-substring-search-down
+
+    ############################################
 
     # suggestions
     zgen load tarruda/zsh-autosuggestions
 
-    # theme
-    zgen oh-my-zsh themes/arrow
+    # Enable autosuggestions automatically
+    zle-line-init() {
+	    zle autosuggest-start
+    }
+    zle -N zle-line-init
 
+
+    # theme
+    zgen load halfo/lambda-mod-zsh-theme lambda-mod
 
     # save all to init script
     zgen save
 fi
 
-zle-line-init() {
-zle autosuggest-start
-}
-zle -N zle-line-init
 
-#Bind Keys for zsh-history-substring-search
-###########################################
 
-# bind UP and DOWN arrow keys
-zmodload zsh/terminfo
-bindkey "$terminfo[kcuu1]" history-substring-search-up
-bindkey "$terminfo[kcud1]" history-substring-search-down
-
-# bind UP and DOWN arrow keys (compatibility fallback
-# for Ubuntu 12.04, Fedora 21, and MacOSX 10.9 users)
-bindkey '^[[A' history-substring-search-up
-bindkey '^[[B' history-substring-search-down
-
-# bind P and N for EMACS mode
-bindkey -M emacs '^P' history-substring-search-up
-bindkey -M emacs '^N' history-substring-search-down
-
-# bind k and j for VI mode
-bindkey -M vicmd 'k' history-substring-search-up
-bindkey -M vicmd 'j' history-substring-search-down
-
-############################################
 
 # User configuration
   export PATH="/home/tstapler/stapler-config/env/bin:/home/tstapler/.pyenv/shims:/home/tstapler/.pyenv/shims:/home/tstapler/.pyenv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games"
@@ -80,5 +84,7 @@ bindkey -M vicmd 'j' history-substring-search-down
 #Aliases
  alias zshconfig="$EDITOR ~/.zshrc"
  alias ohmyzsh="$EDITOR ~/.oh-my-zsh"
+ alias vimrc="$EDITOR ~/.vimrc"
+
 #Setup RVM
 export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
