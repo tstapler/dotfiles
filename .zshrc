@@ -30,6 +30,7 @@ zplug "junegunn/fzf-bin", \
 	from:gh-r, \
 	file:fzf, \
 	of:"*linux*64*"
+zplug "peco/peco", as:command, from:gh-r, of:"*linux_amd64*"
 
 # Install plugins if there are plugins that have not been installed
 if ! zplug check --verbose; then
@@ -47,10 +48,8 @@ zplug load --verbose
      zle autosuggest-start
      }
      zle -N zle-line-init
-# bind UP and DOWN arrow keys
- zmodload zsh/terminfo
- bindkey "$terminfo[kcuu1]" history-substring-search-up
- bindkey "$terminfo[kcud1]" history-substring-search-down
+# Toggle Auto Suggest
+bindkey '^T' autosuggest-toggle
 
 #Add predict
 autoload predict-on
@@ -84,6 +83,7 @@ alias ohmyzsh="$EDITOR ~/.oh-my-zsh"
 alias vimrc="$EDITOR ~/.vimrc"
 
 #Set environment varibles
-export ENHANCD_FILTER=fzf
+export ENHANCD_FILTER=peco:fzf
+
 #Setup RVM
 export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
