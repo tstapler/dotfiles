@@ -1,15 +1,19 @@
+" vim:fdm=marker
 "
-"Tyler Stapler's vimrc file
-"
-"author: Tyler Stapler
+" _____     _           ___ _             _         _           _              
+"|_   _|  _| |___ _ _  / __| |_ __ _ _ __| |___ _ _( )___  __ _(_)_ __  _ _ __ 
+"  | || || | / -_) '_| \__ \  _/ _` | '_ \ / -_) '_|/(_-<  \ V / | '  \| '_/ _|
+"  |_| \_, |_\___|_|   |___/\__\__,_| .__/_\___|_|   /__/ (_)_/|_|_|_|_|_| \__|
+"      |__/                         |_|                                        
 "
 
+" Set Options {{{
 "Vim not vi
 set nocompatible
 set t_Co=256
 
 "Change the shell from fish to support NeoBundle
-set shell=/bin/sh
+set shell=/bin/bash
 
 "Set map leader
 let mapleader=","
@@ -22,7 +26,38 @@ set foldmethod=indent
 "symbols are displayed by default.
 set encoding=utf-8
 
-"Mappings 
+"Help enforce 80 column code if available
+if exists('colorcolumn')
+	set colorcolum=80
+else
+	au BufWinEnter * let w:m2=matchadd('ErrorMsg', '\%>80v.\+', -1)
+endif
+
+"Show ex commands as they are being typed
+set showcmd
+
+"Use "Magic" aka regex during searches
+set magic
+
+"Set vim menu completion
+set wildmenu
+set wildmode=longest:list,full
+
+"Vim master race
+
+"Show search results as typing
+set incsearch
+"Show line numbers
+set number
+
+"Show the status line even with just one window
+set laststatus=2
+
+set omnifunc=syntaxcomplete#Complete
+
+" }}}
+
+" Mappings {{{
 
 "Use the space bar to open/close folds
 nnoremap <space> za
@@ -54,7 +89,6 @@ nnoremap <space>y :Unite history/yank<cr>
 "File explorer like NerdTree
 nnoremap <C-e> :VimFilerExplorer<cr>
 
-"Neosnippet Settings
 " Plugin key-mappings.
 imap <C-k>     <Plug>(neosnippet_expand_or_jump)
 smap <C-k>     <Plug>(neosnippet_expand_or_jump)
@@ -68,39 +102,10 @@ imap <expr><TAB>
 smap <expr><TAB> neosnippet#expandable_or_jumpable() ?
 			\ "\<Plug>(neosnippet_expand_or_jump)" : "\<TAB>"
 
-"Help enforce 80 column code if available
-if exists('colorcolumn')
-	set colorcolum=80
-else
-	au BufWinEnter * let w:m2=matchadd('ErrorMsg', '\%>80v.\+', -1)
-endif
+" }}}
 
-"Show ex commands as they are being typed
-set showcmd
+"Neobundle Config {{{
 
-"Use "Magic" aka regex during searches
-set magic
-
-"Set vim menu completion
-set wildmenu
-set wildmode=longest:list,full
-
-"Vim master race
-
-"Show search results as typing
-set incsearch
-"Show line numbers
-set number
-
-"Show the status line even with just one window
-set laststatus=2
-
-set omnifunc=syntaxcomplete#Complete
-
-filetype plugin indent on
-
-
-"Neobundle Config
 "Note: Skip initialization for vim-tiny or vim-small.
 if 0 | endif
 
@@ -180,6 +185,7 @@ NeoBundle 'tpope/vim-repeat'
 NeoBundle 'klen/python-mode'
 NeoBundle 'xolox/vim-session'
 NeoBundle 'dag/vim-fish'
+NeoBundle 'plasticboy/vim-markdown'
 
 call neobundle#end()
 
@@ -189,6 +195,10 @@ filetype plugin indent on
 " this will conveniently prompt you to
 "install them.
 NeoBundleCheck
+
+" }}}
+
+" Autocommands {{{
 
 "Makefile autocmd
 autocmd FileType make setlocal noexpandtab
@@ -206,7 +216,12 @@ autocmd FileType vim setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 autocmd FileType yml setl indentkeys-=<:> tabstop=2 softtabstop=2 expandtab
 
 autocmd Filetype fish compiler fish setlocal textwidth=79  foldmethod=expr
-"Unite Vim
+
+" }}}
+
+" Plugin Configuration {{{
+
+" Unite Vim
 call unite#filters#matcher_default#use(['matcher_fuzzy'])
 call unite#filters#sorter_default#use(['sorter_rank'])
 call unite#custom#source('file,file/new,buffer,te -buffer-name=search -start-insert -auto-preview grep -custom-grep-command file_rec,line', 'matchers', 'matcher_fuzzy')
@@ -389,3 +404,5 @@ augroup myvimrc
 	au!
 	au BufWritePost .vimrc,_vimrc,vimrc,.gvimrc,_gvimrc,gvimrc,.vimrc.local,.vimrc.bundle.local so $MYVIMRC | if has('gui_running') | so $MYGVIMRC | endif
 	augroup END
+
+" }}}
