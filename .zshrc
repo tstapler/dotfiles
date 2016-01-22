@@ -22,7 +22,6 @@ zplug "robbyrussell/oh-my-zsh", of:oh-my-zsh.sh, nice:-10
 #Theme
 export TERM="xterm-256color"
 zplug "bhilburn/powerlevel9k"
-POWERLEVEL9k_MODE='awesome-fontconfig'
 
 zplug "zsh-users/zsh-completions"
 zplug "b4b4r07/enhancd", of:enhancd.sh
@@ -65,6 +64,7 @@ zstyle ':predict' toggle true
 zstyle ':predict' verbose true
 
 #Powerlevel 9k config
+POWERLEVEL9k_MODE='awesome-fontconfig'
 POWERLEVEL9K_PROMPT_ON_NEWLINE=true
 POWERLEVEL9K_MULTILINE_FIRST_PROMPT_PREFIX="↱"
 POWERLEVEL9K_MULTILINE_SECOND_PROMPT_PREFIX="↳ "
@@ -73,6 +73,13 @@ POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status history time)
 POWERLEVEL9K_SHORTEN_DIR_LENGTH=1
 POWERLEVEL9K_SHORTEN_DELIMITER=""
 POWERLEVEL9K_SHORTEN_STRATEGY="truncate_from_right"
+POWERLEVEL9K_DIR_DEFAULT_BACKGROUND="240"
+POWERLEVEL9K_DIR_DEFAULT_FOREGROUND="208"
+POWERLEVEL9K_DIR_HOME_BACKGROUND="208"
+POWERLEVEL9K_DIR_HOME_FOREGROUND="240"
+POWERLEVEL9K_DIR_HOME_SUBFOLDER_BACKGROUND="240"
+POWERLEVEL9K_DIR_HOME_SUBFOLDER_FOREGROUND="208"
+
 # User configuration
 export PATH=$PATH:"/home/tstapler/stapler-config/env/bin:/home/tstapler/.pyenv/shims:/home/tstapler/.pyenv/shims:/home/tstapler/.pyenv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games"
 
