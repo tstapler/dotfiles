@@ -186,6 +186,7 @@ NeoBundle 'klen/python-mode'
 NeoBundle 'xolox/vim-session'
 NeoBundle 'dag/vim-fish'
 NeoBundle 'plasticboy/vim-markdown'
+NeoBundle 'dart-lang/dart-vim-plugin'
 
 call neobundle#end()
 
