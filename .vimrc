@@ -127,11 +127,6 @@ call neobundle#begin(expand('~/.vim/bundle/'))
 " Required:
 NeoBundleFetch 'Shougo/neobundle.vim'
 
-" My Bundles here:
-" Refer to |:NeoBundle-examples|.
-" Note: You don't set neobundle setting in
-".gvimrc!
-"
 NeoBundle 'Chiel92/vim-autoformat'
 NeoBundle 'Shougo/neocomplete.vim.git'
 NeoBundle 'Shougo/context_filetype.vim'
@@ -191,6 +186,8 @@ NeoBundle 'plasticboy/vim-markdown'
 NeoBundle 'dart-lang/dart-vim-plugin'
 NeoBundle 'Rip-Rip/clang_complete'
 NeoBundle 'shougo/echodoc.vim'
+NeoBundle 'saltstack/salt-vim'
+NeoBundle 'pearofducks/ansible-vim'
 
 call neobundle#end()
 
