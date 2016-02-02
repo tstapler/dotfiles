@@ -18,6 +18,7 @@ zplug "b4b4r07/zplug"
 
 #oh-my-zsh pack
 zplug "robbyrussell/oh-my-zsh", of:oh-my-zsh.sh, nice:-10
+zplug "willghatch/zsh-hooks"
 
 #Theme
 export TERM="xterm-256color"
@@ -28,7 +29,7 @@ zplug "b4b4r07/enhancd", of:enhancd.sh
 zplug "zsh-users/zaw"
 
 zplug "zsh-users/zsh-syntax-highlighting"
-zplug "tarruda/zsh-autosuggestions"
+zplug "tarruda/zsh-autosuggestions", at:v0.1.x
 
 #The file searchers 
 zplug "junegunn/fzf-bin", as:command, from:gh-r, file:fzf, of:"*linux*64*"
@@ -45,30 +46,20 @@ fi
 # Then, source plugins and add commands to $PATH
 zplug load --verbose
 
+function my-line-init() {
 # Enable autosuggestions automatically.
- zle-line-init() {
-     zle autosuggest-start
-     }
-     zle -N zle-line-init
+	autosuggest_start
+}
+hooks-add-hook zle_line_init_hook my-line-init
 # Toggle Auto Suggest
 bindkey '^T' autosuggest-toggle
-
-#Add predict
-autoload predict-on
-predict-toggle() {
-  ((predict_on=1-predict_on)) && predict-on || predict-off
-}
-zle -N predict-toggle
-bindkey '^Z'   predict-toggle
-zstyle ':predict' toggle true
-zstyle ':predict' verbose true
 
 #Powerlevel 9k config
 POWERLEVEL9k_MODE='awesome-fontconfig'
 POWERLEVEL9K_PROMPT_ON_NEWLINE=true
 POWERLEVEL9K_MULTILINE_FIRST_PROMPT_PREFIX="%{%F{249}%}\u250f"
 POWERLEVEL9K_MULTILINE_SECOND_PROMPT_PREFIX="%{%F{249}%}\u2517%{%F{default}%}%{%F{249}%}\u27A4% %{%F{red}%}$%  "
-POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(context dir rbenv vcs)
+POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(context dir rbenv vcs vi_mode)
 POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status history time)
 POWERLEVEL9K_SHORTEN_DIR_LENGTH=1
 POWERLEVEL9K_SHORTEN_DELIMITER=""
