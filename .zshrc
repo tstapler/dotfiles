@@ -48,7 +48,7 @@ zplug load --verbose
 
 function my-line-init() {
 # Enable autosuggestions automatically.
-	autosuggest_start
+	autosuggest-start
 }
 hooks-add-hook zle_line_init_hook my-line-init
 # Toggle Auto Suggest
