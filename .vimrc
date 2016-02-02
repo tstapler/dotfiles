@@ -53,6 +53,8 @@ set number
 "Show the status line even with just one window
 set laststatus=2
 
+set cmdheight=2
+
 set omnifunc=syntaxcomplete#Complete
 
 " }}}
@@ -187,6 +189,8 @@ NeoBundle 'xolox/vim-session'
 NeoBundle 'dag/vim-fish'
 NeoBundle 'plasticboy/vim-markdown'
 NeoBundle 'dart-lang/dart-vim-plugin'
+NeoBundle 'Rip-Rip/clang_complete'
+NeoBundle 'shougo/echodoc.vim'
 
 call neobundle#end()
 
@@ -216,8 +220,11 @@ autocmd FileType vim setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 "Yaml filetype commands
 autocmd FileType yml setl indentkeys-=<:> tabstop=2 softtabstop=2 expandtab
 
+"fish filetype commands
 autocmd Filetype fish compiler fish setlocal textwidth=79  foldmethod=expr
 
+"C file
+autocmd FileType c setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 " }}}
 
 " Plugin Configuration {{{
@@ -274,9 +281,27 @@ let g:vimfiler_as_default_explorer = 1
 
 "Neocomplete config
 let g:neocomplete#enable_at_startup = 1
+let g:echodoc_enable_at_startup = 1
 let g:neocomplete#enable_auto_select = 0
 let g:neocomplcache_enable_at_startup = 0
 let g:neocomplete#use_vimproc = 1
+
+if !exists('g:neocomplete#force_omni_input_patterns')
+  let g:neocomplete#force_omni_input_patterns = {}
+endif
+let g:neocomplete#force_omni_input_patterns.c =
+      \ '[^.[:digit:] *\t]\%(\.\|->\)\w*'
+let g:neocomplete#force_omni_input_patterns.cpp =
+      \ '[^.[:digit:] *\t]\%(\.\|->\)\w*\|\h\w*::\w*'
+let g:neocomplete#force_omni_input_patterns.objc =
+      \ '\[\h\w*\s\h\?\|\h\w*\%(\.\|->\)'
+let g:neocomplete#force_omni_input_patterns.objcpp =
+      \ '\[\h\w*\s\h\?\|\h\w*\%(\.\|->\)\|\h\w*::\w*'
+let g:clang_complete_auto = 0
+let g:clang_auto_select = 0
+let g:clang_omnicppcomplete_compliance = 0
+let g:clang_make_default_keymappings = 0
+"let g:clang_use_library = 1
 
 " <TAB>: completion.
 inoremap <expr><TAB>  pumvisible() ? "\<C-n>" : "\<TAB>"
