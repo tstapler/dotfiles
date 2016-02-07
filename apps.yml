@@ -1,6 +1,8 @@
 # Apps - Things installed with apt-get
 ---
 standalone: 
+  #Desktop Apps
+  - touchegg
   #Languages
   - nodejs
   - golang
@@ -14,6 +16,7 @@ standalone:
   - valgrind
   - exuberant-ctags
   - pylint
+  - llvm
   #Shells
   - fish
   - zsh
