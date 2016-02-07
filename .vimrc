@@ -53,16 +53,15 @@ set number
 "Show the status line even with just one window
 set laststatus=2
 
+"Options to enable echodoc
 set cmdheight=2
+set completeopt-=preview
 
 set omnifunc=syntaxcomplete#Complete
 
 " }}}
 
 " Mappings {{{
-
-"Use the space bar to open/close folds
-nnoremap <space> za
 
 "Cycle through Quickfix list with F3 
 map <F3> :cn<Enter>
@@ -86,7 +85,7 @@ nnoremap <silent> <buffer> <cr> :JavaSearchContext<cr>
 
 "Unite mappings
 nnoremap <leader>f :Unite -buffer-name=search -start-insert -auto-preview grep:.<CR>
-nnoremap <space>y :Unite history/yank<cr>
+nnoremap <space>y :Unite history<cr>
 
 "File explorer like NerdTree
 nnoremap <C-e> :VimFilerExplorer<cr>
@@ -189,6 +188,11 @@ NeoBundle 'Rip-Rip/clang_complete'
 NeoBundle 'shougo/echodoc.vim'
 NeoBundle 'saltstack/salt-vim'
 NeoBundle 'pearofducks/ansible-vim'
+NeoBundle 'tpope/vim-dispatch'
+NeoBundle 'tpope/vim-eunuch'
+NeoBundle 'vim-scripts/bash-support.vim'
+NeoBundle 'mbbill/echofunc'
+NeoBundle 'rhysd/vim-clang-format'
 
 call neobundle#end()
 
@@ -203,26 +207,38 @@ NeoBundleCheck
 
 " Autocommands {{{
 
-"Makefile autocmd
+"Makefile filetype
 autocmd FileType make setlocal noexpandtab
 
-"Python autocmd
-autocmd FileType python setlocal tabstop=4 shiftwidth=4 softtabstop=4 expandtab
+"Python filetype
+autocmd FileType python compiler python setlocal tabstop=4 shiftwidth=4 softtabstop=4 expandtab
 
-"Javascript autocmd
+"Javascript filetype
 autocmd FileType javascript setlocal omnifunc=tern#Complete
 
 "vim autocmd
 autocmd FileType vim setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
-"Yaml filetype commands
-autocmd FileType yml setl indentkeys-=<:> tabstop=2 softtabstop=2 expandtab
+"Yaml filetype 
+autocmd FileType yml setlocal indentkeys-=<:> tabstop=2 softtabstop=2 expandtab
 
-"fish filetype commands
+"fish filetype 
 autocmd Filetype fish compiler fish setlocal textwidth=79  foldmethod=expr
 
-"C file
+"C filetype
 autocmd FileType c setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab
+
+"Dart filetype
+autocmd FileType dart setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab
+autocmd FileType dart setlocal errorformat+=%.%#\\\|%.%#\\\|%.%#\\\|%f\\\|%l\\\|%c\\\|%.%#\\\|%m
+autocmd FileType dart setlocal makeprg=dartanalyzer\ --machine\ %
+autocmd BufWritePre *.dart Make
+
+augroup Formatting
+    autocmd!
+    autocmd BufNew,BufRead *.txt,*.mkd setlocal formatoptions=ant textwidth=68 wrapmargin=0
+augroup END
+
 " }}}
 
 " Plugin Configuration {{{
@@ -254,8 +270,7 @@ elseif executable('ack-grep')
 	" Use ack
 	" http://beyondgrep.com/
 	let g:unite_source_grep_command = 'ack-grep'
-	let g:unite_source_grep_default_opts =
-				\ '-i --no-heading --no-color -k -H'
+	let g:unite_source_grep_default_opts = '-i --no-heading --no-color -k -H'
 	let g:unite_source_grep_recursive_opt = ''
 endif
 
@@ -341,6 +356,9 @@ let g:syntastic_quiet_messages = { "level": "warnings" }
 let g:syntastic_text_checkers = ['language_check']
 let g:syntastic_language_check_args = '--language=en-US'
 
+let g:syntastic_mode_map = { "mode": "active",
+  \ "passive_filetypes": ["dart"] }
+
 "Syntastic Extras Settings
 let g:syntastic_make_checkers = ['gnumake']
 let g:syntastic_javascript_checkers = ['json_tool']
@@ -417,6 +435,14 @@ let g:javascript_enable_domhtmlcss = 1
 
 "Vim-Session
 let g:session_autosave='no'
+
+"clang-format options
+let g:clang_format#style_options = {
+            \ "AccessModifierOffset" : -2,
+            \ "AllowShortIfStatementsOnASingleLine" : "true",
+            \ "AlwaysBreakTemplateDeclarations" : "true",
+            \ "Standard" : "Auto",
+            \ "BreakBeforeBraces" : "GNU"}
 
 " For conceal markers.
 if has('conceal')
