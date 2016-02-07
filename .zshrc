@@ -28,12 +28,13 @@ zplug "zsh-users/zsh-completions"
 zplug "b4b4r07/enhancd", of:enhancd.sh
 zplug "zsh-users/zaw"
 
-zplug "zsh-users/zsh-syntax-highlighting"
-zplug "tarruda/zsh-autosuggestions", at:v0.1.x
-
 #The file searchers 
 zplug "junegunn/fzf-bin", as:command, from:gh-r, file:fzf, of:"*linux*64*"
 zplug "peco/peco", as:command, from:gh-r, file:peco, of:"*linux_amd64*"
+
+zplug "zsh-users/zsh-syntax-highlighting"
+zplug "tarruda/zsh-autosuggestions", at:v0.1.x, of:autosuggestions.zsh
+
 
 # Install plugins if there are plugins that have not been installed
 if ! zplug check --verbose; then
@@ -48,7 +49,7 @@ zplug load --verbose
 
 function my-line-init() {
 # Enable autosuggestions automatically.
-	autosuggest-start
+	autosuggest_start
 }
 hooks-add-hook zle_line_init_hook my-line-init
 # Toggle Auto Suggest
@@ -74,11 +75,13 @@ POWERLEVEL9K_DIR_HOME_SUBFOLDER_FOREGROUND="208"
 # User configuration
 export PATH=$PATH:"/home/tstapler/stapler-config/env/bin:/home/tstapler/.pyenv/shims:/home/tstapler/.pyenv/shims:/home/tstapler/.pyenv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games"
 
-#Set GOPATH
+#Add Dart pub files to path
+export PATH=$PATH:"/home/tstapler/.pub-cache/bin"
+
 export GOPATH=$HOME/Programming/go
 
 #Add GO to PATH
-export PATH=$PATH:$GOPATH/bin
+export PATH="$PATH":"$GOPATH/bin"
 
 # Preferred editor for local and remote sessions
 if [[ -n $SSH_CONNECTION ]]; then
