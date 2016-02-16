@@ -103,6 +103,12 @@ imap <expr><TAB>
 smap <expr><TAB> neosnippet#expandable_or_jumpable() ?
 			\ "\<Plug>(neosnippet_expand_or_jump)" : "\<TAB>"
 
+" Set persistent_undo for undotree
+if has("persistent_undo")
+  set undodir=~/.undodir/
+  set undofile
+endif
+
 " }}}
 
 "Neobundle Config {{{
@@ -193,6 +199,7 @@ NeoBundle 'tpope/vim-eunuch'
 NeoBundle 'vim-scripts/bash-support.vim'
 NeoBundle 'mbbill/echofunc'
 NeoBundle 'rhysd/vim-clang-format'
+NeoBundle 'mbbill/undotree'
 
 call neobundle#end()
 
@@ -233,6 +240,9 @@ autocmd FileType dart setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 autocmd FileType dart setlocal errorformat+=%.%#\\\|%.%#\\\|%.%#\\\|%f\\\|%l\\\|%c\\\|%.%#\\\|%m
 autocmd FileType dart setlocal makeprg=dartanalyzer\ --machine\ %
 autocmd BufWritePre *.dart Make
+autocmd FileType dart inoremap {<cr> {<cr>}<c-o>O<tab>
+autocmd FileType dart inoremap [<cr> [<cr>]<c-o>O<tab>
+autocmd FileType dart inoremap (<cr> (<cr>)<c-o>O<tab>)]}
 
 augroup Formatting
     autocmd!
