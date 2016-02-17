@@ -1,3 +1,0 @@
----
-standalone:
-  - "github.com/peco/peco/cmd/peco"
