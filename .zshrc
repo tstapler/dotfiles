@@ -32,8 +32,8 @@ zplug "zsh-users/zaw"
 zplug "junegunn/fzf-bin", as:command, from:gh-r, file:fzf, of:"*linux*64*"
 zplug "peco/peco", as:command, from:gh-r, file:peco, of:"*linux_amd64*"
 
+zplug "tarruda/zsh-autosuggestions", of:dist/autosuggestions.zsh
 zplug "zsh-users/zsh-syntax-highlighting"
-zplug "tarruda/zsh-autosuggestions", at:v0.1.x, of:autosuggestions.zsh
 
 
 # Install plugins if there are plugins that have not been installed
