@@ -1,0 +1,12 @@
+#!/usr/bin/env ansible-playbook
+- name: "Install i3 packages"
+  hosts: localhost
+  tasks:
+    - apt: name={{item}} state=installed
+      with_items:
+      - i3
+      - dunst
+      - i3lock
+      - i3status
+      - suckless-tools
+      become: yes

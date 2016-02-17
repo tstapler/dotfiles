@@ -1,0 +1,12 @@
+#!/usr/bin/env ansible-playbook
+- name: "Install vim packages"
+  apt: name={{item}} state=installed
+  with_items:
+    - astyle
+    - clang-format
+    - ack-grep
+    - silversearcher-ag
+    - python-autopep8
+    - tidy
+    - pylint
+    - exuberant-ctags
