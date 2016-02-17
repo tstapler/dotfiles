@@ -1,0 +1,7 @@
+#Node JS Packages
+---
+standalone:
+  generators:
+    - js-beautify
+    - bower
+    - js-yaml

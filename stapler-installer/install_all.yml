@@ -1,0 +1,14 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: "Install all packages"
+  hosts: localhost
+  become: yes
+  tasks:
+    - include: tasks/stapler_apps.yml
+    - include: tasks/vim_apps.yml
+    - include: tasks/i3_apps.yml
+    - include: tasks/gems.yml
+    - include: tasks/node_packages.yml
+    - include: tasks/perl_packages.yml
+
+

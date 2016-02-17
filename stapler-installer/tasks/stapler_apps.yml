@@ -1,0 +1,28 @@
+#!/usr/bin/env ansible-playbook
+# Apps - Things installed with apt-get
+---
+- name: "Install standalone packages" 
+  apt: name={{item}} state=installed
+  with_items:
+    #Desktop Apps
+    - touchegg
+    #Languages
+    - nodejs
+    - golang
+    - openjdk-7-jdk
+    #Dev Tools
+    - vim-gtk
+    - automake
+    - gcc
+    - cmake
+    - gdb
+    - valgrind
+    - exuberant-ctags
+    - pylint
+    - llvm
+    #Shells
+    - fish
+    - zsh
+    #CLI Utilities
+    - toilet
+    - nmap
