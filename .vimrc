@@ -218,7 +218,7 @@ NeoBundleCheck
 autocmd FileType make setlocal noexpandtab
 
 "Python filetype
-autocmd FileType python compiler python setlocal tabstop=4 shiftwidth=4 softtabstop=4 expandtab
+autocmd FileType python setlocal tabstop=4 shiftwidth=4 softtabstop=4 expandtab
 
 "Javascript filetype
 autocmd FileType javascript setlocal omnifunc=tern#Complete
