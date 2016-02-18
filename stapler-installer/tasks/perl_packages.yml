@@ -2,8 +2,6 @@
 #Perl Packages - installed from cpan
 ---
 - name: "Install perl packages"
-  hosts: localhost
-  tasks:
-    - cpanm: name={{item}}
-      with_items:
-        - yamlxs
+  cpanm: name={{item}}
+    with_items:
+      - yamlxs

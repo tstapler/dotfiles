@@ -7,8 +7,8 @@
     - include: tasks/stapler_apps.yml
     - include: tasks/vim_apps.yml
     - include: tasks/i3_apps.yml
-    - include: tasks/gems.yml
     - include: tasks/node_packages.yml
     - include: tasks/perl_packages.yml
+    - include: tasks/gems.yml
 
 
