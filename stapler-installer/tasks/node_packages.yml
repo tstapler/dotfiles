@@ -1,7 +1,9 @@
+#!/usr/bin/env ansible-playbook
 #Node JS Packages
 ---
-standalone:
-  generators:
+- name: "Install all global node packages"
+  npm: name={{item}} global= yes state=installed
+  with_items:
     - js-beautify
     - bower
     - js-yaml

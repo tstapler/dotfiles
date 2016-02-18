@@ -1,6 +1,10 @@
 # Ruby Gems
 ---
-stand-alone:
-  - ruby-beautify
-wemux:
-  - wemux-pair
+- name: "Install all gems"
+  gem: name={{item}} state=present
+  with_items:
+    #Standalone
+    - ruby-beautify
+    #Wemux
+    - wemux-pair
+  become: yes

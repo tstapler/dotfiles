@@ -20,6 +20,8 @@
     - exuberant-ctags
     - pylint
     - llvm
+    #Security Tools
+    - apparmor
     #Shells
     - fish
     - zsh
