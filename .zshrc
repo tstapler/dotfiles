@@ -32,7 +32,7 @@ zplug "zsh-users/zaw"
 zplug "junegunn/fzf-bin", as:command, from:gh-r, file:fzf, of:"*linux*64*"
 zplug "peco/peco", as:command, from:gh-r, file:peco, of:"*linux_amd64*"
 
-zplug "tarruda/zsh-autosuggestions", of:dist/autosuggestions.zsh
+zplug "tarruda/zsh-autosuggestions"
 zplug "zsh-users/zsh-syntax-highlighting"
 
 
