@@ -1,16 +1,23 @@
 #!/usr/bin/env ansible-playbook
 # Apps - Things installed with apt-get
 ---
+- name: "Add Repos for standalone packages"
+  apt_repository: repo={{item}} state=present
+  with_items:
+    - ppa:shutter/ppa
+
 - name: "Install standalone packages" 
   apt: name={{item}} state=installed
   with_items:
     #Desktop Apps
     - touchegg
+    - shutter
     #Languages
     - nodejs
     - golang
     - openjdk-7-jdk
     #Dev Tools
+    - neovim
     - vim-gtk
     - automake
     - gcc
