@@ -4,6 +4,10 @@
 - name: "Install all global node packages"
   npm: name={{item}} global= yes state=installed
   with_items:
-    - js-beautify
+    #CLI Apps
     - bower
+    - grunt-cli
+    #Checkers and Linters
+    - js-beautify
     - js-yaml
+
