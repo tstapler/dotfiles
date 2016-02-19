@@ -78,14 +78,12 @@ nnoremap <buffer> <F9> :exec '!python' shellescape(@%, 1)<cr>
 "Mapping for Tagbar
 nnoremap <leader>t :TagbarToggle<cr>
 
-"Mappings for Eclim
-nnoremap <silent> <buffer> <leader>i :JavaImport<cr>
-nnoremap <silent> <buffer> <leader>d :JavaDocSearch -x declarations<cr>
-nnoremap <silent> <buffer> <cr> :JavaSearchContext<cr>
-
 "Unite mappings
+"Grep in current directory
 nnoremap <leader>f :Unite -buffer-name=search -start-insert -auto-preview grep:.<CR>
-nnoremap <space>y :Unite history<cr>
+
+"Fuzzy search like ctrl-p
+nnoremap <C-P> :call Unite_ctrlp()<cr>
 
 "File explorer like NerdTree
 nnoremap <C-e> :VimFilerExplorer<cr>
@@ -102,6 +100,10 @@ imap <expr><TAB>
 			\    "\<Plug>(neosnippet_expand_or_jump)" : "\<TAB>"
 smap <expr><TAB> neosnippet#expandable_or_jumpable() ?
 			\ "\<Plug>(neosnippet_expand_or_jump)" : "\<TAB>"
+
+" <TAB>: completion.
+inoremap <expr><TAB>  pumvisible() ? "\<C-n>" : "\<TAB>"
+" Recommended key-mappings.
 
 " Set persistent_undo for undotree
 if has("persistent_undo")
@@ -153,7 +155,6 @@ NeoBundle 'tpope/vim-surround'
 NeoBundle 'tpope/vim-commentary'
 NeoBundle 'flazz/vim-colorschemes'
 NeoBundle 'Chiel92/vim-autoformat'
-NeoBundle 'dansomething/vim-eclim'
 NeoBundle 'rking/ag.vim'
 NeoBundle 'tapichu/asm2d-vim'
 NeoBundle 'Shougo/vimfiler.vim'
@@ -261,11 +262,9 @@ call unite#custom#source('file,file/new,buffer,te -buffer-name=search -start-ins
 " Build the ctrlp function, using projectroot to define the 
 " working directory.
 function! Unite_ctrlp()
-	execute ':Unite  -buffer-name=files -start-insert -match-input buffer file_rec/async:'.ProjectRootGuess().'/'
+	execute ':Unite  -buffer-name=files -start-insert -match-input buffer file_rec/async'
 endfunction
 
-"Fuzzy search like ctrl-p
-nnoremap <C-P> :call Unite_ctrlp()<cr>
 
 "Select Search
 if executable('Ag')
@@ -326,9 +325,6 @@ let g:clang_omnicppcomplete_compliance = 0
 let g:clang_make_default_keymappings = 0
 "let g:clang_use_library = 1
 
-" <TAB>: completion.
-inoremap <expr><TAB>  pumvisible() ? "\<C-n>" : "\<TAB>"
-" Recommended key-mappings.
 
 "Airline Config
 let g:airline#extensions#tabline#enabled = 1
@@ -432,9 +428,6 @@ let g:gitgutter_max_signs = 1000
 
 "Easytags Settings
 let g:easytags_async = 1
-
-"Eclim settings
-let g:EclimFileTypeValidate = 0
 
 "EasyTags settings
 let g:easytags_async = 1
