@@ -201,6 +201,7 @@ NeoBundle 'vim-scripts/bash-support.vim'
 NeoBundle 'mbbill/echofunc'
 NeoBundle 'rhysd/vim-clang-format'
 NeoBundle 'mbbill/undotree'
+NeoBundle 'christoomey/vim-sort-motion'
 
 call neobundle#end()
 
@@ -245,10 +246,9 @@ autocmd FileType dart inoremap {<cr> {<cr>}<c-o>O<tab>
 autocmd FileType dart inoremap [<cr> [<cr>]<c-o>O<tab>
 autocmd FileType dart inoremap (<cr> (<cr>)<c-o>O<tab>)]}
 
-augroup Formatting
-    autocmd!
-    autocmd BufNew,BufRead *.txt,*.mkd setlocal formatoptions=ant textwidth=68 wrapmargin=0
-augroup END
+"Markdown filetype
+au! BufRead,BufNewFile *.markdown set filetype=mkd
+au! BufRead,BufNewFile *.md       set filetype=mkd
 
 " }}}
 
