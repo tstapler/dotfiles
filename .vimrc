@@ -201,6 +201,7 @@ NeoBundle 'vim-scripts/bash-support.vim'
 NeoBundle 'mbbill/echofunc'
 NeoBundle 'rhysd/vim-clang-format'
 NeoBundle 'mbbill/undotree'
+NeoBundle 'idanarye/vim-vebugger'
 
 call neobundle#end()
 
