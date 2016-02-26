@@ -1,4 +1,0 @@
-click==6.2
-plumbum==1.6.1.post0
-PyYAML==3.11
-wheel==0.24.0
