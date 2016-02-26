@@ -12,8 +12,15 @@
 set nocompatible
 set t_Co=256
 
-"Change the shell from fish to support NeoBundle
+"Change the shell to vanilla to support NeoBundle
 set shell=/bin/bash
+
+"Enable mouse usage for scrolling and resizing splits
+set mouse+=a
+if &term =~ '^screen'
+    " tmux knows the extended mouse mode
+    set ttymouse=xterm2
+endif
 
 "Set map leader
 let mapleader=","
@@ -43,8 +50,6 @@ set magic
 set wildmenu
 set wildmode=longest:list,full
 
-"Vim master race
-
 "Show search results as typing
 set incsearch
 "Show line numbers
@@ -53,11 +58,7 @@ set number
 "Show the status line even with just one window
 set laststatus=2
 
-"Options to enable echodoc
-set cmdheight=2
-set completeopt-=preview
-
-set omnifunc=syntaxcomplete#Complete
+"set omnifunc=syntaxcomplete#Complete
 
 " }}}
 
@@ -192,16 +193,15 @@ NeoBundle 'dag/vim-fish'
 NeoBundle 'plasticboy/vim-markdown'
 NeoBundle 'dart-lang/dart-vim-plugin'
 NeoBundle 'Rip-Rip/clang_complete'
-NeoBundle 'shougo/echodoc.vim'
 NeoBundle 'saltstack/salt-vim'
 NeoBundle 'pearofducks/ansible-vim'
 NeoBundle 'tpope/vim-dispatch'
 NeoBundle 'tpope/vim-eunuch'
 NeoBundle 'vim-scripts/bash-support.vim'
-NeoBundle 'mbbill/echofunc'
 NeoBundle 'rhysd/vim-clang-format'
 NeoBundle 'mbbill/undotree'
 NeoBundle 'christoomey/vim-sort-motion'
+NeoBundle 'lervag/vimtex'
 
 call neobundle#end()
 
@@ -247,8 +247,8 @@ autocmd FileType dart inoremap [<cr> [<cr>]<c-o>O<tab>
 autocmd FileType dart inoremap (<cr> (<cr>)<c-o>O<tab>)]}
 
 "Markdown filetype
-au! BufRead,BufNewFile *.markdown set filetype=mkd
-au! BufRead,BufNewFile *.md       set filetype=mkd
+au! FileType,BufRead,BufNewFile *.markdown set filetype=mkd spell
+au! FileType,BufRead,BufNewFile *.md       set filetype=mkd spell
 
 " }}}
 
@@ -303,7 +303,6 @@ let g:vimfiler_as_default_explorer = 1
 
 "Neocomplete config
 let g:neocomplete#enable_at_startup = 1
-let g:echodoc_enable_at_startup = 1
 let g:neocomplete#enable_auto_select = 0
 let g:neocomplcache_enable_at_startup = 0
 let g:neocomplete#use_vimproc = 1
@@ -324,6 +323,17 @@ let g:clang_auto_select = 0
 let g:clang_omnicppcomplete_compliance = 0
 let g:clang_make_default_keymappings = 0
 "let g:clang_use_library = 1
+
+if !exists('g:neocomplete#force_omni_input_patterns')
+  let g:neocomplete#force_omni_input_patterns = {}
+endif
+let g:neocomplete#force_omni_input_patterns.tex =
+      \ '\v\\%('
+      \ . '\a*cite\a*%(\s*\[[^]]*\]){0,2}\s*\{[^}]*'
+      \ . '|\a*ref%(\s*\{[^}]*|range\s*\{[^,}]*%(}\{)?)'
+      \ . '|includegraphics\*?%(\s*\[[^]]*\]){0,2}\s*\{[^}]*'
+      \ . '|%(include%(only)?|input)\s*\{[^}]*'
+      \ . ')'
 
 
 "Airline Config
