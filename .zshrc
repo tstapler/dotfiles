@@ -80,6 +80,7 @@ export PATH=$PATH:"/home/tstapler/.pub-cache/bin"
 
 export GOPATH=$HOME/Programming/go
 
+export TEXMFHOME=~/texmf
 #Add GO to PATH
 export PATH="$PATH":"$GOPATH/bin"
 
