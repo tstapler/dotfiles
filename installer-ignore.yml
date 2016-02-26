@@ -1,0 +1,11 @@
+#Globbing patterns to ignore when
+#linking config files to home dir
+---
+- .*stapler.*
+- .*\.git
+- .*\.swp
+- .*\.yml
+- env
+- .*\.txt
+- .ropeproject
+- awesome.*
