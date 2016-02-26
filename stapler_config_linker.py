@@ -10,7 +10,7 @@ home_dir = os.path.expanduser('~')
 
 #Read installer ignore file
 ignored = [line.split("#", 1)[0].strip("\n")
-            for line in open(join(config_dir, "installer-ignore.yml"))
+            for line in open(join(config_dir, ".linkerignore"))
             if line.split("#", 1)[0] != ""]
 ignore_patterns = "(" + ")|(".join(ignored) + ")"
 
