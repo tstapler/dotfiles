@@ -202,6 +202,7 @@ NeoBundle 'rhysd/vim-clang-format'
 NeoBundle 'mbbill/undotree'
 NeoBundle 'christoomey/vim-sort-motion'
 NeoBundle 'lervag/vimtex'
+NeoBundle 'idanarye/vim-vebugger'
 
 call neobundle#end()
 
