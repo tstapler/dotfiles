@@ -192,6 +192,9 @@ NeoBundle 'xolox/vim-session'
 NeoBundle 'dag/vim-fish'
 NeoBundle 'plasticboy/vim-markdown'
 NeoBundle 'dart-lang/dart-vim-plugin'
+NeoBundle 'miyakogi/vim-dartanalyzer'
+NeoBundle 'jceb/vim-hier'
+NeoBundle 'dannyob/quickfixstatus'
 NeoBundle 'Rip-Rip/clang_complete'
 NeoBundle 'saltstack/salt-vim'
 NeoBundle 'pearofducks/ansible-vim'
@@ -203,6 +206,8 @@ NeoBundle 'mbbill/undotree'
 NeoBundle 'christoomey/vim-sort-motion'
 NeoBundle 'lervag/vimtex'
 NeoBundle 'idanarye/vim-vebugger'
+NeoBundle 'ekalinin/Dockerfile.vim'
+NeoBundle 'suan/vim-instant-markdown'
 
 call neobundle#end()
 
@@ -240,12 +245,9 @@ autocmd FileType c setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
 "Dart filetype
 autocmd FileType dart setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab
-autocmd FileType dart setlocal errorformat+=%.%#\\\|%.%#\\\|%.%#\\\|%f\\\|%l\\\|%c\\\|%.%#\\\|%m
-autocmd FileType dart setlocal makeprg=dartanalyzer\ --machine\ %
-autocmd BufWritePre *.dart Make
-autocmd FileType dart inoremap {<cr> {<cr>}<c-o>O<tab>
-autocmd FileType dart inoremap [<cr> [<cr>]<c-o>O<tab>
-autocmd FileType dart inoremap (<cr> (<cr>)<c-o>O<tab>)]}
+"autocmd FileType dart inoremap {<cr> {<cr>}<c-o>O<tab>
+"autocmd FileType dart inoremap [<cr> [<cr>]<c-o>O<tab>
+"autocmd FileType dart inoremap (<cr> (<cr>)<c-o>O<tab>)]}
 
 "Markdown filetype
 au! FileType,BufRead,BufNewFile *.markdown set filetype=mkd spell
@@ -458,6 +460,7 @@ let g:clang_format#style_options = {
             \ "Standard" : "Auto",
             \ "BreakBeforeBraces" : "GNU"}
 
+
 " For conceal markers.
 if has('conceal')
 	set conceallevel=2 concealcursor=niv
@@ -468,5 +471,3 @@ augroup myvimrc
 	au!
 	au BufWritePost .vimrc,_vimrc,vimrc,.gvimrc,_gvimrc,gvimrc,.vimrc.local,.vimrc.bundle.local so $MYVIMRC | if has('gui_running') | so $MYGVIMRC | endif
 	augroup END
-
-" }}}
