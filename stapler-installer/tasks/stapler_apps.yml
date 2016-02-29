@@ -17,6 +17,7 @@
     #Desktop Apps
     - touchegg
     - shutter
+    - xdotool
     #Languages
     - nodejs
     - golang
@@ -32,6 +33,7 @@
     - exuberant-ctags
     - pylint
     - llvm
+    - markdown
     #Security Tools
     - apparmor
     #Shells
