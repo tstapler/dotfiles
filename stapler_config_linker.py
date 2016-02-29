@@ -47,7 +47,6 @@ def find_absences(source=config_dir, destination=home_dir):
         # Create list of dirs that dont exist
         for dir_name in dirs:
             if not os.path.exists(join(destination, rel_path, dir_name)):
-                print "Doesnt Exist"
                 absent_dirs.append(join(destination, rel_path, dir_name))
 
         # Create a list of files to be symlinked
@@ -56,7 +55,7 @@ def find_absences(source=config_dir, destination=home_dir):
                 # Add the source and destination for the symlink
                 to_link.append((join(root, f), join(destination, rel_path, f)))
 
-        return to_link, absent_dirs
+    return to_link, absent_dirs
 
 def create_dirs_and_link(links=[], dirs=[]):
         for dir_name in dirs:
