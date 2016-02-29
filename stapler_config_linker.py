@@ -8,20 +8,20 @@ install_platform = sys.platform
 config_dir = os.path.split(os.path.abspath(__file__))[0]
 home_dir = os.path.expanduser('~')
 
-#Read installer ignore file
+# Read installer ignore file
 ignored = [line.split("#", 1)[0].strip("\n")
-            for line in open(join(config_dir, ".linkerignore"))
-            if line.split("#", 1)[0] != ""]
+           for line in open(join(config_dir, ".linkerignore"))
+           if line.split("#", 1)[0] != ""]
 ignore_patterns = "(" + ")|(".join(ignored) + ")"
 
-def link_configs(config_dir=config_dir, destination= home_dir):
+
+def link_configs(config_dir=config_dir, dest=home_dir):
     """Symlinks configuration files to the destination directory
 
         Parses the ignore file for regexes and then generates a list of files
         which need to be simulinked"""
 
-    to_link, absent_dirs = find_absences(source=config_dir, destination=destination)
-
+    to_link, absent_dirs = find_absences(source=config_dir, destination=dest)
 
     if len(to_link) == 0:
         print("No files to move")
@@ -30,9 +30,20 @@ def link_configs(config_dir=config_dir, destination= home_dir):
     print("Preparing to symlink the following files")
     print("\n".join(link[1] for link in to_link))
     if query_yes_no("Are these the correct files?"):
-        create_dirs_and_link(links=to_link, dirs=absent_dirs)
+        create_dirs(dirs=absent_dirs)
+        create_links(links=to_link)
+
 
 def find_absences(source=config_dir, destination=home_dir):
+    """ Walk the source directory and return a lists of diles and dirs absent
+        from the destination directory
+
+        "source": The location to copy from (Default is the script's location)
+        "destination" The location to copy to (Defaults to home directory)
+
+        The return value to_link is a list of tuples (source_dir, dest_dir)
+        The return value absent_dirs is a list of paths to directories
+    """
     absent_dirs = []
     to_link = []
     for root, dirs, files in os.walk(source, topdown=True):
@@ -41,7 +52,8 @@ def find_absences(source=config_dir, destination=home_dir):
             rel_path = ""
 
         # Remove ignored directories from the walk
-        dirs[:] = [dir_name for dir_name in dirs if not re.match(ignore_patterns, dir_name)]
+        dirs[:] = [dir_name for dir_name in dirs
+                   if not re.match(ignore_patterns, dir_name)]
         files[:] = [f for f in files if not re.match(ignore_patterns, f)]
 
         # Create list of dirs that dont exist
@@ -51,21 +63,37 @@ def find_absences(source=config_dir, destination=home_dir):
 
         # Create a list of files to be symlinked
         for f in files:
-            if not os.path.exists(join(destination, rel_path,f)):
+            if not os.path.exists(join(destination, rel_path, f)):
                 # Add the source and destination for the symlink
                 to_link.append((join(root, f), join(destination, rel_path, f)))
 
     return to_link, absent_dirs
 
-def create_dirs_and_link(links=[], dirs=[]):
-        for dir_name in dirs:
-            os.makedirs(dir_name)
-        for link in links:
-            os.symlink(link[0], link[1])
+
+def create_dirs(dirs=[]):
+    """
+    Make sure that each of the given paths exist
+
+    "dirs": A list of paths to to be created
+
+    """
+    for dir_name in dirs:
+        os.makedirs(dir_name)
+
+
+def create_links(links=[]):
+    """
+    Create symlinks for each item in links
+
+    "links": tuples containing the following items (source, destination)
+    """
+    for link in links:
+        os.symlink(link[0], link[1])
 
 
 def query_yes_no(question, default="yes"):
-    """Ask a yes/no question via raw_input() and return their answer.
+    """
+    Ask a yes/no question via raw_input() and return their answer.
 
     "question" is a string that is presented to the user.
     "default" is the presumed answer if the user just hits <Enter>.
