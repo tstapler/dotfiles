@@ -141,6 +141,7 @@ NeoBundle 'Shougo/context_filetype.vim'
 NeoBundle 'Shougo/neoinclude.vim'
 NeoBundle 'Shougo/neosnippet'
 NeoBundle 'Shougo/neosnippet-snippets'
+NeoBundle 'honza/vim-snippets'
 NeoBundle 'Shougo/neco-syntax'
 NeoBundle 'Shougo/neopairs.vim'
 NeoBundle 'Shougo/unite.vim'
@@ -465,6 +466,8 @@ let g:clang_format#style_options = {
 if has('conceal')
 	set conceallevel=2 concealcursor=niv
 endif
+
+let g:neosnippet#snippets_directory='~/.vimsnippets/*.snip'
 
 "Auto Refresh Config if updated
 augroup myvimrc
