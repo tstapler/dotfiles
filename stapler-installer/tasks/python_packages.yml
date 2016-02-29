@@ -7,3 +7,4 @@
       - ipdb
       - docker
       - docker-composer
+      - grip
