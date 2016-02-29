@@ -1,7 +1,0 @@
-#!/usr/bin/env ansible-playbook
-#Perl Packages - installed from cpan
----
-- name: "Install perl packages"
-  cpanm: name={{item}}
-    with_items:
-      - yamlxs
