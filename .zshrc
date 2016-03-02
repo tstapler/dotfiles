@@ -47,11 +47,6 @@ fi
 # Then, source plugins and add commands to $PATH
 zplug load --verbose
 
-function my-line-init() {
-# Enable autosuggestions automatically.
-	autosuggest_start
-}
-hooks-add-hook zle_line_init_hook my-line-init
 # Toggle Auto Suggest
 bindkey '^T' autosuggest-toggle
 
