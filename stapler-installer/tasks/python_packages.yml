@@ -7,4 +7,7 @@
       - ipdb
       - docker
       - docker-composer
+      #Vim
       - grip
+      - html-tree-diff
+      - pandocfilters

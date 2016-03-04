@@ -7,6 +7,8 @@
     - E1DF1F24 # Git Core
     - 009ED615 # Shutter
     - 8231B6DD # NeoVim
+    - 4716DAB5 # Mixxx
+    - BBEBDCB318AD50EC6865090613B00F1FD2C19886 # SPOTIFY
 
 - name: "Add Repos for standalone packages"
   apt_repository: repo={{item}} state=present update_cache=yes
@@ -14,6 +16,8 @@
     - deb http://ppa.launchpad.net/git-core/ppa/ubuntu trusty main 
     - deb http://ppa.launchpad.net/shutter/ppa/ubuntu trusty main
     - deb http://ppa.launchpad.net/neovim-ppa/unstable/ubuntu trusty main 
+    - deb http://ppa.launchpad.net/mixxx/mixxx/ubuntu trusty main
+    - deb http://repository.spotify.com stable non-free
 
 - name: "Install standalone packages" 
   apt: name={{item}} state=installed
@@ -22,6 +26,8 @@
     - touchegg
     - shutter
     - xdotool
+    - mixxx
+    - spotify-client
     #Languages
     - nodejs
     - golang
@@ -37,8 +43,32 @@
     - valgrind
     - exuberant-ctags
     - pylint
-    - llvm
+    - llvm-3.6
     - markdown
+    # Arduro
+    - libboost-all-dev
+    - libasound2-dev
+    - libglibmm-2.4-dev
+    - libcurl3-dev
+    - libsndfile1-dev
+    - liblo-dev
+    - libtag1-dev
+    - vamp-plugin-sdk
+    - librubberband-dev
+    - libfftw3-dev
+    - libaubio-dev
+    - libcwiid-dev
+    - libcppunit-dev
+    - liblrdf*
+    - libsamplerate-dev
+    - lv2-dev
+    - libserd-dev
+    - libsord-dev
+    - libsratom-dev
+    - liblilv-dev
+    - libsuil-dev
+    - libgtkmm-2.4-dev
+    - libjack-jackd2-dev
     #Security Tools
     - apparmor
     #Shells
