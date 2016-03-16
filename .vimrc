@@ -176,7 +176,7 @@ NeoBundle 'Shougo/vimshell.vim'
 NeoBundle 'Shougo/neossh.vim'
 NeoBundle 'majutsushi/tagbar'
 NeoBundle 'xolox/vim-misc'
-NeoBundle 'xolox/vim-easytags'
+"NeoBundle 'xolox/vim-easytags'
 NeoBundle 'airblade/vim-gitgutter'
 NeoBundle 'Cognoscan/vim-vhdl'
 NeoBundle 'dbakker/vim-projectroot'
@@ -192,11 +192,9 @@ NeoBundle 'mattn/emmet-vim'
 NeoBundle 'heavenshell/vim-jsdoc'
 NeoBundle 'tpope/vim-repeat'
 NeoBundle 'klen/python-mode'
-NeoBundle 'xolox/vim-session'
 NeoBundle 'dag/vim-fish'
 NeoBundle 'plasticboy/vim-markdown'
 NeoBundle 'dart-lang/dart-vim-plugin'
-NeoBundle 'miyakogi/vim-dartanalyzer'
 NeoBundle 'jceb/vim-hier'
 NeoBundle 'dannyob/quickfixstatus'
 NeoBundle 'Rip-Rip/clang_complete'
@@ -219,6 +217,8 @@ NeoBundle 'vim-pandoc/vim-pandoc-after'
 NeoBundle 'tex/vimpreviewpandoc'
 NeoBundle 'lambdalisue/vim-pandoc-preview'
 NeoBundle 'mattn/webapi-vim'
+NeoBundle 'LucHermitte/lh-vim-lib', {'name': 'lh-vim-lib'}
+NeoBundle 'LucHermitte/local_vimrc', {'depends': 'lh-vim-lib'}
 
 call neobundle#end()
 
@@ -273,6 +273,9 @@ augroup pandoc
   au Filetype pandoc let loaded_delimitMate = 1 
   au Filetype pandoc :DelimitMateSwitch
 augroup END
+
+"html
+au FileType html setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
 " }}}
 
@@ -460,18 +463,14 @@ let g:tagbar_type_vhdl = {
       \}
 let g:gitgutter_max_signs = 1000
 
-"Easytags Settings
-let g:easytags_async = 1
-
 "EasyTags settings
+let g:easytags_auto_update = 1
+let g:easytags_on_cursorhold = 0
 let g:easytags_async = 1
-let g:easytags_always_enabled = 1
+let g:easytags_resolve_links = 1
 
 "Vim-Javascript settings
 let g:javascript_enable_domhtmlcss = 1
-
-"Vim-Session
-let g:session_autosave='no'
 
 "clang-format options
 let g:clang_format#style_options = {
@@ -503,6 +502,9 @@ let g:pandoc#folding#mode = "relative"
 let g:pandoc#after#modules#enabled = ["nrrwrgn", "tablemode", "unite"]
 let g:pandoc#completion#bib#mode = 'citeproc'
 let g:pandoc#syntax#colorcolumn = 1
+
+"Emmet settings
+let g:user_emmet_leader_key='<leader>e'
 
 augroup myvimrc
   au!
