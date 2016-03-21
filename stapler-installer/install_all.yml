@@ -3,16 +3,11 @@
 - name: "Install all packages"
   hosts: localhost
   become: yes
-  tasks:
-    - name: "Install packages using apt-get"
-      include: tasks/stapler_apps.yml
-    - name: "Install vim specific packages"
-      include: tasks/vim_apps.yml
-    - name: "Install i3 WM specific packages"
-      include: tasks/i3_apps.yml
-    - name: "Install node packages using npm"
-      include: tasks/node_packages.yml
-    - name: "Install ruby gems using gem"
-      include: tasks/gems.yml
+  roles:
+    - package_manager
+    - script_installers
+    - pip
+    - go
+    - node
 
 

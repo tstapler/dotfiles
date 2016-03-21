@@ -9,6 +9,8 @@
     - 8231B6DD # NeoVim
     - 4716DAB5 # Mixxx
     - BBEBDCB318AD50EC6865090613B00F1FD2C19886 # SPOTIFY
+    - CA8DA16B # apt-fast
+    - 852541CB # Audacity
 
 - name: "Add Repos for standalone packages"
   apt_repository: repo={{item}} state=present update_cache=yes
@@ -18,6 +20,8 @@
     - deb http://ppa.launchpad.net/neovim-ppa/unstable/ubuntu trusty main 
     - deb http://ppa.launchpad.net/mixxx/mixxx/ubuntu trusty main
     - deb http://repository.spotify.com stable non-free
+    - deb http://ppa.launchpad.net/apt-fast/stable/ubuntu trusty main
+    - deb http://ppa.launchpad.net/ubuntuhandbook1/audacity/ubuntu trusty main 
 
 - name: "Install standalone packages" 
   apt: name={{item}} state=installed
@@ -32,6 +36,7 @@
     - nodejs
     - golang
     - openjdk-7-jdk
+    - cabal-install
     #Dev Tools
     - git
     - neovim
@@ -45,7 +50,31 @@
     - pylint
     - llvm-3.6
     - markdown
-    # Arduro
+    - texlive-full
+    - texlive-latex-extra
+    #GUI Utils
+    - audacity
+    - gnucash
+    #Security Tools
+    - apparmor
+    #Shells
+    - fish
+    - zsh
+    #CLI Utilities
+    - toilet
+    - nmap
+    #Dependencies
+    ##Git-Annex
+    - libgnutls-dev
+    - liblz-dev
+    - libxml-sax-perl
+    - pkg-config
+    - libidn11-dev
+    - libxml2-dev
+    - libgsasl7-dev
+    - libmagic-dev
+    - libghc-gnuidn-dev
+    ## Arduro
     - libboost-all-dev
     - libasound2-dev
     - libglibmm-2.4-dev
@@ -69,11 +98,3 @@
     - libsuil-dev
     - libgtkmm-2.4-dev
     - libjack-jackd2-dev
-    #Security Tools
-    - apparmor
-    #Shells
-    - fish
-    - zsh
-    #CLI Utilities
-    - toilet
-    - nmap

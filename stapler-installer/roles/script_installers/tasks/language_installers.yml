@@ -1,0 +1,11 @@
+---
+- name: Install RVM
+  shell: "curl -sSL https://get.rvm.io | bash"
+
+- name: Install Go
+  unarchive: 
+    src=https://storage.googleapis.com/golang/go1.5.3.linux-amd64.tar.gz 
+    dest=/usr/local
+    creates=/usr/local/go
+    copy=no
+  become: yes

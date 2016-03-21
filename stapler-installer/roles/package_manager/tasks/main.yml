@@ -1,0 +1,5 @@
+- name: Import General Apps
+  include: stapler_apps.yml
+
+- name: Include i3 window manager 
+  include: i3_apps.yml
