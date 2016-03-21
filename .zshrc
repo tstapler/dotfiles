@@ -70,14 +70,20 @@ POWERLEVEL9K_DIR_HOME_SUBFOLDER_FOREGROUND="208"
 # User configuration
 export PATH=$PATH:"/home/tstapler/stapler-config/env/bin:/home/tstapler/.pyenv/shims:/home/tstapler/.pyenv/shims:/home/tstapler/.pyenv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games"
 
-#Add Dart pub files to path
+#Add Dart pub files to PATH
 export PATH=$PATH:"/home/tstapler/.pub-cache/bin"
 
-export GOPATH=$HOME/Programming/go
+#Add Go to PATH
+export GOPATH=/usr/local/go
 
+#Add LaTex files to PATH
 export TEXMFHOME=~/texmf
+
 #Add GO to PATH
 export PATH="$PATH":"$GOPATH/bin"
+
+#Add Cabal to PATH
+export PATH="$HOME/.cabal/bin:"$PATH
 
 # Preferred editor for local and remote sessions
 if [[ -n $SSH_CONNECTION ]]; then
