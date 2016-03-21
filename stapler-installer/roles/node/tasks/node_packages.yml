@@ -7,6 +7,9 @@
     #CLI Apps
     - bower
     - grunt-cli
+    - pm2
+    - supervisor
+    - knex
     #Checkers and Linters
     - js-beautify
     - js-yaml
