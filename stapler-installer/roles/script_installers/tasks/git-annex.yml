@@ -1,0 +1,13 @@
+---
+- name: Install Git Annex
+  unarchive:
+    copy=no
+    src=https://downloads.kitenet.net/git-annex/linux/current/git-annex-standalone-amd64.tar.gz
+    dest=/usr/local/
+    creates=/usr/local/git-annex.linux
+
+- name: Symlink Git Annex
+  file: src=/usr/local/git-annex.linux/{{item}} dest=/usr/bin/{{item}} state=link
+  with_items:
+    - git-annex
+

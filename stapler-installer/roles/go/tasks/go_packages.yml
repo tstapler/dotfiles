@@ -1,0 +1,4 @@
+---
+- name: "Go Packages"
+  shell: "go get github.com/peco/peco/cmd/peco"
+  

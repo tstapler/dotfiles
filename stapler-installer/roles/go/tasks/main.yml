@@ -1,0 +1,3 @@
+- name: Go Packages
+  include: go_packages.yml
+  become: yes
