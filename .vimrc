@@ -240,7 +240,7 @@ au FileType make setlocal noexpandtab
 au FileType python setlocal tabstop=4 shiftwidth=4 softtabstop=4 expandtab
 
 "Javascript filetype
-au FileType javascript setlocal omnifunc=tern#Complete
+au FileType javascript setlocal omnifunc=tern#Complete tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
 "vim autocmd
 au FileType vim setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab
