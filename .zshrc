@@ -73,7 +73,7 @@ export PATH=$PATH:"/home/tstapler/stapler-config/env/bin:/home/tstapler/.pyenv/s
 #Add Dart pub files to PATH
 export PATH=$PATH:"/home/tstapler/.pub-cache/bin"
 
-#Add Go to PATH
+#Create Go Path
 export GOPATH=/usr/local/go
 
 #Add LaTex files to PATH
