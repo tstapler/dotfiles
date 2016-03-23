@@ -219,6 +219,7 @@ NeoBundle 'lambdalisue/vim-pandoc-preview'
 NeoBundle 'mattn/webapi-vim'
 NeoBundle 'LucHermitte/lh-vim-lib', {'name': 'lh-vim-lib'}
 NeoBundle 'LucHermitte/local_vimrc', {'depends': 'lh-vim-lib'}
+NeoBundle 'jacoborus/vim-jsdoc'
 
 call neobundle#end()
 
@@ -505,6 +506,9 @@ let g:pandoc#syntax#colorcolumn = 1
 
 "Emmet settings
 let g:user_emmet_leader_key='<leader>e'
+
+"JsDoc settings
+let g:jsdoc_allow_input_prompt = 1
 
 augroup myvimrc
   au!
