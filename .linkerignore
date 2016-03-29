@@ -1,7 +1,7 @@
 #Globbing patterns to ignore when
 #linking config files to home dir
 .*stapler.*
-.*\.git
+.*\.git$
 .*\.swp
 .*\.yml
 env
