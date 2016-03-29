@@ -13,18 +13,20 @@
     - 852541CB # Audacity
 
 - name: "Add Repos for standalone packages"
-  apt_repository: repo={{item}} state=present update_cache=yes
+  apt_repository: repo="{{item}}" state=present update_cache=yes
+  ignore_errors: True
   with_items:
-    - deb http://ppa.launchpad.net/git-core/ppa/ubuntu trusty main 
-    - deb http://ppa.launchpad.net/shutter/ppa/ubuntu trusty main
-    - deb http://ppa.launchpad.net/neovim-ppa/unstable/ubuntu trusty main 
-    - deb http://ppa.launchpad.net/mixxx/mixxx/ubuntu trusty main
-    - deb http://repository.spotify.com stable non-free
-    - deb http://ppa.launchpad.net/apt-fast/stable/ubuntu trusty main
-    - deb http://ppa.launchpad.net/ubuntuhandbook1/audacity/ubuntu trusty main 
+    - "deb http://ppa.launchpad.net/git-core/ppa/ubuntu {{ ansible_distribution_release }} main "
+    - "deb http://ppa.launchpad.net/shutter/ppa/ubuntu {{ ansible_distribution_release }} main"
+    - "deb http://ppa.launchpad.net/neovim-ppa/unstable/ubuntu {{ ansible_distribution_release }} main "
+    - "deb http://ppa.launchpad.net/mixxx/mixxx/ubuntu {{ ansible_distribution_release }} main"
+    - "deb http://repository.spotify.com stable non-free"
+    - "deb http://ppa.launchpad.net/apt-fast/stable/ubuntu {{ ansible_distribution_release }} main"
+    - "deb http://ppa.launchpad.net/ubuntuhandbook1/audacity/ubuntu {{ ansible_distribution_release }} main "
 
 - name: "Install standalone packages" 
   apt: name={{item}} state=installed
+  ignore_errors: True
   with_items:
     #Desktop Apps
     - touchegg
