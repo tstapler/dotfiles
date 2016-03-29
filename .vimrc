@@ -95,12 +95,12 @@ smap <C-k>     <Plug>(neosnippet_expand_or_jump)
 xmap <C-k>     <Plug>(neosnippet_expand_target)
 
 " SuperTab like snippets behavior.
-imap <expr><TAB>
-      \ pumvisible() ? "\<C-n>" :
-      \ neosnippet#expandable_or_jumpable() ?
-      \    "\<Plug>(neosnippet_expand_or_jump)" : "\<TAB>"
-smap <expr><TAB> neosnippet#expandable_or_jumpable() ?
-      \ "\<Plug>(neosnippet_expand_or_jump)" : "\<TAB>"
+"imap <expr><TAB>
+"      \ pumvisible() ? "\<C-n>" :
+"      \ neosnippet#expandable_or_jumpable() ?
+"      \    "\<Plug>(neosnippet_expand_or_jump)" : "\<TAB>"
+"smap <expr><TAB> neosnippet#expandable_or_jumpable() ?
+"      \ "\<Plug>(neosnippet_expand_or_jump)" : "\<TAB>"
 
 " <TAB>: completion.
 inoremap <expr><TAB>  pumvisible() ? "\<C-n>" : "\<TAB>"
@@ -108,6 +108,9 @@ inoremap <expr><TAB>  pumvisible() ? "\<C-n>" : "\<TAB>"
 
 " Toggle Quick Preview
 nnoremap  <leader>m :InstantMarkdownPreview<cr>
+
+" Fix inconsisent Y behavior
+nnoremap Y y$
 
 " Set persistent_undo for undotree
 if has("persistent_undo")
@@ -271,7 +274,8 @@ augroup END
 
 "Pandoc
 augroup pandoc
-  au Filetype pandoc let loaded_delimitMate = 1 
+  au Filetype pandoc let loaded_delimitMate = 1
+  au Filetype pandoc NeoCompleteLock
   au Filetype pandoc :DelimitMateSwitch
 augroup END
 
