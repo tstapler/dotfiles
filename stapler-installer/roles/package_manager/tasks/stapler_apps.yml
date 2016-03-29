@@ -9,7 +9,6 @@
     - 8231B6DD # NeoVim
     - 4716DAB5 # Mixxx
     - BBEBDCB318AD50EC6865090613B00F1FD2C19886 # SPOTIFY
-    - CA8DA16B # apt-fast
     - 852541CB # Audacity
 
 - name: "Add Repos for standalone packages"
@@ -21,7 +20,6 @@
     - "deb http://ppa.launchpad.net/neovim-ppa/unstable/ubuntu {{ ansible_distribution_release }} main "
     - "deb http://ppa.launchpad.net/mixxx/mixxx/ubuntu {{ ansible_distribution_release }} main"
     - "deb http://repository.spotify.com stable non-free"
-    - "deb http://ppa.launchpad.net/apt-fast/stable/ubuntu {{ ansible_distribution_release }} main"
     - "deb http://ppa.launchpad.net/ubuntuhandbook1/audacity/ubuntu {{ ansible_distribution_release }} main "
 
 - name: "Install standalone packages" 
@@ -65,38 +63,3 @@
     #CLI Utilities
     - toilet
     - nmap
-    #Dependencies
-    ##Git-Annex
-    - libgnutls-dev
-    - liblz-dev
-    - libxml-sax-perl
-    - pkg-config
-    - libidn11-dev
-    - libxml2-dev
-    - libgsasl7-dev
-    - libmagic-dev
-    - libghc-gnuidn-dev
-    ## Arduro
-    - libboost-all-dev
-    - libasound2-dev
-    - libglibmm-2.4-dev
-    - libcurl3-dev
-    - libsndfile1-dev
-    - liblo-dev
-    - libtag1-dev
-    - vamp-plugin-sdk
-    - librubberband-dev
-    - libfftw3-dev
-    - libaubio-dev
-    - libcwiid-dev
-    - libcppunit-dev
-    - liblrdf*
-    - libsamplerate-dev
-    - lv2-dev
-    - libserd-dev
-    - libsord-dev
-    - libsratom-dev
-    - liblilv-dev
-    - libsuil-dev
-    - libgtkmm-2.4-dev
-    - libjack-jackd2-dev
