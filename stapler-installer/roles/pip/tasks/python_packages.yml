@@ -1,14 +1,13 @@
-#!/usr/bin/env ansible-playbook
 #Python Packages - installed from pypi using pip
 ---
 - name: "Install python packages"
-  pip: name={{item}} state=present
-    with_items:
-      - ipdb
-      - docker
-      - docker-composer
-      - youtube-dl
-      #Vim
-      - grip
-      - html-tree-diff
-      - pandocfilters
+  pip: 
+    name={{item}} 
+    state=present
+  with_items:
+    - ipdb
+    - youtube-dl
+    #Vim
+    - grip
+    - html-tree-diff
+    - pandocfilters
