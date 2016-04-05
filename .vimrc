@@ -224,6 +224,7 @@ NeoBundle 'LucHermitte/lh-vim-lib', {'name': 'lh-vim-lib'}
 NeoBundle 'LucHermitte/local_vimrc', {'depends': 'lh-vim-lib'}
 NeoBundle 'jacoborus/vim-jsdoc'
 NeoBundle 'jamessan/vim-gnupg'
+NeoBundle 'vim-scripts/DoxygenToolkit.vim'
 
 call neobundle#end()
 
@@ -399,7 +400,7 @@ let g:syntastic_check_on_wq = 0
 let g:syntastic_aggregate_errors = 1
 let g:syntastic_error_symbol = "✗"
 let g:syntastic_id_checkers = 1
-let g:syntastic_auto_jump = 3
+let g:syntastic_auto_jump = 0
 let g:syntastic_quiet_messages = { "level": "warnings" }
 
 let g:syntastic_text_checkers = ['language_check']
