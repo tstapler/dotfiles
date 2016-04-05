@@ -223,6 +223,7 @@ NeoBundle 'mattn/webapi-vim'
 NeoBundle 'LucHermitte/lh-vim-lib', {'name': 'lh-vim-lib'}
 NeoBundle 'LucHermitte/local_vimrc', {'depends': 'lh-vim-lib'}
 NeoBundle 'jacoborus/vim-jsdoc'
+NeoBundle 'jamessan/vim-gnupg'
 
 call neobundle#end()
 
