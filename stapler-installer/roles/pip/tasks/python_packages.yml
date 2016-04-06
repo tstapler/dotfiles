@@ -7,6 +7,7 @@
   with_items:
     - ipdb
     - youtube-dl
+    - ansible
     #Vim
     - grip
     - html-tree-diff
