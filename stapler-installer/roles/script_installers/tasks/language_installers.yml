@@ -15,5 +15,5 @@
   become: yes
 
 - name: Install NPM
-  apt: repo=nodejs state=present update_cache=yes
+  apt: name=nodejs state=present update_cache=yes
 
