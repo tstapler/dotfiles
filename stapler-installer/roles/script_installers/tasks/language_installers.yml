@@ -4,8 +4,16 @@
 
 - name: Install Go
   unarchive: 
-    src=https://storage.googleapis.com/golang/go1.5.3.linux-amd64.tar.gz 
+    src="http://storage.googleapis.com/golang/go1.5.3.linux-amd64.tar.gz"
     dest=/usr/local
     creates=/usr/local/go
     copy=no
   become: yes
+
+- name: Add NPM Repository
+  shell: "curl -sL https://deb.nodesource.com/setup_5.x | bash -"
+  become: yes
+
+- name: Install NPM
+  apt: repo=nodejs state=present update_cache=yes
+
