@@ -2,15 +2,16 @@
 	email = tystapler@gmail.com
 	name = Tyler Stapler
 [core]
-    editor = vim
-    excludesfile = ~/.gitignore
+	editor = vim
+	excludesfile = ~/.gitignore
+	symlinks = true
 [web]
-    browser = google-chrome
+	browser = google-chrome
 [push]
-    default = matching
+	default = matching
 [color]
-    ui = auto
+	ui = auto
 [diff]
-    tool = vimdiff
+	tool = vimdiff
 [github]
-    user = tstapler
+	user = tstapler
