@@ -112,6 +112,15 @@ nnoremap  <leader>m :InstantMarkdownPreview<cr>
 " Fix inconsisent Y behavior
 nnoremap Y y$
 
+" Vim Radical (Convert base)
+nmap g<C-A> <Plug>RadicalView
+xmap g<C-A> <Plug>RadicalView
+nmap crd <Plug>RadicalCoerceToDecimal
+nmap crx <Plug>RadicalCoerceToHex
+nmap cro <Plug>RadicalCoerceToOctal
+nmap crb <Plug>RadicalCoerceToBinary
+
+
 " Set persistent_undo for undotree
 if has("persistent_undo")
   set undodir=~/.undodir/
@@ -136,6 +145,8 @@ endif
 
 " Required:
 call neobundle#begin(expand('~/.vim/bundle/'))
+
+"NeoBundle Settings
 
 " Let NeoBundle manage NeoBundle
 " Required:
@@ -225,7 +236,15 @@ NeoBundle 'LucHermitte/local_vimrc', {'depends': 'lh-vim-lib'}
 NeoBundle 'jacoborus/vim-jsdoc'
 NeoBundle 'jamessan/vim-gnupg'
 NeoBundle 'vim-scripts/DoxygenToolkit.vim'
-
+NeoBundle 'fidian/hexmode'
+NeoBundle 'google/vim-maktaba'
+NeoBundle 'glts/vim-magnum'
+NeoBundle 'glts/vim-radical', {'depends': 
+      \ [ 
+      \   'google/vim-maktaba',
+      \   'glts/vim-magnum'
+      \ ]}
+NeoBundle 'christoomey/vim-titlecase'
 call neobundle#end()
 
 filetype plugin indent on
@@ -330,10 +349,13 @@ let g:vimfiler_tree_closed_icon = '▸'
 let g:vimfiler_file_icon = '-'
 let g:vimfiler_marked_file_icon = '*'
 
+" Unite Options
 let g:unite_source_history_yank_enable=1
 let g:unite_enable_start_insert=1
+let g:unite_ignore_source_files = [ 'packages' ]
 
 let g:vimfiler_as_default_explorer = 1
+
 
 "Neocomplete config
 let g:neocomplete#enable_at_startup = 1
