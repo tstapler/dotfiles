@@ -1,6 +1,10 @@
 ---
 - name: Install RVM
-  shell: "curl -sSL https://get.rvm.io | bash"
+  shell: "curl -sSL https://get.rvm.io | bash" 
+  args:
+    creates: "~/.rvm/"
+  become: no
+  
 
 - name: Install Go
   unarchive: 
@@ -11,7 +15,9 @@
   become: yes
 
 - name: Add NPM Repository
-  shell: "curl -sL https://deb.nodesource.com/setup_5.x | bash -"
+  shell: "curl -sL https://deb.nodesource.com/setup_5.x | bash -" 
+  args:
+    creates: /usr/bin/npm
   become: yes
 
 - name: Install NPM
