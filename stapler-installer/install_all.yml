@@ -7,6 +7,7 @@
     - package_manager
     - script_installers
     - pip
+    - source_installers
     # TODO: fix path issues with - go
     - node
 

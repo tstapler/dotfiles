@@ -1,0 +1,4 @@
+# Install programs from source
+---
+- name: Install playerctl from source
+  include: playerctl.yml

@@ -1,5 +1,11 @@
-- name: Import General Apps
+- name: Include General Apps
   include: stapler_apps.yml
 
-- name: Include i3 window manager 
+- name: Include i3 Window Manager Dependencies
   include: i3_apps.yml
+
+- name: Include playerctl Dependencies
+  include: player_ctl_deps.yml
+
+- name: Include vim plugin Dependencies
+  include: vim_apps.yml

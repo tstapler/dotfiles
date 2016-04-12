@@ -1,0 +1,18 @@
+- name: Download version 0.5.0 from github
+  git:
+    repo=https://github.com/acrisci/playerctl.git
+    dest=/opt/playerctl
+    version=v0.5.0
+  become: yes
+
+- name: Run autogen.sh
+  script: /opt/playerctl/autogen.sh
+  args:
+    creates: /opt/playerctl/Makefile
+  become: yes
+
+- name: Make and Install playerctl
+  shell: "cd /opt/playerctl/ && make && make install"
+  args:
+    creates: /usr/local/bin/playerctl
+  become: yes
