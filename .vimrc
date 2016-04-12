@@ -245,6 +245,7 @@ NeoBundle 'glts/vim-radical', {'depends':
       \   'glts/vim-magnum'
       \ ]}
 NeoBundle 'christoomey/vim-titlecase'
+NeoBundle 'fadein/FIGlet.vim'
 call neobundle#end()
 
 filetype plugin indent on
