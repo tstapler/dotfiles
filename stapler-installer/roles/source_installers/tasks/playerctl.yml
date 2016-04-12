@@ -16,3 +16,11 @@
   args:
     creates: /usr/local/bin/playerctl
   become: yes
+
+- name: Link playerctl library to lib
+  file: 
+    src=/usr/local/lib/libplayerctl-1.0.so.0
+    dest=/lib/libplayerctl-1.0.so.0
+    state=link
+  become: yes
+  
