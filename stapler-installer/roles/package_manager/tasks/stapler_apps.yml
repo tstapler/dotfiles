@@ -61,5 +61,6 @@
     - zsh
     #CLI Utilities
     - toilet
+    - figlet
     - nmap
     - ranger
