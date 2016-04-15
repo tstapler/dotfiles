@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE FixtureDefinition>
+<FixtureDefinition xmlns="http://www.qlcplus.org/FixtureDefinition">
+ <Creator>
+  <Name>Q Light Controller Plus</Name>
+  <Version>4.10.3a</Version>
+  <Author>Tyler Stapler</Author>
+ </Creator>
+ <Manufacturer>Chauvet</Manufacturer>
+ <Model>COLORstrip-Tyler</Model>
+ <Type>Color Changer</Type>
+ <Channel Name="Static Colors">
+  <Group Byte="0">Colour</Group>
+  <Capability Min="0" Max="9">No Functions</Capability>
+  <Capability Min="10" Max="19" Color="#aa0000">Red 0% - 100%</Capability>
+  <Capability Min="20" Max="29" Color="#00aa00">Green 0% - 100%</Capability>
+  <Capability Min="30" Max="39" Color="#0000ff">Blue 0 - 100%</Capability>
+  <Capability Min="40" Max="49" Color="#fff939">Yellow 0 - 100%</Capability>
+  <Capability Min="50" Max="59" Color="#ff00ff">Magenta 0 - 100%</Capability>
+  <Capability Min="60" Max="69" Color="#00ffff">Cyan 0 - 100%</Capability>
+  <Capability Min="70" Max="79" Color="#ffffff">White</Capability>
+  <Capability Min="80" Max="89">Color Chase 1</Capability>
+  <Capability Min="90" Max="99">Color Chase 2</Capability>
+  <Capability Min="100" Max="109">Color Chase 3</Capability>
+  <Capability Min="110" Max="119">Color Chase 4</Capability>
+  <Capability Min="120" Max="129">Color Chase 5</Capability>
+  <Capability Min="130" Max="139">Color Chase 6</Capability>
+  <Capability Min="140" Max="149">Color Chase 7</Capability>
+  <Capability Min="150" Max="159">Color Chase 8</Capability>
+  <Capability Min="160" Max="169">Color Chase 9</Capability>
+  <Capability Min="170" Max="179">Color Chase 10</Capability>
+  <Capability Min="180" Max="189">Color Chase 11</Capability>
+  <Capability Min="190" Max="199">Color Chase 12</Capability>
+  <Capability Min="200" Max="209">Color Chase 13</Capability>
+  <Capability Min="210" Max="219">RGB Color Mixing (Via Channels 2, 3, and 4)</Capability>
+  <Capability Min="220" Max="229">Color Fade</Capability>
+  <Capability Min="230" Max="255" Color="#ff0000">Sound Active</Capability>
+ </Channel>
+ <Channel Name="Run Speed">
+  <Group Byte="0">Speed</Group>
+  <Capability Min="0" Max="126">Slow To Fast</Capability>
+  <Capability Min="127" Max="255">Sound-Active</Capability>
+ </Channel>
+ <Channel Name="Strobe">
+  <Group Byte="0">Shutter</Group>
+  <Capability Min="0" Max="127">Slow to Fast</Capability>
+  <Capability Min="128" Max="255">Sound-Active</Capability>
+ </Channel>
+ <Channel Name="Blue for Color Mixing">
+  <Group Byte="0">Intensity</Group>
+  <Capability Min="0" Max="255">0 to 100%</Capability>
+ </Channel>
+ <Mode Name="4 Channel Mode">
+  <Physical>
+   <Bulb Type="LED" Lumens="2208" ColourTemperature="0"/>
+   <Dimensions Weight="2" Width="9650" Height="64" Depth="155"/>
+   <Lens Name="Other" DegreesMin="0" DegreesMax="68"/>
+   <Focus Type="Fixed" PanMax="0" TiltMax="0"/>
+   <Technical PowerConsumption="72" DmxConnector="3-pin"/>
+  </Physical>
+  <Channel Number="0">Static Colors</Channel>
+  <Channel Number="1">Run Speed</Channel>
+  <Channel Number="2">Strobe</Channel>
+  <Channel Number="3">Blue for Color Mixing</Channel>
+ </Mode>
+</FixtureDefinition>
