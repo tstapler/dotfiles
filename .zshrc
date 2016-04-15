@@ -96,6 +96,7 @@ fi
 alias zshconfig="$EDITOR ~/.zshrc"
 alias ohmyzsh="$EDITOR ~/.oh-my-zsh"
 alias vimrc="$EDITOR ~/.vimrc"
+alias vim="nvim"
 
 #Set environment varibles
 export ENHANCD_FILTER=fzf
