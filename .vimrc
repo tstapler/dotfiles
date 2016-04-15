@@ -65,8 +65,10 @@ set laststatus=2
 " Mappings {{{
 
 "Cycle through Quickfix list with F3 
-map <F3> :cn<Enter>
-map <S-F3> :cp<Enter>
+nnoremap <F3> :cn<Enter>
+nnoremap <S-F3> :cp<Enter>
+
+nnoremap <F5> :<C-U>make<CR>
 
 "Change Buffers
 map <leader>n :bn<Enter>
@@ -246,6 +248,9 @@ NeoBundle 'glts/vim-radical', {'depends':
       \ ]}
 NeoBundle 'christoomey/vim-titlecase'
 NeoBundle 'fadein/FIGlet.vim'
+NeoBundle 'johnsyweb/vim-makeshift'
+NeoBundle 'vim-scripts/scons.vim'
+
 call neobundle#end()
 
 filetype plugin indent on
@@ -510,6 +515,7 @@ let g:clang_format#style_options = {
       \ "Standard" : "Auto",
       \ "BreakBeforeBraces" : "GNU"}
 
+let g:makeshift_chdir = 1
 
 " For conceal markers.
 "if has('conceal')
