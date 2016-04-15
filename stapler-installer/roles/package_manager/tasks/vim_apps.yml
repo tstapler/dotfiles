@@ -10,4 +10,5 @@
     - tidy
     - pylint
     - exuberant-ctags
+    - cscope
   become: yes
