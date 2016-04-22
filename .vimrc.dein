@@ -1,0 +1,522 @@
+" vim:fdm=marker
+" dein Plugins {{{
+
+"dein Scripts-----------------------------
+if &compatible
+  set nocompatible               " Be iMproved
+endif
+
+" Required:
+set runtimepath^=/home/tstapler/.vim/bundle/repos/github.com/Shougo/dein.vim
+
+" Required:
+call dein#begin(expand('/home/tstapler/.vim/bundle/dein.vim'))
+
+" Let dein manage dein
+" Required:
+call dein#add('Shougo/dein.vim')
+
+" Editing Plugins
+
+"" Code Completion
+call dein#add('Shougo/neocomplete.vim.git')
+call dein#add('Shougo/deoplete.nvim')
+
+""" Code Completion Sources
+call dein#add('Shougo/neoinclude.vim')
+call dein#add('Shougo/neco-syntax')
+call dein#add('Shougo/neco-vim')
+call dein#add('zchee/deoplete-jedi')
+
+"" Snippets
+call dein#add('Shougo/neosnippet.vim')
+call dein#add('Shougo/neosnippet-snippets')
+call dein#add('honza/vim-snippets')
+call dein#add('Chiel92/vim-autoformat')
+call dein#add('Shougo/context_filetype.vim')
+call dein#add('godlygeek/tabular')
+call dein#add('tpope/vim-surround')
+call dein#add('tpope/vim-commentary')
+call dein#add('Chiel92/vim-autoformat')
+call dein#add('mattn/emmet-vim')
+call dein#add('christoomey/vim-sort-motion')
+call dein#add('Raimondi/delimitMate')
+call dein#add('christoomey/vim-titlecase')
+call dein#add('fidian/hexmode')
+call dein#add('glts/vim-radical', {'depends':
+      \ [
+      \   'google/vim-maktaba',
+      \   'glts/vim-magnum'
+      \ ]})
+call dein#add('fadein/FIGlet.vim')
+
+" Management Plugins
+call dein#add('Shougo/unite.vim')
+call dein#add('benekastah/neomake')
+call dein#add('tpope/vim-fugitive')
+call dein#add('mattn/gist-vim')
+call dein#add('Shougo/vimfiler.vim')
+call dein#add('dbakker/vim-projectroot')
+call dein#add('airblade/vim-gitgutter')
+call dein#add('majutsushi/tagbar')
+call dein#add('tpope/vim-repeat')
+call dein#add('mbbill/undotree')
+call dein#add('LucHermitte/local_vimrc', {'depends': 'lh-vim-lib'})
+call dein#add('ludovicchabant/vim-gutentags')
+call dein#add('vim-ctrlspace/vim-ctrlspace')
+
+" Utility Plugins
+call dein#add('rking/ag.vim')
+call dein#add('Shougo/vimshell.vim')
+call dein#add('Shougo/neossh.vim')
+call dein#add('scrooloose/syntastic')
+call dein#add('myint/syntastic-extras')
+call dein#add('idanarye/vim-vebugger')
+call dein#add('critiqjo/lldb.nvim')
+
+" Interface Plugins
+call dein#add('vim-airline/vim-airline')
+call dein#add('vim-airline/vim-airline-themes')
+call dein#add('flazz/vim-colorschemes')
+call dein#add('dannyob/quickfixstatus')
+
+" Language Specific Plugins
+call dein#add('briancollins/vim-jst')
+call dein#add('elzr/vim-json')
+call dein#add('groenewege/vim-less')
+call dein#add('tapichu/asm2d-vim')
+call dein#add('Cognoscan/vim-vhdl')
+call dein#add('pangloss/vim-javascript')
+call dein#add('avakhov/vim-yaml')
+call dein#add('heavenshell/vim-pydocstring')
+call dein#add('ternjs/tern_for_vim')
+call dein#add('pangloss/vim-javascript')
+call dein#add('heavenshell/vim-jsdoc')
+call dein#add('klen/python-mode')
+call dein#add('dag/vim-fish')
+call dein#add('plasticboy/vim-markdown')
+call dein#add('vim-scripts/scons.vim')
+call dein#add('dart-lang/dart-vim-plugin')
+" Dart Plugins
+call dein#add('miyakogi/vim-dartanalyzer')
+call dein#add('dart-lang/dart-vim-plugin')
+call dein#add('saltstack/salt-vim')
+call dein#add('pearofducks/ansible-vim')
+call dein#add('tpope/vim-dispatch')
+call dein#add('tpope/vim-eunuch')
+call dein#add('vim-scripts/bash-support.vim')
+call dein#add('lervag/vimtex')
+call dein#add('ekalinin/Dockerfile.vim')
+" C/C++ Plugins
+"call dein#add('rhysd/vim-clang-format')
+call dein#add('Rip-Rip/clang_complete')
+"call dein#add('justmao945/vim-clang')
+
+" Documentation & Word Processing Plugins
+call dein#add('suan/vim-instant-markdown')
+call dein#add('vim-pandoc/vim-pandoc')
+call dein#add('vim-pandoc/vim-pandoc-syntax')
+call dein#add('vim-pandoc/vim-pandoc-after')
+call dein#add('tex/vimpreviewpandoc')
+call dein#add('lambdalisue/vim-pandoc-preview')
+call dein#add('jacoborus/vim-jsdoc')
+call dein#add('jamessan/vim-gnupg')
+call dein#add('vim-scripts/DoxygenToolkit.vim')
+call dein#add('johnsyweb/vim-makeshift')
+
+" Miscellaneous Plugins
+call dein#add('Shougo/vimproc.vim', {'build' : 'make'})
+call dein#add('xolox/vim-misc')
+call dein#add('mattn/webapi-vim')
+call dein#add('google/vim-maktaba')
+call dein#add('glts/vim-magnum')
+call dein#add('LucHermitte/lh-vim-lib', {'name': 'lh-vim-lib'})
+call dein#add('jceb/vim-hier')
+
+" Required:
+call dein#end()
+
+" Required:
+filetype plugin indent on
+
+" If you want to install not installed plugins on startup.
+if dein#check_install()
+  call dein#install()
+endif
+
+"End dein Scripts-------------------------
+
+" }}}
+
+" Plugin Mappings {{{{
+"Mapping for Tagbar
+nnoremap <leader>t :TagbarToggle<cr>
+
+"Unite mappings
+"Grep in current directory
+nnoremap <leader>f :Unite -buffer-name=search -start-insert -auto-preview grep:.<CR>
+
+"Fuzzy search like ctrl-p
+nnoremap <C-P> :call Unite_ctrlp()<cr>
+
+"File explorer like NerdTree
+nnoremap <C-e> :VimFilerExplorer<cr>
+
+" Plugin key-mappings.
+imap <C-k>     <Plug>(neosnippet_expand_or_jump)
+smap <C-k>     <Plug>(neosnippet_expand_or_jump)
+xmap <C-k>     <Plug>(neosnippet_expand_target)
+
+" SuperTab like snippets behavior.
+"imap <expr><TAB>
+"      \ pumvisible() ? "\<C-n>" :
+"      \ neosnippet#expandable_or_jumpable() ?
+"      \    "\<Plug>(neosnippet_expand_or_jump)" : "\<TAB>"
+"smap <expr><TAB> neosnippet#expandable_or_jumpable() ?
+"      \ "\<Plug>(neosnippet_expand_or_jump)" : "\<TAB>"
+
+" <TAB>: completion.
+inoremap <expr><TAB>  pumvisible() ? "\<C-n>" : "\<TAB>"
+" Recommended key-mappings.
+
+" Toggle Quick Preview
+nnoremap  <leader>m :InstantMarkdownPreview<cr>
+
+
+" Vim Radical (Convert base)
+nmap g<C-A> <Plug>RadicalView
+xmap g<C-A> <Plug>RadicalView
+nmap crd <Plug>RadicalCoerceToDecimal
+nmap crx <Plug>RadicalCoerceToHex
+nmap cro <Plug>RadicalCoerceToOctal
+nmap crb <Plug>RadicalCoerceToBinary
+
+" }}}}
+
+" Plugin Settings {{{
+
+" Neomake Settings {{{
+   let g:neomake_c_enable_markers=['clang']
+   let g:neomake_c_clang_args = ["-std=c11", "-Wextra", "-Wall", "-fsanitize=undefined","-g"]
+   let g:neomake_cpp_enable_markers=['clang']
+   let g:neomake_cpp_clang_args = ["-std=c++14", "-Wextra", "-Wall", "-fsanitize=undefined","-g"]
+" End Neomake Settings }}} 
+
+" ctrlspace Settings {{{
+
+  if executable("ag")
+    let g:CtrlSpaceGlobCommand = 'ag -l --hidden --nocolor -g ""'
+  endif
+
+  let g:CtrlSpaceLoadLastWorkspaceOnStart = 1
+  let g:CtrlSpaceSaveWorkspaceOnSwitch = 1
+  let g:CtrlSpaceSaveWorkspaceOnExit = 1
+
+  " For ctrlspace
+  set hidden
+
+" End ctrlspace Settings }}}
+
+" Unite Settings {{{
+call unite#filters#matcher_default#use(['matcher_fuzzy'])
+call unite#filters#sorter_default#use(['sorter_rank'])
+call unite#custom#source('file,file/new,buffer,te -buffer-name=search -start-insert -auto-preview grep -custom-grep-command file_rec,line', 'matchers', 'matcher_fuzzy')
+
+" Build the ctrlp function, using projectroot to define the
+" working directory.
+function! Unite_ctrlp()
+  execute ':Unite  -buffer-name=files -start-insert -match-input buffer file_rec/async'
+endfunction
+
+" LLdb Settings {{{
+nmap <M-b> <Plug>LLBreakSwitch
+vmap <F2> <Plug>LLStdInSelected
+nnoremap <F4> :LLstdin<CR>
+nnoremap <F5> :LLmode debug<CR>
+nnoremap <S-F5> :LLmode code<CR>
+nnoremap <F8> :LL continue<CR>
+nnoremap <S-F8> :LL process interrupt<CR>
+nnoremap <F9> :LL print <C-R>=expand('<cword>')<CR>
+vnoremap <F9> :<C-U>LL print <C-R>=lldb#util#get_selection()<CR><CR>
+" End LLdb Settings }}} 
+
+"Select Search
+if executable('Ag')
+  " Use ag (the silver searcher)
+  " https://github.com/ggreer/the_silver_searcher
+  let g:unite_source_grep_command = 'Ag'
+  let g:unite_source_grep_default_opts =
+        \ '-i --hidden --ignore ' .
+        \ '''.hg'' --ignore ''.svn'' --ignore ''.git'' --ignore ''.bzr'' --ignore ''packages''
+  let g:unite_source_grep_recursive_opt = ''
+elseif executable('ack-grep')
+  " Use ack
+  " http://beyondgrep.com/
+  let g:unite_source_grep_command = 'ack-grep'
+  let g:unite_source_grep_default_opts = '-i --no-heading --no-color -k -H'
+  let g:unite_source_grep_recursive_opt = ''
+endif
+
+" Unite Options
+let g:unite_source_history_yank_enable=1
+let g:unite_enable_start_insert=1
+let g:unite_ignore_source_files = [ 'packages' ]
+
+" End Unite Settings }}}
+
+" Vimfiler Settings {{{
+" Enable file operation commands.
+" Edit file by tabedit.
+call vimfiler#custom#profile('default', 'context', {
+      \ 'safe' : 0
+      \ })
+
+" Like Textmate icons.
+let g:vimfiler_tree_leaf_icon = ' '
+let g:vimfiler_tree_opened_icon = '▾'
+let g:vimfiler_tree_closed_icon = '▸'
+let g:vimfiler_file_icon = '-'
+let g:vimfiler_marked_file_icon = '*'
+
+let g:vimfiler_as_default_explorer = 1
+" End Vimfiler Settings }}}
+
+" deoplete Settings {{{
+if has('nvim')
+  let g:deoplete#enable_at_startup = 1
+
+  let g:deoplete#sources#jedi#show_docstring = 1
+	" Use deoplete.
+	let g:deoplete#enable_at_startup = 1
+	" Use smartcase.
+	let g:deoplete#enable_smart_case = 1
+
+	" <C-h>, <BS>: close popup and delete backword char.
+	inoremap <expr><C-h> deoplete#mappings#smart_close_popup()."\<C-h>"
+	inoremap <expr><BS>  deoplete#mappings#smart_close_popup()."\<C-h>"
+
+	" <CR>: close popup and save indent.
+	inoremap <silent> <CR> <C-r>=<SID>my_cr_function()<CR>
+	function! s:my_cr_function() abort
+	  return deoplete#mappings#close_popup() . "\<CR>"
+	endfunction
+
+  let g:clang_complete_auto = 0
+  let g:clang_auto_select = 0
+  let g:clang_omnicppcomplete_compliance = 0
+  let g:clang_make_default_keymappings = 0
+
+  " for c and c++
+endif
+
+" End deoplete Settings }}}
+
+" NeoComplete Settings {{{
+if !has('nvim') " Disable in Neovim
+  let g:neocomplete#enable_at_startup = 1
+  let g:neocomplete#enable_auto_select = 0
+  let g:neocomplcache_enable_at_startup = 0
+  let g:neocomplete#use_vimproc = 1
+
+  if !exists('g:neocomplete#force_omni_input_patterns')
+    let g:neocomplete#force_omni_input_patterns = {}
+  endif
+  let g:neocomplete#force_omni_input_patterns.c =
+        \ '[^.[:digit:] *\t]\%(\.\|->\)\w*'
+  let g:neocomplete#force_omni_input_patterns.cpp =
+        \ '[^.[:digit:] *\t]\%(\.\|->\)\w*\|\h\w*::\w*'
+  let g:neocomplete#force_omni_input_patterns.objc =
+        \ '\[\h\w*\s\h\?\|\h\w*\%(\.\|->\)'
+  let g:neocomplete#force_omni_input_patterns.objcpp =
+        \ '\[\h\w*\s\h\?\|\h\w*\%(\.\|->\)\|\h\w*::\w*'
+  let g:clang_complete_auto = 0
+  let g:clang_auto_select = 0
+  let g:clang_omnicppcomplete_compliance = 0
+  let g:clang_make_default_keymappings = 0
+  "let g:clang_use_library = 1
+
+  if !exists('g:neocomplete#force_omni_input_patterns')
+    let g:neocomplete#force_omni_input_patterns = {}
+  endif
+  let g:neocomplete#force_omni_input_patterns.tex =
+        \ '\v\\%('
+        \ . '\a*cite\a*%(\s*\[[^]]*\]){0,2}\s*\{[^}]*'
+        \ . '|\a*ref%(\s*\{[^}]*|range\s*\{[^,}]*%(}\{)?)'
+        \ . '|includegraphics\*?%(\s*\[[^]]*\]){0,2}\s*\{[^}]*'
+        \ . '|%(include%(only)?|input)\s*\{[^}]*'
+        \ . ')'
+endif
+" End NeoComplete Settings }}}
+
+"Airline Settings {{{
+let g:airline#extensions#tabline#enabled = 1
+let g:airline#extensions#virtualenv#enabled = 1
+let g:airline_exclude_preview = 1
+
+if !exists('g:airline_symbols')
+  let g:airline_symbols = {}
+endif
+
+let g:airline_left_sep = '▶'
+let g:airline_right_sep = '«'
+
+"Colorscheme
+colorscheme badwolf
+let g:airline_theme = 'badwolf'
+
+" End Airline Settings }}}
+
+" Ag.vim Settings {{{
+let g:ag_working_path_mode='r'
+" End Ag.vim Settings }}} 
+
+"Syntastic Settings {{{
+set statusline+=%#warningmsg#
+set statusline+=%{SyntasticStatuslineFlag()}
+set statusline+=%*
+
+let g:syntastic_always_populate_loc_list = 1
+let g:syntastic_auto_loc_list = 2
+let g:syntastic_check_on_open = 0
+let g:syntastic_check_on_wq = 0
+let g:syntastic_aggregate_errors = 1
+let g:syntastic_error_symbol = "✗"
+let g:syntastic_id_checkers = 1
+let g:syntastic_auto_jump = 0
+let g:syntastic_quiet_messages = { "level": "warnings" }
+
+let g:syntastic_text_checkers = ['language_check']
+let g:syntastic_language_check_args = '--language=en-US'
+
+let g:syntastic_mode_map = { "mode": "active",
+      \ "passive_filetypes": ["dart"] }
+
+"Syntastic Extras Settings
+let g:syntastic_make_checkers = ['gnumake']
+let g:syntastic_javascript_checkers = ['json_tool']
+let g:syntastic_yaml_checkers = ['pyyaml']
+let g:syntastic_gitcommit_checkers = ['language_check']
+let g:syntastic_svn_checkers = ['language_check']
+
+" End Syntastic Settings }}}
+
+" Tagbar Settings {{{
+let g:tagbar_type_vimwiki = {
+      \ 'ctagstype' : 'wiki',
+      \ 'kinds'     : [
+      \ 'h:headers'
+      \ ]
+      \ }
+let g:tagbar_type_mkd= {
+      \ 'ctagstype' : 'md',
+      \ 'kinds' : [
+      \ 'h:headings'
+      \ ],
+      \ 'sort' : 0,
+      \ }
+let g:tagbar_type_css= {
+      \ 'ctagstype' : 'css',
+      \ 'kinds' : [
+      \ 'c:classes',
+      \ 'i:ids',
+      \ 't:tags',
+      \ 'm:media',
+      \ 'f:fonts',
+      \ 'k:keyframes'
+      \ ],
+      \ 'sort' : 0,
+      \ }
+let g:tagbar_type_html= {
+      \ 'ctagstype' : 'html',
+      \ 'kinds'     : [
+      \ 'i:ids',
+      \ 'c:classes',
+      \ ]
+      \ }
+let g:tagbar_type_vhdl = {
+      \ 'ctagstype': 'vhdl',
+      \ 'kinds' : [
+      \'d:prototypes',
+      \'b:package bodies',
+      \'e:entities',
+      \'a:architectures',
+      \'t:types',
+      \'p:processes',
+      \'f:functions',
+      \'r:procedures',
+      \'c:constants',
+      \'T:subtypes',
+      \'r:records',
+      \'C:components',
+      \'P:packages',
+      \'l:locals'
+      \]
+      \}
+" End Tagbar Settings }}}
+
+" GitGutter Settings {{{
+let g:gitgutter_max_signs = 1000
+" End GitGutter Settings }}}
+
+"EasyTags Settings {{{
+let g:easytags_auto_update = 1
+let g:easytags_on_cursorhold = 0
+let g:easytags_async = 1
+" End EasyTags Settings }}}
+
+" Vim-Javascript Settings {{{
+let g:javascript_enable_domhtmlcss = 1
+" End Vim-Javascript Settings }}}
+
+" clang-format Settings {{{
+let g:clang_format#style_options = {
+      \ "AccessModifierOffset" : -2,
+      \ "AllowShortIfStatementsOnASingleLine" : "true",
+      \ "AlwaysBreakTemplateDeclarations" : "true",
+      \ "Standard" : "Auto",
+      \ "BreakBeforeBraces" : "GNU"}
+
+" End clang-format Settings }}}
+
+" makeshift Settings {{{
+let g:makeshift_chdir = 1
+" End makeshift Settings }}}
+
+" Neosnippet Settings {{{
+let g:neosnippet#snippets_directory='~/.vimsnippets'
+" End Neosnippet Settings }}}
+
+" InstantMarkdownPreview Settings {{{
+let g:instant_markdown_autostart = 0
+" End InstantMarkdownPreview Settings }}}
+
+" Pandoc Settings {{{
+let g:pandoc#syntax#conceal#use = 0
+let g:pandoc#syntax#conceal#blacklist = ["block", "codeblock_start", "codeblock_delim"]
+let g:pandoc#formatting#mode = "ha"
+let g:pandoc#formatting#smart_autoformat_on_cursormoved = 1
+let g:pandoc#folding#level = 2
+let g:pandoc#folding#mode = "relative"
+let g:pandoc#after#modules#enabled = ["nrrwrgn", "tablemode", "unite"]
+let g:pandoc#completion#bib#mode = 'citeproc'
+let g:pandoc#syntax#colorcolumn = 1
+
+if has('conceal')
+  set conceallevel=2 concealcursor=niv
+endif
+
+" End Pandoc Settings }}}
+
+" Emmet Settings {{{
+let g:user_emmet_leader_key='<leader>e'
+" End Emmet Settings }}}
+
+" JsDoc Settings {{{
+let g:jsdoc_allow_input_prompt = 1
+" End JsDoc Settings }}}
+
+augroup myvimrc
+  au!
+  au BufWritePost .vimrc,_vimrc,vimrc,.gvimrc,_gvimrc,gvimrc so $MYVIMRC | if has('gui_running') | so $MYGVIMRC | endif
+augroup END
+"}}}
