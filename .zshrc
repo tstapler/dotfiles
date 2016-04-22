@@ -1,8 +1,8 @@
-# _____     _           ___ _             _         _        ____   _           
-#|_   _|  _| |___ _ _  / __| |_ __ _ _ __| |___ _ _( )___   |_  /__| |_  _ _ __ 
+# _____     _           ___ _             _         _        ____   _
+#|_   _|  _| |___ _ _  / __| |_ __ _ _ __| |___ _ _( )___   |_  /__| |_  _ _ __
 #  | || || | / -_) '_| \__ \  _/ _` | '_ \ / -_) '_|/(_-<  _ / /(_-< ' \| '_/ _|
 #  |_| \_, |_\___|_|   |___/\__\__,_| .__/_\___|_|   /__/ (_)___/__/_||_|_| \__|
-#      |__/                         |_|                                         
+#      |__/                         |_|
 
 # Load zplug, clone if not found
 if [[ ! -d ~/.zplug ]];then
@@ -28,7 +28,7 @@ zplug "zsh-users/zsh-completions"
 zplug "b4b4r07/enhancd", of:enhancd.sh
 zplug "zsh-users/zaw"
 
-#The file searchers 
+#The file searchers
 zplug "junegunn/fzf-bin", as:command, from:gh-r, file:fzf, of:"*linux*64*"
 zplug "peco/peco", as:command, from:gh-r, file:peco, of:"*linux_amd64*"
 
@@ -85,23 +85,32 @@ export PATH="$PATH":"$GOPATH/bin"
 #Add Cabal to PATH
 export PATH="$HOME/.cabal/bin:"$PATH
 
-# Preferred editor for local and remote sessions
-if [[ -n $SSH_CONNECTION ]]; then
+#Set environment varibles
+export ENHANCD_FILTER=fzf
+
+#Setup RVM
+export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
+
+if hash nvim 2>/dev/null; then
+	# Use Neovim if it exists
+	export EDITOR='nvim'
+	alias vim='nvim'
+
+elif hash vim 2>/dev/null; then
+	# Use Vim if no Neovim
 	export EDITOR='vim'
+
 else
-	export EDITOR='mvim'
+	# Settle for vi if all else fails
+	export EDITOR='vi'
+	alias vim='vi'
 fi
 
 #Aliases
 alias zshconfig="$EDITOR ~/.zshrc"
 alias ohmyzsh="$EDITOR ~/.oh-my-zsh"
 alias vimrc="$EDITOR ~/.vimrc"
-alias vim="nvim"
 
-#Set environment varibles
-export ENHANCD_FILTER=fzf
 
-#Setup RVM
-export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
 
 [ -s "/home/tstapler/.dnx/dnvm/dnvm.sh" ] && . "/home/tstapler/.dnx/dnvm/dnvm.sh" # Load dnvm
