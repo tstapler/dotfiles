@@ -9,3 +9,4 @@ env
 .ropeproject
 awesome.*
 .*linker.*
+tags
