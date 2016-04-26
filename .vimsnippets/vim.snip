@@ -1,0 +1,25 @@
+snippet     dein-plugin
+abbr        dein
+options     head
+        call dein#add('${1:Plugin Name}')
+
+snippet     plugin-settings
+abbr        pset
+options     indent
+        " ${1:Plugin Name} Settings {{{
+                `getreg('"')=='' ? "${2:Plugin Body}" : getreg('"')`
+        " End $1 Settings }}} ${3}
+
+snippet     filetype-setting
+abbr        ftype
+options     indent
+        " ${1:Langage Name} filetype {{{
+                `getreg('"')=='' ? "${2:autocommand}" : getreg('"')`
+        " End $1 filetype }}} ${3}
+
+snippet     fold
+abbr        fo
+options     head
+        " ${1: Fold Name} {{{
+                `getreg('"')=='' ? "${2:autocommand}" : getreg('"')`
+        " End $1 }}} ${3}

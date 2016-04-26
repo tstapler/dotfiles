@@ -1,0 +1,9 @@
+snippet     endpoint
+abbr        end
+options     head
+  ${1:Function Name} (HttpResponse req) async {
+    HttpResponse res = req.response;
+    addCorsHeaders(res);
+    ${2:Function Body}
+    res.close();
+  }
