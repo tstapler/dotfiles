@@ -93,7 +93,7 @@ nnoremap Y y$
 " }}}
 
 " Plugin Manager {{{
-if filereadable(expand("~/.vimrc.dein")) && isdirectory(expand("~/.vim/bundle/dein.vim"))
+if filereadable(expand("~/.vimrc.dein")) && isdirectory(expand("~/.vim/bundle/repos"))
   source ~/.vimrc.dein
 else
   colorscheme slate
