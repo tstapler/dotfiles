@@ -73,56 +73,71 @@ call dein#add('scrooloose/syntastic')
 call dein#add('myint/syntastic-extras')
 call dein#add('idanarye/vim-vebugger')
 call dein#add('critiqjo/lldb.nvim')
+call dein#add('tpope/vim-dispatch')
 
 " Interface Plugins
 call dein#add('vim-airline/vim-airline')
 call dein#add('vim-airline/vim-airline-themes')
 call dein#add('flazz/vim-colorschemes')
-call dein#add('dannyob/quickfixstatus')
 
-" Language Specific Plugins
-call dein#add('briancollins/vim-jst')
-call dein#add('elzr/vim-json')
-call dein#add('groenewege/vim-less')
-call dein#add('tapichu/asm2d-vim')
-call dein#add('Cognoscan/vim-vhdl')
-call dein#add('pangloss/vim-javascript')
-call dein#add('avakhov/vim-yaml')
+" Language Specific Plugins {{{
+
+" Python {{{
 call dein#add('heavenshell/vim-pydocstring')
-call dein#add('ternjs/tern_for_vim')
-call dein#add('pangloss/vim-javascript')
-call dein#add('heavenshell/vim-jsdoc')
 call dein#add('klen/python-mode')
+" End Python }}} 
+
+" Javascript {{{
+call dein#add('pangloss/vim-javascript')
+call dein#add('ternjs/tern_for_vim')
+call dein#add('jacoborus/vim-jsdoc')
+call dein#add('heavenshell/vim-jsdoc')
+call dein#add('briancollins/vim-jst')
+" End Javascript }}} 
+
 call dein#add('dag/vim-fish')
 call dein#add('plasticboy/vim-markdown')
 call dein#add('vim-scripts/scons.vim')
+
+" Dart {{{
 call dein#add('dart-lang/dart-vim-plugin')
-" Dart Plugins
 call dein#add('miyakogi/vim-dartanalyzer')
-call dein#add('dart-lang/dart-vim-plugin')
+" End Dart }}} 
+
+" C/C++ Plugins {{{
+call dein#add('Rip-Rip/clang_complete')
+" End C/C++ Plugins }}} 
+"
 call dein#add('saltstack/salt-vim')
 call dein#add('pearofducks/ansible-vim')
-call dein#add('tpope/vim-dispatch')
-call dein#add('tpope/vim-eunuch')
 call dein#add('vim-scripts/bash-support.vim')
 call dein#add('lervag/vimtex')
 call dein#add('ekalinin/Dockerfile.vim')
-" C/C++ Plugins
-"call dein#add('rhysd/vim-clang-format')
-call dein#add('Rip-Rip/clang_complete')
-"call dein#add('justmao945/vim-clang')
+call dein#add('elzr/vim-json')
+call dein#add('groenewege/vim-less')
+call dein#add('tapichu/asm2d-vim')
+call dein#add('pangloss/vim-javascript')
+call dein#add('avakhov/vim-yaml')
 
-" Documentation & Word Processing Plugins
-call dein#add('suan/vim-instant-markdown')
+
+" End Language Spefic Plugins }}}
+
+" Documentation & Word Processing Plugins {{{
+
+" Pandoc {{{
 call dein#add('vim-pandoc/vim-pandoc')
 call dein#add('vim-pandoc/vim-pandoc-syntax')
 call dein#add('vim-pandoc/vim-pandoc-after')
-call dein#add('tex/vimpreviewpandoc')
 call dein#add('lambdalisue/vim-pandoc-preview')
-call dein#add('jacoborus/vim-jsdoc')
+call dein#add('tex/vimpreviewpandoc')
+" End Pandoc }}} 
+
+call dein#add('suan/vim-instant-markdown')
 call dein#add('jamessan/vim-gnupg')
 call dein#add('vim-scripts/DoxygenToolkit.vim')
 call dein#add('johnsyweb/vim-makeshift')
+
+" End Documentation & Word Processing Plugins }}}
 
 " Miscellaneous Plugins
 call dein#add('Shougo/vimproc.vim', {'build' : 'make'})
@@ -492,13 +507,15 @@ let g:instant_markdown_autostart = 0
 
 " Pandoc Settings {{{
 let g:pandoc#syntax#conceal#use = 0
+let g:pandoc#keyboard#use_default_mappings = 1
 let g:pandoc#syntax#conceal#blacklist = ["block", "codeblock_start", "codeblock_delim"]
 let g:pandoc#formatting#mode = "ha"
-let g:pandoc#formatting#smart_autoformat_on_cursormoved = 1
 let g:pandoc#folding#level = 2
 let g:pandoc#folding#mode = "relative"
-let g:pandoc#after#modules#enabled = ["nrrwrgn", "tablemode", "unite"]
+let g:pandoc#after#modules#enabled = ["nrrwrgn", "tablemode", "unite", "neosnippets"]
 let g:pandoc#completion#bib#mode = 'citeproc'
+let g:pandoc#folding#fold_yaml = 1
+"Pandoc Syntax
 let g:pandoc#syntax#colorcolumn = 1
 
 if has('conceal')
