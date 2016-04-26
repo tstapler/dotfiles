@@ -10,28 +10,32 @@ endif
 set runtimepath^=/home/tstapler/.vim/bundle/repos/github.com/Shougo/dein.vim
 
 " Required:
-call dein#begin(expand('/home/tstapler/.vim/bundle/dein.vim'))
+call dein#begin(expand('/home/tstapler/.vim/bundle'))
 
 " Let dein manage dein
 " Required:
 call dein#add('Shougo/dein.vim')
 
-" Editing Plugins
+" Editing Plugins {{{
 
-"" Code Completion
+" Code Completion {{{
 call dein#add('Shougo/neocomplete.vim.git')
 call dein#add('Shougo/deoplete.nvim')
+" End Code Completion }}} 
 
-""" Code Completion Sources
+" Code Completion Sources {{{
 call dein#add('Shougo/neoinclude.vim')
 call dein#add('Shougo/neco-syntax')
 call dein#add('Shougo/neco-vim')
 call dein#add('zchee/deoplete-jedi')
+" End Code Completion Sources }}} 
 
-"" Snippets
+" Snippet Plugins {{{
 call dein#add('Shougo/neosnippet.vim')
 call dein#add('Shougo/neosnippet-snippets')
 call dein#add('honza/vim-snippets')
+" End Snippet Plugins }}} 
+
 call dein#add('Chiel92/vim-autoformat')
 call dein#add('Shougo/context_filetype.vim')
 call dein#add('godlygeek/tabular')
@@ -50,7 +54,9 @@ call dein#add('glts/vim-radical', {'depends':
       \ ]})
 call dein#add('fadein/FIGlet.vim')
 
-" Management Plugins
+" End Editing Plugins }}} 
+
+" Management Plugins {{{
 call dein#add('Shougo/unite.vim')
 call dein#add('benekastah/neomake')
 call dein#add('tpope/vim-fugitive')
@@ -64,21 +70,20 @@ call dein#add('mbbill/undotree')
 call dein#add('LucHermitte/local_vimrc', {'depends': 'lh-vim-lib'})
 call dein#add('ludovicchabant/vim-gutentags')
 call dein#add('vim-ctrlspace/vim-ctrlspace')
+" End Management Plugins }}} 
 
-" Utility Plugins
+" Utility Plugins {{{
 call dein#add('rking/ag.vim')
-call dein#add('Shougo/vimshell.vim')
-call dein#add('Shougo/neossh.vim')
 call dein#add('scrooloose/syntastic')
 call dein#add('myint/syntastic-extras')
-call dein#add('idanarye/vim-vebugger')
-call dein#add('critiqjo/lldb.nvim')
 call dein#add('tpope/vim-dispatch')
+" End Utility Plugins }}} 
 
-" Interface Plugins
+" Interface Plugins {{{
 call dein#add('vim-airline/vim-airline')
 call dein#add('vim-airline/vim-airline-themes')
 call dein#add('flazz/vim-colorschemes')
+" End Interface Plugins }}} 
 
 " Language Specific Plugins {{{
 
@@ -107,7 +112,7 @@ call dein#add('miyakogi/vim-dartanalyzer')
 " C/C++ Plugins {{{
 call dein#add('Rip-Rip/clang_complete')
 " End C/C++ Plugins }}} 
-"
+
 call dein#add('saltstack/salt-vim')
 call dein#add('pearofducks/ansible-vim')
 call dein#add('vim-scripts/bash-support.vim')
@@ -119,8 +124,7 @@ call dein#add('tapichu/asm2d-vim')
 call dein#add('pangloss/vim-javascript')
 call dein#add('avakhov/vim-yaml')
 
-
-" End Language Spefic Plugins }}}
+" End Language Specific Plugins }}}
 
 " Documentation & Word Processing Plugins {{{
 
@@ -139,7 +143,7 @@ call dein#add('johnsyweb/vim-makeshift')
 
 " End Documentation & Word Processing Plugins }}}
 
-" Miscellaneous Plugins
+" Miscellaneous Plugins {{{
 call dein#add('Shougo/vimproc.vim', {'build' : 'make'})
 call dein#add('xolox/vim-misc')
 call dein#add('mattn/webapi-vim')
@@ -147,6 +151,7 @@ call dein#add('google/vim-maktaba')
 call dein#add('glts/vim-magnum')
 call dein#add('LucHermitte/lh-vim-lib', {'name': 'lh-vim-lib'})
 call dein#add('jceb/vim-hier')
+" End Miscellaneous Plugins }}}
 
 " Required:
 call dein#end()
@@ -243,18 +248,6 @@ function! Unite_ctrlp()
   execute ':Unite  -buffer-name=files -start-insert -match-input buffer file_rec/async'
 endfunction
 
-" LLdb Settings {{{
-nmap <M-b> <Plug>LLBreakSwitch
-vmap <F2> <Plug>LLStdInSelected
-nnoremap <F4> :LLstdin<CR>
-nnoremap <F5> :LLmode debug<CR>
-nnoremap <S-F5> :LLmode code<CR>
-nnoremap <F8> :LL continue<CR>
-nnoremap <S-F8> :LL process interrupt<CR>
-nnoremap <F9> :LL print <C-R>=expand('<cword>')<CR>
-vnoremap <F9> :<C-U>LL print <C-R>=lldb#util#get_selection()<CR><CR>
-" End LLdb Settings }}} 
-
 "Select Search
 if executable('Ag')
   " Use ag (the silver searcher)
@@ -316,12 +309,12 @@ if has('nvim')
 	  return deoplete#mappings#close_popup() . "\<CR>"
 	endfunction
 
+  " for c and c++
   let g:clang_complete_auto = 0
   let g:clang_auto_select = 0
   let g:clang_omnicppcomplete_compliance = 0
   let g:clang_make_default_keymappings = 0
 
-  " for c and c++
 endif
 
 " End deoplete Settings }}}
