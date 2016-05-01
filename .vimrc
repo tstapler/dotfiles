@@ -84,8 +84,9 @@ map <leader>n :bn<Enter>
 map <leader>p :bp<Enter>
 map <leader>d :bd<Enter>
 
-"When editing python F9 to drop to python shell
-nnoremap <buffer> <F9> :exec '!python' shellescape(@%, 1)<cr>
+if has("nvim")
+  nnoremap <F7> :new term://zsh<Enter>
+endif
 
 " Fix inconsisent Y behavior
 nnoremap Y y$
@@ -143,14 +144,6 @@ augroup markdown
   au! FileType,BufRead,BufNewFile *.md       set filetype=mkd spell
 augroup END
 " End Markdown filetype }}}
-
-" Pandoc filetype {{{
-augroup pandoc
-  au Filetype pandoc let loaded_delimitMate = 1
-  au Filetype pandoc NeoCompleteLock
-  au Filetype pandoc :DelimitMateSwitch
-augroup END
-" End Pandoc filetype }}}
 
 " HTML filetype {{{
 au FileType html setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab

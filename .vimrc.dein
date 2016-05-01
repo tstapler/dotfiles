@@ -7,10 +7,10 @@ if &compatible
 endif
 
 " Required:
-set runtimepath^=/home/tstapler/.vim/bundle/repos/github.com/Shougo/dein.vim
+set runtimepath^=~/.vim/bundle/repos/github.com/Shougo/dein.vim
 
 " Required:
-call dein#begin(expand('/home/tstapler/.vim/bundle'))
+call dein#begin(expand('~/.vim/bundle'))
 
 " Let dein manage dein
 " Required:
@@ -21,20 +21,20 @@ call dein#add('Shougo/dein.vim')
 " Code Completion {{{
 call dein#add('Shougo/neocomplete.vim.git')
 call dein#add('Shougo/deoplete.nvim')
-" End Code Completion }}} 
+" End Code Completion }}}
 
 " Code Completion Sources {{{
 call dein#add('Shougo/neoinclude.vim')
 call dein#add('Shougo/neco-syntax')
 call dein#add('Shougo/neco-vim')
 call dein#add('zchee/deoplete-jedi')
-" End Code Completion Sources }}} 
+" End Code Completion Sources }}}
 
 " Snippet Plugins {{{
 call dein#add('Shougo/neosnippet.vim')
 call dein#add('Shougo/neosnippet-snippets')
 call dein#add('honza/vim-snippets')
-" End Snippet Plugins }}} 
+" End Snippet Plugins }}}
 
 call dein#add('Chiel92/vim-autoformat')
 call dein#add('Shougo/context_filetype.vim')
@@ -54,7 +54,7 @@ call dein#add('glts/vim-radical', {'depends':
       \ ]})
 call dein#add('fadein/FIGlet.vim')
 
-" End Editing Plugins }}} 
+" End Editing Plugins }}}
 
 " Management Plugins {{{
 call dein#add('Shougo/unite.vim')
@@ -70,27 +70,27 @@ call dein#add('mbbill/undotree')
 call dein#add('LucHermitte/local_vimrc', {'depends': 'lh-vim-lib'})
 call dein#add('ludovicchabant/vim-gutentags')
 call dein#add('vim-ctrlspace/vim-ctrlspace')
-" End Management Plugins }}} 
+" End Management Plugins }}}
 
 " Utility Plugins {{{
 call dein#add('rking/ag.vim')
 call dein#add('scrooloose/syntastic')
 call dein#add('myint/syntastic-extras')
 call dein#add('tpope/vim-dispatch')
-" End Utility Plugins }}} 
+" End Utility Plugins }}}
 
 " Interface Plugins {{{
 call dein#add('vim-airline/vim-airline')
 call dein#add('vim-airline/vim-airline-themes')
 call dein#add('flazz/vim-colorschemes')
-" End Interface Plugins }}} 
+" End Interface Plugins }}}
 
 " Language Specific Plugins {{{
 
 " Python {{{
 call dein#add('heavenshell/vim-pydocstring')
 call dein#add('klen/python-mode')
-" End Python }}} 
+" End Python }}}
 
 " Javascript {{{
 call dein#add('pangloss/vim-javascript')
@@ -98,7 +98,7 @@ call dein#add('ternjs/tern_for_vim')
 call dein#add('jacoborus/vim-jsdoc')
 call dein#add('heavenshell/vim-jsdoc')
 call dein#add('briancollins/vim-jst')
-" End Javascript }}} 
+" End Javascript }}}
 
 call dein#add('dag/vim-fish')
 call dein#add('plasticboy/vim-markdown')
@@ -107,11 +107,11 @@ call dein#add('vim-scripts/scons.vim')
 " Dart {{{
 call dein#add('dart-lang/dart-vim-plugin')
 call dein#add('miyakogi/vim-dartanalyzer')
-" End Dart }}} 
+" End Dart }}}
 
 " C/C++ Plugins {{{
 call dein#add('Rip-Rip/clang_complete')
-" End C/C++ Plugins }}} 
+" End C/C++ Plugins }}}
 
 call dein#add('saltstack/salt-vim')
 call dein#add('pearofducks/ansible-vim')
@@ -134,7 +134,7 @@ call dein#add('vim-pandoc/vim-pandoc-syntax')
 call dein#add('vim-pandoc/vim-pandoc-after')
 call dein#add('lambdalisue/vim-pandoc-preview')
 call dein#add('tex/vimpreviewpandoc')
-" End Pandoc }}} 
+" End Pandoc }}}
 
 call dein#add('suan/vim-instant-markdown')
 call dein#add('jamessan/vim-gnupg')
@@ -168,7 +168,7 @@ endif
 
 " }}}
 
-" Plugin Mappings {{{{
+" Plugin Mappings {{{
 "Mapping for Tagbar
 nnoremap <leader>t :TagbarToggle<cr>
 
@@ -211,29 +211,29 @@ nmap crx <Plug>RadicalCoerceToHex
 nmap cro <Plug>RadicalCoerceToOctal
 nmap crb <Plug>RadicalCoerceToBinary
 
-" }}}}
+" }}}
 
 " Plugin Settings {{{
 
 " Neomake Settings {{{
-   let g:neomake_c_enable_markers=['clang']
-   let g:neomake_c_clang_args = ["-std=c11", "-Wextra", "-Wall", "-fsanitize=undefined","-g"]
-   let g:neomake_cpp_enable_markers=['clang']
-   let g:neomake_cpp_clang_args = ["-std=c++14", "-Wextra", "-Wall", "-fsanitize=undefined","-g"]
-" End Neomake Settings }}} 
+let g:neomake_c_enable_markers=['clang']
+let g:neomake_c_clang_args = ["-std=c11", "-Wextra", "-Wall", "-fsanitize=undefined","-g"]
+let g:neomake_cpp_enable_markers=['clang']
+let g:neomake_cpp_clang_args = ["-std=c++14", "-Wextra", "-Wall", "-fsanitize=undefined","-g"]
+" End Neomake Settings }}}
 
 " ctrlspace Settings {{{
 
-  if executable("ag")
-    let g:CtrlSpaceGlobCommand = 'ag -l --hidden --nocolor -g ""'
-  endif
+if executable("ag")
+  let g:CtrlSpaceGlobCommand = 'ag -l --hidden --nocolor -g ""'
+endif
 
-  let g:CtrlSpaceLoadLastWorkspaceOnStart = 1
-  let g:CtrlSpaceSaveWorkspaceOnSwitch = 1
-  let g:CtrlSpaceSaveWorkspaceOnExit = 1
+let g:CtrlSpaceLoadLastWorkspaceOnStart = 1
+let g:CtrlSpaceSaveWorkspaceOnSwitch = 1
+let g:CtrlSpaceSaveWorkspaceOnExit = 1
 
-  " For ctrlspace
-  set hidden
+" For ctrlspace
+set hidden
 
 " End ctrlspace Settings }}}
 
@@ -294,20 +294,20 @@ if has('nvim')
   let g:deoplete#enable_at_startup = 1
 
   let g:deoplete#sources#jedi#show_docstring = 1
-	" Use deoplete.
-	let g:deoplete#enable_at_startup = 1
-	" Use smartcase.
-	let g:deoplete#enable_smart_case = 1
+  " Use deoplete.
+  let g:deoplete#enable_at_startup = 1
+  " Use smartcase.
+  let g:deoplete#enable_smart_case = 1
 
-	" <C-h>, <BS>: close popup and delete backword char.
-	inoremap <expr><C-h> deoplete#mappings#smart_close_popup()."\<C-h>"
-	inoremap <expr><BS>  deoplete#mappings#smart_close_popup()."\<C-h>"
+  " <C-h>, <BS>: close popup and delete backword char.
+  inoremap <expr><C-h> deoplete#mappings#smart_close_popup()."\<C-h>"
+  inoremap <expr><BS>  deoplete#mappings#smart_close_popup()."\<C-h>"
 
-	" <CR>: close popup and save indent.
-	inoremap <silent> <CR> <C-r>=<SID>my_cr_function()<CR>
-	function! s:my_cr_function() abort
-	  return deoplete#mappings#close_popup() . "\<CR>"
-	endfunction
+  " <CR>: close popup and save indent.
+  inoremap <silent> <CR> <C-r>=<SID>my_cr_function()<CR>
+  function! s:my_cr_function() abort
+    return deoplete#mappings#close_popup() . "\<CR>"
+  endfunction
 
   " for c and c++
   let g:clang_complete_auto = 0
@@ -376,7 +376,7 @@ let g:airline_theme = 'badwolf'
 
 " Ag.vim Settings {{{
 let g:ag_working_path_mode='r'
-" End Ag.vim Settings }}} 
+" End Ag.vim Settings }}}
 
 "Syntastic Settings {{{
 set statusline+=%#warningmsg#
@@ -525,8 +525,33 @@ let g:user_emmet_leader_key='<leader>e'
 let g:jsdoc_allow_input_prompt = 1
 " End JsDoc Settings }}}
 
+"}}}
+
+" Auto Groups {{{
+
+" Delimit Mate {{{
+if dein#check_install(["Raimondi/delimitMate"])
+  augroup pandoc
+    " Not sure if needed -> au Filetype pandoc let loaded_delimitMate = 1
+    au Filetype pandoc :DelimitMateSwitch
+  augroup END
+endif
+" End Delimit Mate }}}
+
+" NeoComplete {{{
+if dein#check_install(["Shougo/neocomplete.vim.git"]) && !has('nvim')
+  augroup pandoc
+    au FileType pandoc NeoCompleteLock
+  augroup END
+endif
+" End NeoComplete }}}
+
+" Autoreload .vimrc {{{
 augroup myvimrc
   au!
   au BufWritePost .vimrc,_vimrc,vimrc,.gvimrc,_gvimrc,gvimrc so $MYVIMRC | if has('gui_running') | so $MYGVIMRC | endif
 augroup END
-"}}}
+
+" End Autoreload .vimrc }}} 
+
+" End Auto Groups }}}
