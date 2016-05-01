@@ -23,3 +23,18 @@ options     head
         " ${1: Fold Name} {{{
                 `getreg('"')=='' ? "${2:autocommand}" : getreg('"')`
         " End $1 }}} ${3}
+
+snippet     autogroup
+abbr        aug
+options     head
+        augroup ${1: Group Name}
+                ${2: Group Commands}
+        augroup END
+        ${3}
+
+snippet     check-install
+abbr        chk
+options     head
+        if call dein#check_install("${1: Plugin Name}")
+                ${2: Auto Group}
+        endif
