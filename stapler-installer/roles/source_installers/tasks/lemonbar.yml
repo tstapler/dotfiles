@@ -1,0 +1,12 @@
+---
+- name: "Clone lemonbar"
+  git: 
+    repo=https://github.com/LemonBoy/bar.git 
+    dest=~/bin/lemonbar
+  become: no
+
+- name: "Make and Install lemonbar"
+  shell: cd ~/bin/lemonbar && make && make install
+  args:
+    creates: /usr/bin/lemonbar
+  become: yes
