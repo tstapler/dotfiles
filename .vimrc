@@ -145,6 +145,14 @@ augroup markdown
 augroup END
 " End Markdown filetype }}}
 
+" Terminal {{{
+if has('nvim')
+  augroup nvim_term
+      au BufEnter * if &buftype == 'terminal'  | tnoremap <C-[> <C-\><C-n> | startinsert | endif
+  augroup END
+endif
+" End Terminal }}} 
+
 " HTML filetype {{{
 au FileType html setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 " End HTML filetype }}}
