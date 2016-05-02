@@ -21,5 +21,6 @@
   become: yes
 
 - name: Install NPM
-  apt: name=nodejs state=present update_cache=yes
+  apt: name=nodejs state=present
+  ignore_errors: True
 

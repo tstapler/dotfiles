@@ -8,7 +8,12 @@
     - ipdb
     - youtube-dl
     - ansible
+    - powerline-status
+    #i3
+    - i3ipc
     #Vim
     - grip
     - html-tree-diff
     - pandocfilters
+    #NeoVim
+    - neovim

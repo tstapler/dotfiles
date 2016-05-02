@@ -9,6 +9,7 @@
     - 4716DAB5 # Mixxx
     - BBEBDCB318AD50EC6865090613B00F1FD2C19886 # SPOTIFY
     - 852541CB # Audacity
+    - 1BD3A65C # Terminator
 
 - name: "Add Repos for standalone packages"
   apt_repository: repo="{{item}}" state=present update_cache=yes
@@ -20,12 +21,15 @@
     - "deb http://ppa.launchpad.net/mixxx/mixxx/ubuntu {{ ansible_distribution_release }} main"
     - "deb http://repository.spotify.com stable non-free"
     - "deb http://ppa.launchpad.net/ubuntuhandbook1/audacity/ubuntu {{ ansible_distribution_release }} main "
+    - "deb http://ppa/launchpad.net/gnome-terminator/ppa/ubuntu {{ ansible_distribution_release }} main"
+        
 
 - name: "Install standalone packages" 
   apt: name={{item}} state=installed
   ignore_errors: True
   with_items:
     #Desktop Apps
+    - terminator
     - touchegg
     - shutter
     - xdotool
@@ -34,7 +38,6 @@
     #Languages
     - nodejs
     - golang
-    - openjdk-7-jdk
     - cabal-install
     #Dev Tools
     - git
@@ -64,3 +67,5 @@
     - figlet
     - nmap
     - ranger
+    #Build Tooling
+    - checkinstall
