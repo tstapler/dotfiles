@@ -1,7 +1,7 @@
 snippet lecture
 abbr lec
 options head
-        ## Lecture Title: ${1:Lecture name}
+  ## Lecture Title: ${1:Lecture name}
   **Class Name**: ${2:Name}
 
 snippet     header
@@ -10,6 +10,12 @@ options     head
         ---
   title: ${1}
   author: Tyler Stapler
+  header-includes:
+    - \usepackage{fancyhdr}
+    - \pagestyle{fancy}
+    - \fancyhead[RO, RE]{Stapler, Tyler}
+    - \fancyfoot[CO, CE]{$1}
+    - \fancyfoot[lE, RO]{\thepage}
   abstract: ${2:Abstract}
   ---
 
