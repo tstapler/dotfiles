@@ -159,3 +159,12 @@ au FileType html setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
 " }}}
 
+" Reload Config On Save {{{
+augroup myvimrc
+  au BufWritePost .vimrc,_vimrc,vimrc,.vimrc.dein,.gvimrc,_gvimrc,gvimrc so $MYVIMRC |
+        \ if has('gui_running') |
+        \ so $MYGVIMRC |
+        \ endif
+augroup END
+
+" End Reload Config On Save }}} 

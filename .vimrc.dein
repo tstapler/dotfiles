@@ -1,4 +1,5 @@
 " vim:fdm=marker
+
 " dein Plugins {{{
 
 "dein Scripts-----------------------------
@@ -57,7 +58,19 @@ call dein#add('fadein/FIGlet.vim')
 " End Editing Plugins }}}
 
 " Management Plugins {{{
+
+" Unite Vim} {{{
 call dein#add('Shougo/unite.vim')
+call dein#add('kmnk/vim-unite-giti')
+call dein#add('tsukkee/unite-tag')
+call dein#add('tsukkee/unite-help')
+call dein#add('Shougo/unite-outline')
+call dein#add('ujihisa/unite-colorscheme')
+call dein#add('ujihisa/unite-locate')
+call dein#add('tacroe/unite-mark')
+call dein#add('tungd/unite-session')
+" End Unite Vim} }}}
+
 call dein#add('benekastah/neomake')
 call dein#add('tpope/vim-fugitive')
 call dein#add('mattn/gist-vim')
@@ -89,7 +102,7 @@ call dein#add('flazz/vim-colorschemes')
 
 " Python {{{
 call dein#add('heavenshell/vim-pydocstring')
-call dein#add('klen/python-mode')
+"call dein#add('klen/python-mode')
 " End Python }}}
 
 " Javascript {{{
@@ -136,6 +149,13 @@ call dein#add('lambdalisue/vim-pandoc-preview')
 call dein#add('tex/vimpreviewpandoc')
 " End Pandoc }}}
 
+" Distraction Free Writing {{{
+call dein#add('amix/vim-zenroom2')
+call dein#add('junegunn/goyo.vim')
+call dein#add('junegunn/limelight.vim')
+" End Distraction Free Writing }}}
+
+call dein#add('tpope/vim-abolish')
 call dein#add('suan/vim-instant-markdown')
 call dein#add('jamessan/vim-gnupg')
 call dein#add('vim-scripts/DoxygenToolkit.vim')
@@ -169,20 +189,31 @@ endif
 " }}}
 
 " Plugin Mappings {{{
-"Mapping for Tagbar
-nnoremap <leader>t :TagbarToggle<cr>
 
-"Unite mappings
+" tagbar {{{
+nnoremap <leader>t :TagbarToggle<cr>
+" End tagbar }}}
+
+" Unite {{{
 "Grep in current directory
 nnoremap <leader>f :Unite -buffer-name=search -start-insert -auto-preview grep:.<CR>
-
 "Fuzzy search like ctrl-p
 nnoremap <C-P> :call Unite_ctrlp()<cr>
+" Execute help.
+nnoremap <C-h>  :<C-u>Unite -start-insert help<CR>
+" Execute help by cursor keyword.
+nnoremap <silent> g<C-h>  :<C-u>UniteWithCursorWord help<CR>
+" End Unite }}}
 
-"File explorer like NerdTree
+" zenroom2 {{{
+nnoremap <silent> <leader>z :Goyo<cr>
+" End zenroom2 }}}
+
+" vimfiler {{{
 nnoremap <C-e> :VimFilerExplorer<cr>
+" End vimfiler }}}
 
-" Plugin key-mappings.
+" neosnippet {{{
 imap <C-k>     <Plug>(neosnippet_expand_or_jump)
 smap <C-k>     <Plug>(neosnippet_expand_or_jump)
 xmap <C-k>     <Plug>(neosnippet_expand_target)
@@ -199,17 +230,21 @@ xmap <C-k>     <Plug>(neosnippet_expand_target)
 inoremap <expr><TAB>  pumvisible() ? "\<C-n>" : "\<TAB>"
 " Recommended key-mappings.
 
-" Toggle Quick Preview
+" End neosnippet }}}
+
+" InstantMarkdownPreview {{{
 nnoremap  <leader>m :InstantMarkdownPreview<cr>
+" End InstantMarkdownPreview }}}
 
-
-" Vim Radical (Convert base)
+" Radical Vim (Convert Base) {{{
 nmap g<C-A> <Plug>RadicalView
 xmap g<C-A> <Plug>RadicalView
 nmap crd <Plug>RadicalCoerceToDecimal
 nmap crx <Plug>RadicalCoerceToHex
 nmap cro <Plug>RadicalCoerceToOctal
 nmap crb <Plug>RadicalCoerceToBinary
+
+" End Radical Vim (Convert Base) }}}
 
 " }}}
 
@@ -525,6 +560,10 @@ let g:user_emmet_leader_key='<leader>e'
 let g:jsdoc_allow_input_prompt = 1
 " End JsDoc Settings }}}
 
+" Gutentags Settings {{{
+let g:gutentags_cache_dir = "~/.vim/"
+" End Gutentags Settings }}} 
+
 "}}}
 
 " Auto Groups {{{
@@ -555,3 +594,5 @@ augroup END
 " End Autoreload .vimrc }}} 
 
 " End Auto Groups }}}
+
+"}}}
