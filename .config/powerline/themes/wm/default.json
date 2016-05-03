@@ -1,0 +1,62 @@
+{
+  "default_module": "powerline.segments.i3wm",
+  "segments": {
+    "left": [
+      {
+        "function": "powerline.segments.common.net.hostname"
+      },
+      {
+        "function": "mode",
+        "args": {
+          "names": {
+            "default": null,
+            "gaps": "gaps <+ - 0 =>",
+            "resize": "resize <left right up down>"
+          }
+        }
+      },
+      {
+        "type": "segment_list",
+        "function": "powerline.listers.i3wm.workspace_lister",
+        "include_modes": ["default"],
+        "segments": [
+          {
+            "function": "workspace",
+            "args": {
+              "strip": true
+            }
+          }
+        ]
+      }
+    ],
+    "right": [
+      {
+        "function": "scratchpad",
+        "draw_inner_divider": true,
+        "include_modes": ["default"]
+      },
+      {
+        "function": "powerline.segments.common.wthr.weather",
+        "priority": 50
+      },
+      {
+        "function": "powerline.segments.common.bat.battery",
+        "args": {
+          "gamify": true,
+          "steps": 6
+        }
+      },
+      {
+        "function": "powerline.segments.common.time.date",
+        "name": "time",
+        "args": {
+          "format": "%H:%M",
+          "istime": true
+        }
+      },
+      {
+        "function": "powerline.segments.common.time.date"
+      }
+    ]
+  }
+}
