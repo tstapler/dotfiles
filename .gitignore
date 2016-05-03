@@ -42,3 +42,8 @@ env
 ehthumbs.db
 Icon?
 Thumbs.db
+
+# Editor Files #
+###############
+.cs_*
+tags
