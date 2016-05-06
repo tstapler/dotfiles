@@ -54,6 +54,7 @@ call dein#add('glts/vim-radical', {'depends':
       \   'glts/vim-magnum'
       \ ]})
 call dein#add('fadein/FIGlet.vim')
+call dein#add('triglav/vim-visual-increment')
 
 " End Editing Plugins }}}
 
@@ -186,8 +187,7 @@ endif
 
 "End dein Scripts-------------------------
 
-" }}}
-
+" }}} 
 " Plugin Mappings {{{
 
 " tagbar {{{
@@ -273,37 +273,39 @@ set hidden
 " End ctrlspace Settings }}}
 
 " Unite Settings {{{
-call unite#filters#matcher_default#use(['matcher_fuzzy'])
-call unite#filters#sorter_default#use(['sorter_rank'])
-call unite#custom#source('file,file/new,buffer,te -buffer-name=search -start-insert -auto-preview grep -custom-grep-command file_rec,line', 'matchers', 'matcher_fuzzy')
+if dein#check_install(["Shougo/unite.vim"])
+  call unite#filters#matcher_default#use(['matcher_fuzzy'])
+  call unite#filters#sorter_default#use(['sorter_rank'])
+  call unite#custom#source('file,file/new,buffer,te -buffer-name=search -start-insert -auto-preview grep -custom-grep-command file_rec,line', 'matchers', 'matcher_fuzzy')
 
-" Build the ctrlp function, using projectroot to define the
-" working directory.
-function! Unite_ctrlp()
-  execute ':Unite  -buffer-name=files -start-insert -match-input buffer file_rec/async'
-endfunction
+  " Build the ctrlp function, using projectroot to define the
+  " working directory.
+  function! Unite_ctrlp()
+    execute ':Unite  -buffer-name=files -start-insert -match-input buffer file_rec/async'
+  endfunction
 
-"Select Search
-if executable('Ag')
-  " Use ag (the silver searcher)
-  " https://github.com/ggreer/the_silver_searcher
-  let g:unite_source_grep_command = 'Ag'
-  let g:unite_source_grep_default_opts =
-        \ '-i --hidden --ignore ' .
-        \ '''.hg'' --ignore ''.svn'' --ignore ''.git'' --ignore ''.bzr'' --ignore ''packages''
-  let g:unite_source_grep_recursive_opt = ''
-elseif executable('ack-grep')
-  " Use ack
-  " http://beyondgrep.com/
-  let g:unite_source_grep_command = 'ack-grep'
-  let g:unite_source_grep_default_opts = '-i --no-heading --no-color -k -H'
-  let g:unite_source_grep_recursive_opt = ''
+  "Select Search
+  if executable('Ag')
+    " Use ag (the silver searcher)
+    " https://github.com/ggreer/the_silver_searcher
+    let g:unite_source_grep_command = 'Ag'
+    let g:unite_source_grep_default_opts =
+          \ '-i --hidden --ignore ' .
+          \ '''.hg'' --ignore ''.svn'' --ignore ''.git'' --ignore ''.bzr'' --ignore ''packages''
+    let g:unite_source_grep_recursive_opt = ''
+  elseif executable('ack-grep')
+    " Use ack
+    " http://beyondgrep.com/
+    let g:unite_source_grep_command = 'ack-grep'
+    let g:unite_source_grep_default_opts = '-i --no-heading --no-color -k -H'
+    let g:unite_source_grep_recursive_opt = ''
+  endif
+
+  " Unite Options
+  let g:unite_source_history_yank_enable=1
+  let g:unite_enable_start_insert=1
+  let g:unite_ignore_source_files = [ 'packages' ]
 endif
-
-" Unite Options
-let g:unite_source_history_yank_enable=1
-let g:unite_enable_start_insert=1
-let g:unite_ignore_source_files = [ 'packages' ]
 
 " End Unite Settings }}}
 
