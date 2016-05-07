@@ -1,2 +1,0 @@
-- name: Include node_packages
-  include: node_packages.yml

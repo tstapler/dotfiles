@@ -1,5 +1,0 @@
----
-- name: Include Language Installers
-  include: language_installers.yml
-- name: Install Git Annex
-  include: git-annex.yml
