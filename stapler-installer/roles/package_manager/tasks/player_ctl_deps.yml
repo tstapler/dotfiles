@@ -1,9 +1,0 @@
----
-- name: "Install playerctl Dependencies"
-  apt: 
-    name={{item}} 
-    state=installed
-  with_items:
-    - gtk-doc-tools
-    - gobject-introspection
-  become: yes

@@ -1,2 +1,0 @@
-- name: Include python_packages
-  include: python_packages.yml
