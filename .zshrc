@@ -67,50 +67,13 @@ POWERLEVEL9K_DIR_HOME_FOREGROUND="240"
 POWERLEVEL9K_DIR_HOME_SUBFOLDER_BACKGROUND="240"
 POWERLEVEL9K_DIR_HOME_SUBFOLDER_FOREGROUND="208"
 
-# User configuration
-export PATH=$PATH:"/home/tstapler/stapler-config/env/bin:/home/tstapler/.pyenv/shims:/home/tstapler/.pyenv/shims:/home/tstapler/.pyenv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games"
-
-#Add Dart pub files to PATH
-export PATH=$PATH:"/home/tstapler/.pub-cache/bin"
-
-#Create Go Path
-export GOPATH=/usr/local/go
-
-#Add LaTex files to PATH
-export TEXMFHOME=~/texmf
-
-#Add GO to PATH
-export PATH="$PATH":"$GOPATH/bin"
-
-#Add Cabal to PATH
-export PATH="$HOME/.cabal/bin:"$PATH
-
-#Set environment varibles
-export ENHANCD_FILTER=fzf
-
-#Setup RVM
-export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
-
-if hash nvim 2>/dev/null; then
-	# Use Neovim if it exists
-	export EDITOR='nvim'
-	alias vim='nvim'
-
-elif hash vim 2>/dev/null; then
-	# Use Vim if no Neovim
-	export EDITOR='vim'
-
-else
-	# Settle for vi if all else fails
-	export EDITOR='vi'
-	alias vim='vi'
-fi
+# Export Environment Variables
+source ~/.shell/exports.sh
 
 #Aliases
-alias zshconfig="$EDITOR ~/.zshrc"
-alias ohmyzsh="$EDITOR ~/.oh-my-zsh"
-alias vimrc="$EDITOR ~/.vimrc"
+source ~/.shell/aliases.sh
 
 
 
+# Load .NET version manager
 [ -s "/home/tstapler/.dnx/dnvm/dnvm.sh" ] && . "/home/tstapler/.dnx/dnvm/dnvm.sh" # Load dnvm
