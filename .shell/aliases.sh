@@ -12,3 +12,4 @@ alias ls='ls -F'
 if [ "$EDITOR" = "nvim" ]; then
 	alias vim='nvim'
 fi
+
