@@ -1,4 +1,5 @@
 [global_config]
+  dbus = True
 [keybindings]
 [layouts]
   [[default]]
