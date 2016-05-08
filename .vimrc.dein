@@ -97,6 +97,7 @@ call dein#add('tpope/vim-dispatch')
 call dein#add('vim-airline/vim-airline')
 call dein#add('vim-airline/vim-airline-themes')
 call dein#add('flazz/vim-colorschemes')
+call dein#add('myusuf3/numbers.vim')
 " End Interface Plugins }}}
 
 " Language Specific Plugins {{{
@@ -188,6 +189,7 @@ endif
 "End dein Scripts-------------------------
 
 " }}} 
+
 " Plugin Mappings {{{
 
 " tagbar {{{
@@ -197,8 +199,7 @@ nnoremap <leader>t :TagbarToggle<cr>
 " Unite {{{
 "Grep in current directory
 nnoremap <leader>f :Unite -buffer-name=search -start-insert -auto-preview grep:.<CR>
-"Fuzzy search like ctrl-p
-nnoremap <C-P> :call Unite_ctrlp()<cr>
+
 " Execute help.
 nnoremap <C-h>  :<C-u>Unite -start-insert help<CR>
 " Execute help by cursor keyword.
@@ -245,6 +246,11 @@ nmap cro <Plug>RadicalCoerceToOctal
 nmap crb <Plug>RadicalCoerceToBinary
 
 " End Radical Vim (Convert Base) }}}
+
+" ctrl-space {{{
+"Fuzzy search like ctrl-p
+nnoremap <silent><C-p> :CtrlSpace O<CR>
+" End ctrl-space }}} 
 
 " }}}
 
@@ -596,5 +602,3 @@ augroup END
 " End Autoreload .vimrc }}} 
 
 " End Auto Groups }}}
-
-"}}}
