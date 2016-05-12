@@ -37,6 +37,7 @@ call dein#add('Shougo/neosnippet-snippets')
 call dein#add('honza/vim-snippets')
 " End Snippet Plugins }}}
 
+call dein#add('dhruvasagar/vim-table-mode')
 call dein#add('Chiel92/vim-autoformat')
 call dein#add('Shougo/context_filetype.vim')
 call dein#add('godlygeek/tabular')
@@ -544,15 +545,14 @@ let g:instant_markdown_autostart = 0
 " End InstantMarkdownPreview Settings }}}
 
 " Pandoc Settings {{{
-let g:pandoc#syntax#conceal#use = 0
-let g:pandoc#keyboard#use_default_mappings = 1
 let g:pandoc#syntax#conceal#blacklist = ["block", "codeblock_start", "codeblock_delim"]
-let g:pandoc#formatting#mode = "ha"
+let g:pandoc#keyboard#use_default_mappings = 1
+let g:pandoc#formatting#mode = "hA"
 let g:pandoc#folding#level = 2
 let g:pandoc#folding#mode = "relative"
 let g:pandoc#after#modules#enabled = ["nrrwrgn", "tablemode", "unite", "neosnippets"]
 let g:pandoc#completion#bib#mode = 'citeproc'
-let g:pandoc#folding#fold_yaml = 1
+let g:pandoc#folding#fold_yaml = 0
 "Pandoc Syntax
 let g:pandoc#syntax#colorcolumn = 1
 
@@ -562,6 +562,9 @@ endif
 
 " End Pandoc Settings }}}
 
+" Tex Mode {{{
+let g:tex_conceal = "ab"
+" End Tex Mode }}} 
 " Emmet Settings {{{
 let g:user_emmet_leader_key='<leader>e'
 " End Emmet Settings }}}
