@@ -129,6 +129,7 @@ call dein#add('miyakogi/vim-dartanalyzer')
 call dein#add('Rip-Rip/clang_complete')
 " End C/C++ Plugins }}}
 
+call dein#add('tmux-plugins/vim-tmux')
 call dein#add('saltstack/salt-vim')
 call dein#add('pearofducks/ansible-vim')
 call dein#add('vim-scripts/bash-support.vim')
