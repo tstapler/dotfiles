@@ -33,3 +33,31 @@ options head
           - \fancyfoot[lE, RO]{\thepage}
         abstract: ${2:Abstract}
         ---
+ 
+snippet     code
+abbr        code
+options     head
+        ~~~~ {.${1:Language}}
+                ${2:Code}
+        ~~~~
+        ${3}
+
+snippet     equ
+abbr        equ
+options     head
+        $$ ${1:Equation} $$
+
+snippet     fra
+abbr        fra
+options     head
+        \frac{${1:Top}}{${2:Bottom}}${3}
+
+snippet     sum
+abbr        sum
+options     head
+        \sum_{i=${1:Start}}^{${2:Stop}}${3}
+
+snippet     lbrace
+abbr        lbrace
+options     head
+        \lbrace ${1: Content} \rbrace ${2}
