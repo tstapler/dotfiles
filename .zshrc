@@ -17,7 +17,7 @@ source ~/.zplug/zplug
 zplug "b4b4r07/zplug"
 
 #oh-my-zsh pack
-zplug "robbyrussell/oh-my-zsh", of:oh-my-zsh.sh, nice:-10
+zplug "robbyrussell/oh-my-zsh", use:oh-my-zsh.sh, nice:-10
 zplug "willghatch/zsh-hooks"
 
 #Theme
@@ -25,12 +25,22 @@ export TERM="xterm-256color"
 zplug "bhilburn/powerlevel9k"
 
 zplug "zsh-users/zsh-completions"
-zplug "b4b4r07/enhancd", of:enhancd.sh
+zplug "b4b4r07/enhancd", use:enhancd.sh
 zplug "zsh-users/zaw"
 
 #The file searchers
-zplug "junegunn/fzf-bin", as:command, from:gh-r, file:fzf, of:"*linux*64*"
-zplug "peco/peco", as:command, from:gh-r, file:peco, of:"*linux_amd64*"
+
+if [[ `uname` == 'Linux' ]]; then
+zplug "junegunn/fzf-bin", as:command, from:gh-r, rename-to:fzf, use:"*linux*64*"
+zplug "peco/peco", as:command, from:gh-r, rename-to:peco, use:"*linux_amd64*"
+fi
+
+if [[ `uname` == 'Darwin' ]]; then
+zplug "junegunn/fzf-bin", as:command, from:gh-r, rename-to:fzf, use:"*darwin*64*"
+zplug "peco/peco", as:command, from:gh-r, rename-to:peco, use:"*linux_amd64*"
+fi
+
+
 
 zplug "tarruda/zsh-autosuggestions"
 zplug "zsh-users/zsh-syntax-highlighting"
