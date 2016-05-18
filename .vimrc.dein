@@ -43,17 +43,18 @@ call dein#add('Shougo/context_filetype.vim')
 call dein#add('godlygeek/tabular')
 call dein#add('tpope/vim-surround')
 call dein#add('tpope/vim-commentary')
+call dein#add('tpope/vim-speeddating')
 call dein#add('Chiel92/vim-autoformat')
 call dein#add('mattn/emmet-vim')
 call dein#add('christoomey/vim-sort-motion')
 call dein#add('Raimondi/delimitMate')
 call dein#add('christoomey/vim-titlecase')
 call dein#add('fidian/hexmode')
-call dein#add('glts/vim-radical', {'depends':
-      \ [
-      \   'google/vim-maktaba',
-      \   'glts/vim-magnum'
-      \ ]})
+" call dein#add('glts/vim-radical', {'depends':
+"       \ [
+"       \   'google/vim-maktaba',
+"       \   'glts/vim-magnum'
+"       \ ]})
 call dein#add('fadein/FIGlet.vim')
 call dein#add('triglav/vim-visual-increment')
 
@@ -150,8 +151,8 @@ call dein#add('avakhov/vim-yaml')
 call dein#add('vim-pandoc/vim-pandoc')
 call dein#add('vim-pandoc/vim-pandoc-syntax')
 call dein#add('vim-pandoc/vim-pandoc-after')
-call dein#add('lambdalisue/vim-pandoc-preview')
-call dein#add('tex/vimpreviewpandoc')
+" call dein#add('lambdalisue/vim-pandoc-preview')
+" call dein#add('tex/vimpreviewpandoc')
 " End Pandoc }}}
 
 " Distraction Free Writing {{{
@@ -173,6 +174,7 @@ call dein#add('Shougo/vimproc.vim', {'build' : 'make'})
 call dein#add('xolox/vim-misc')
 call dein#add('mattn/webapi-vim')
 call dein#add('google/vim-maktaba')
+call dein#add('google/vim-glaive')
 call dein#add('glts/vim-magnum')
 call dein#add('LucHermitte/lh-vim-lib', {'name': 'lh-vim-lib'})
 call dein#add('jceb/vim-hier')

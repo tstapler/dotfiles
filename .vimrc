@@ -96,7 +96,7 @@ nnoremap Y y$
 " Plugin Manager {{{
 if filereadable(expand("~/.vimrc.dein")) 
    \ && isdirectory(expand("~/.vim/bundle/repos")) 
-   \ && version > 730
+   \ && (has("nvim") || version > 703)
   source ~/.vimrc.dein
 else
   colorscheme slate
