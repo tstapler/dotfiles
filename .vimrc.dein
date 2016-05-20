@@ -107,7 +107,7 @@ call dein#add('myusuf3/numbers.vim')
 
 " Python {{{
 call dein#add('heavenshell/vim-pydocstring')
-"call dein#add('klen/python-mode')
+call dein#add('klen/python-mode')
 " End Python }}}
 
 " Javascript {{{
@@ -173,9 +173,9 @@ call dein#add('johnsyweb/vim-makeshift')
 call dein#add('Shougo/vimproc.vim', {'build' : 'make'})
 call dein#add('xolox/vim-misc')
 call dein#add('mattn/webapi-vim')
-call dein#add('google/vim-maktaba')
-call dein#add('google/vim-glaive')
-call dein#add('glts/vim-magnum')
+" call dein#add('google/vim-maktaba')
+" call dein#add('google/vim-glaive')
+" call dein#add('glts/vim-magnum')
 call dein#add('LucHermitte/lh-vim-lib', {'name': 'lh-vim-lib'})
 call dein#add('jceb/vim-hier')
 " End Miscellaneous Plugins }}}
@@ -578,6 +578,10 @@ let g:jsdoc_allow_input_prompt = 1
 " Gutentags Settings {{{
 let g:gutentags_cache_dir = "~/.vim/"
 " End Gutentags Settings }}} 
+
+" pymode Settings {{{
+let g:pymode_rope_completion = 0
+" End pymode Settings }}} 
 
 "}}}
 
