@@ -17,3 +17,9 @@ options     head
           package: ${3: Options}
           with_items:
             - ${4: Packages}
+
+snippet     task
+abbr        task
+options     head
+        - name: ${1: Task Name} 
+          ${2: Module Name}: ${3: Args}
