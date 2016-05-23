@@ -91,6 +91,7 @@ call dein#add('vim-ctrlspace/vim-ctrlspace')
 
 " Utility Plugins {{{
 call dein#add('rking/ag.vim')
+call dein#add('Chun-Yang/vim-action-ag')
 call dein#add('scrooloose/syntastic')
 call dein#add('myint/syntastic-extras')
 call dein#add('tpope/vim-dispatch')
