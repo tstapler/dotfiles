@@ -263,10 +263,22 @@ nnoremap <silent><C-p> :CtrlSpace O<CR>
 " Plugin Settings {{{
 
 " Neomake Settings {{{
+
+" Open Automatically
+let g:neomake_open_list = 2 
+
 let g:neomake_c_enable_markers=['clang']
 let g:neomake_c_clang_args = ["-std=c11", "-Wextra", "-Wall", "-fsanitize=undefined","-g"]
 let g:neomake_cpp_enable_markers=['clang']
 let g:neomake_cpp_clang_args = ["-std=c++14", "-Wextra", "-Wall", "-fsanitize=undefined","-g"]
+
+let g:neomake_python_flake8_maker = {
+    \ 'exe': 'flake8'
+    \ }
+let g:neomake_python_prospector_maker = {
+    \ 'exe': 'prospector'
+    \ }
+let g:neomake_python_enable_markers=['flake8', 'prospector']
 " End Neomake Settings }}}
 
 " ctrlspace Settings {{{
@@ -582,6 +594,8 @@ let g:gutentags_cache_dir = "~/.vim/"
 
 " pymode Settings {{{
 let g:pymode_rope_completion = 0
+let g:pymode_lint = 0
+let g:pymode_rope_regenerate_on_write = 0
 " End pymode Settings }}} 
 
 "}}}
@@ -612,5 +626,11 @@ augroup myvimrc
 augroup END
 
 " End Autoreload .vimrc }}} 
+
+" Neomake {{{
+augroup neomake
+  autocmd! BufWritePost * Neomake
+augroup END
+" End Neomake }}} 
 
 " End Auto Groups }}}
