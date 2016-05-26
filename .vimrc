@@ -111,7 +111,7 @@ au FileType make setlocal noexpandtab
 " End Makefile filetype }}}
 
 " Python filetype {{{
-au FileType python setlocal tabstop=4 shiftwidth=4 softtabstop=4 expandtab
+au FileType python setlocal tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab
 " End Python filetype }}}
 
 " Javascript filetype {{{
