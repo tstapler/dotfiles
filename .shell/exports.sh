@@ -29,10 +29,12 @@ export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
 if hash nvim 2>/dev/null; then
 	# Use Neovim if it exists
 	export EDITOR='nvim'
+	export GIT_EDITOR='nvim'
 
 elif hash vim 2>/dev/null; then
 	# Use Vim if no Neovim
 	export EDITOR='vim'
+	export GIT_EDITOR='vim'
 
 else
 	# Settle for vi if all else fails
