@@ -60,6 +60,9 @@ zplug load --verbose
 # Toggle Auto Suggest
 bindkey '^T' autosuggest-toggle
 
+# Language managers (RVM, NVM, PYENV, ...)
+source ~/.shell/languages.sh
+
 # Prompt Config
 source ~/.shell/powerlevel9k.sh
 
@@ -71,5 +74,3 @@ source ~/.shell/aliases.sh
 
 
 
-# Load .NET version manager
-[ -s "/home/tstapler/.dnx/dnvm/dnvm.sh" ] && . "/home/tstapler/.dnx/dnvm/dnvm.sh" # Load dnvm
