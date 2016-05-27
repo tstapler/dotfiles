@@ -120,10 +120,6 @@ call dein#add('heavenshell/vim-jsdoc')
 call dein#add('briancollins/vim-jst')
 " End Javascript }}}
 
-call dein#add('dag/vim-fish')
-call dein#add('plasticboy/vim-markdown')
-call dein#add('vim-scripts/scons.vim')
-
 " Dart {{{
 call dein#add('dart-lang/dart-vim-plugin')
 call dein#add('miyakogi/vim-dartanalyzer')
@@ -133,6 +129,14 @@ call dein#add('miyakogi/vim-dartanalyzer')
 call dein#add('Rip-Rip/clang_complete')
 " End C/C++ Plugins }}}
 
+" TypeScript Plugins {{{
+call dein#add('clausreinke/typescript-tools.vim')
+call dein#add('HerringtonDarkholme/yats.vim')
+" End TypeScript Plugins }}} 
+
+call dein#add('dag/vim-fish')
+call dein#add('plasticboy/vim-markdown')
+call dein#add('vim-scripts/scons.vim')
 call dein#add('tmux-plugins/vim-tmux')
 call dein#add('saltstack/salt-vim')
 call dein#add('pearofducks/ansible-vim')

@@ -136,7 +136,7 @@ au FileType c setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
 " Dart filetype {{{
 augroup dart
-  au FileType dart setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab
+  au FileType dart setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab smarttab
 augroup END
 " End Dart filetype }}}
 
@@ -146,6 +146,12 @@ augroup markdown
   au! FileType,BufRead,BufNewFile *.md       set filetype=mkd spell
 augroup END
 " End Markdown filetype }}}
+
+" TypeScript filetype {{{
+augroup typescript
+  au Filetype typescript setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab smarttab
+augroup END
+" End TypeScript filetype }}} 
 
 " Terminal {{{
 if has('nvim')
