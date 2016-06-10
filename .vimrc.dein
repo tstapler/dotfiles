@@ -273,12 +273,17 @@ let g:neomake_cpp_enable_markers=['clang']
 let g:neomake_cpp_clang_args = ["-std=c++14", "-Wextra", "-Wall", "-fsanitize=undefined","-g"]
 
 let g:neomake_python_flake8_maker = {
-    \ 'exe': 'flake8'
+    \ 'exe': 'flake8',
+    \ 'errorformat': '%f:%l:%c: %m'    
     \ }
-let g:neomake_python_prospector_maker = {
-    \ 'exe': 'prospector'
+let g:neomake_python_pylama_maker = {
+    \ 'exe': 'pylama',
+    \ 'args': ['-o','~/.config/pylama/pylama.ini'],
+    \ 'errorformat': '%f:%l:%c: %m'    
     \ }
-let g:neomake_python_enable_markers=['flake8', 'prospector']
+
+let g:neomake_python_enabled_makers=['flake8', 'pylama']
+
 " End Neomake Settings }}}
 
 " ctrlspace Settings {{{
