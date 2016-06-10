@@ -47,3 +47,7 @@ Thumbs.db
 ###############
 .cs_*
 tags
+.gutctags
+covhtml
+coverage.xml
+CS_SESSION
