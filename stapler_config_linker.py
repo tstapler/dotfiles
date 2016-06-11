@@ -1,128 +1,217 @@
-from os.path import join
+from collections import namedtuple
+from os.path import exists, join, relpath, expanduser, realpath, split, abspath
+from os import walk
+from shutil import move
 import os
 import sys
 import re
 
+INSTALL_PLATFORM = sys.platform
+CONFIG_DIR = split(os.path.abspath(__file__))[0]
+HOME_DIR = expanduser("~")
+MISSING_FILE_MESSAGE = "Please create a {} file in the same" \
+                       " directory as the linker python file."
 
-install_platform = sys.platform
-config_dir = os.path.split(os.path.abspath(__file__))[0]
-home_dir = os.path.expanduser('~')
-
-# Read installer ignore file
-ignored = [line.split("#", 1)[0].strip("\n")
-           for line in open(join(config_dir, ".linkerignore"))
-           if line.split("#", 1)[0] != ""]
-ignore_patterns = "(" + ")|(".join(ignored) + ")"
+Link = namedtuple('Link', ['src', 'dest'])
 
 
-def link_configs(config_dir=config_dir, dest=home_dir):
-    """Symlinks configuration files to the destination directory
+class Linker(object):
+    """Tyler Stapler's Config Linker
+
+    Attributes:
+        src: The location of the configuration to be linked
+        dest: The location to be copied to
+        folder_links:
+        ignore_file:
+    """
+    def __init__(self,
+                 src=CONFIG_DIR,
+                 dest=HOME_DIR,
+                 folder_links_file=None,
+                 ignore_file=None):
+        self.src = src
+        self.dest = dest
+
+        if folder_links_file is None:
+            try:
+                self.folder_links_file = join(CONFIG_DIR, ".folderlinks")
+                exists(self.folder_links_file)
+            except IOError:
+                print(MISSING_FILE_MESSAGE.format(".folderlinks"))
+                sys.exit(1)
+        if ignore_file is None:
+            try:
+                self.ignore_file = join(CONFIG_DIR, ".linkerignore")
+                exists(self.ignore_file)
+            except IOError:
+                print(MISSING_FILE_MESSAGE.format(".linkerignore"))
+                sys.exit(1)
+
+        self.folder_patterns = self._get_lines_from_file(self.folder_links_file)
+        self.ignored_patterns = self._parse_ignore_file(self.ignore_file)
+
+    def link_configs(self):
+        """Symlinks configuration files to the destination directory
 
         Parses the ignore file for regexes and then generates a list of files
         which need to be simulinked"""
 
-    to_link, absent_dirs = find_absences(source=config_dir, destination=dest)
+        absent_files, absent_dirs = self.find_absences()
 
-    if len(to_link) == 0:
-        print("No files to move")
-        return
+        if len(absent_files) == 0:
+            print("No files to move")
+            return
 
-    print("Preparing to symlink the following files")
-    print("\n".join(link[1] for link in to_link))
-    if query_yes_no("Are these the correct files?"):
-        create_dirs(dirs=absent_dirs)
-        create_links(links=to_link)
+        print("Preparing to symlink the following files")
+        print("\n".join(link.dest for link in absent_files))
+        if self._query_yes_no("Are these the correct files?"):
+            self._create_dirs(dirs=absent_dirs)
+            self._create_links(links=absent_files)
 
+    def find_absences(self):
+        """ Walk the source directory and return a lists of diles and dirs absent
+            from the destination directory
 
-def find_absences(source=config_dir, destination=home_dir):
-    """ Walk the source directory and return a lists of diles and dirs absent
-        from the destination directory
+        Args:
+            source: The path to copy from (Default is the script's location)
+            destination The path to copy to (Defaults to home directory)
 
-        "source": The location to copy from (Default is the script's location)
-        "destination" The location to copy to (Defaults to home directory)
+        Returns:
+            absent_files: a list of Links
+            absent_dirs: a list of paths to directories
+        """
+        absent_dirs = []
+        absent_files = []
+        for root, dirs, files in walk(self.src, topdown=True):
+            rel_path = relpath(root, self.src)
+            if rel_path == ".":
+                rel_path = ""
 
-        The return value to_link is a list of tuples (source_dir, dest_dir)
-        The return value absent_dirs is a list of paths to directories
-    """
-    absent_dirs = []
-    to_link = []
-    for root, dirs, files in os.walk(source, topdown=True):
-        rel_path = os.path.relpath(root, source)
-        if rel_path == ".":
-            rel_path = ""
+            # Remove ignored directories from the walk
+            dirs[:] = [dir_name for dir_name in dirs
+                       if not re.match(self.ignored_patterns, dir_name)]
+            files[:] = [f for f in files
+                        if not re.match(self.ignored_patterns, f)]
 
-        # Remove ignored directories from the walk
-        dirs[:] = [dir_name for dir_name in dirs
-                   if not re.match(ignore_patterns, dir_name)]
-        files[:] = [f for f in files if not re.match(ignore_patterns, f)]
+            # Create list of dirs that dont exist
+            for dir_name in dirs:
+                if not exists(join(self.dest, rel_path, dir_name)):
+                    absent_dirs.append(join(self.dest, rel_path, dir_name))
 
-        # Create list of dirs that dont exist
-        for dir_name in dirs:
-            if not os.path.exists(join(destination, rel_path, dir_name)):
-                absent_dirs.append(join(destination, rel_path, dir_name))
+            # Create a list of files to be symlinked
+            for f in files:
+                if not exists(join(self.dest, rel_path, f)):
+                    # Add the source and destination for the symlink
+                    absent_files.append(Link(join(root, f),
+                                         join(self.dest, rel_path, f)))
 
-        # Create a list of files to be symlinked
-        for f in files:
-            if not os.path.exists(join(destination, rel_path, f)):
-                # Add the source and destination for the symlink
-                to_link.append((join(root, f), join(destination, rel_path, f)))
+        return absent_files, absent_dirs
 
-    return to_link, absent_dirs
+    def link_folders(self):
+        """Link all the files in the folder link file
 
+        Args:
+            None
 
-def create_dirs(dirs=[]):
-    """
-    Make sure that each of the given paths exist
+        Returns:
+            None
+        """
+        folders_to_link = []
 
-    "dirs": A list of paths to to be created
+        for folder_path in folders_to_link:
+            path_rel_to_home = relpath(folder_path, self.src)
+            if exists(folder_path):
+                move(folder_path, join(self.src, path_rel_to_home))
 
-    """
-    for dir_name in dirs:
-        os.makedirs(dir_name)
+    def _get_lines_from_file(self, file_path):
+        """ Return a list of lines from a file minus comments
 
+        Args:
+            file_path (string): The path to the target file
 
-def create_links(links=[]):
-    """
-    Create symlinks for each item in links
+        Returns:
+            [string]
+        """
+        try:
+            return [line.split("#", 1)[0].strip("\n")
+                    for line in open(file_path)
+                    if line.split("#", 1)[0] != ""]
+        except IOError:
+            return [""]
 
-    "links": tuples containing the following items (source, destination)
-    """
-    for link in links:
-        os.symlink(link[0], link[1])
+    def _parse_ignore_file(self, file_path):
+        """Parse the gitignore style file
 
+        Args:
+            file_path (string): The path to the target file
 
-def query_yes_no(question, default="yes"):
-    """
-    Ask a yes/no question via raw_input() and return their answer.
-
-    "question" is a string that is presented to the user.
-    "default" is the presumed answer if the user just hits <Enter>.
-        It must be "yes" (the default), "no" or None (meaning
-        an answer is required of the user).
-
-    The "answer" return value is True for "yes" or False for "no".
-    """
-    valid = {"yes": True, "y": True, "ye": True,
-             "no": False, "n": False}
-    if default is None:
-        prompt = " [y/n] "
-    elif default == "yes":
-        prompt = " [Y/n] "
-    elif default == "no":
-        prompt = " [y/N] "
-    else:
-        raise ValueError("invalid default answer: '%s'" % default)
-
-    while True:
-        sys.stdout.write(question + prompt)
-        choice = raw_input().lower()
-        if default is not None and choice == '':
-            return valid[default]
-        elif choice in valid:
-            return valid[choice]
+        Returns:
+            string: Returns the regexes derived from the file
+        """
+        ignored = self._get_lines_from_file(file_path)
+        if ignored == []:
+            return ""
         else:
-            sys.stdout.write("Please respond with 'yes' or 'no' "
-                             "(or 'y' or 'n').\n")
+            return "(" + ")|(".join(ignored) + ")"  # regex from list of regexes
+
+    def _create_dirs(self, dirs=[]):
+        """Creates all folders in dirs
+
+        Args:
+            dirs ([string]): A list of paths to be linked
+
+        Returns:
+            None: Does not return anything
+        """
+        for dir_name in dirs:
+            os.makedirs(dir_name)
+
+    def _create_links(self, links=[]):
+        """Create symlinks for each item in links
+
+        Args:
+            links([Link]): a list of Links
+        Returns:
+            None: Does not return anything
+        """
+        for link in links:
+            os.symlink(link.src, link.dest)
+
+    def _query_yes_no(self, question, default="yes"):
+        """Ask a yes/no question via raw_input() and return their answer.
+
+        Args:
+            question (string): a string that is presented to the user.
+            default (string): the answer if the user just hits <Enter>.
+                It must be "yes" (the default), "no" or None (meaning
+                an answer is required of the user).
+
+        Returns "answer" return value is True for "yes" or False for "no".
+        """
+        valid = {"yes": True, "y": True, "ye": True,
+                 "no": False, "n": False}
+        if default is None:
+            prompt = " [y/n] "
+        elif default == "yes":
+            prompt = " [Y/n] "
+        elif default == "no":
+            prompt = " [y/N] "
+        else:
+            raise ValueError("invalid default answer: '%s'" % default)
+
+        while True:
+            sys.stdout.write(question + prompt)
+            choice = raw_input().lower()
+            if default is not None and choice == '':
+                return valid[default]
+            elif choice in valid:
+                return valid[choice]
+            else:
+                sys.stdout.write("Please respond with 'yes' or 'no' "
+                                 "(or 'y' or 'n').\n")
 
 if __name__ == '__main__':
-    link_configs()
+
+    linker = Linker()
+
+    linker.link_configs()
