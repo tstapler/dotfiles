@@ -1,0 +1,10 @@
+snippet     task
+abbr        task
+options     head
+        - name: ${1:Name}
+          ${2:command}: ${3:options}
+
+snippet     deb
+abbr        deb-repo
+options     head
+        "deb http://ppa/launchpad.net/${1:Name}/ppa/ubuntu {{ ansible_distribution_release }} main"
