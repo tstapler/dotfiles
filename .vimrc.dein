@@ -32,6 +32,7 @@ call dein#add('zchee/deoplete-jedi')
 " End Code Completion Sources }}}
 
 " Snippet Plugins {{{
+call dein#add('SirVer/ultisnips')
 call dein#add('Shougo/neosnippet.vim')
 call dein#add('Shougo/neosnippet-snippets')
 call dein#add('honza/vim-snippets')
@@ -603,6 +604,19 @@ let g:pymode_rope_completion = 0
 let g:pymode_lint = 0
 let g:pymode_rope_regenerate_on_write = 0
 " End pymode Settings }}} 
+
+" utilisnips {{{
+
+" Trigger configuration. Do not use <tab> if you use
+" https://github.com/Valloric/YouCompleteMe.
+let g:UltiSnipsExpandTrigger="<c-k>"
+let g:UltiSnipsJumpForwardTrigger="<c-b>"
+let g:UltiSnipsJumpBackwardTrigger="<c-z>"
+
+" If you want :UltiSnipsEdit to split your window.
+let g:UltiSnipsEditSplit="vertical"
+
+" End utilisnips }}} 
 
 "}}}
 
