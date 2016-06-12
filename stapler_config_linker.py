@@ -1,6 +1,7 @@
 from collections import namedtuple
-from os.path import exists, join, relpath, expanduser, realpath, split, abspath
-from os import walk
+from os.path import exists, join, relpath, expanduser, islink, split, abspath
+from os import walk, symlink, makedirs
+from filecmp import dircmp
 from shutil import move
 import os
 import sys
@@ -48,7 +49,7 @@ class Linker(object):
                 sys.exit(1)
 
         self.folder_patterns = self._get_lines_from_file(self.folder_links_file)
-        self.ignored_patterns = self._parse_ignore_file(self.ignore_file)
+        self.ignored_patterns = self._parse_regex_file(self.ignore_file)
 
     def link_configs(self):
         """Symlinks configuration files to the destination directory
@@ -103,7 +104,7 @@ class Linker(object):
                 if not exists(join(self.dest, rel_path, f)):
                     # Add the source and destination for the symlink
                     absent_files.append(Link(join(root, f),
-                                         join(self.dest, rel_path, f)))
+                                        join(self.dest, rel_path, f)))
 
         return absent_files, absent_dirs
 
@@ -116,12 +117,22 @@ class Linker(object):
         Returns:
             None
         """
-        folders_to_link = []
 
-        for folder_path in folders_to_link:
-            path_rel_to_home = relpath(folder_path, self.src)
-            if exists(folder_path):
-                move(folder_path, join(self.src, path_rel_to_home))
+        for folder in self.folder_patterns:
+            dest_folder_path = join(self.dest, folder)
+            src_folder_path = join(self.src, folder)
+
+            if exists(dest_folder_path) and exists(src_folder_path):
+                # Syncronize dirs
+                print(dest_folder_path)
+                print(src_folder_path)
+                dcmp = dircmp(dest_folder_path, src_folder_path)
+                print dcmp.left_only
+            elif exists(dest_folder_path) and not exists(src_folder_path):
+                move(dest_folder_path, src_folder_path)
+                symlink(src_folder_path, dest_folder_path)
+            elif not exists(dest_folder_path) and exists(src_folder_path):
+                symlink(src_folder_path, dest_folder_path)
 
     def _get_lines_from_file(self, file_path):
         """ Return a list of lines from a file minus comments
@@ -139,7 +150,7 @@ class Linker(object):
         except IOError:
             return [""]
 
-    def _parse_ignore_file(self, file_path):
+    def _parse_regex_file(self, file_path):
         """Parse the gitignore style file
 
         Args:
@@ -148,11 +159,11 @@ class Linker(object):
         Returns:
             string: Returns the regexes derived from the file
         """
-        ignored = self._get_lines_from_file(file_path)
-        if ignored == []:
+        lines = self._get_lines_from_file(file_path)
+        if lines == []:
             return ""
         else:
-            return "(" + ")|(".join(ignored) + ")"  # regex from list of regexes
+            return "(" + ")|(".join(lines) + ")"  # regex from list of regexes
 
     def _create_dirs(self, dirs=[]):
         """Creates all folders in dirs
@@ -164,7 +175,7 @@ class Linker(object):
             None: Does not return anything
         """
         for dir_name in dirs:
-            os.makedirs(dir_name)
+            makedirs(dir_name)
 
     def _create_links(self, links=[]):
         """Create symlinks for each item in links
@@ -175,7 +186,7 @@ class Linker(object):
             None: Does not return anything
         """
         for link in links:
-            os.symlink(link.src, link.dest)
+            symlink(link.src, link.dest)
 
     def _query_yes_no(self, question, default="yes"):
         """Ask a yes/no question via raw_input() and return their answer.
@@ -215,3 +226,4 @@ if __name__ == '__main__':
     linker = Linker()
 
     linker.link_configs()
+    linker.link_folders()
