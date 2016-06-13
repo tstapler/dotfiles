@@ -565,6 +565,7 @@ let g:makeshift_chdir = 1
 
 " Neosnippet Settings {{{
 let g:neosnippet#snippets_directory='~/.vimsnippets'
+set completeopt+=preview
 " End Neosnippet Settings }}}
 
 " InstantMarkdownPreview Settings {{{
