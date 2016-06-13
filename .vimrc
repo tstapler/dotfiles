@@ -59,6 +59,9 @@ set number
 "Show the status line even with just one window
 set laststatus=2
 
+"Read buffers from disk when they change
+set autoread
+
 " Enable syntax highlighting
 syntax on
 
