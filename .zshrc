@@ -57,8 +57,18 @@ fi
 # Then, source plugins and add commands to $PATH
 zplug load --verbose
 
-# Toggle Auto Suggest
-bindkey '^T' autosuggest-toggle
+# Vim Mode
+bindkey -v
+
+# Emacs like keybindings in insert mode
+bindkey -M viins '^P' up-history
+bindkey -M viins '^N' down-history
+bindkey -M viins '^?' backward-delete-char
+bindkey -M viins '^h' backward-delete-char
+bindkey -M viins '^w' backward-kill-word
+bindkey -M viins '^r' history-incremental-search-backward
+bindkey -M viins '^a' beginning-of-line
+bindkey -M viins '^e' end-of-line
 
 # Language managers (RVM, NVM, PYENV, ...)
 source ~/.shell/languages.sh
