@@ -4,6 +4,7 @@
 .*\.git$
 .*\.swp
 .*\.yml
+.*\.zip
 env
 .*\.txt
 .ropeproject
