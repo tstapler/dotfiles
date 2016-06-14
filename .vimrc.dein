@@ -10,6 +10,8 @@ endif
 " Required:
 set runtimepath^=~/.vim/bundle/repos/github.com/Shougo/dein.vim
 
+filetype off
+
 " Required:
 call dein#begin(expand('~/.vim/bundle'))
 
@@ -33,8 +35,8 @@ call dein#add('zchee/deoplete-jedi')
 
 " Snippet Plugins {{{
 call dein#add('SirVer/ultisnips')
-call dein#add('Shougo/neosnippet.vim')
-call dein#add('Shougo/neosnippet-snippets')
+" call dein#add('Shougo/neosnippet.vim')
+" call dein#add('Shougo/neosnippet-snippets')
 call dein#add('honza/vim-snippets')
 " End Snippet Plugins }}}
 
@@ -565,7 +567,6 @@ let g:makeshift_chdir = 1
 
 " Neosnippet Settings {{{
 let g:neosnippet#snippets_directory='~/.vimsnippets'
-set completeopt+=preview
 " End Neosnippet Settings }}}
 
 " InstantMarkdownPreview Settings {{{
@@ -616,11 +617,17 @@ let g:pymode_rope_regenerate_on_write = 0
 " Trigger configuration. Do not use <tab> if you use
 " https://github.com/Valloric/YouCompleteMe.
 let g:UltiSnipsExpandTrigger="<c-k>"
-let g:UltiSnipsJumpForwardTrigger="<c-b>"
-let g:UltiSnipsJumpBackwardTrigger="<c-z>"
+let g:UltiSnipsJumpForwardTrigger="<c-k>"
+let g:UltiSnipsJumpBackwardTrigger="<leader>p"
+let g:UltiSnipsListSnippets="><leader>l"
 
 " If you want :UltiSnipsEdit to split your window.
 let g:UltiSnipsEditSplit="vertical"
+
+let g:UltiSnipsSnippetsDir = "~/.vimsnippets"
+
+let g:UltiSnipsSnippetDirectories=["UltiSips", "stapler-snips"]
+
 
 " End utilisnips }}} 
 
