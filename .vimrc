@@ -82,11 +82,6 @@ endif
 nnoremap <F3> :cn<Enter>
 nnoremap <S-F3> :cp<Enter>
 
-"Change Buffers
-map <leader>n :bn<Enter>
-map <leader>p :bp<Enter>
-map <leader>d :bd<Enter>
-
 if has("nvim")
   nnoremap <F7> :new term://zsh<Enter>
 endif
