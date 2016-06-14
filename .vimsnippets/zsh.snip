@@ -1,0 +1,6 @@
+snippet     chk
+abbr        Check If Command Exists
+options     head
+        if command -v ${1: Command Name} >/dev/null 2>&1; then
+                ${2: Run Command}
+        fi ${3}
