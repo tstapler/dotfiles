@@ -1,0 +1,30 @@
+snippet qatodo "Setup QA Workflow steps"
+todo$1
+	qatasks$2
+endsnippet
+
+snippet prtodo "The Checklist for a Pull request"
+todo$1
+	prtasks$2
+endsnippet
+
+snippet prtasks "The Checklist for a Pull request"
+- [ ] Implement
+- [ ] Write Unit Tests
+- [ ] Submit Pull Request
+- [ ] Receive CR +4
+- [ ] Submit QA
+- [ ] Merged to Master
+endsnippet
+
+snippet qatasks "The Checklist for QAing a Product"
+- [ ] Check if smithy ran and passed in the last 24 hours
+- [ ] Create test run on Skynet 
+- [ ] Do manual testing on deployer
+- [ ] Check Log Viewer for errors
+- [ ] Fill out QA checklist and submit master pull request
+endsnippet
+
+snippet todo "A new todo item"
+* TODO 
+endsnippet
