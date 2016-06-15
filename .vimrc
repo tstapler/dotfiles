@@ -62,6 +62,9 @@ set laststatus=2
 "Read buffers from disk when they change
 set autoread
 
+"The whitespace to show when calling :set list
+set listchars=eol:$,tab:>-,trail:~,extends:>,precedes:<
+
 " Enable syntax highlighting
 syntax on
 
