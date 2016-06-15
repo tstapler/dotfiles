@@ -98,6 +98,7 @@ call dein#add('Chun-Yang/vim-action-ag')
 call dein#add('scrooloose/syntastic')
 call dein#add('myint/syntastic-extras')
 call dein#add('tpope/vim-dispatch')
+call dein#add('Konfekt/FastFold')
 " End Utility Plugins }}}
 
 " Interface Plugins {{{
@@ -135,7 +136,7 @@ call dein#add('Rip-Rip/clang_complete')
 call dein#add('clausreinke/typescript-tools.vim')
 call dein#add('Quramy/tsuquyomi')
 call dein#add('HerringtonDarkholme/yats.vim')
-" End TypeScript Plugins }}} 
+" End TypeScript Plugins }}}
 
 call dein#add('dag/vim-fish')
 call dein#add('plasticboy/vim-markdown')
@@ -202,7 +203,7 @@ endif
 
 "End dein Scripts-------------------------
 
-" }}} 
+" }}}
 
 " Plugin Mappings {{{
 
@@ -264,7 +265,7 @@ nmap crb <Plug>RadicalCoerceToBinary
 " ctrl-space {{{
 "Fuzzy search like ctrl-p
 nnoremap <silent><C-p> :CtrlSpace O<CR>
-" End ctrl-space }}} 
+" End ctrl-space }}}
 
 " }}}
 
@@ -273,7 +274,7 @@ nnoremap <silent><C-p> :CtrlSpace O<CR>
 " Neomake Settings {{{
 
 " Open Automatically
-let g:neomake_open_list = 2 
+let g:neomake_open_list = 2
 
 let g:neomake_c_enable_markers=['clang']
 let g:neomake_c_clang_args = ["-std=c11", "-Wextra", "-Wall", "-fsanitize=undefined","-g"]
@@ -281,16 +282,25 @@ let g:neomake_cpp_enable_markers=['clang']
 let g:neomake_cpp_clang_args = ["-std=c++14", "-Wextra", "-Wall", "-fsanitize=undefined","-g"]
 
 let g:neomake_python_flake8_maker = {
-    \ 'exe': 'flake8',
-    \ 'errorformat': '%f:%l:%c: %m'    
-    \ }
+      \ 'exe': 'flake8',
+      \ 'errorformat': '%f:%l:%c: %m'
+      \ }
 let g:neomake_python_pylama_maker = {
-    \ 'exe': 'pylama',
-    \ 'args': ['-o','~/.config/pylama/pylama.ini'],
-    \ 'errorformat': '%f:%l:%c: %m'    
-    \ }
+      \ 'exe': 'pylama',
+      \ 'args': ['-o','~/.config/pylama/pylama.ini'],
+      \ 'errorformat': '%f:%l:%c: %m'
+      \ }
 
-let g:neomake_python_enabled_makers=['flake8', 'pylama']
+let g:neomake_python_enabled_makers = ['flake8', 'pylama']
+
+let g:neomake_pandoc_proselint_maker = {
+      \ 'exe': 'proselint'
+      \ }
+
+let g:neomake_pandoc_proselint_maker = {
+      \ 'exe': 'markdownlint'
+      \ }
+let g:neomake_pandoc_enabled_makers = ['proselint']
 
 " End Neomake Settings }}}
 
@@ -593,7 +603,7 @@ endif
 
 " Tex Mode {{{
 let g:tex_conceal = "ab"
-" End Tex Mode }}} 
+" End Tex Mode }}}
 " Emmet Settings {{{
 let g:user_emmet_leader_key='<leader>e'
 " End Emmet Settings }}}
@@ -604,13 +614,13 @@ let g:jsdoc_allow_input_prompt = 1
 
 " Gutentags Settings {{{
 let g:gutentags_cache_dir = "~/.vim/"
-" End Gutentags Settings }}} 
+" End Gutentags Settings }}}
 
 " pymode Settings {{{
 let g:pymode_rope_completion = 0
 let g:pymode_lint = 0
 let g:pymode_rope_regenerate_on_write = 0
-" End pymode Settings }}} 
+" End pymode Settings }}}
 
 " utilisnips {{{
 
@@ -629,7 +639,7 @@ let g:UltiSnipsSnippetsDir = "~/.vimsnippets"
 let g:UltiSnipsSnippetDirectories=["UltiSips", "stapler-snips"]
 
 
-" End utilisnips }}} 
+" End utilisnips }}}
 
 "}}}
 
@@ -658,10 +668,12 @@ augroup myvimrc
   au BufWritePost .vimrc,_vimrc,vimrc,.gvimrc,_gvimrc,gvimrc so $MYVIMRC | if has('gui_running') | so $MYGVIMRC | endif
 augroup END
 
-" End Autoreload .vimrc }}} 
+" End Autoreload .vimrc }}}
 
 " Neomake {{{
-  autocmd! BufWritePost * Neomake
-" End Neomake }}} 
+  au BufWritePost * Neomake
+  au InsertLeave * Neomake
+  au CursorHold * Neomake
+" End Neomake }}}
 
 " End Auto Groups }}}
