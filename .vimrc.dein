@@ -106,13 +106,15 @@ call dein#add('vim-airline/vim-airline')
 call dein#add('vim-airline/vim-airline-themes')
 call dein#add('flazz/vim-colorschemes')
 call dein#add('myusuf3/numbers.vim')
+"call dein#add('bronson/vim-crosshairs')
 " End Interface Plugins }}}
 
 " Language Specific Plugins {{{
 
 " Python {{{
 call dein#add('heavenshell/vim-pydocstring')
-call dein#add('klen/python-mode')
+"call dein#add('klen/python-mode')
+call dein#add('davidhalter/jedi-vim')
 " End Python }}}
 
 " Javascript {{{
@@ -230,9 +232,9 @@ nnoremap <C-e> :VimFilerExplorer<cr>
 " End vimfiler }}}
 
 " neosnippet {{{
-imap <C-k>     <Plug>(neosnippet_expand_or_jump)
-smap <C-k>     <Plug>(neosnippet_expand_or_jump)
-xmap <C-k>     <Plug>(neosnippet_expand_target)
+"imap <C-k>     <Plug>(neosnippet_expand_or_jump)
+"smap <C-k>     <Plug>(neosnippet_expand_or_jump)
+"xmap <C-k>     <Plug>(neosnippet_expand_target)
 
 " SuperTab like snippets behavior.
 "imap <expr><TAB>
@@ -271,6 +273,16 @@ nnoremap <silent><C-p> :CtrlSpace O<CR>
 
 " Plugin Settings {{{
 
+" Vim Crossharis Settings {{{
+set cursorline
+set cursorcolumn
+" End Vim Crossharis Settings }}}
+
+" jedi-vim Settings {{{
+let g:jedi#completions_enabled = 0
+let g:jedi#auto_vim_configuration = 0
+" End jedi-vim Settings }}}
+
 " Neomake Settings {{{
 
 " Open Automatically
@@ -297,10 +309,15 @@ let g:neomake_pandoc_proselint_maker = {
       \ 'exe': 'proselint'
       \ }
 
-let g:neomake_pandoc_proselint_maker = {
+let g:neomake_pandoc_markdownlint_maker = {
       \ 'exe': 'markdownlint'
       \ }
-let g:neomake_pandoc_enabled_makers = ['proselint']
+
+let g:neomake_pandoc_writegood_maker= {
+      \ 'exe': 'write-good',
+      \ 'errorformat': '%m on line %l at column %c'
+      \ }
+let g:neomake_pandoc_enabled_makers = ['proselint', 'writegood', 'markdownlint']
 
 " End Neomake Settings }}}
 
@@ -398,7 +415,8 @@ if has('nvim')
   let g:clang_auto_select = 0
   let g:clang_omnicppcomplete_compliance = 0
   let g:clang_make_default_keymappings = 0
-
+   
+  
 endif
 
 " End deoplete Settings }}}
@@ -467,8 +485,8 @@ set statusline+=%#warningmsg#
 set statusline+=%{SyntasticStatuslineFlag()}
 set statusline+=%*
 
-let g:syntastic_always_populate_loc_list = 1
-let g:syntastic_auto_loc_list = 2
+"let g:syntastic_always_populate_loc_list = 1
+"let g:syntastic_auto_loc_list = 2
 let g:syntastic_check_on_open = 0
 let g:syntastic_check_on_wq = 0
 let g:syntastic_aggregate_errors = 1
@@ -604,6 +622,7 @@ endif
 " Tex Mode {{{
 let g:tex_conceal = "ab"
 " End Tex Mode }}}
+
 " Emmet Settings {{{
 let g:user_emmet_leader_key='<leader>e'
 " End Emmet Settings }}}
@@ -613,7 +632,7 @@ let g:jsdoc_allow_input_prompt = 1
 " End JsDoc Settings }}}
 
 " Gutentags Settings {{{
-let g:gutentags_cache_dir = "~/.vim/"
+let g:gutentags_cache_dir = "~/.vim"
 " End Gutentags Settings }}}
 
 " pymode Settings {{{
@@ -645,6 +664,10 @@ let g:UltiSnipsSnippetDirectories=["UltiSips", "stapler-snips"]
 
 " Auto Groups {{{
 
+" Pandoc Settings {{{
+
+" End Pandoc Settings }}}
+
 " Delimit Mate {{{
 if dein#check_install(["Raimondi/delimitMate"])
   augroup pandoc
@@ -672,7 +695,6 @@ augroup END
 
 " Neomake {{{
   au BufWritePost * Neomake
-  au InsertLeave * Neomake
   au CursorHold * Neomake
 " End Neomake }}}
 
