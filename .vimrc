@@ -16,7 +16,7 @@ endif
 set t_Co=256
 
 "Change the shell to vanilla to support NeoBundle
-set shell=/bin/bash
+"set shell=/bin/bash
 
 "Enable mouse usage for scrolling and resizing splits
 set mouse+=a
