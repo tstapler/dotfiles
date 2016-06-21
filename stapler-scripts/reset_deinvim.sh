@@ -1,7 +1,9 @@
 rm -rf ~/.vim/bundle
 
-rm -rf ~/.vim/bundle
-~/dotfiles/stapler-scripts/install-scripts/dein-install.sh
-python ~/dotfiles/stapler-linker/linker.py
-
-
+if [[ -d ~/dotfiles ]]; then
+TARGET="dotfiles"
+else
+TARGET="stapler-config"
+fi
+~/$TARGET/stapler-scripts/install-scripts/dein-install.sh
+python ~/$TARGET/stapler-linker/linker.py
