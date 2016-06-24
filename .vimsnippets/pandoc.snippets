@@ -1,4 +1,4 @@
-snippet pr
+snippet wrkpr
 # Code Review
 
 This PR ${1} per ${2}
@@ -10,4 +10,27 @@ https://jira.atl.workiva/browse/$2
 ## QA Tips
 
 ${3:N/A}
+endsnippet
+
+snippet wrkmpr
+## SIGN OFF
+- **QA Resource Approval:** +1
+- **JIRA Ticket #: https://jira.webfilings.com/browse/${1:ticket_number-52345}**
+- **Code Review: ${2:github link}**
+- **CI Build: ${3:Build link}**
+- **Appspot: ${4:appspot}**
+- **Unit Test? Or explanation for lack of Unit Test?: ${5:yes/no}**
+- **Is Help documentation required:** No
+
+## KITTYHAWK
+-  **Ticket #:** NA
+-  **Automation Dependency:** NA
+-  **Automated tests created:**
+ 	- 
+	-  **Change run against automation:**
+	 	-  **FAILS DOCUMENTED - Cause/Resolution/Related to Change**
+		- [ ] **Reviewed automation run logs**
+		- [ ] **Proper people have been included in code review and testing**
+
+		FYI @${6:Developer}, @davidwinn-wf
 endsnippet
