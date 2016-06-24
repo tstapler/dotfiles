@@ -210,6 +210,11 @@ endif
 
 " Plugin Mappings {{{
 
+" vim-test Settings {{{
+nmap <silent> <leader>u :TestNearest<CR>
+nmap <silent> <leader>U :TestFile<CR>
+" End vim-test Settings }}}
+
 " tagbar {{{
 nnoremap <leader>t :TagbarToggle<cr>
 " End tagbar }}}
@@ -276,6 +281,7 @@ nnoremap <silent><C-p> :CtrlSpace O<CR>
 
 " vim-test Settings {{{
 let test#strategy = "neovim"
+let test#python#runner = 'djangotest'
 " End vim-test Settings }}}
 
 " Vim Crossharis Settings {{{
