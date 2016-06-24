@@ -37,7 +37,7 @@ set foldmethod=indent
 if exists('colorcolumn')
   set colorcolum=80
 else
-  au BufWinEnter * let w:m2=matchadd('ErrorMsg', '\%>80v.\+', -1)
+  "au BufWinEnter * let w:m2=matchadd('ErrorMsg', '\%>80v.\+', -1)
 endif
 
 "Show ex commands as they are being typed
