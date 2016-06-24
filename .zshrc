@@ -41,10 +41,9 @@ zplug "peco/peco", as:command, from:gh-r, rename-to:peco, use:"*darwin*64*"
 fi
 
 
-
 zplug "tarruda/zsh-autosuggestions"
 zplug "zsh-users/zsh-syntax-highlighting"
-
+zplug "zsh-users/zsh-history-substring-search"
 
 # Install plugins if there are plugins that have not been installed
 if ! zplug check --verbose; then
@@ -69,6 +68,14 @@ bindkey -M viins '^w' backward-kill-word
 bindkey -M viins '^r' history-incremental-search-backward
 bindkey -M viins '^a' beginning-of-line
 bindkey -M viins '^e' end-of-line
+bindkey -M viins '^xe' edit-command-line
+bindkey -M viins '^x^e' edit-command-line
+
+# History subzmodload zsh/terminfo
+bindkey "$terminfo[kcuu1]" history-substring-search-up
+bindkey "$terminfo[kcud1]" history-substring-search-downstring plugin bindings
+bindkey -M vicmd 'k' history-substring-search-up
+bindkey -M vicmd 'j' history-substring-search-down
 
 # Language managers (RVM, NVM, PYENV, ...)
 source ~/.shell/languages.sh
