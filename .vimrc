@@ -157,7 +157,9 @@ augroup END
 " Terminal {{{
 if has('nvim')
   augroup nvim_term
-      au BufEnter * if &buftype == 'terminal'  | tnoremap <C-[> <C-\><C-n> | startinsert | endif
+      au!
+      au BufEnter * if &buftype == 'terminal'  | tnoremap <C-[> <C-\><C-n> | endif
+      au BufEnter * if &buftype == 'terminal' | setlocal colorcolumn=0 | endif
   augroup END
 endif
 " End Terminal }}} 
