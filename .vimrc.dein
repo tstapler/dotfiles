@@ -298,20 +298,17 @@ let g:neomake_c_clang_args = ["-std=c11", "-Wextra", "-Wall", "-fsanitize=undefi
 let g:neomake_cpp_enable_markers=['clang']
 let g:neomake_cpp_clang_args = ["-std=c++14", "-Wextra", "-Wall", "-fsanitize=undefined","-g"]
 
-let g:neomake_python_flake8_maker = {
-      \ 'exe': 'flake8',
-      \ 'errorformat': '%f:%l:%c: %m'
-      \ }
 let g:neomake_python_pylama_maker = {
       \ 'exe': 'pylama',
-      \ 'args': ['-o','~/.config/pylama/pylama.ini'],
+      \ 'args': ['--format', 'pep8', '-o','~/.config/pylama/pylama.ini'],
       \ 'errorformat': '%f:%l:%c: %m'
       \ }
 
-let g:neomake_python_enabled_makers = ['flake8', 'pylama']
+let g:neomake_python_enabled_makers = ['python', 'pylama', 'frosted', 'flake8']
 
 let g:neomake_pandoc_proselint_maker = {
-      \ 'exe': 'proselint'
+      \ 'exe': 'proselint',
+      \ 'errorformat': '%f:%l:%c: %m'
       \ }
 
 let g:neomake_pandoc_markdownlint_maker = {
@@ -320,7 +317,10 @@ let g:neomake_pandoc_markdownlint_maker = {
 
 let g:neomake_pandoc_writegood_maker= {
       \ 'exe': 'write-good',
-      \ 'errorformat': '%m on line %l at column %c'
+      \ 'errorformat': 
+      \ '%PIn %f,'.
+      \ '%m on line %l at column %c,'.
+      \ '%-Q'
       \ }
 let g:neomake_pandoc_enabled_makers = ['proselint', 'writegood', 'markdownlint']
 
