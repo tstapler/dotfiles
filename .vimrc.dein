@@ -669,14 +669,11 @@ let g:UltiSnipsSnippetDirectories=["UltiSips", "stapler-snips"]
 
 " Auto Groups {{{
 
-" Pandoc Settings {{{
-
-" End Pandoc Settings }}}
-
 " Delimit Mate {{{
 if dein#check_install(["Raimondi/delimitMate"])
   augroup pandoc
-    " Not sure if needed -> au Filetype pandoc let loaded_delimitMate = 1
+    au!
+    au Filetype pandoc let loaded_delimitMate = 1
     au Filetype pandoc :DelimitMateSwitch
   augroup END
 endif
@@ -685,6 +682,7 @@ endif
 " NeoComplete {{{
 if dein#check_install(["Shougo/neocomplete.vim.git"]) && !has('nvim')
   augroup pandoc
+    au!
     au FileType pandoc NeoCompleteLock
   augroup END
 endif
@@ -699,8 +697,7 @@ augroup END
 " End Autoreload .vimrc }}}
 
 " Neomake {{{
-  au BufWritePost * Neomake
-  au CursorHold * Neomake
+au BufWritePost * Neomake
 " End Neomake }}}
 
 " End Auto Groups }}}
