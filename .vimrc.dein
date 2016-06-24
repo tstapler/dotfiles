@@ -99,6 +99,7 @@ call dein#add('scrooloose/syntastic')
 call dein#add('myint/syntastic-extras')
 call dein#add('tpope/vim-dispatch')
 call dein#add('Konfekt/FastFold')
+call dein#add('janko-m/vim-test')
 " End Utility Plugins }}}
 
 " Interface Plugins {{{
@@ -272,6 +273,10 @@ nnoremap <silent><C-p> :CtrlSpace O<CR>
 " }}}
 
 " Plugin Settings {{{
+
+" vim-test Settings {{{
+let test#strategy = "neovim"
+" End vim-test Settings }}}
 
 " Vim Crossharis Settings {{{
 set cursorline
