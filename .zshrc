@@ -37,7 +37,7 @@ fi
 
 if [[ `uname` == 'Darwin' ]]; then
 zplug "junegunn/fzf-bin", as:command, from:gh-r, rename-to:fzf, use:"*darwin*64*"
-zplug "peco/peco", as:command, from:gh-r, rename-to:peco, use:"*linux_amd64*"
+zplug "peco/peco", as:command, from:gh-r, rename-to:peco, use:"*darwin*64*"
 fi
 
 
