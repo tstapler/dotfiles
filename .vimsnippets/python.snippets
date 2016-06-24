@@ -1,11 +1,24 @@
 snippet deft "A function snippet for a unittest"
-def $1(${2:self}):
+def test_$1(${2:self}):
     """Test when $3"""
     ${4:pass}
 
+endsnippet
+
+snippet testdata
+class ${1:Name}(${2:DatastoreTestCase}):
+    def setUp(self):
+        super($1, self).setUp()
 endsnippet
 	
 snippet testclass
 class ${1:Name}(${2:TestCase}):
     pass
+endsnippet
+
+snippet trys "Sorround in try except"
+try:
+    ${VISUAL:body}
+except ${2:Exception, e}:
+    ${3:raise e}	
 endsnippet

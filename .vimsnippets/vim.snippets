@@ -2,8 +2,23 @@ snippet dein
 call dein#add('${1:user/repo}')
 endsnippet
 
-snippet fold
+snippet settings
 " ${1:Name} Settings {{{
 ${VISUAL:${2:Content\}}
 " End $1 Settings }}}
+endsnippet
+
+snippet fold
+" ${1:Name} {{{
+${VISUAL:${2:Content\}}
+" End $1 }}}
+endsnippet
+
+snippet deinagrp
+if dein#check_install(["${1:Name/Repo}"])
+  augroup ${2:Name}
+    au!
+    $3
+  augroup END
+endif
 endsnippet
