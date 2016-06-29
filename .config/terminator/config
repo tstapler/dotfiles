@@ -1,6 +1,20 @@
 [global_config]
+  enabled_plugins = TerminalShot, LaunchpadCodeURLHandler, APTURLHandler, Logger, LaunchpadBugURLHandler
   dbus = True
+  borderless = True
 [keybindings]
+[profiles]
+  [[default]]
+    background_darkness = 0.2
+    background_image = None
+  [[Stapler-Config]]
+    palette = "#000000:#cc0000:#4e9a06:#c4a000:#3465a4:#75507b:#06989a:#d3d7cf:#555753:#ef2929:#8ae234:#fce94f:#729fcf:#ad7fa8:#34e2e2:#eeeeec"
+    login_shell = True
+    background_darkness = 0.37
+    background_type = transparent
+    background_image = None
+    show_titlebar = False
+    font = Droid Sans 12
 [layouts]
   [[default]]
     [[[child1]]]
@@ -10,13 +24,3 @@
       parent = ""
       type = Window
 [plugins]
-[profiles]
-  [[default]]
-    background_darkness = 0.2
-    background_image = None
-  [[Stapler-Config]]
-    background_darkness = 0.37
-    background_image = None
-    background_type = transparent
-    font = Droid Sans 12
-    palette = "#000000:#cc0000:#4e9a06:#c4a000:#3465a4:#75507b:#06989a:#d3d7cf:#555753:#ef2929:#8ae234:#fce94f:#729fcf:#ad7fa8:#34e2e2:#eeeeec"
