@@ -107,6 +107,10 @@ endif
                                                           
 " Autocommands {{{                                        
                                                           
+" gitcommit filetype {{{
+au FileType gitcommit setlocal spell
+" End gitcommit filetype }}}
+
 " Makefile filetype {{{                                   
 au FileType make setlocal noexpandtab                     
 " End Makefile filetype }}}
