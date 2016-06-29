@@ -284,8 +284,9 @@ nnoremap <silent><C-p> :CtrlSpace O<CR>
 
 " Plugin Settings {{{
 
-" vim-choosewin Settings {{{
-" End vim-choosewin Settings }}}
+" numbers Settings {{{
+  let g:numbers_exclude = g:numbers_exclude + ['term']
+" End numbers Settings }}}
 
 " vim-test Settings {{{
 let test#strategy = "neovim"
