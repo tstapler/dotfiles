@@ -22,3 +22,10 @@ if dein#check_install(["${1:Name/Repo}"])
   augroup END                                           
 endif                                                   
 endsnippet                                              
+
+snippet aug "Autogroup"
+augroup ${1:group_name}
+  au!
+  $2
+augroup END
+endsnippet
