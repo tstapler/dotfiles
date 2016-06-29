@@ -162,7 +162,7 @@ augroup END
 if has('nvim')
   augroup nvim_term
       au!
-      au BufEnter * if &buftype == 'terminal' | setlocal colorcolumn=0 | endif
+      au BufEnter * if &buftype == 'terminal' | setlocal colorcolumn=0 nonumber | endif
   augroup END
 endif
 " End Terminal }}} 
