@@ -138,8 +138,8 @@ call dein#add('Rip-Rip/clang_complete')
 
 " TypeScript Plugins {{{
 call dein#add('clausreinke/typescript-tools.vim')
-call dein#add('Quramy/tsuquyomi')
-call dein#add('HerringtonDarkholme/yats.vim')
+"call dein#add('Quramy/tsuquyomi')
+call dein#add('HerringtonDarkholme/yats.vim') 
 " End TypeScript Plugins }}}
 
 call dein#add('dag/vim-fish')
