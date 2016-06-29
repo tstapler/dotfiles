@@ -107,7 +107,8 @@ call dein#add('vim-airline/vim-airline')
 call dein#add('vim-airline/vim-airline-themes')
 call dein#add('flazz/vim-colorschemes')
 call dein#add('myusuf3/numbers.vim')
-"call dein#add('bronson/vim-crosshairs')
+call dein#add('bronson/vim-crosshairs')
+call dein#add('t9md/vim-choosewin')
 " End Interface Plugins }}}
 
 " Language Specific Plugins {{{
@@ -210,10 +211,14 @@ endif
 
 " Plugin Mappings {{{
 
-" vim-test Settings {{{
-nmap <silent> <leader>u :TestNearest<CR>
-nmap <silent> <leader>U :TestFile<CR>
-" End vim-test Settings }}}
+" vim-choosewin {{{
+  nmap <leader>w <Plug>(choosewin)
+" End vim-choosewin }}}
+
+" vim-test {{{
+  nmap <silent> <leader>u :TestNearest<CR>
+  nmap <silent> <leader>U :TestFile<CR>
+" End vim-test }}}
 
 " tagbar {{{
 nnoremap <leader>t :TagbarToggle<cr>
@@ -279,6 +284,9 @@ nnoremap <silent><C-p> :CtrlSpace O<CR>
 
 " Plugin Settings {{{
 
+" vim-choosewin Settings {{{
+" End vim-choosewin Settings }}}
+
 " vim-test Settings {{{
 let test#strategy = "neovim"
 let test#python#runner = 'djangotest'
@@ -329,6 +337,18 @@ let g:neomake_pandoc_writegood_maker= {
       \ '%-Q'
       \ }
 let g:neomake_pandoc_enabled_makers = ['proselint', 'writegood', 'markdownlint']
+
+let g:neomake_gitcommit_gitlint_maker = {
+      \ 'exe': 'gitlint',
+      \ 'args': ['-vvv'],
+      \ 'error_format': '%m',
+      \ 'remove_invalid_entries': 0,
+      \ 'append_file': 0
+      \ }
+
+let g:neomake_gitcommit_enabled_makers = ['gitlint']
+
+let g:neomake_verbose = 3
 
 " End Neomake Settings }}}
 
