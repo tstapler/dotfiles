@@ -4,13 +4,13 @@ endsnippet
 
 snippet settings
 " ${1:Name} Settings {{{
-${VISUAL:${2:Content\}}
+  ${2:${VISUAL:Content}}
 " End $1 Settings }}}
 endsnippet
 
 snippet fold
 " ${1:Name} {{{
-${VISUAL:${2:Content\}}
+  ${2:${VISUAL:Content}}
 " End $1 }}}
 endsnippet
 
@@ -19,6 +19,6 @@ if dein#check_install(["${1:Name/Repo}"])
   augroup ${2:Name}
     au!
     $3
-  augroup END
-endif
-endsnippet
+  augroup END                                           
+endif                                                   
+endsnippet                                              

@@ -22,3 +22,14 @@ try:
 except ${2:Exception, e}:
     ${3:raise e}	
 endsnippet
+
+snippet patch "Patch a funciton using mock"
+${1:name} = mock.patch("$2")
+self.$1 = $1.start()
+self.addCleanup($1.stop)
+endsnippet
+
+snippet testhandler "Test a webtest2 handler"
+app = webapp2.WSGIApplication([('/', ${1:ClassName})])
+self.testapp = webtest.TestApp(app)
+endsnippet
