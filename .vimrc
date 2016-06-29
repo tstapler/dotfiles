@@ -102,13 +102,13 @@ if filereadable(expand("~/.vimrc.dein"))
 else
   colorscheme slate
 endif
-
-" End Plugin Manager }}}
-
-" Autocommands {{{
-
-" Makefile filetype {{{
-au FileType make setlocal noexpandtab
+                                                          
+" End Plugin Manager }}}                                  
+                                                          
+" Autocommands {{{                                        
+                                                          
+" Makefile filetype {{{                                   
+au FileType make setlocal noexpandtab                     
 " End Makefile filetype }}}
 
 " Python filetype {{{
@@ -158,7 +158,6 @@ augroup END
 if has('nvim')
   augroup nvim_term
       au!
-      au BufEnter * if &buftype == 'terminal'  | tnoremap <C-[> <C-\><C-n> | endif
       au BufEnter * if &buftype == 'terminal' | setlocal colorcolumn=0 | endif
   augroup END
 endif
