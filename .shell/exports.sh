@@ -8,12 +8,12 @@ export PATH=$PATH:"/home/tstapler/stapler-config/env/bin:/home/tstapler/.pyenv/s
 export PATH=$PATH:"/home/tstapler/.pub-cache/bin"
 
 #Create Go Path
-export GOPATH="~/.local/lib/go"
+export GOPATH="$HOME/.local/lib/go"
 
 #Add LaTex files to PATH
 export TEXMFHOME=~/texmf
 
-#Add GO to PATH
+#Add GO executables to PATH
 export PATH="$PATH":"$GOPATH/bin"
 
 #Add Cabal to PATH
