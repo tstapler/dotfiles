@@ -1,9 +1,6 @@
 # Fixes git + gpg error inside of tmux
 export GPG_TTY=$(tty)
 
-# User path configuration
-export PATH=$PATH:"/home/tstapler/stapler-config/env/bin:/home/tstapler/.pyenv/shims:/home/tstapler/.pyenv/shims:/home/tstapler/.pyenv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games"
-
 #Add Dart pub files to PATH
 export PATH=$PATH:"/home/tstapler/.pub-cache/bin"
 
