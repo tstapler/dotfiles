@@ -31,6 +31,7 @@ call dein#add('Shougo/neoinclude.vim')
 call dein#add('Shougo/neco-syntax')
 call dein#add('Shougo/neco-vim')
 call dein#add('zchee/deoplete-jedi')
+call dein#add('zchee/deoplete-go', {'build': 'make'})
 " End Code Completion Sources }}}
 
 " Snippet Plugins {{{
@@ -126,15 +127,19 @@ call dein#add('jacoborus/vim-jsdoc')
 call dein#add('heavenshell/vim-jsdoc')
 call dein#add('briancollins/vim-jst')
 " End Javascript }}}
+"
+" C/C++ Plugins {{{
+call dein#add('Rip-Rip/clang_complete')
+" End C/C++ Plugins }}}
 
 " Dart {{{
 call dein#add('dart-lang/dart-vim-plugin')
 call dein#add('miyakogi/vim-dartanalyzer')
 " End Dart }}}
 
-" C/C++ Plugins {{{
-call dein#add('Rip-Rip/clang_complete')
-" End C/C++ Plugins }}}
+" Go {{{
+call dein#add('fatih/vim-go')
+" End Go }}}
 
 " TypeScript Plugins {{{
 call dein#add('clausreinke/typescript-tools.vim')
@@ -285,7 +290,9 @@ nnoremap <silent><C-p> :CtrlSpace O<CR>
 " Plugin Settings {{{
 
 " numbers Settings {{{
+if exists("g:numbers_exlude")
   let g:numbers_exclude = g:numbers_exclude + ['term']
+endif
 " End numbers Settings }}}
 
 " vim-test Settings {{{
@@ -349,7 +356,14 @@ let g:neomake_gitcommit_gitlint_maker = {
 
 let g:neomake_gitcommit_enabled_makers = ['gitlint']
 
-let g:neomake_verbose = 3
+let g:neomake_go_gometalinter_maker = {
+      \ 'exe': 'gometalinter',
+      \ 'error_format': '%f:%l:%c: %m'
+      \ }
+
+let g:neomake_go_enabled_makers = ['gometalinter']
+
+let g:neomake_verbose = 1
 
 " End Neomake Settings }}}
 
