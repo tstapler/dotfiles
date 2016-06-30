@@ -3676,16 +3676,7 @@
             <output>
                 <group>[Sampler1]</group>
                 <key>cue_preview</key>
-                <status>0x97</status>
-                <midino>0x68</midino>
-                <on>0x0F</on>
-                <off>0x01</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Sampler1]</group>
-                <key>cue_preview</key>
-                <status>0x99</status>
+                <status>0x9A</status>
                 <midino>0x68</midino>
                 <on>0x0F</on>
                 <off>0x01</off>
@@ -3703,7 +3694,16 @@
             <output>
                 <group>[Sampler1]</group>
                 <key>cue_preview</key>
-                <status>0x9A</status>
+                <status>0x99</status>
+                <midino>0x68</midino>
+                <on>0x0F</on>
+                <off>0x01</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Sampler1]</group>
+                <key>cue_preview</key>
+                <status>0x97</status>
                 <midino>0x68</midino>
                 <on>0x0F</on>
                 <off>0x01</off>
@@ -3720,7 +3720,7 @@
                 <group>[Channel2]</group>
                 <key>beatloop_64_enabled</key>
                 <status>0x9A</status>
-                <midino>0x76</midino>
+                <midino>0x7E</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
@@ -3728,23 +3728,14 @@
                 <group>[Channel2]</group>
                 <key>beatloop_64_enabled</key>
                 <status>0x9A</status>
-                <midino>0x7E</midino>
+                <midino>0x76</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
             <output>
                 <group>[Sampler2]</group>
                 <key>cue_preview</key>
-                <status>0x97</status>
-                <midino>0x69</midino>
-                <on>0x0F</on>
-                <off>0x01</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Sampler2]</group>
-                <key>cue_preview</key>
-                <status>0x99</status>
+                <status>0x9A</status>
                 <midino>0x69</midino>
                 <on>0x0F</on>
                 <off>0x01</off>
@@ -3762,7 +3753,16 @@
             <output>
                 <group>[Sampler2]</group>
                 <key>cue_preview</key>
-                <status>0x9A</status>
+                <status>0x99</status>
+                <midino>0x69</midino>
+                <on>0x0F</on>
+                <off>0x01</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Sampler2]</group>
+                <key>cue_preview</key>
+                <status>0x97</status>
                 <midino>0x69</midino>
                 <on>0x0F</on>
                 <off>0x01</off>
@@ -3778,7 +3778,7 @@
             <output>
                 <group>[Channel1]</group>
                 <key>play</key>
-                <status>0x97</status>
+                <status>0x99</status>
                 <midino>0x17</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
@@ -3786,7 +3786,7 @@
             <output>
                 <group>[Channel1]</group>
                 <key>play</key>
-                <status>0x99</status>
+                <status>0x97</status>
                 <midino>0x17</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
@@ -3794,7 +3794,7 @@
             <output>
                 <group>[Channel2]</group>
                 <key>hotcue_7_enabled</key>
-                <status>0x98</status>
+                <status>0x9A</status>
                 <midino>0x66</midino>
                 <on>0x4F</on>
                 <off>0x41</off>
@@ -3803,7 +3803,7 @@
             <output>
                 <group>[Channel2]</group>
                 <key>hotcue_7_enabled</key>
-                <status>0x9A</status>
+                <status>0x98</status>
                 <midino>0x66</midino>
                 <on>0x4F</on>
                 <off>0x41</off>
@@ -3819,7 +3819,7 @@
             <output>
                 <group>[Channel2]</group>
                 <key>hotcue_8_enabled</key>
-                <status>0x98</status>
+                <status>0x9A</status>
                 <midino>0x67</midino>
                 <on>0x4F</on>
                 <off>0x41</off>
@@ -3828,18 +3828,10 @@
             <output>
                 <group>[Channel2]</group>
                 <key>hotcue_8_enabled</key>
-                <status>0x9A</status>
+                <status>0x98</status>
                 <midino>0x67</midino>
                 <on>0x4F</on>
                 <off>0x41</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>beatloop_64_enabled</key>
-                <status>0x99</status>
-                <midino>0x76</midino>
-                <off>0x71</off>
                 <minimum>1</minimum>
             </output>
             <output>
@@ -3851,12 +3843,11 @@
                 <minimum>1</minimum>
             </output>
             <output>
-                <group>[Channel2]</group>
-                <key>hotcue_3_enabled</key>
-                <status>0x98</status>
-                <midino>0x62</midino>
-                <on>0x4F</on>
-                <off>0x41</off>
+                <group>[Channel1]</group>
+                <key>beatloop_64_enabled</key>
+                <status>0x99</status>
+                <midino>0x76</midino>
+                <off>0x71</off>
                 <minimum>1</minimum>
             </output>
             <output>
@@ -3869,9 +3860,27 @@
                 <minimum>1</minimum>
             </output>
             <output>
+                <group>[Channel2]</group>
+                <key>hotcue_3_enabled</key>
+                <status>0x98</status>
+                <midino>0x62</midino>
+                <on>0x4F</on>
+                <off>0x41</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
                 <group>[Sampler3]</group>
                 <key>cue_preview</key>
-                <status>0x97</status>
+                <status>0x9A</status>
+                <midino>0x6A</midino>
+                <on>0x0F</on>
+                <off>0x01</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Sampler3]</group>
+                <key>cue_preview</key>
+                <status>0x98</status>
                 <midino>0x6A</midino>
                 <on>0x0F</on>
                 <off>0x01</off>
@@ -3889,27 +3898,10 @@
             <output>
                 <group>[Sampler3]</group>
                 <key>cue_preview</key>
-                <status>0x98</status>
+                <status>0x97</status>
                 <midino>0x6A</midino>
                 <on>0x0F</on>
                 <off>0x01</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Sampler3]</group>
-                <key>cue_preview</key>
-                <status>0x9A</status>
-                <midino>0x6A</midino>
-                <on>0x0F</on>
-                <off>0x01</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>beatloop_32_enabled</key>
-                <status>0x9A</status>
-                <midino>0x75</midino>
-                <off>0x71</off>
                 <minimum>1</minimum>
             </output>
             <output>
@@ -3922,6 +3914,23 @@
             </output>
             <output>
                 <group>[Channel2]</group>
+                <key>beatloop_32_enabled</key>
+                <status>0x9A</status>
+                <midino>0x75</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>hotcue_5_enabled</key>
+                <status>0x9A</status>
+                <midino>0x64</midino>
+                <on>0x4F</on>
+                <off>0x41</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
                 <key>hotcue_5_enabled</key>
                 <status>0x98</status>
                 <midino>0x64</midino>
@@ -3931,9 +3940,9 @@
             </output>
             <output>
                 <group>[Channel2]</group>
-                <key>hotcue_5_enabled</key>
+                <key>hotcue_4_enabled</key>
                 <status>0x9A</status>
-                <midino>0x64</midino>
+                <midino>0x63</midino>
                 <on>0x4F</on>
                 <off>0x41</off>
                 <minimum>1</minimum>
@@ -3949,11 +3958,10 @@
             </output>
             <output>
                 <group>[Channel2]</group>
-                <key>hotcue_4_enabled</key>
+                <key>play</key>
                 <status>0x9A</status>
-                <midino>0x63</midino>
-                <on>0x4F</on>
-                <off>0x41</off>
+                <midino>0x17</midino>
+                <off>0x71</off>
                 <minimum>1</minimum>
             </output>
             <output>
@@ -3962,23 +3970,6 @@
                 <status>0x98</status>
                 <midino>0x17</midino>
                 <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>play</key>
-                <status>0x9A</status>
-                <midino>0x17</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>hotcue_7_enabled</key>
-                <status>0x97</status>
-                <midino>0x66</midino>
-                <on>0x4F</on>
-                <off>0x41</off>
                 <minimum>1</minimum>
             </output>
             <output>
@@ -3991,10 +3982,10 @@
                 <minimum>1</minimum>
             </output>
             <output>
-                <group>[Channel2]</group>
-                <key>hotcue_6_enabled</key>
-                <status>0x98</status>
-                <midino>0x65</midino>
+                <group>[Channel1]</group>
+                <key>hotcue_7_enabled</key>
+                <status>0x97</status>
+                <midino>0x66</midino>
                 <on>0x4F</on>
                 <off>0x41</off>
                 <minimum>1</minimum>
@@ -4003,6 +3994,15 @@
                 <group>[Channel2]</group>
                 <key>hotcue_6_enabled</key>
                 <status>0x9A</status>
+                <midino>0x65</midino>
+                <on>0x4F</on>
+                <off>0x41</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>hotcue_6_enabled</key>
+                <status>0x98</status>
                 <midino>0x65</midino>
                 <on>0x4F</on>
                 <off>0x41</off>
@@ -4018,7 +4018,7 @@
             <output>
                 <group>[Channel2]</group>
                 <key>hotcue_1_enabled</key>
-                <status>0x98</status>
+                <status>0x9A</status>
                 <midino>0x60</midino>
                 <on>0x4F</on>
                 <off>0x41</off>
@@ -4027,17 +4027,8 @@
             <output>
                 <group>[Channel2]</group>
                 <key>hotcue_1_enabled</key>
-                <status>0x9A</status>
+                <status>0x98</status>
                 <midino>0x60</midino>
-                <on>0x4F</on>
-                <off>0x41</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>hotcue_8_enabled</key>
-                <status>0x97</status>
-                <midino>0x67</midino>
                 <on>0x4F</on>
                 <off>0x41</off>
                 <minimum>1</minimum>
@@ -4053,9 +4044,9 @@
             </output>
             <output>
                 <group>[Channel1]</group>
-                <key>hotcue_3_enabled</key>
+                <key>hotcue_8_enabled</key>
                 <status>0x97</status>
-                <midino>0x62</midino>
+                <midino>0x67</midino>
                 <on>0x4F</on>
                 <off>0x41</off>
                 <minimum>1</minimum>
@@ -4070,18 +4061,18 @@
                 <minimum>1</minimum>
             </output>
             <output>
-                <group>[Sampler4]</group>
-                <key>cue_preview</key>
+                <group>[Channel1]</group>
+                <key>hotcue_3_enabled</key>
                 <status>0x97</status>
-                <midino>0x6B</midino>
-                <on>0x0F</on>
-                <off>0x01</off>
+                <midino>0x62</midino>
+                <on>0x4F</on>
+                <off>0x41</off>
                 <minimum>1</minimum>
             </output>
             <output>
                 <group>[Sampler4]</group>
                 <key>cue_preview</key>
-                <status>0x99</status>
+                <status>0x9A</status>
                 <midino>0x6B</midino>
                 <on>0x0F</on>
                 <off>0x01</off>
@@ -4099,18 +4090,19 @@
             <output>
                 <group>[Sampler4]</group>
                 <key>cue_preview</key>
-                <status>0x9A</status>
+                <status>0x99</status>
                 <midino>0x6B</midino>
                 <on>0x0F</on>
                 <off>0x01</off>
                 <minimum>1</minimum>
             </output>
             <output>
-                <group>[Channel1]</group>
-                <key>beatloop_32_enabled</key>
-                <status>0x99</status>
-                <midino>0x75</midino>
-                <off>0x71</off>
+                <group>[Sampler4]</group>
+                <key>cue_preview</key>
+                <status>0x97</status>
+                <midino>0x6B</midino>
+                <on>0x0F</on>
+                <off>0x01</off>
                 <minimum>1</minimum>
             </output>
             <output>
@@ -4122,6 +4114,23 @@
                 <minimum>1</minimum>
             </output>
             <output>
+                <group>[Channel1]</group>
+                <key>beatloop_32_enabled</key>
+                <status>0x99</status>
+                <midino>0x75</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>hotcue_2_enabled</key>
+                <status>0x9A</status>
+                <midino>0x61</midino>
+                <on>0x4F</on>
+                <off>0x41</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
                 <group>[Channel2]</group>
                 <key>hotcue_2_enabled</key>
                 <status>0x98</status>
@@ -4131,10 +4140,10 @@
                 <minimum>1</minimum>
             </output>
             <output>
-                <group>[Channel2]</group>
-                <key>hotcue_2_enabled</key>
-                <status>0x9A</status>
-                <midino>0x61</midino>
+                <group>[Channel1]</group>
+                <key>hotcue_5_enabled</key>
+                <status>0x99</status>
+                <midino>0x64</midino>
                 <on>0x4F</on>
                 <off>0x41</off>
                 <minimum>1</minimum>
@@ -4150,9 +4159,9 @@
             </output>
             <output>
                 <group>[Channel1]</group>
-                <key>hotcue_5_enabled</key>
+                <key>hotcue_4_enabled</key>
                 <status>0x99</status>
-                <midino>0x64</midino>
+                <midino>0x63</midino>
                 <on>0x4F</on>
                 <off>0x41</off>
                 <minimum>1</minimum>
@@ -4168,9 +4177,9 @@
             </output>
             <output>
                 <group>[Channel1]</group>
-                <key>hotcue_4_enabled</key>
+                <key>hotcue_6_enabled</key>
                 <status>0x99</status>
-                <midino>0x63</midino>
+                <midino>0x65</midino>
                 <on>0x4F</on>
                 <off>0x41</off>
                 <minimum>1</minimum>
@@ -4186,9 +4195,9 @@
             </output>
             <output>
                 <group>[Channel1]</group>
-                <key>hotcue_6_enabled</key>
+                <key>hotcue_1_enabled</key>
                 <status>0x99</status>
-                <midino>0x65</midino>
+                <midino>0x60</midino>
                 <on>0x4F</on>
                 <off>0x41</off>
                 <minimum>1</minimum>
@@ -4204,9 +4213,9 @@
             </output>
             <output>
                 <group>[Channel1]</group>
-                <key>hotcue_1_enabled</key>
+                <key>hotcue_2_enabled</key>
                 <status>0x99</status>
-                <midino>0x60</midino>
+                <midino>0x61</midino>
                 <on>0x4F</on>
                 <off>0x41</off>
                 <minimum>1</minimum>
@@ -4221,27 +4230,10 @@
                 <minimum>1</minimum>
             </output>
             <output>
-                <group>[Channel1]</group>
-                <key>hotcue_2_enabled</key>
-                <status>0x99</status>
-                <midino>0x61</midino>
-                <on>0x4F</on>
-                <off>0x41</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>beatloop_1_enabled</key>
-                <status>0x98</status>
-                <midino>0x74</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
                 <group>[Channel2]</group>
                 <key>beatloop_1_enabled</key>
                 <status>0x9A</status>
-                <midino>0x70</midino>
+                <midino>0x78</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
@@ -4257,6 +4249,22 @@
                 <group>[Channel2]</group>
                 <key>beatloop_1_enabled</key>
                 <status>0x9A</status>
+                <midino>0x70</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>beatloop_1_enabled</key>
+                <status>0x98</status>
+                <midino>0x74</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>beatloop_0.0625_enabled</key>
+                <status>0x98</status>
                 <midino>0x78</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
@@ -4271,25 +4279,9 @@
             </output>
             <output>
                 <group>[Channel2]</group>
-                <key>beatloop_0.0625_enabled</key>
-                <status>0x98</status>
-                <midino>0x78</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>beatloop_2_enabled</key>
-                <status>0x98</status>
-                <midino>0x75</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
                 <key>beatloop_2_enabled</key>
                 <status>0x9A</status>
-                <midino>0x71</midino>
+                <midino>0x79</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
@@ -4305,8 +4297,23 @@
                 <group>[Channel2]</group>
                 <key>beatloop_2_enabled</key>
                 <status>0x9A</status>
-                <midino>0x79</midino>
+                <midino>0x71</midino>
                 <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>beatloop_2_enabled</key>
+                <status>0x98</status>
+                <midino>0x75</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>pfl</key>
+                <status>0x99</status>
+                <midino>0x0A</midino>
                 <minimum>1</minimum>
             </output>
             <output>
@@ -4317,10 +4324,11 @@
                 <minimum>1</minimum>
             </output>
             <output>
-                <group>[Channel1]</group>
-                <key>pfl</key>
-                <status>0x99</status>
-                <midino>0x0A</midino>
+                <group>[Channel2]</group>
+                <key>beatloop_0.125_enabled</key>
+                <status>0x98</status>
+                <midino>0x79</midino>
+                <off>0x71</off>
                 <minimum>1</minimum>
             </output>
             <output>
@@ -4332,26 +4340,10 @@
                 <minimum>1</minimum>
             </output>
             <output>
-                <group>[Channel2]</group>
-                <key>beatloop_0.125_enabled</key>
-                <status>0x98</status>
-                <midino>0x79</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>beatloop_1_enabled</key>
-                <status>0x97</status>
-                <midino>0x74</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
                 <group>[Channel1]</group>
                 <key>beatloop_1_enabled</key>
                 <status>0x99</status>
-                <midino>0x70</midino>
+                <midino>0x78</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
@@ -4367,6 +4359,22 @@
                 <group>[Channel1]</group>
                 <key>beatloop_1_enabled</key>
                 <status>0x99</status>
+                <midino>0x70</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>beatloop_1_enabled</key>
+                <status>0x97</status>
+                <midino>0x74</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>beatloop_0.0625_enabled</key>
+                <status>0x97</status>
                 <midino>0x78</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
@@ -4381,25 +4389,9 @@
             </output>
             <output>
                 <group>[Channel1]</group>
-                <key>beatloop_0.0625_enabled</key>
-                <status>0x97</status>
-                <midino>0x78</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>beatloop_2_enabled</key>
-                <status>0x97</status>
-                <midino>0x75</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
                 <key>beatloop_2_enabled</key>
                 <status>0x99</status>
-                <midino>0x71</midino>
+                <midino>0x79</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
@@ -4415,15 +4407,16 @@
                 <group>[Channel1]</group>
                 <key>beatloop_2_enabled</key>
                 <status>0x99</status>
-                <midino>0x79</midino>
+                <midino>0x71</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
             <output>
                 <group>[Channel1]</group>
-                <key>quantize</key>
+                <key>beatloop_2_enabled</key>
                 <status>0x97</status>
-                <midino>0x10</midino>
+                <midino>0x75</midino>
+                <off>0x71</off>
                 <minimum>1</minimum>
             </output>
             <output>
@@ -4434,10 +4427,10 @@
                 <minimum>1</minimum>
             </output>
             <output>
-                <group>[Channel2]</group>
-                <key>pfl</key>
-                <status>0x98</status>
-                <midino>0x0A</midino>
+                <group>[Channel1]</group>
+                <key>quantize</key>
+                <status>0x97</status>
+                <midino>0x10</midino>
                 <minimum>1</minimum>
             </output>
             <output>
@@ -4449,17 +4442,16 @@
             </output>
             <output>
                 <group>[Channel2]</group>
-                <key>beatloop_8_enabled</key>
+                <key>pfl</key>
                 <status>0x98</status>
-                <midino>0x77</midino>
-                <off>0x71</off>
+                <midino>0x0A</midino>
                 <minimum>1</minimum>
             </output>
             <output>
                 <group>[Channel2]</group>
                 <key>beatloop_8_enabled</key>
                 <status>0x9A</status>
-                <midino>0x73</midino>
+                <midino>0x7B</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
@@ -4475,15 +4467,15 @@
                 <group>[Channel2]</group>
                 <key>beatloop_8_enabled</key>
                 <status>0x9A</status>
-                <midino>0x7B</midino>
+                <midino>0x73</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
             <output>
-                <group>[Channel1]</group>
-                <key>beatloop_0.125_enabled</key>
-                <status>0x97</status>
-                <midino>0x71</midino>
+                <group>[Channel2]</group>
+                <key>beatloop_8_enabled</key>
+                <status>0x98</status>
+                <midino>0x77</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
@@ -4492,6 +4484,14 @@
                 <key>beatloop_0.125_enabled</key>
                 <status>0x97</status>
                 <midino>0x79</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>beatloop_0.125_enabled</key>
+                <status>0x97</status>
+                <midino>0x71</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
@@ -4506,7 +4506,7 @@
                 <group>[Channel2]</group>
                 <key>beatloop_16_enabled</key>
                 <status>0x9A</status>
-                <midino>0x74</midino>
+                <midino>0x7C</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
@@ -4514,8 +4514,15 @@
                 <group>[Channel2]</group>
                 <key>beatloop_16_enabled</key>
                 <status>0x9A</status>
-                <midino>0x7C</midino>
+                <midino>0x74</midino>
                 <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>quantize</key>
+                <status>0x9A</status>
+                <midino>0x10</midino>
                 <minimum>1</minimum>
             </output>
             <output>
@@ -4526,25 +4533,10 @@
                 <minimum>1</minimum>
             </output>
             <output>
-                <group>[Channel2]</group>
-                <key>quantize</key>
-                <status>0x9A</status>
-                <midino>0x10</midino>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>beatloop_8_enabled</key>
-                <status>0x97</status>
-                <midino>0x77</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
                 <group>[Channel1]</group>
                 <key>beatloop_8_enabled</key>
                 <status>0x99</status>
-                <midino>0x73</midino>
+                <midino>0x7B</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
@@ -4560,15 +4552,15 @@
                 <group>[Channel1]</group>
                 <key>beatloop_8_enabled</key>
                 <status>0x99</status>
-                <midino>0x7B</midino>
+                <midino>0x73</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
             <output>
                 <group>[Channel1]</group>
-                <key>beatloop_16_enabled</key>
-                <status>0x99</status>
-                <midino>0x74</midino>
+                <key>beatloop_8_enabled</key>
+                <status>0x97</status>
+                <midino>0x77</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
@@ -4577,6 +4569,14 @@
                 <key>beatloop_16_enabled</key>
                 <status>0x99</status>
                 <midino>0x7C</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>beatloop_16_enabled</key>
+                <status>0x99</status>
+                <midino>0x74</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
@@ -4623,7 +4623,7 @@
                 <group>[Channel2]</group>
                 <key>beatloop_0.5_enabled</key>
                 <status>0x98</status>
-                <midino>0x73</midino>
+                <midino>0x7B</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
@@ -4631,21 +4631,21 @@
                 <group>[Channel2]</group>
                 <key>beatloop_0.5_enabled</key>
                 <status>0x98</status>
-                <midino>0x7B</midino>
+                <midino>0x73</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
             <output>
                 <group>[Channel1]</group>
                 <key>beats_translate_curpos</key>
-                <status>0x97</status>
+                <status>0x99</status>
                 <midino>0x11</midino>
                 <minimum>1</minimum>
             </output>
             <output>
                 <group>[Channel1]</group>
                 <key>beats_translate_curpos</key>
-                <status>0x99</status>
+                <status>0x97</status>
                 <midino>0x11</midino>
                 <minimum>1</minimum>
             </output>
@@ -4675,16 +4675,8 @@
             <output>
                 <group>[Channel2]</group>
                 <key>beatloop_4_enabled</key>
-                <status>0x98</status>
-                <midino>0x76</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>beatloop_4_enabled</key>
                 <status>0x9A</status>
-                <midino>0x72</midino>
+                <midino>0x7A</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
@@ -4700,15 +4692,15 @@
                 <group>[Channel2]</group>
                 <key>beatloop_4_enabled</key>
                 <status>0x9A</status>
-                <midino>0x7A</midino>
+                <midino>0x72</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
             <output>
-                <group>[Channel1]</group>
-                <key>beatloop_0.5_enabled</key>
-                <status>0x97</status>
-                <midino>0x73</midino>
+                <group>[Channel2]</group>
+                <key>beatloop_4_enabled</key>
+                <status>0x98</status>
+                <midino>0x76</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
@@ -4721,10 +4713,11 @@
                 <minimum>1</minimum>
             </output>
             <output>
-                <group>[Channel2]</group>
-                <key>beats_translate_curpos</key>
-                <status>0x98</status>
-                <midino>0x11</midino>
+                <group>[Channel1]</group>
+                <key>beatloop_0.5_enabled</key>
+                <status>0x97</status>
+                <midino>0x73</midino>
+                <off>0x71</off>
                 <minimum>1</minimum>
             </output>
             <output>
@@ -4736,10 +4729,9 @@
             </output>
             <output>
                 <group>[Channel2]</group>
-                <key>beatloop_0.25_enabled</key>
+                <key>beats_translate_curpos</key>
                 <status>0x98</status>
-                <midino>0x72</midino>
-                <off>0x71</off>
+                <midino>0x11</midino>
                 <minimum>1</minimum>
             </output>
             <output>
@@ -4747,6 +4739,14 @@
                 <key>beatloop_0.25_enabled</key>
                 <status>0x98</status>
                 <midino>0x7A</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>beatloop_0.25_enabled</key>
+                <status>0x98</status>
+                <midino>0x72</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
@@ -4776,16 +4776,8 @@
             <output>
                 <group>[Channel1]</group>
                 <key>beatloop_4_enabled</key>
-                <status>0x97</status>
-                <midino>0x76</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>beatloop_4_enabled</key>
                 <status>0x99</status>
-                <midino>0x72</midino>
+                <midino>0x7A</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
@@ -4801,6 +4793,22 @@
                 <group>[Channel1]</group>
                 <key>beatloop_4_enabled</key>
                 <status>0x99</status>
+                <midino>0x72</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>beatloop_4_enabled</key>
+                <status>0x97</status>
+                <midino>0x76</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>beatloop_0.25_enabled</key>
+                <status>0x97</status>
                 <midino>0x7A</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
@@ -4810,14 +4818,6 @@
                 <key>beatloop_0.25_enabled</key>
                 <status>0x97</status>
                 <midino>0x72</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>beatloop_0.25_enabled</key>
-                <status>0x97</status>
-                <midino>0x7A</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
