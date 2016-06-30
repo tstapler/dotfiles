@@ -22,10 +22,16 @@ if dein#check_install(["${1:Name/Repo}"])
   augroup END                                           
 endif                                                   
 endsnippet                                              
-
 snippet aug "Autogroup"
 augroup ${1:group_name}
   au!
   $2
 augroup END
 endsnippet
+
+snippet maker "Neomake Maker"
+let g:neomake_${1:filetype}_${2:makername}_maker = {
+      \ 'exe': '${3:exe_name}'
+}
+endsnippet
+	
