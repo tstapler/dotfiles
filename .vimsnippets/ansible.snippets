@@ -8,3 +8,7 @@ snippet anstask
 - name: ${1:Task Name}
   ${2:command}: ${3:arguments}
 endsnippet
+
+snippet aptrepo
+- "deb http://ppa.launchpad.net/${1:repo}/${2:branch}/ubuntu {{ ansible_distribution_release }} main"
+endsnippet
