@@ -231,7 +231,7 @@ nnoremap <leader>t :TagbarToggle<cr>
 
 " Unite {{{
 "Grep in current directory
-nnoremap <leader>f :Unite -buffer-name=search -start-insert -auto-preview grep:.<CR>
+nnoremap <leader>f :Unite -tab -buffer-name=search -start-insert -vertical-preview -no-resize -auto-resize -auto-preview grep:.<CR>
 
 " Execute help.
 nnoremap <C-h>  :<C-u>Unite -start-insert help<CR>
@@ -326,7 +326,7 @@ let g:neomake_python_pylama_maker = {
       \ 'errorformat': '%f:%l:%c: %m'
       \ }
 
-let g:neomake_python_enabled_makers = ['python', 'pylama', 'frosted', 'flake8']
+  let g:neomake_python_enabled_makers = ['python', 'pylama', 'frosted', 'flake8']
 
 let g:neomake_pandoc_proselint_maker = {
       \ 'exe': 'proselint',
@@ -363,6 +363,12 @@ let g:neomake_go_gometalinter_maker = {
 
 let g:neomake_go_enabled_makers = ['gometalinter']
 
+let g:neomake_ansible_ansiblelint_maker = {
+      \ 'exe': 'ansible-lint'
+      \ }
+
+let g:neomake_ansible_enabled_makers = ["ansiblelint"]
+
 let g:neomake_verbose = 1
 
 " End Neomake Settings }}}
@@ -395,10 +401,10 @@ if dein#check_install(["Shougo/unite.vim"])
   endfunction
 
   "Select Search
-  if executable('Ag')
+  if executable('ag')
     " Use ag (the silver searcher)
     " https://github.com/ggreer/the_silver_searcher
-    let g:unite_source_grep_command = 'Ag'
+    let g:unite_source_grep_command = 'ag'
     let g:unite_source_grep_default_opts =
           \ '-i --hidden --ignore ' .
           \ '''.hg'' --ignore ''.svn'' --ignore ''.git'' --ignore ''.bzr'' --ignore ''packages''
