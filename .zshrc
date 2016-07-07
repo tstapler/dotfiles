@@ -13,22 +13,23 @@ fi
 
 source ~/.zplug/zplug
 
-#Let zplug manage itself
+# Let zplug manage itself
 zplug "b4b4r07/zplug"
 
-#oh-my-zsh pack
+# oh-my-zsh pack
 zplug "robbyrussell/oh-my-zsh", use:oh-my-zsh.sh, nice:-10
 zplug "willghatch/zsh-hooks"
 
-#Theme
+# Theme
 export TERM="xterm-256color"
 zplug "bhilburn/powerlevel9k"
 
 zplug "zsh-users/zsh-completions"
 zplug "b4b4r07/enhancd", use:enhancd.sh
 zplug "zsh-users/zaw"
+zplug "Tarrasch/zsh-autoenv"
 
-#The file searchers
+# The file searchers
 
 if [[ `uname` == 'Linux' ]]; then
 zplug "junegunn/fzf-bin", as:command, from:gh-r, rename-to:fzf, use:"*linux*64*"
@@ -41,6 +42,7 @@ zplug "peco/peco", as:command, from:gh-r, rename-to:peco, use:"*darwin*64*"
 fi
 
 
+# Suggestions
 zplug "tarruda/zsh-autosuggestions"
 zplug "zsh-users/zsh-syntax-highlighting"
 zplug "zsh-users/zsh-history-substring-search"
@@ -60,8 +62,8 @@ zplug load --verbose
 bindkey -v
 
 # Emacs like keybindings in insert mode
-bindkey -M viins '^P' up-history
-bindkey -M viins '^N' down-history
+bindkey -M viins '^P' history-substring-search-up
+bindkey -M viins '^N' history-substring-search-down
 bindkey -M viins '^?' backward-delete-char
 bindkey -M viins '^h' backward-delete-char
 bindkey -M viins '^w' backward-kill-word
@@ -86,8 +88,10 @@ source ~/.shell/powerlevel9k.sh
 # Export Environment Variables
 source ~/.shell/exports.sh
 
-#Aliases
+# Aliases
 source ~/.shell/aliases.sh
 
-
-
+# Workiva specific stuff
+if [[ "$WORKIVA" == true ]] ; then
+	source ~/.shell/workiva.sh
+fi
