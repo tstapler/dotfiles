@@ -32,6 +32,13 @@ endsnippet
 snippet maker "Neomake Maker"
 let g:neomake_${1:filetype}_${2:makername}_maker = {
       \ 'exe': '${3:exe_name}'
-}
+      \ }
 endsnippet
 	
+snippet makers "Neomake filetype makers"
+if exists("g:neomake_$1_enabled_makers")
+  let g:neomake_${1:filetype}_enabled_makers = g:neomake_$1_enabled_makers + [${2}]
+else
+  let g:neomake_$1_enabled_makers = [$2]
+endif
+endsnippet
