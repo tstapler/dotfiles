@@ -32,6 +32,8 @@ call dein#add('Shougo/neco-syntax')
 call dein#add('Shougo/neco-vim')
 call dein#add('zchee/deoplete-jedi')
 call dein#add('zchee/deoplete-go', {'build': 'make'})
+call dein#add('carlitux/deoplete-ternjs')
+call dein#add('mhartington/deoplete-typescript')
 " End Code Completion Sources }}}
 
 " Snippet Plugins {{{
@@ -134,7 +136,7 @@ call dein#add('Rip-Rip/clang_complete')
 
 " Dart {{{
 call dein#add('dart-lang/dart-vim-plugin')
-call dein#add('miyakogi/vim-dartanalyzer')
+"call dein#add('miyakogi/vim-dartanalyzer') <== need to fix
 " End Dart }}}
 
 " Go {{{
@@ -142,8 +144,6 @@ call dein#add('fatih/vim-go')
 " End Go }}}
 
 " TypeScript Plugins {{{
-call dein#add('clausreinke/typescript-tools.vim')
-"call dein#add('Quramy/tsuquyomi')
 call dein#add('HerringtonDarkholme/yats.vim') 
 " End TypeScript Plugins }}}
 
@@ -231,12 +231,25 @@ nnoremap <leader>t :TagbarToggle<cr>
 
 " Unite {{{
 "Grep in current directory
-nnoremap <leader>f :Unite -tab -buffer-name=search -start-insert -vertical-preview -no-resize -auto-resize -auto-preview grep:.<CR>
+nnoremap <leader>f :Unite -direction=dynamictop -start-insert -no-resize -auto-resize -auto-preview grep:.<CR>
 
 " Execute help.
 nnoremap <C-h>  :<C-u>Unite -start-insert help<CR>
 " Execute help by cursor keyword.
 nnoremap <silent> g<C-h>  :<C-u>UniteWithCursorWord help<CR>
+
+
+" ultisnips {{{
+  function! UltiSnipsCallUnite()
+    Unite -start-insert -winheight=100 -immediately -no-empty ultisnips
+    return ''
+  endfunction
+  
+  inoremap <silent> <F12> <C-R>=(pumvisible()? "\<LT>C-E>":"")<CR><C-R>=UltiSnipsCallUnite()<CR>
+  nnoremap <silent> <F12> a<C-R>=(pumvisible()? "\<LT>C-E>":"")<CR><C-R>=UltiSnipsCallUnite()<CR>
+  
+" End ultisnips }}}
+
 " End Unite }}}
 
 " zenroom2 {{{
@@ -444,9 +457,15 @@ let g:vimfiler_as_default_explorer = 1
 
 " deoplete Settings {{{
 if has('nvim')
+  " neocomplete like
+   set completeopt+=noinsert
+  " deoplete.nvim recommend
+   set completeopt+=noselect
+
   let g:deoplete#enable_at_startup = 1
 
   let g:deoplete#sources#jedi#show_docstring = 1
+
   " Use deoplete.
   let g:deoplete#enable_at_startup = 1
   " Use smartcase.
@@ -468,7 +487,17 @@ if has('nvim')
   let g:clang_omnicppcomplete_compliance = 0
   let g:clang_make_default_keymappings = 0
    
-  
+  " deoplete-go Settings {{{
+  let g:deoplete#sources#go#gocode_binary = $GOPATH.'/bin/gocode'
+  let g:deoplete#sources#go#sort_class = ['package', 'func', 'type', 'var', 'const']
+  let g:deoplete#sources#go#use_cache = 1
+  " End deoplete-go Settings }}}
+
+  " deoplete-ternjs Settings {{{
+    let g:tern_request_timeout = 1
+    let g:tern_show_signature_in_pum = 0  " This do disable full signature type on autocomplete
+  " End deoplete-ternjs Settings }}}
+
 endif
 
 " End deoplete Settings }}}
