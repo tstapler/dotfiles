@@ -174,8 +174,8 @@ au FileType html setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 " }}}
 
 " Custom Functions {{{
-  function! CopyBufferFilename()
-    :let @" = expand("%")
+  function! YankBufferFilename()
+    :let @+ = expand("%")
   endfunction
 " End Custom Functions }}}
 
