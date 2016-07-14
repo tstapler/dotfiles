@@ -2,7 +2,7 @@
 export GPG_TTY=$(tty)
 
 #Add Dart pub files to PATH
-export PATH=$PATH:"/home/tstapler/.pub-cache/bin"
+export PATH="$PATH":"$HOME/.pub-cache/bin"
 
 #Create Go Path
 export GOPATH="$HOME/.local/lib/go"
@@ -16,7 +16,7 @@ export PATH="$PATH":"$GOPATH/bin"
 #Add Cabal to PATH
 export PATH="$HOME/.cabal/bin:"$PATH
 
-#Set environment varibles
+#Set environment varibles for Enhancd
 export ENHANCD_FILTER=fzf
 
 #Setup RVM

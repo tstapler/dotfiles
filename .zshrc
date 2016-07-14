@@ -25,9 +25,9 @@ export TERM="xterm-256color"
 zplug "bhilburn/powerlevel9k"
 
 zplug "zsh-users/zsh-completions"
-zplug "b4b4r07/enhancd", use:enhancd.sh
-zplug "zsh-users/zaw"
 zplug "Tarrasch/zsh-autoenv"
+zplug "b4b4r07/enhancd", use:init.sh
+zplug "zsh-users/zaw"
 
 # The file searchers
 
