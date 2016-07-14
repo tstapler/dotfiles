@@ -95,3 +95,11 @@ source ~/.shell/aliases.sh
 if [[ "$WORKIVA" == true ]] ; then
 	source ~/.shell/workiva.sh
 fi
+
+# By operating system
+OS="`uname`"
+case $OS in
+	'Darwin')
+	source ~/.shell/osx.sh
+	;;
+esac
