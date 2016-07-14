@@ -27,8 +27,6 @@ fi
 
 alias ddev='pub run dart_dev'
 
-# Add pub bin to cache
-export PATH="$PATH":"$HOME/.pub-cache/bin"
 
 # Use dart_dev completions
 if [ -n "$ZSH_VERSION" ]; then
