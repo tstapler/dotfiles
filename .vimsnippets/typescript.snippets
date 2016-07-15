@@ -2,10 +2,19 @@ snippet component
 import { Component } from '@angular/core';
 
 @Component({
+moduleId: module.id
   selector: '$1',
-  templateUrl: '${2:./app/}.component.html'
+  templateUrl: '${2:./}.component.html'
   })
 export class $3 {
   $4
 }
 endsnippet
+
+snippet import
+import { ${1:Name} } from '${2:location}';
+endsnippet
+
+snippet export "Export from"
+export { ${1:Thing} } from './${2:file}';
+endsnippet	
