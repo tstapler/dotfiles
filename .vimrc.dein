@@ -41,6 +41,7 @@ call dein#add('SirVer/ultisnips')
 " call dein#add('Shougo/neosnippet.vim')
 " call dein#add('Shougo/neosnippet-snippets')
 call dein#add('honza/vim-snippets')
+call dein#add('chrisgillis/vim-bootstrap3-snippets')
 " End Snippet Plugins }}}
 
 call dein#add('dhruvasagar/vim-table-mode')
@@ -161,6 +162,7 @@ call dein#add('groenewege/vim-less')
 call dein#add('tapichu/asm2d-vim')
 call dein#add('pangloss/vim-javascript')
 call dein#add('avakhov/vim-yaml')
+call dein#add('sheerun/vim-polyglot')
 
 " End Language Specific Plugins }}}
 
@@ -303,7 +305,7 @@ nnoremap <silent><C-p> :CtrlSpace O<CR>
 " Plugin Settings {{{
 
 " numbers Settings {{{
-if exists("g:numbers_exlude")
+if exists("g:numbers_exclude")
   let g:numbers_exclude = g:numbers_exclude + ['term']
 endif
 " End numbers Settings }}}
@@ -381,6 +383,8 @@ let g:neomake_ansible_ansiblelint_maker = {
       \ }
 
 let g:neomake_ansible_enabled_makers = ["ansiblelint"]
+
+let g:neomake_html_enabled_makers = []
 
 let g:neomake_verbose = 1
 
