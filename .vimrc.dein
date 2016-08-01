@@ -160,7 +160,6 @@ call dein#add('ekalinin/Dockerfile.vim')
 call dein#add('elzr/vim-json')
 call dein#add('groenewege/vim-less')
 call dein#add('tapichu/asm2d-vim')
-call dein#add('pangloss/vim-javascript')
 call dein#add('avakhov/vim-yaml')
 call dein#add('sheerun/vim-polyglot')
 
