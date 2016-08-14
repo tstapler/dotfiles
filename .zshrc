@@ -16,8 +16,6 @@ source ~/.zplug/zplug
 # Let zplug manage itself
 zplug "b4b4r07/zplug"
 
-# oh-my-zsh pack
-zplug "robbyrussell/oh-my-zsh", use:oh-my-zsh.sh, nice:-10
 zplug "willghatch/zsh-hooks"
 
 # Theme
