@@ -22,8 +22,13 @@ export PATH="$HOME/.cabal/bin:"$PATH
 # Set environment varibles for Enhancd
 export ENHANCD_FILTER=fzf
 
-# Setup RVM
+# Setup RVM Path
 export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
+
+# Set Gem Path
+if which ruby >/dev/null && which gem >/dev/null; then
+    PATH="$(ruby -rubygems -e 'puts Gem.user_dir')/bin:$PATH"
+fi
 
 # Editor Variable
 if hash nvim 2>/dev/null; then
