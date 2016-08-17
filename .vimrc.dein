@@ -160,7 +160,7 @@ call dein#add('ekalinin/Dockerfile.vim')
 call dein#add('elzr/vim-json')
 call dein#add('groenewege/vim-less')
 call dein#add('tapichu/asm2d-vim')
-call dein#add('avakhov/vim-yaml')
+"call dein#add('avakhov/vim-yaml') Conflicts with vim ansible
 call dein#add('sheerun/vim-polyglot')
 
 " End Language Specific Plugins }}}
@@ -302,6 +302,9 @@ nnoremap <silent><C-p> :CtrlSpace O<CR>
 " }}}
 
 " Plugin Settings {{{
+" vim-json Settings {{{
+let g:vim_json_syntax_conceal = 0
+" End vim-json Settings }}}
 
 " numbers Settings {{{
 if exists("g:numbers_exclude")
