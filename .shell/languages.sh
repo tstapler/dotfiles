@@ -8,4 +8,3 @@ fi
 if [[ -d "~/.dnx" ]]; then
 [ -s "/home/tstapler/.dnx/dnvm/dnvm.sh" ] && . "/home/tstapler/.dnx/dnvm/dnvm.sh" # Load dnvm
 fi
-
