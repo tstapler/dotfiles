@@ -15,3 +15,5 @@
 	tool = vimdiff
 [github]
 	user = tstapler
+[hub]
+	protocol = ssh
