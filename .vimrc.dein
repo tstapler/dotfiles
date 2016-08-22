@@ -137,7 +137,6 @@ call dein#add('Rip-Rip/clang_complete')
 
 " Dart {{{
 call dein#add('dart-lang/dart-vim-plugin')
-"call dein#add('miyakogi/vim-dartanalyzer') <== need to fix
 " End Dart }}}
 
 " Go {{{
@@ -302,6 +301,12 @@ nnoremap <silent><C-p> :CtrlSpace O<CR>
 " }}}
 
 " Plugin Settings {{{
+" TableMode {{{
+" make table both pandoc and github lovable
+let g:table_mode_separator = '|'
+let g:table_mode_corner = '|'
+let g:table_mode_corner_corner = '|'
+" End TableMode }}}
 " vim-json Settings {{{
 let g:vim_json_syntax_conceal = 0
 " End vim-json Settings }}}
@@ -750,6 +755,10 @@ let g:UltiSnipsSnippetDirectories=["UltiSips", "stapler-snips"]
 "}}}
 
 " Auto Groups {{{
+
+" TableMode {{{
+  autocmd FileType markdown TableModeEnable
+" End TableMode }}}
 
 " Delimit Mate {{{
 if dein#check_install(["Raimondi/delimitMate"])
