@@ -89,6 +89,11 @@ source ~/.shell/exports.sh
 # Aliases
 source ~/.shell/aliases.sh
 
+# Machine Specific
+if [[ -f ~/.shell/local.sh ]]; then
+	source ~/.shell/local.sh
+fi
+
 # Workiva specific stuff
 if [[ "$WORKIVA" == true ]] ; then
 	source ~/.shell/workiva.sh
