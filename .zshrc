@@ -6,32 +6,30 @@
 
 # Load zplug, clone if not found
 if [[ ! -d ~/.zplug ]];then
-	git clone https://github.com/b4b4r07/zplug.git ~/.zplug
-	source ~/.zplug/zplug
-	zplug update --self
+	curl -sL zplug.sh/installer | zsh
 fi
 
-source ~/.zplug/zplug
+source ~/.zplug/init.zsh
 
 # Let zplug manage itself
-zplug "b4b4r07/zplug"
+zplug "zplug/zplug"
 
 zplug "willghatch/zsh-hooks"
 
 # Theme
 export TERM="xterm-256color"
-zplug "bhilburn/powerlevel9k"
+zplug "bhilburn/powerlevel9k", use:powerlevel9k.zsh-theme
 
 zplug "zsh-users/zsh-completions"
 zplug "Tarrasch/zsh-autoenv"
-zplug "b4b4r07/enhancd", use:init.sh
+zplug "b4b4r07/enhancd", use:"init.sh"
 zplug "zsh-users/zaw"
 
 # The file searchers
 
 if [[ `uname` == 'Linux' ]]; then
 zplug "junegunn/fzf-bin", as:command, from:gh-r, rename-to:fzf, use:"*linux*64*"
-zplug "peco/peco", as:command, from:gh-r, rename-to:peco, use:"*linux_amd64*"
+zplug "peco/peco", as:command, from:gh-r, rename-to:peco, use:"*linux*64*"
 fi
 
 if [[ `uname` == 'Darwin' ]]; then
