@@ -356,15 +356,13 @@ let g:neomake_pandoc_proselint_maker = {
       \ }
 
 let g:neomake_pandoc_markdownlint_maker = {
-      \ 'exe': 'markdownlint'
+      \ 'exe': 'markdownlint',
+      \ 'errorformat': '%f:%l:%c: %m'
       \ }
 
 let g:neomake_pandoc_writegood_maker= {
-      \ 'exe': 'write-good',
-      \ 'errorformat': 
-      \ '%PIn %f,'.
-      \ '%m on line %l at column %c,'.
-      \ '%-Q'
+      \ 'exe': 'write-better',
+      \ 'errorformat': '%f:%m\ on line %l at column %c',
       \ }
 let g:neomake_pandoc_enabled_makers = ['proselint', 'writegood', 'markdownlint']
 
