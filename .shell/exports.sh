@@ -7,6 +7,9 @@ export PATH="$PATH":"$HOME/.pub-cache/bin"
 # Add personal executables to path
 export PATH=$PATH:"$HOME/bin/bin"
 
+# Add personal scripts to path
+export PATH=$PATH:"$HOME/bin/scripts"
+
 # Create Go Path
 export GOPATH="$HOME/.local/lib/go"
 
