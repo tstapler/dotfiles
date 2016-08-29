@@ -1,3 +1,5 @@
+extends markdown
+
 snippet wrkpr
 # Code Review
 
@@ -37,8 +39,10 @@ snippet wrkmpr
  	- 
 	-  **Change run against automation:**
 	 	-  **FAILS DOCUMENTED - Cause/Resolution/Related to Change**
-		- [ ] **Reviewed automation run logs**
-		- [ ] **Proper people have been included in code review and testing**
+
+- [ ] **Reviewed automation run logs**
+
+- [ ] **Proper people have been included in code review and testing**
 
 FYI @${6:Developer}, @davidwinn-wf
 endsnippet
@@ -77,4 +81,8 @@ author:
 abstract: |
   ${2:Abstract}
 ...
+endsnippet
+
+snippet ghublink
+https://github.com/${1:Owner}/${2:Repo}/blob/${3:master}/${4:${VISUAL:path}}#L${5:Line Number}
 endsnippet
