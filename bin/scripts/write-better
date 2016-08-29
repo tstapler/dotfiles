@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+while [ "$1" != "" ]; do
+   write-good "${1}" | write-better.awk
+done;
