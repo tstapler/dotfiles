@@ -12,3 +12,19 @@ endsnippet
 snippet aptrepo
 - "deb http://ppa.launchpad.net/${1:repo}/${2:branch}/ubuntu {{ ansible_distribution_release }} main"
 endsnippet
+
+snippet ansdocker
+- name: Create ${1:Something} Container
+  docker: 
+    name: ${2:name}
+    image: ${3:owner}/$2
+    state: reloaded
+    restart_policy: always
+    net: host
+    env:
+      RANCHER_NETWORK=true,
+      VERSION=latest,
+      PUID={{ docker_puid }},
+      GUID={{ docker_guid }}
+    volumes: "{{ $2_volumes }}"
+endsnippet
