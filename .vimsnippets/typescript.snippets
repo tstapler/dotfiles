@@ -1,11 +1,34 @@
+snippet class
+export class ${1:Name} {
+constructor(${2:Args}) {}
+}
+endsnippet 
+
 snippet component
 import { Component } from '@angular/core';
 
 @Component({
+moduleId: module.id
   selector: '$1',
-  templateUrl: '${2:./app/}.component.html'
+  templateUrl: '${2:./}.component.html'
   })
 export class $3 {
   $4
+}
+endsnippet
+
+snippet import
+import { ${1:Name} } from '${2:location}';
+endsnippet
+
+snippet export "Export from"
+export { ${1:Thing} } from './${2:file}';
+endsnippet	
+
+snippet service "An angular 2 Service"
+import { Injectable } from '@angular/core';
+
+@Injectable()
+export class ${1:Name}Service {
 }
 endsnippet

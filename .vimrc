@@ -106,6 +106,10 @@ endif
 " End Plugin Manager }}}                                  
                                                           
 " Autocommands {{{                                        
+
+" TypeScript filetype {{{
+  au Filetype ts setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab smarttab
+" End TypeScript filetype }}}
                                                           
 " gitcommit filetype {{{
 au FileType gitcommit setlocal spell

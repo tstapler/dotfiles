@@ -2,5 +2,5 @@
 	path = nerd-fonts
 	url = https://github.com/ryanoasis/nerd-fonts
 [submodule "stapler-linker"]
-	path = stapler-linker
+	path = staplerlinker
 	url = git@github.com:tstapler/stapler-linker
