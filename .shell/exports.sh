@@ -17,7 +17,7 @@ export PATH="$PATH":"$GOPATH/bin"
 export PATH="$HOME/.cabal/bin:"$PATH
 
 #Set environment varibles for Enhancd
-export ENHANCD_FILTER=fzf
+export ENHANCD_FILTER=fzf:peco:gawk
 
 #Setup RVM
 export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
