@@ -1,3 +1,5 @@
+extends markdown
+
 snippet wrkpr
 # Code Review
 
@@ -12,6 +14,12 @@ https://jira.atl.workiva.net/browse/$2
 ## QA Tips
 
 ${3:N/A}
+endsnippet
+
+snippet wrkday
+#### `!p import time; snip.rv = time.strftime("%A - %d")`
+
+${1: What you did today!}
 endsnippet
 
 snippet wrkmpr
@@ -31,15 +39,19 @@ snippet wrkmpr
  	- 
 	-  **Change run against automation:**
 	 	-  **FAILS DOCUMENTED - Cause/Resolution/Related to Change**
-		- [ ] **Reviewed automation run logs**
-		- [ ] **Proper people have been included in code review and testing**
 
-		FYI @${6:Developer}, @davidwinn-wf
+- [ ] **Reviewed automation run logs**
+
+- [ ] **Proper people have been included in code review and testing**
+
+FYI @${6:Developer}, @davidwinn-wf
 endsnippet
 
 snippet code "A code block"
-```$1
+``` $1
+
 ${2:Content}
+
 ```
 endsnippet
 	
@@ -56,3 +68,21 @@ endsnippet
 snippet italic
 *${1:${VISUAL}}*
 endsnippet	
+
+snippet lecture
+### Lecture ${1:Number} - `!p import time; snip.rv = time.strftime("%A, %B %d")`
+endsnippet
+
+snippet noteheader
+---
+title:  '${1:Title}'
+author:
+- name: Tyler Stapler
+abstract: |
+  ${2:Abstract}
+...
+endsnippet
+
+snippet ghublink
+https://github.com/${1:Owner}/${2:Repo}/blob/${3:master}/${4:${VISUAL:path}}#L${5:Line Number}
+endsnippet

@@ -41,6 +41,7 @@ call dein#add('SirVer/ultisnips')
 " call dein#add('Shougo/neosnippet.vim')
 " call dein#add('Shougo/neosnippet-snippets')
 call dein#add('honza/vim-snippets')
+call dein#add('chrisgillis/vim-bootstrap3-snippets')
 " End Snippet Plugins }}}
 
 call dein#add('dhruvasagar/vim-table-mode')
@@ -136,7 +137,6 @@ call dein#add('Rip-Rip/clang_complete')
 
 " Dart {{{
 call dein#add('dart-lang/dart-vim-plugin')
-"call dein#add('miyakogi/vim-dartanalyzer') <== need to fix
 " End Dart }}}
 
 " Go {{{
@@ -159,8 +159,8 @@ call dein#add('ekalinin/Dockerfile.vim')
 call dein#add('elzr/vim-json')
 call dein#add('groenewege/vim-less')
 call dein#add('tapichu/asm2d-vim')
-call dein#add('pangloss/vim-javascript')
-call dein#add('avakhov/vim-yaml')
+"call dein#add('avakhov/vim-yaml') Conflicts with vim ansible
+call dein#add('sheerun/vim-polyglot')
 
 " End Language Specific Plugins }}}
 
@@ -301,9 +301,18 @@ nnoremap <silent><C-p> :CtrlSpace O<CR>
 " }}}
 
 " Plugin Settings {{{
+" TableMode {{{
+" make table both pandoc and github lovable
+let g:table_mode_separator = '|'
+let g:table_mode_corner = '|'
+let g:table_mode_corner_corner = '|'
+" End TableMode }}}
+" vim-json Settings {{{
+let g:vim_json_syntax_conceal = 0
+" End vim-json Settings }}}
 
 " numbers Settings {{{
-if exists("g:numbers_exlude")
+if exists("g:numbers_exclude")
   let g:numbers_exclude = g:numbers_exclude + ['term']
 endif
 " End numbers Settings }}}
@@ -347,15 +356,13 @@ let g:neomake_pandoc_proselint_maker = {
       \ }
 
 let g:neomake_pandoc_markdownlint_maker = {
-      \ 'exe': 'markdownlint'
+      \ 'exe': 'markdownlint',
+      \ 'errorformat': '%f:%l:%c: %m'
       \ }
 
 let g:neomake_pandoc_writegood_maker= {
-      \ 'exe': 'write-good',
-      \ 'errorformat': 
-      \ '%PIn %f,'.
-      \ '%m on line %l at column %c,'.
-      \ '%-Q'
+      \ 'exe': 'write-better',
+      \ 'errorformat': '%f:%m\ on line %l at column %c',
       \ }
 let g:neomake_pandoc_enabled_makers = ['proselint', 'writegood', 'markdownlint']
 
@@ -381,6 +388,8 @@ let g:neomake_ansible_ansiblelint_maker = {
       \ }
 
 let g:neomake_ansible_enabled_makers = ["ansiblelint"]
+
+let g:neomake_html_enabled_makers = []
 
 let g:neomake_verbose = 1
 
@@ -685,7 +694,7 @@ let g:instant_markdown_autostart = 0
 " Pandoc Settings {{{
 let g:pandoc#syntax#conceal#blacklist = ["block", "codeblock_start", "codeblock_delim"]
 let g:pandoc#keyboard#use_default_mappings = 1
-let g:pandoc#formatting#mode = "hA"
+let g:pandoc#formatting#mode = "ha"
 let g:pandoc#folding#level = 2
 let g:pandoc#folding#mode = "relative"
 let g:pandoc#after#modules#enabled = ["nrrwrgn", "tablemode", "unite", "neosnippets"]
@@ -744,6 +753,10 @@ let g:UltiSnipsSnippetDirectories=["UltiSips", "stapler-snips"]
 "}}}
 
 " Auto Groups {{{
+
+" TableMode {{{
+  autocmd FileType markdown TableModeEnable
+" End TableMode }}}
 
 " Delimit Mate {{{
 if dein#check_install(["Raimondi/delimitMate"])
