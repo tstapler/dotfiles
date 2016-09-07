@@ -76,25 +76,25 @@ bindkey -M vicmd 'k' history-substring-search-up
 bindkey -M vicmd 'j' history-substring-search-down
 
 # Language managers (RVM, NVM, PYENV, ...)
-source ~/.shell/languages.sh
+source $HOME/.shell/languages.sh
 
 # Prompt Config
-source ~/.shell/powerlevel9k.sh
+source $HOME/.shell/powerlevel9k.sh
 
 # Export Environment Variables
-source ~/.shell/exports.sh
+source $HOME/.shell/exports.sh
 
 # Aliases
-source ~/.shell/aliases.sh
+source $HOME/.shell/aliases.sh
 
 # Machine Specific
-if [[ -f ~/.shell/local.sh ]]; then
-	source ~/.shell/local.sh
+if [[ -f $HOME/.shell/local.sh ]]; then
+	source $HOME/.shell/local.sh
 fi
 
 # Workiva specific stuff
 if [[ "$WORKIVA" == true ]] ; then
-	source ~/.shell/workiva.sh
+	source $HOME/.shell/workiva.sh
 fi
 
 # By operating system
