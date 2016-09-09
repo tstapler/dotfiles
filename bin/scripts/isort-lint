@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-isort -df "$@" | isort_diff_parser.py
+isort -fss -df "$@" | isort_diff_parser.py
