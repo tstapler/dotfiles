@@ -33,3 +33,8 @@ snippet testhandler "Test a webtest2 handler"
 app = webapp2.WSGIApplication([('/', ${1:ClassName})])
 self.testapp = webtest.TestApp(app)
 endsnippet
+
+snippet ipdbs "ipdb with sset_trace()"
+import ipdb
+ipdb.sset_trace()
+endsnippet
