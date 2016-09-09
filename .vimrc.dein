@@ -301,12 +301,18 @@ nnoremap <silent><C-p> :CtrlSpace O<CR>
 " }}}
 
 " Plugin Settings {{{
+
+" UltiSnips Settings {{{
+let g:ultisnips_python_style = "google"
+" End UltiSnips Settings }}}
+
 " TableMode {{{
 " make table both pandoc and github lovable
 let g:table_mode_separator = '|'
 let g:table_mode_corner = '|'
 let g:table_mode_corner_corner = '|'
 " End TableMode }}}
+
 " vim-json Settings {{{
 let g:vim_json_syntax_conceal = 0
 " End vim-json Settings }}}
