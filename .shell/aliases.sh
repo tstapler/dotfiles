@@ -30,3 +30,7 @@ if [ "$EDITOR" = "nvim" ]; then
 	alias vim='nvim'
 fi
 
+
+if hash -v gpg2 >/dev/null; then
+	alias gpg=gpg2
+fi
