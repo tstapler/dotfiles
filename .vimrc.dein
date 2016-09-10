@@ -392,11 +392,15 @@ let g:neomake_go_gometalinter_maker = {
       \ 'error_format': '%f:%l:%c: %m'
       \ }
 
+
 let g:neomake_go_enabled_makers = ['gometalinter']
 
 let g:neomake_ansible_ansiblelint_maker = {
-      \ 'exe': 'ansible-lint'
+      \ 'exe': 'ansible-lint',
+      \ 'error_format': '%E[ANSIBLE%n]\ %m,%C%f:%l,%Z%s',
+      \ 'buffer_output': 1
       \ }
+let g:neomake_ansible_ansiblelint_remove_invalid_entries = 0
 
 let g:neomake_ansible_enabled_makers = ["ansiblelint"]
 
