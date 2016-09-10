@@ -1,3 +1,5 @@
+if [[ -f "$HOME/.rvm/scripts/rvm" ]]; then
+fi
 
 export NVM_DIR="$HOME/.nvm"
 if [[ -d $NVM_DIR ]]; then
@@ -9,6 +11,7 @@ if [[ -d "~/.dnx" ]]; then
 [ -s "/home/tstapler/.dnx/dnvm/dnvm.sh" ] && . "/home/tstapler/.dnx/dnvm/dnvm.sh" # Load dnvm
 fi
 
+# Load virtualenvwrapper
 if [[ -f "/usr/local/bin/virtualenvwrapper.sh" ]]; then
 	if [[ $WORKIVA == true ]]; then
 		export PROJECT_HOME=$HOME/Workiva
