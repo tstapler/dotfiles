@@ -47,18 +47,23 @@ snippet wrkmpr
 FYI @${6:Developer}, @davidwinn-wf
 endsnippet
 
+
 snippet code "A code block"
-``` $1
+\`\`\` $1
 
 ${2:Content}
 
-```
+\`\`\`
 endsnippet
 	
 snippet wrknote
 # ${1:Name}
 
 ticket: ${2:Number}
+endsnippet
+
+snippet ghublink
+https://github.com/${1:Owner}/${2:Repo}/blob/${3:master}/${4:${VISUAL:path}}#L${5:Line Number}
 endsnippet
 
 snippet bold
@@ -70,7 +75,7 @@ snippet italic
 endsnippet	
 
 snippet lecture
-### Lecture ${1:Number} - `!p import time; snip.rv = time.strftime("%A, %B %d")`
+### ${1:Lecture} ${2:Number} - `!p import time; snip.rv = time.strftime("%A, %B %d")`
 endsnippet
 
 snippet noteheader
@@ -80,9 +85,37 @@ author:
 - name: Tyler Stapler
 abstract: |
   ${2:Abstract}
+header-includes:
+    - \usepackage{fancyhdr}
+    - \pagestyle{fancy}
+    - \fancyhead[RO, RE]{Stapler, Tyler}
+    - \fancyfoot[CO, CE]{$1}
+    - \fancyfoot[lE, RO]{\thepage}
 ...
 endsnippet
 
-snippet ghublink
-https://github.com/${1:Owner}/${2:Repo}/blob/${3:master}/${4:${VISUAL:path}}#L${5:Line Number}
+snippet $
+$${1:${VISUAL}}$
+endsnippet	
+
+snippet $$
+\$\$${1:${VISUAL}}\$\$
+endsnippet	
+
+snippet center
+\begin{center}
+${1:${VISUAL}}
+\end{center}
+endsnippet
+
+snippet lim
+\lim_{${1:from}\to${2:bound}}
+endsnippet
+
+snippet sum
+\sum_{${1:bottom}}^{${2:top}}
+endsnippet
+
+snippet frac
+\frac{${1:Top}}{${2:Bottom}}
 endsnippet
