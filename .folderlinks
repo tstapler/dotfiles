@@ -1,4 +1,4 @@
-.vimsnippets
-.vim/bundle/.dein/stapler-snips
+.vimsnippets:.vimsnippets:.vim/bundle/.dein/stapler-snips
 .mixxx/controllers
 bin/scripts
+.vimrc:.config/nvim/init.vim
