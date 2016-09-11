@@ -2,3 +2,4 @@
 .mixxx/controllers
 bin/scripts
 .vimrc:.config/nvim/init.vim
+staplerlinker/staplerlinker/cli.py:bin/bin/staplerliner
