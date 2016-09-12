@@ -328,10 +328,10 @@ let test#strategy = "neovim"
 let test#python#runner = 'djangotest'
 " End vim-test Settings }}}
 
-" Vim Crossharis Settings {{{
+" Vim Crosshairs Settings {{{
 set cursorline
 set cursorcolumn
-" End Vim Crossharis Settings }}}
+" End Vim Crosshairs Settings }}}
 
 " jedi-vim Settings {{{
 let g:jedi#completions_enabled = 0
