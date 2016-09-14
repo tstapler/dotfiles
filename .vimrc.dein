@@ -130,7 +130,11 @@ call dein#add('jacoborus/vim-jsdoc')
 call dein#add('heavenshell/vim-jsdoc')
 call dein#add('briancollins/vim-jst')
 " End Javascript }}}
-"
+
+" Java {{{
+call dein#add('artur-shaik/vim-javacomplete2')
+" End Java }}}
+
 " C/C++ Plugins {{{
 call dein#add('Rip-Rip/clang_complete')
 " End C/C++ Plugins }}}
@@ -775,6 +779,12 @@ if dein#check_install(["Raimondi/delimitMate"])
   augroup END
 endif
 " End Delimit Mate }}}
+
+" javacomplete2 {{{
+if dein#check_install(["artur-shaik/vim-javacomplete2"])
+  autocmd FileType java setlocal omnifunc=javacomplete#Complete
+endif
+" End javacomplete2 }}}
 
 " NeoComplete {{{
 if dein#check_install(["Shougo/neocomplete.vim.git"]) && !has('nvim')
