@@ -31,6 +31,6 @@ if [ "$EDITOR" = "nvim" ]; then
 fi
 
 
-if hash -v gpg2 >/dev/null; then
+if hash gpg2 2>/dev/null; then
 	alias gpg=gpg2
 fi
