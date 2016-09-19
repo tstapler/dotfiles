@@ -387,14 +387,6 @@ let g:neomake_gitcommit_gitlint_maker = {
 
 let g:neomake_gitcommit_enabled_makers = ['gitlint']
 
-let g:neomake_go_gometalinter_maker = {
-      \ 'exe': 'gometalinter',
-      \ 'error_format': '%f:%l:%c: %m'
-      \ }
-
-
-let g:neomake_go_enabled_makers = ['gometalinter']
-
 let g:neomake_ansible_ansiblelint_maker = {
       \ 'exe': 'ansible-lint',
       \ 'error_format': '%E[ANSIBLE%n]\ %m,%C%f:%l,%Z%s',
@@ -513,6 +505,7 @@ if has('nvim')
    
   " deoplete-go Settings {{{
   let g:deoplete#sources#go#gocode_binary = $GOPATH.'/bin/gocode'
+  let g:deoplete#sources#go#json_directory = ' ~/.cache/deoplete/go/$GOOS_$GOARCH'
   let g:deoplete#sources#go#sort_class = ['package', 'func', 'type', 'var', 'const']
   let g:deoplete#sources#go#use_cache = 1
   " End deoplete-go Settings }}}
