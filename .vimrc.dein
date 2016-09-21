@@ -117,35 +117,39 @@ call dein#add('t9md/vim-choosewin')
 
 " Language Specific Plugins {{{
 
-" Python {{{
-call dein#add('heavenshell/vim-pydocstring')
-"call dein#add('klen/python-mode')
-call dein#add('davidhalter/jedi-vim')
-" End Python }}}
+" C/C++ Plugins {{{
+call dein#add('Rip-Rip/clang_complete')
+" End C/C++ Plugins }}}
 
-" Javascript {{{
-call dein#add('pangloss/vim-javascript')
-call dein#add('ternjs/tern_for_vim')
-call dein#add('jacoborus/vim-jsdoc')
-call dein#add('heavenshell/vim-jsdoc')
-call dein#add('briancollins/vim-jst')
-" End Javascript }}}
+" Dart Plugins {{{
+call dein#add('dart-lang/dart-vim-plugin')
+" End Dart Plugins }}}
+
+" Go Plugins {{{
+call dein#add('fatih/vim-go')
+" End Go }}}
 
 " Java {{{
 call dein#add('artur-shaik/vim-javacomplete2')
 " End Java }}}
 
-" C/C++ Plugins {{{
-call dein#add('Rip-Rip/clang_complete')
-" End C/C++ Plugins }}}
+" Javascript Plugins {{{
+call dein#add('pangloss/vim-javascript')
+call dein#add('ternjs/tern_for_vim')
+call dein#add('jacoborus/vim-jsdoc')
+call dein#add('heavenshell/vim-jsdoc')
+call dein#add('briancollins/vim-jst')
+" End Javascript Plugins }}}
 
-" Dart {{{
-call dein#add('dart-lang/dart-vim-plugin')
-" End Dart }}}
+" Python Plugins {{{
+call dein#add('heavenshell/vim-pydocstring')
+"call dein#add('klen/python-mode')
+call dein#add('davidhalter/jedi-vim')
+" End Python Plugins }}}
 
-" Go {{{
-call dein#add('fatih/vim-go')
-" End Go }}}
+" Ruby Plugin {{{
+  call dein#add('vim-ruby/vim-ruby')
+" End Ruby Plugin }}}
 
 " TypeScript Plugins {{{
 call dein#add('HerringtonDarkholme/yats.vim') 
