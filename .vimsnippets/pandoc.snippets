@@ -81,8 +81,7 @@ endsnippet
 snippet noteheader
 ---
 title:  '${1:Title}'
-author:
-- name: Tyler Stapler
+author: Tyler Stapler
 abstract: |
   ${2:Abstract}
 header-includes:
@@ -118,4 +117,10 @@ endsnippet
 
 snippet frac
 \frac{${1:Top}}{${2:Bottom}}
+endsnippet
+
+snippet begin
+\begin{${1:block}}
+	${2:Content}
+\end{$1}
 endsnippet
