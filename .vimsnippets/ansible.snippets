@@ -28,3 +28,9 @@ snippet ansdocker
       GUID={{ docker_guid }}
     volumes: "{{ $2_volumes }}"
 endsnippet
+
+snippet ansplaybook
+- name: "${1:Name}"
+  hosts: ${2:hosts}
+  $3
+endsnippet
