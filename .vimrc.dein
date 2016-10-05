@@ -32,6 +32,7 @@ call dein#add('Shougo/neco-syntax')
 call dein#add('Shougo/neco-vim')
 call dein#add('zchee/deoplete-jedi')
 call dein#add('zchee/deoplete-go', {'build': 'make'})
+call dein#add('fishbullet/deoplete-ruby')
 call dein#add('carlitux/deoplete-ternjs')
 call dein#add('mhartington/deoplete-typescript')
 " End Code Completion Sources }}}
@@ -147,9 +148,9 @@ call dein#add('heavenshell/vim-pydocstring')
 call dein#add('davidhalter/jedi-vim')
 " End Python Plugins }}}
 
-" Ruby Plugin {{{
+" Ruby Plugins {{{
   call dein#add('vim-ruby/vim-ruby')
-" End Ruby Plugin }}}
+" End Ruby Plugins }}}
 
 " TypeScript Plugins {{{
 call dein#add('HerringtonDarkholme/yats.vim') 
@@ -710,7 +711,7 @@ let g:instant_markdown_autostart = 0
 " Pandoc Settings {{{
 let g:pandoc#syntax#conceal#blacklist = ["block", "codeblock_start", "codeblock_delim"]
 let g:pandoc#keyboard#use_default_mappings = 1
-let g:pandoc#formatting#mode = "ha"
+let g:pandoc#formatting#mode = "sA"
 let g:pandoc#folding#level = 2
 let g:pandoc#folding#mode = "relative"
 let g:pandoc#after#modules#enabled = ["nrrwrgn", "tablemode", "unite", "neosnippets"]
