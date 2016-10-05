@@ -127,6 +127,10 @@ au FileType python setlocal tabstop=4 shiftwidth=4 softtabstop=4 expandtab smart
 au FileType javascript setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 " End Javascript filetype }}}
 
+" Ruby filetype {{{
+au FileType ruby setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab smartindent
+" End Ruby filetype }}}
+
 " vim  filetype {{{
 au FileType vim setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 " End vim  filetype }}}
