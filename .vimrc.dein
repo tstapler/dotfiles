@@ -58,11 +58,11 @@ call dein#add('christoomey/vim-sort-motion')
 call dein#add('Raimondi/delimitMate')
 call dein#add('christoomey/vim-titlecase')
 call dein#add('fidian/hexmode')
-" call dein#add('glts/vim-radical', {'depends':
-"       \ [
-"       \   'google/vim-maktaba',
-"       \   'glts/vim-magnum'
-"       \ ]})
+call dein#add('glts/vim-radical', {'depends':
+      \ [
+      \   'google/vim-maktaba',
+      \   'glts/vim-magnum'
+      \ ]})
 call dein#add('fadein/FIGlet.vim')
 call dein#add('triglav/vim-visual-increment')
 
@@ -70,7 +70,7 @@ call dein#add('triglav/vim-visual-increment')
 
 " Management Plugins {{{
 
-" Unite Vim} {{{
+" Unite Vim {{{
 call dein#add('Shougo/unite.vim')
 call dein#add('kmnk/vim-unite-giti')
 call dein#add('tsukkee/unite-tag')
@@ -80,7 +80,7 @@ call dein#add('ujihisa/unite-colorscheme')
 call dein#add('ujihisa/unite-locate')
 call dein#add('tacroe/unite-mark')
 call dein#add('tungd/unite-session')
-" End Unite Vim} }}}
+" End Unite Vim }}}
 
 call dein#add('jceb/vim-orgmode')
 call dein#add('benekastah/neomake')
@@ -168,7 +168,6 @@ call dein#add('ekalinin/Dockerfile.vim')
 call dein#add('elzr/vim-json')
 call dein#add('groenewege/vim-less')
 call dein#add('tapichu/asm2d-vim')
-"call dein#add('avakhov/vim-yaml') Conflicts with vim ansible
 call dein#add('sheerun/vim-polyglot')
 
 " End Language Specific Plugins }}}
@@ -179,8 +178,6 @@ call dein#add('sheerun/vim-polyglot')
 call dein#add('vim-pandoc/vim-pandoc')
 call dein#add('vim-pandoc/vim-pandoc-syntax')
 call dein#add('vim-pandoc/vim-pandoc-after')
-" call dein#add('lambdalisue/vim-pandoc-preview')
-" call dein#add('tex/vimpreviewpandoc')
 " End Pandoc }}}
 
 " Distraction Free Writing {{{
@@ -239,14 +236,6 @@ nnoremap <leader>t :TagbarToggle<cr>
 " End tagbar }}}
 
 " Unite {{{
-"Grep in current directory
-nnoremap <leader>f :Unite -direction=dynamictop -start-insert -no-resize -auto-resize -auto-preview grep:.<CR>
-
-" Execute help.
-nnoremap <C-h>  :<C-u>Unite -start-insert help<CR>
-" Execute help by cursor keyword.
-nnoremap <silent> g<C-h>  :<C-u>UniteWithCursorWord help<CR>
-
 
 " ultisnips {{{
   function! UltiSnipsCallUnite()
