@@ -105,6 +105,7 @@ call dein#add('myint/syntastic-extras')
 call dein#add('tpope/vim-dispatch')
 call dein#add('Konfekt/FastFold')
 call dein#add('janko-m/vim-test')
+call dein#add('dyng/ctrlsf.vim')
 " End Utility Plugins }}}
 
 " Interface Plugins {{{
@@ -221,6 +222,20 @@ endif
 " }}}
 
 " Plugin Mappings {{{
+
+" ctrlsf.vim {{{
+  nmap     <C-F>f <Plug>CtrlSFPrompt
+  vmap     <C-F>f <Plug>CtrlSFVwordPath
+  vmap     <C-F>F <Plug>CtrlSFVwordExec
+  nmap     <C-F>n <Plug>CtrlSFCwordPath
+  nmap     <C-F>p <Plug>CtrlSFPwordPath
+  nnoremap <C-F>o :CtrlSFOpen<CR>
+  nnoremap <C-F>t :CtrlSFToggle<CR>
+  inoremap <C-F>t <Esc>:CtrlSFToggle<CR>
+  nmap     <C-F>l <Plug>CtrlSFQuickfixPrompt
+  vmap     <C-F>l <Plug>CtrlSFQuickfixVwordPath
+  vmap     <C-F>L <Plug>CtrlSFQuickfixVwordExec
+" End ctrlsf.vim }}}
 
 " vim-choosewin {{{
   nmap <leader>w <Plug>(choosewin)
@@ -673,6 +688,7 @@ let g:easytags_async = 1
 
 " Vim-Javascript Settings {{{
 let g:javascript_enable_domhtmlcss = 1
+let g:javascript_plugin_jsdoc = 1
 " End Vim-Javascript Settings }}}
 
 " clang-format Settings {{{
