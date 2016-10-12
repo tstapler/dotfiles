@@ -51,6 +51,7 @@ tags
 covhtml
 coverage.xml
 CS_SESSION
+.tern-port
 
 stapler-snips
 local.sh
