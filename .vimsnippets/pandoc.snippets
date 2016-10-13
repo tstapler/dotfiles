@@ -75,21 +75,21 @@ snippet italic
 endsnippet	
 
 snippet lecture
-### ${1:Lecture} ${2:Number} - `!p import time; snip.rv = time.strftime("%A, %B %d")`
+## ${1:Lecture} ${2:Number} - `!p import time; snip.rv = time.strftime("%A, %B %d")`
 endsnippet
 
 snippet noteheader
 ---
 title:  '${1:Title}'
 author: Tyler Stapler
-abstract: |
-  ${2:Abstract}
+abstract: ${2:Abstract}
+date: date$3
 header-includes:
     - \usepackage{fancyhdr}
     - \pagestyle{fancy}
-    - \fancyhead[RO, RE]{Stapler, Tyler}
-    - \fancyfoot[CO, CE]{$1}
-    - \fancyfoot[lE, RO]{\thepage}
+    - \fancyhead[RO, RE]{${3:Semester}}}
+    - \fancyhead[CO, CE]{$1}
+    - \fancyhead[LO, LE]{${4:Class}}
 ...
 endsnippet
 
