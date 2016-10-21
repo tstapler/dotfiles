@@ -75,8 +75,6 @@ bindkey "$terminfo[kcud1]" history-substring-search-downstring plugin bindings
 bindkey -M vicmd 'k' history-substring-search-up
 bindkey -M vicmd 'j' history-substring-search-down
 
-# Language managers (RVM, NVM, PYENV, ...)
-source $HOME/.shell/languages.sh
 
 # Prompt Config
 source $HOME/.shell/powerlevel9k.sh
@@ -86,6 +84,14 @@ source $HOME/.shell/exports.sh
 
 # Aliases
 source $HOME/.shell/aliases.sh
+
+# By operating system
+OS="`uname`"
+case $OS in
+	'Darwin')
+	source ~/.shell/osx.sh
+	;;
+esac
 
 # Machine Specific
 if [[ -f $HOME/.shell/local.sh ]]; then
@@ -97,10 +103,5 @@ if [[ "$WORKIVA" == true ]] ; then
 	source $HOME/.shell/workiva.sh
 fi
 
-# By operating system
-OS="`uname`"
-case $OS in
-	'Darwin')
-	source ~/.shell/osx.sh
-	;;
-esac
+# Language managers (RVM, NVM, PYENV, ...)
+source $HOME/.shell/languages.sh
