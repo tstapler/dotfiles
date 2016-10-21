@@ -63,6 +63,8 @@ call dein#add('glts/vim-radical', {'depends':
       \   'google/vim-maktaba',
       \   'glts/vim-magnum'
       \ ]})
+call dein#add('google/vim-maktaba')
+call dein#add('glts/vim-magnum')
 call dein#add('fadein/FIGlet.vim')
 call dein#add('triglav/vim-visual-increment')
 
@@ -85,6 +87,8 @@ call dein#add('tungd/unite-session')
 call dein#add('jceb/vim-orgmode')
 call dein#add('benekastah/neomake')
 call dein#add('tpope/vim-fugitive')
+call dein#add('junkblocker/patchreview-vim')
+call dein#add('codegram/vim-codereview', {'depends': 'junkblocker/patchreview-vim'})
 call dein#add('mattn/gist-vim')
 call dein#add('Shougo/vimfiler.vim')
 call dein#add('dbakker/vim-projectroot')
@@ -92,7 +96,7 @@ call dein#add('airblade/vim-gitgutter')
 call dein#add('majutsushi/tagbar')
 call dein#add('tpope/vim-repeat')
 call dein#add('mbbill/undotree')
-call dein#add('LucHermitte/local_vimrc', {'depends': 'lh-vim-lib'})
+call dein#add('LucHermitte/local_vimrc', {'depends': 'LucHermitte/lh-vim-lib'})
 call dein#add('ludovicchabant/vim-gutentags')
 call dein#add('vim-ctrlspace/vim-ctrlspace')
 " End Management Plugins }}}
@@ -202,7 +206,7 @@ call dein#add('mattn/webapi-vim')
 " call dein#add('google/vim-maktaba')
 " call dein#add('google/vim-glaive')
 " call dein#add('glts/vim-magnum')
-call dein#add('LucHermitte/lh-vim-lib', {'name': 'lh-vim-lib'})
+call dein#add('LucHermitte/lh-vim-lib')
 call dein#add('jceb/vim-hier')
 " End Miscellaneous Plugins }}}
 
