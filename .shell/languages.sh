@@ -1,5 +1,3 @@
-if [[ -f "$HOME/.rvm/scripts/rvm" ]]; then
-fi
 
 export NVM_DIR="$HOME/.nvm"
 if [[ -d $NVM_DIR ]]; then
@@ -20,4 +18,8 @@ if [[ -f "/usr/local/bin/virtualenvwrapper.sh" ]]; then
 	fi
 	export WORKON_HOME=$HOME/.virtualenvs
 	source /usr/local/bin/virtualenvwrapper.sh
+fi
+
+if [[ -s "$HOME/.rvm/scripts/rvm" ]]; then
+	source "$HOME/.rvm/scripts/rvm"
 fi
