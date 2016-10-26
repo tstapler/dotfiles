@@ -10,6 +10,9 @@ export PATH=$PATH:"$HOME/bin/bin"
 # Add personal scripts to path
 export PATH=$PATH:"$HOME/bin/scripts"
 
+# Add user python executables to path
+export PATH=$PATH:"$HOME/.local/bin"
+
 # Create Go Path
 export GOPATH="$HOME/.local/lib/go"
 
