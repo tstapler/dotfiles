@@ -30,7 +30,9 @@ snippet ansdocker
 endsnippet
 
 snippet ansplaybook
+---
 - name: "${1:Name}"
   hosts: ${2:hosts}
-  $3
+  tasks:
+   $3
 endsnippet
