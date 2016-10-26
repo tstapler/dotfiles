@@ -82,12 +82,11 @@ snippet noteheader
 ---
 title:  '${1:Title}'
 author: Tyler Stapler
-abstract: ${2:Abstract}
 date: date$3
 header-includes:
     - \usepackage{fancyhdr}
     - \pagestyle{fancy}
-    - \fancyhead[RO, RE]{${3:Semester}}}
+    - \fancyhead[RO, RE]{${3:Semester}}
     - \fancyhead[CO, CE]{$1}
     - \fancyhead[LO, LE]{${4:Class}}
 ...
@@ -123,4 +122,8 @@ snippet begin
 \begin{${1:block}}
 	${2:Content}
 \end{$1}
+endsnippet
+
+snippet t
+\text{$1}
 endsnippet
