@@ -227,6 +227,10 @@ endif
 
 " Plugin Mappings {{{
 
+" vim-fugitive {{{
+  nnoremap <silent> <leader>g :Gstatus<CR>
+" End vim-fugitive }}}
+
 " ctrlsf.vim {{{
   nmap     <C-F>f <Plug>CtrlSFPrompt
   vmap     <C-F>f <Plug>CtrlSFVwordPath
