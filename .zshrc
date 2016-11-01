@@ -63,7 +63,7 @@ bindkey -M viins '^N' history-substring-search-down
 bindkey -M viins '^?' backward-delete-char
 bindkey -M viins '^h' backward-delete-char
 bindkey -M viins '^w' backward-kill-word
-bindkey -M viins '^r' history-incremental-search-backward
+bindkey -M viins '^r' history-incremental-pattern-search-backward
 bindkey -M viins '^a' beginning-of-line
 bindkey -M viins '^e' end-of-line
 bindkey -M viins '^xe' edit-command-line
@@ -84,6 +84,9 @@ source $HOME/.shell/exports.sh
 
 # Aliases
 source $HOME/.shell/aliases.sh
+
+# Utility Functions
+source $HOME/.shell/functions.sh
 
 # By operating system
 OS="`uname`"
