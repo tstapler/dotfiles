@@ -13,17 +13,21 @@ export PATH=$PATH:"$HOME/bin/scripts"
 # Add user python executables to path
 export PATH=$PATH:"$HOME/.local/bin"
 
+# Add Android Home to Path
+export ANDROID_HOME="/opt/android-sdk"
+
 # Create Go Path
 export GOPATH="$HOME/.local/lib/go"
 
-# Add LaTex files to PATH
-export TEXMFHOME=~/texmf
 
 # Add GO executables to PATH
 export PATH="$PATH":"$GOPATH/bin"
 
 # Add Cabal to PATH
 export PATH=$PATH:"$HOME/.cabal/bin"
+
+# Add LaTex files to PATH
+export TEXMFHOME=~/texmf
 
 # Set environment varibles for Enhancd
 export ENHANCD_FILTER=fzf:peco:gawk
@@ -50,4 +54,9 @@ if [ -f "${HOME}/.gpg-agent-info" ]; then
 	export GPG_AGENT_INFO
 	export SSH_AUTH_SOCK
 	export SSH_AGENT_PID
+fi
+
+# Completions for NativeScript
+if [ -f /home/tstapler/.tnsrc ]; then 
+    source /home/tstapler/.tnsrc 
 fi
