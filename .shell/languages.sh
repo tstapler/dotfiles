@@ -21,5 +21,7 @@ if [[ -f "/usr/local/bin/virtualenvwrapper.sh" ]]; then
 fi
 
 if [[ -s "$HOME/.rvm/scripts/rvm" ]]; then
+	# Add RVM to PATH for scripting
+	export PATH="$PATH:$HOME/.rvm/bin" 
 	source "$HOME/.rvm/scripts/rvm"
 fi
