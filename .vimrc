@@ -15,15 +15,20 @@ endif
 
 set t_Co=256
 
-"Change the shell to vanilla to support NeoBundle
-"set shell=/bin/bash
-
 "Enable mouse usage for scrolling and resizing splits
 set mouse+=a
 
 if !has("nvim") && &term =~ '^screen'
   " tmux knows the extended mouse mode
   set ttymouse=xterm2
+endif
+
+if executable('zsh')
+  let shell_location = exepath('zsh')
+  execute 'set shell=' . shell_location
+elseif executable('bash')
+  let shell_location = exepath('bash')
+  execute 'set shell=' . shell_location
 endif
 
 "Set map leader
