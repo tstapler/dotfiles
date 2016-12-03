@@ -181,6 +181,7 @@ call dein#add('groenewege/vim-less')
 call dein#add('tapichu/asm2d-vim')
 call dein#add('sheerun/vim-polyglot')
 call dein#add('endel/flashdevelop.vim', {'depends': ['airblade/vim-rooter', 'tomtom/tlib_vim']})
+call dein#add('cespare/vim-toml')
 
 " End Language Specific Plugins }}}
 
