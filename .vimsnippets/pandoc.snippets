@@ -82,7 +82,7 @@ snippet noteheader
 ---
 title:  '${1:Title}'
 author: Tyler Stapler
-date: date$3
+date: `!p import time; snip.rv = time.strftime("%Y/%m/%d")`
 header-includes:
     - \usepackage{fancyhdr}
     - \pagestyle{fancy}
