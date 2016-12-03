@@ -50,3 +50,7 @@ function gpg_agent_fix {
 		fi
 	fi
 }
+
+function arch_fix_audio_quality {
+	pacmd set-card-profile 2 a2dp_sink
+}
