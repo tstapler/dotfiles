@@ -152,6 +152,13 @@ call dein#add('heavenshell/vim-jsdoc')
 call dein#add('briancollins/vim-jst')
 " End Javascript Plugins }}}
 
+" PHP Plugins {{{
+call dein#add('spf13/PIV')
+call dein#add('arnaud-lb/vim-php-namespace')
+call dein#add('beyondwords/vim-twig')
+call dein#add('beanworks/vim-phpfmt')
+" End PHP Plugins }}}
+
 " Python Plugins {{{
 call dein#add('heavenshell/vim-pydocstring')
 "call dein#add('klen/python-mode')
