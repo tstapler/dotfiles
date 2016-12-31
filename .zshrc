@@ -54,6 +54,9 @@ fi
 # Then, source plugins and add commands to $PATH
 zplug load --verbose
 
+# Load the zshell mv module
+autoload zmv
+
 # Vim Mode
 bindkey -v
 
