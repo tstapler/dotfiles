@@ -20,6 +20,8 @@ zplug "willghatch/zsh-hooks"
 export TERM="xterm-256color"
 zplug "bhilburn/powerlevel9k", use:powerlevel9k.zsh-theme
 
+# Plugins
+zplug "Vifon/deer"
 zplug "zsh-users/zsh-completions"
 zplug "Tarrasch/zsh-autoenv"
 zplug "b4b4r07/enhancd", use:"init.sh"
@@ -66,10 +68,9 @@ bindkey -M viins '^N' history-substring-search-down
 bindkey -M viins '^?' backward-delete-char
 bindkey -M viins '^h' backward-delete-char
 bindkey -M viins '^w' backward-kill-word
-bindkey -M viins '^r' history-incremental-pattern-search-backward
+bindkey -M viins '^r' zaw-history
 bindkey -M viins '^a' beginning-of-line
 bindkey -M viins '^e' end-of-line
-bindkey -M viins '^xe' edit-command-line
 bindkey -M viins '^x^e' edit-command-line
 
 # History subzmodload zsh/terminfo
