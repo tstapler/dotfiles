@@ -174,6 +174,7 @@ call dein#add('HerringtonDarkholme/yats.vim')
 " End TypeScript Plugins }}}
 
 
+call dein#add('elmcast/elm-vim')
 call dein#add('dag/vim-fish')
 call dein#add('plasticboy/vim-markdown')
 call dein#add('vim-scripts/scons.vim')
@@ -550,6 +551,8 @@ if has('nvim')
     let g:tern_request_timeout = 1
     let g:tern_show_signature_in_pum = 0  " This do disable full signature type on autocomplete
   " End deoplete-ternjs Settings }}}
+  
+    let g:elm_detailed_complete = 0
 
 endif
 
