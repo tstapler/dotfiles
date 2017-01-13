@@ -448,6 +448,8 @@ endif
 let g:CtrlSpaceLoadLastWorkspaceOnStart = 1
 let g:CtrlSpaceSaveWorkspaceOnSwitch = 1
 let g:CtrlSpaceSaveWorkspaceOnExit = 1
+let g:CtrlSpaceSetDefaultMapping = 1
+nnoremap <silent> <C-Space> :CtrlSpace<CR>
 
 " For ctrlspace
 set hidden
@@ -494,9 +496,9 @@ endif
 " Vimfiler Settings {{{
 " Enable file operation commands.
 " Edit file by tabedit.
-call vimfiler#custom#profile('default', 'context', {
-      \ 'safe' : 0
-      \ })
+" call vimfiler#custom#profile('default', 'context', {
+"       \ 'safe' : 0
+"       \ })
 
 " Like Textmate icons.
 let g:vimfiler_tree_leaf_icon = ' '
@@ -539,6 +541,7 @@ if has('nvim')
   let g:clang_auto_select = 0
   let g:clang_omnicppcomplete_compliance = 0
   let g:clang_make_default_keymappings = 0
+  let g:clang_library_path='/usr/lib/llvm-3.8/lib/libclang-3.8.so.1'
    
   " deoplete-go Settings {{{
   let g:deoplete#sources#go#gocode_binary = $GOPATH.'/bin/gocode'
