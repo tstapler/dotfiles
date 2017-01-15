@@ -19,6 +19,8 @@ if hash hub 2>/dev/null; then
 	alias git=hub
 fi
 
+alias gcv='git commit --verbose'
+
 alias xkp='gen_pass'
 
 # Encourage the use of NeoVim when possible
