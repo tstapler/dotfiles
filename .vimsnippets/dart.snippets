@@ -1,0 +1,20 @@
+snippet canary_test
+class ${1:TestClassName} extends CanaryTest {
+  $1() : super("${2: Test Name}");
+
+  Future run() async {
+
+    CanaryTestRun result =
+        new CanaryTestRun(this.name, 'Not Started', '', {}, '');
+    $3      
+
+    onFinishAction({"testName": this.name, "result": result});
+  }
+}
+endsnippet
+
+snippet unittest
+test('${1:does the thing}', () async {
+  $2
+});
+endsnippet
