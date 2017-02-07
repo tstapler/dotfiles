@@ -158,14 +158,16 @@ au FileType c setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
 " Dart filetype {{{
 augroup dart
+  au!
   au FileType dart setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab smarttab
+  au BufWritePost *.dart :DartAnalyzer
 augroup END
 " End Dart filetype }}}
 
 " Markdown filetype {{{
 augroup markdown
   au! FileType,BufRead,BufNewFile *.markdown set filetype=mkd spell
-  au! FileType,BufRead,BufNewFile *.md       set filetype=mkd spell
+  au FileType,BufRead,BufNewFile *.md       set filetype=mkd spell
 augroup END
 " End Markdown filetype }}}
 
