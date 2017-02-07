@@ -424,14 +424,14 @@ let g:neomake_gitcommit_gitlint_maker = {
 
 let g:neomake_gitcommit_enabled_makers = ['gitlint']
 
-let g:neomake_ansible_ansiblelint_maker = {
-      \ 'exe': 'ansible-lint',
-      \ 'error_format': '%E[ANSIBLE%n]\ %m,%C%f:%l,%Z%s',
-      \ 'buffer_output': 1
-      \ }
-let g:neomake_ansible_ansiblelint_remove_invalid_entries = 0
+" let g:neomake_ansible_ansiblelint_maker = {
+"       \ 'exe': 'ansible-lint',
+"       \ 'error_format': '%E[ANSIBLE%n]\ %m,%C%f:%l,%Z%s',
+"       \ 'buffer_output': 1
+"       \ }
+" let g:neomake_ansible_ansiblelint_remove_invalid_entries = 0
 
-let g:neomake_ansible_enabled_makers = ["ansiblelint"]
+" let g:neomake_ansible_enabled_makers = ["ansiblelint"]
 
 let g:neomake_html_enabled_makers = []
 
