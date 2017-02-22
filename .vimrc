@@ -156,11 +156,14 @@ au Filetype fish compiler fish setlocal textwidth=79  foldmethod=expr
 au FileType c setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 " End C filetype }}} 
 
+" sh filetype {{{
+au FileType sh setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab smartindent
+" End sh filetype }}}
+
 " Dart filetype {{{
 augroup dart
   au!
   au FileType dart setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab smarttab
-  au BufWritePost *.dart :DartAnalyzer
 augroup END
 " End Dart filetype }}}
 
