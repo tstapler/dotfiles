@@ -72,14 +72,14 @@ call dein#add('triglav/vim-visual-increment')
 
 " Unite Vim {{{
 call dein#add('Shougo/unite.vim')
-call dein#add('kmnk/vim-unite-giti')
-call dein#add('tsukkee/unite-tag')
-call dein#add('tsukkee/unite-help')
-call dein#add('Shougo/unite-outline')
-call dein#add('ujihisa/unite-colorscheme')
-call dein#add('ujihisa/unite-locate')
-call dein#add('tacroe/unite-mark')
-call dein#add('tungd/unite-session')
+" call dein#add('kmnk/vim-unite-giti')
+" call dein#add('tsukkee/unite-tag')
+" call dein#add('tsukkee/unite-help')
+" call dein#add('Shougo/unite-outline')
+" call dein#add('ujihisa/unite-colorscheme')
+" call dein#add('ujihisa/unite-locate')
+" call dein#add('tacroe/unite-mark')
+" call dein#add('tungd/unite-session')
 " End Unite Vim }}}
 
 call dein#add('jceb/vim-orgmode')
@@ -95,7 +95,7 @@ call dein#add('majutsushi/tagbar')
 call dein#add('tpope/vim-repeat')
 call dein#add('mbbill/undotree')
 call dein#add('LucHermitte/local_vimrc', {'depends': 'LucHermitte/lh-vim-lib'})
-call dein#add('ludovicchabant/vim-gutentags')
+"call dein#add('ludovicchabant/vim-gutentags')
 call dein#add('vim-ctrlspace/vim-ctrlspace')
 " End Management Plugins }}}
 
@@ -708,12 +708,6 @@ let g:tagbar_type_vhdl = {
 " GitGutter Settings {{{
 let g:gitgutter_max_signs = 1000
 " End GitGutter Settings }}}
-
-"EasyTags Settings {{{
-let g:easytags_auto_update = 1
-let g:easytags_on_cursorhold = 0
-let g:easytags_async = 1
-" End EasyTags Settings }}}
 
 " Vim-Javascript Settings {{{
 let g:javascript_enable_domhtmlcss = 1
