@@ -340,6 +340,10 @@ nnoremap <silent><C-p> :CtrlSpace O<CR>
 
 " Plugin Settings {{{
 
+" Dart-Vim Settings {{{
+  let g:dart_style_guide = 'yup'
+" End Dart-Vim Settings }}}
+
 " UltiSnips Settings {{{
 let g:ultisnips_python_style = "google"
 " End UltiSnips Settings }}}
@@ -435,6 +439,17 @@ let g:neomake_gitcommit_enabled_makers = ['gitlint']
 " let g:neomake_ansible_enabled_makers = ["ansiblelint"]
 
 let g:neomake_html_enabled_makers = []
+
+let g:win_sep = (has('win32') || has('win64')) ? '/' : ''
+
+let g:dart_efm = '%-GAnalyzing%.%#,[%.%#] %m. (%f\, line %l\, col %c),%-G%.%# error %.%# warnings found.'
+
+let g:neomake_dart_dartanalyzer_maker = {
+  \ 'exe': 'dartanalyzer',
+  \ 'errorformat':  g:dart_efm
+  \ }
+
+let g:neomake_dart_enabled_makers = ['dartanalyzer']
 
 let g:neomake_verbose = 1
 
