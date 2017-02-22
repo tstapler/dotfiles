@@ -110,6 +110,7 @@ call dein#add('janko-m/vim-test')
 call dein#add('dyng/ctrlsf.vim')
 call dein#add('airblade/vim-rooter')
 call dein#add('tomtom/tlib_vim')
+call dein#add('sbdchd/neoformat')
 " End Utility Plugins }}}
 
 " Interface Plugins {{{
@@ -798,6 +799,11 @@ let g:UltiSnipsSnippetDirectories=["UltiSips", "stapler-snips"]
 "}}}
 
 " Auto Groups {{{
+" Dart filetype {{{
+  augroup dart
+    au Filetype dart BufWritePre * Neoformat
+  augroup END
+" End Dart filetype }}}
 
 " TableMode {{{
   autocmd FileType markdown TableModeEnable
@@ -822,7 +828,6 @@ endif
 " NeoComplete {{{
 if dein#check_install(["Shougo/neocomplete.vim.git"]) && !has('nvim')
   augroup pandoc
-    au!
     au FileType pandoc NeoCompleteLock
   augroup END
 endif
@@ -830,7 +835,6 @@ endif
 
 " Autoreload .vimrc {{{
 augroup myvimrc
-  au!
   au BufWritePost .vimrc,_vimrc,vimrc,.gvimrc,_gvimrc,gvimrc so $MYVIMRC | if has('gui_running') | so $MYGVIMRC | endif
 augroup END
 
