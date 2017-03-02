@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+INSTALLER_DIR="$HOME/stapler-installer"
+
+cd "$INSTALLER_DIR" || exit
+
+sudo echo "Starting installer for $HOSTNAME"
+debops -i dynamic-inventory.py "$(grep -l "$HOSTNAME" "$INSTALLER_DIR"/ansible/playbooks/install_*)"
