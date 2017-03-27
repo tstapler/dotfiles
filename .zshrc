@@ -58,6 +58,9 @@ zplug load --verbose
 
 # Load the zshell mv module
 autoload zmv
+autoload edit-command-line
+
+zle -N edit-command-line
 
 # Vim Mode
 bindkey -v

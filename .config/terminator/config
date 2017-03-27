@@ -16,7 +16,7 @@
     background_darkness = 0.2
     background_image = None
   [[Stapler-Config]]
-    background_darkness = 0.37
+    background_darkness = 0.91
     background_image = None
     background_type = transparent
     font = DejaVuSansMonoForPowerline Nerd Font 12
