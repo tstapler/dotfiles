@@ -14,6 +14,9 @@ alias zcp='noglob zmv -C'
 alias zln='noglob zmv -L'
 alias zsy='noglob zmv -Ls'
 
+# Add npm-exec to execute from local node_modules
+alias npm-exec='PATH=$(npm bin):$PATH'
+
 # Use hub which gives git github integration
 if hash hub 2>/dev/null; then
 	alias git=hub
@@ -22,6 +25,10 @@ fi
 alias gcv='git commit --verbose'
 
 alias xkp='gen_pass'
+
+if hash ag 2>/dev/null; then
+	alias ag='ag --path-to-agignore ~/.agignore'
+fi
 
 # Encourage the use of NeoVim when possible
 if [ "$EDITOR" = "nvim" ]; then
