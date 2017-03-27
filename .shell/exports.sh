@@ -14,7 +14,12 @@ export PATH=$PATH:"$HOME/bin/scripts"
 export PATH=$PATH:"$HOME/.local/bin"
 
 # Add Android Home to Path
-export ANDROID_HOME="/opt/android-sdk"
+if [[ -d /opt/android-sdk ]]; then
+	export ANDROID_HOME="/opt/android-sdk"
+elif [[ -d /opt/android-sdk-linux ]]; then
+	export ANDROID_HOME="/opt/android-sdk-linux"
+fi
+
 
 # Create Go Path
 export GOPATH="$HOME/.local/lib/go"
