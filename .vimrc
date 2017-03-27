@@ -156,8 +156,13 @@ au Filetype fish compiler fish setlocal textwidth=79  foldmethod=expr
 au FileType c setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 " End C filetype }}} 
 
+" sh filetype {{{
+au FileType sh setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab smartindent
+" End sh filetype }}}
+
 " Dart filetype {{{
 augroup dart
+  au!
   au FileType dart setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab smarttab
 augroup END
 " End Dart filetype }}}
@@ -165,7 +170,7 @@ augroup END
 " Markdown filetype {{{
 augroup markdown
   au! FileType,BufRead,BufNewFile *.markdown set filetype=mkd spell
-  au! FileType,BufRead,BufNewFile *.md       set filetype=mkd spell
+  au FileType,BufRead,BufNewFile *.md       set filetype=mkd spell
 augroup END
 " End Markdown filetype }}}
 

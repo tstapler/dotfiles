@@ -72,14 +72,14 @@ call dein#add('triglav/vim-visual-increment')
 
 " Unite Vim {{{
 call dein#add('Shougo/unite.vim')
-call dein#add('kmnk/vim-unite-giti')
-call dein#add('tsukkee/unite-tag')
-call dein#add('tsukkee/unite-help')
-call dein#add('Shougo/unite-outline')
-call dein#add('ujihisa/unite-colorscheme')
-call dein#add('ujihisa/unite-locate')
-call dein#add('tacroe/unite-mark')
-call dein#add('tungd/unite-session')
+" call dein#add('kmnk/vim-unite-giti')
+" call dein#add('tsukkee/unite-tag')
+" call dein#add('tsukkee/unite-help')
+" call dein#add('Shougo/unite-outline')
+" call dein#add('ujihisa/unite-colorscheme')
+" call dein#add('ujihisa/unite-locate')
+" call dein#add('tacroe/unite-mark')
+" call dein#add('tungd/unite-session')
 " End Unite Vim }}}
 
 call dein#add('jceb/vim-orgmode')
@@ -95,7 +95,7 @@ call dein#add('majutsushi/tagbar')
 call dein#add('tpope/vim-repeat')
 call dein#add('mbbill/undotree')
 call dein#add('LucHermitte/local_vimrc', {'depends': 'LucHermitte/lh-vim-lib'})
-call dein#add('ludovicchabant/vim-gutentags')
+"call dein#add('ludovicchabant/vim-gutentags')
 call dein#add('vim-ctrlspace/vim-ctrlspace')
 " End Management Plugins }}}
 
@@ -110,6 +110,7 @@ call dein#add('janko-m/vim-test')
 call dein#add('dyng/ctrlsf.vim')
 call dein#add('airblade/vim-rooter')
 call dein#add('tomtom/tlib_vim')
+call dein#add('sbdchd/neoformat')
 " End Utility Plugins }}}
 
 " Interface Plugins {{{
@@ -339,6 +340,10 @@ nnoremap <silent><C-p> :CtrlSpace O<CR>
 
 " Plugin Settings {{{
 
+" Dart-Vim Settings {{{
+  let g:dart_style_guide = 'yup'
+" End Dart-Vim Settings }}}
+
 " UltiSnips Settings {{{
 let g:ultisnips_python_style = "google"
 " End UltiSnips Settings }}}
@@ -424,16 +429,27 @@ let g:neomake_gitcommit_gitlint_maker = {
 
 let g:neomake_gitcommit_enabled_makers = ['gitlint']
 
-let g:neomake_ansible_ansiblelint_maker = {
-      \ 'exe': 'ansible-lint',
-      \ 'error_format': '%E[ANSIBLE%n]\ %m,%C%f:%l,%Z%s',
-      \ 'buffer_output': 1
-      \ }
-let g:neomake_ansible_ansiblelint_remove_invalid_entries = 0
+" let g:neomake_ansible_ansiblelint_maker = {
+"       \ 'exe': 'ansible-lint',
+"       \ 'error_format': '%E[ANSIBLE%n]\ %m,%C%f:%l,%Z%s',
+"       \ 'buffer_output': 1
+"       \ }
+" let g:neomake_ansible_ansiblelint_remove_invalid_entries = 0
 
-let g:neomake_ansible_enabled_makers = ["ansiblelint"]
+" let g:neomake_ansible_enabled_makers = ["ansiblelint"]
 
 let g:neomake_html_enabled_makers = []
+
+let g:win_sep = (has('win32') || has('win64')) ? '/' : ''
+
+let g:dart_efm = '%-GAnalyzing%.%#,[%.%#] %m. (%f\, line %l\, col %c),%-G%.%# error %.%# warnings found.'
+
+let g:neomake_dart_dartanalyzer_maker = {
+  \ 'exe': 'dartanalyzer',
+  \ 'errorformat':  g:dart_efm
+  \ }
+
+let g:neomake_dart_enabled_makers = ['dartanalyzer']
 
 let g:neomake_verbose = 1
 
@@ -709,12 +725,6 @@ let g:tagbar_type_vhdl = {
 let g:gitgutter_max_signs = 1000
 " End GitGutter Settings }}}
 
-"EasyTags Settings {{{
-let g:easytags_auto_update = 1
-let g:easytags_on_cursorhold = 0
-let g:easytags_async = 1
-" End EasyTags Settings }}}
-
 " Vim-Javascript Settings {{{
 let g:javascript_enable_domhtmlcss = 1
 let g:javascript_plugin_jsdoc = 1
@@ -804,6 +814,11 @@ let g:UltiSnipsSnippetDirectories=["UltiSips", "stapler-snips"]
 "}}}
 
 " Auto Groups {{{
+" Dart filetype {{{
+  augroup dart
+    au Filetype dart BufWritePre * Neoformat
+  augroup END
+" End Dart filetype }}}
 
 " TableMode {{{
   autocmd FileType markdown TableModeEnable
@@ -828,7 +843,6 @@ endif
 " NeoComplete {{{
 if dein#check_install(["Shougo/neocomplete.vim.git"]) && !has('nvim')
   augroup pandoc
-    au!
     au FileType pandoc NeoCompleteLock
   augroup END
 endif
@@ -836,7 +850,6 @@ endif
 
 " Autoreload .vimrc {{{
 augroup myvimrc
-  au!
   au BufWritePost .vimrc,_vimrc,vimrc,.gvimrc,_gvimrc,gvimrc so $MYVIMRC | if has('gui_running') | so $MYGVIMRC | endif
 augroup END
 
