@@ -2,7 +2,7 @@
 export GPG_TTY=$(tty)
 
 # Add Dart pub files to PATH
-export PATH="$PATH":"$HOME/.pub-cache/bin"
+export PATH=$PATH:"$HOME/.pub-cache/bin"
 
 # Add personal executables to path
 export PATH=$PATH:"$HOME/bin/bin"
@@ -26,7 +26,7 @@ export GOPATH="$HOME/.local/lib/go"
 
 
 # Add GO executables to PATH
-export PATH="$PATH":"$GOPATH/bin"
+export PATH=$PATH:"$GOPATH/bin"
 
 # Add Cabal to PATH
 export PATH=$PATH:"$HOME/.cabal/bin"
@@ -54,8 +54,8 @@ fi
 
 export GIT_EDITOR=$EDITOR
 
-if [ -f "${HOME}/.gpg-agent-info" ]; then
-	. "${HOME}/.gpg-agent-info"
+if [ -f "$HOME/.gpg-agent-info" ]; then
+	. "$HOME/.gpg-agent-info"
 	export GPG_AGENT_INFO
 	export SSH_AUTH_SOCK
 	export SSH_AGENT_PID
@@ -63,5 +63,9 @@ fi
 
 # Completions for NativeScript
 if [ -f /home/tstapler/.tnsrc ]; then 
-    source /home/tstapler/.tnsrc 
+    source "$HOME/.tnsrc" 
+fi
+
+if hash gr 2>/dev/null; then
+  .<(gr completion)
 fi

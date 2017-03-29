@@ -38,7 +38,7 @@ if [ -n "$ZSH_VERSION" ]; then
 elif [ -n "$BASH_VERSION" ]; then
 	eval "$(pub global run dart_dev bash-completion)"
 fi
-OS="`uname`"
+OS="$(uname)"
 case $OS in
 	'Darwin')
 	# Setup Groovy
