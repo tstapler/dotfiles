@@ -1,0 +1,12 @@
+ORIGIN_URL=$(git ls-remote --get-url 'origin')
+
+case $ORIGIN_URL in
+	*github.com/Workiva|*github.com/*-wf)
+		git config --local user.name "Tyler Stapler"
+		git config --local user.email "tyler.stapler@workiva.com"
+	;;
+	*)
+		git config --local user.name "Tyler Stapler"
+		git config --local user.email "tystapler@gmail.com"
+	;;
+esac
