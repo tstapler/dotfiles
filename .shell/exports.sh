@@ -67,5 +67,5 @@ if [ -f /home/tstapler/.tnsrc ]; then
 fi
 
 if hash gr 2>/dev/null; then
-  .<(gr completion)
+  . <(gr completion)
 fi
