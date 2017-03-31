@@ -3,9 +3,9 @@ alias rm='rm -i'
 alias mv='mv -i'
 alias cp='cp -i'
  
-# Add some easy shortcuts for formatted directory listings and add a touch of color.
-alias ll='ls -lF --color=auto'
-alias la='ls -alF --color=auto'
+# Add some easy shortcuts for formatted directory listings
+alias ll='ls -lF'
+alias la='ls -alF'
 alias ls='ls -F'
 
 # Add zmv aliases
