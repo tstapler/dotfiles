@@ -20,10 +20,8 @@ elif [[ -d /opt/android-sdk-linux ]]; then
 	export ANDROID_HOME="/opt/android-sdk-linux"
 fi
 
-
 # Create Go Path
 export GOPATH="$HOME/.local/lib/go"
-
 
 # Add GO executables to PATH
 export PATH=$PATH:"$GOPATH/bin"
@@ -36,6 +34,9 @@ export TEXMFHOME=~/texmf
 
 # Set environment varibles for Enhancd
 export ENHANCD_FILTER=fzf:peco:gawk
+
+# Enable colorized command output
+export CLICOLOR=1
 
 # Editor Variable
 if hash nvim 2>/dev/null; then
