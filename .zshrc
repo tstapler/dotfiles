@@ -27,6 +27,8 @@ zplug "Tarrasch/zsh-autoenv"
 zplug "b4b4r07/enhancd", use:"init.sh"
 zplug "zsh-users/zaw"
 
+zplug "lib/completion", from:oh-my-zsh
+
 # The file searchers
 
 if [[ `uname` == 'Linux' ]]; then

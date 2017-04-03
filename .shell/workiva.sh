@@ -1,8 +1,3 @@
-export GIT_AUTHOR_NAME="Tyler Stapler"
-export GIT_AUTHOR_EMAIL=tyler.stapler@workiva.com
-export GIT_COMMITTER_NAME="$GIT_AUTHOR_NAME"
-export GIT_COMMITTER_EMAIL="$GIT_AUTHOR_EMAIL"
-
 # Skaardb tools
 export VENV=local
 
@@ -43,7 +38,7 @@ if [ -n "$ZSH_VERSION" ]; then
 elif [ -n "$BASH_VERSION" ]; then
 	eval "$(pub global run dart_dev bash-completion)"
 fi
-OS="`uname`"
+OS="$(uname)"
 case $OS in
 	'Darwin')
 	# Setup Groovy

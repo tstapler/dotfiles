@@ -799,14 +799,14 @@ let g:pymode_rope_regenerate_on_write = 0
 let g:UltiSnipsExpandTrigger="<c-k>"
 let g:UltiSnipsJumpForwardTrigger="<c-k>"
 let g:UltiSnipsJumpBackwardTrigger="<leader>p"
-let g:UltiSnipsListSnippets="><leader>l"
+let g:UltiSnipsListSnippets="<leader>l"
 
 " If you want :UltiSnipsEdit to split your window.
 let g:UltiSnipsEditSplit="vertical"
 
-let g:UltiSnipsSnippetsDir = "~/.vimsnippets"
+let g:UltiSnipsSnippetsDir = $HOME."/.vimsnippets"
 
-let g:UltiSnipsSnippetDirectories=["UltiSips", "stapler-snips"]
+let g:UltiSnipsSnippetDirectories=["UltiSips", $HOME."/.vimsnippets"]
 
 
 " End utilisnips }}}

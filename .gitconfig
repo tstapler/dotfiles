@@ -1,6 +1,5 @@
-[user]
-	email = tystapler@gmail.com
-	name = Tyler Stapler
+[init]
+	templatedir = ~/.gittemplates
 [core]
 	editor = vim
 	excludesfile = ~/.gitignore
@@ -13,7 +12,5 @@
 	ui = auto
 [diff]
 	tool = vimdiff
-[github]
-	user = tstapler
 [hub]
 	protocol = ssh
