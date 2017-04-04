@@ -340,6 +340,10 @@ nnoremap <silent><C-p> :CtrlSpace O<CR>
 
 " Plugin Settings {{{
 
+" bash-support Settings {{{
+  let g:BASH_Executable = g:shell_location
+" End bash-support Settings }}}
+
 " Dart-Vim Settings {{{
   let g:dart_style_guide = 'yup'
 " End Dart-Vim Settings }}}
