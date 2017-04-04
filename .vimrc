@@ -24,10 +24,10 @@ if !has("nvim") && &term =~ '^screen'
 endif
 
 if executable('zsh')
-  let shell_location = exepath('zsh')
+  let g:shell_location = exepath('zsh')
   execute 'set shell=' . shell_location
 elseif executable('bash')
-  let shell_location = exepath('bash')
+  let g:shell_location = exepath('bash')
   execute 'set shell=' . shell_location
 endif
 
