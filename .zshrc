@@ -6,10 +6,12 @@
 
 # Load zplug, clone if not found
 if [[ ! -d ~/.zplug ]];then
-	curl -sL zplug.sh/installer | zsh
+	curl -sL --proto-redir -all,https https://zplug.sh/installer | zsh
 fi
 
 source ~/.zplug/init.zsh
+
+ZPLUG_CACHE_DIR="$HOME/.cache/zplug"
 
 # Let zplug manage itself
 zplug "zplug/zplug"
@@ -18,10 +20,10 @@ zplug "willghatch/zsh-hooks"
 
 # Theme
 export TERM="xterm-256color"
-zplug "bhilburn/powerlevel9k", use:powerlevel9k.zsh-theme
+zplug "bhilburn/powerlevel9k", as:theme
 
 # Plugins
-zplug "Vifon/deer"
+#zplug "Vifon/deer"
 zplug "zsh-users/zsh-completions"
 zplug "Tarrasch/zsh-autoenv"
 zplug "b4b4r07/enhancd", use:"init.sh"
@@ -31,15 +33,18 @@ zplug "lib/completion", from:oh-my-zsh
 
 # The file searchers
 
-if [[ `uname` == 'Linux' ]]; then
-zplug "junegunn/fzf-bin", as:command, from:gh-r, rename-to:fzf, use:"*linux*64*"
-zplug "peco/peco", as:command, from:gh-r, rename-to:peco, use:"*linux*64*"
-fi
+case $(uname) in
+	Darwin) 
+		BIN_ARCH=darwin
+		;;
+	*)
+		BIN_ARCH=linux
+		;;
+esac
 
-if [[ `uname` == 'Darwin' ]]; then
-zplug "junegunn/fzf-bin", as:command, from:gh-r, rename-to:fzf, use:"*darwin*64*"
-zplug "peco/peco", as:command, from:gh-r, rename-to:peco, use:"*darwin*64*"
-fi
+zplug "junegunn/fzf-bin", as:command, from:gh-r, rename-to:fzf, use:"*$BIN_ARCH*amd64*"
+
+zplug "peco/peco", as:command, from:gh-r, rename-to:peco, use:"*$BIN_ARCH*64*"
 
 
 # Suggestions
