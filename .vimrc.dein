@@ -108,7 +108,6 @@ call dein#add('tpope/vim-dispatch')
 call dein#add('Konfekt/FastFold')
 call dein#add('janko-m/vim-test')
 call dein#add('dyng/ctrlsf.vim')
-call dein#add('airblade/vim-rooter')
 call dein#add('tomtom/tlib_vim')
 call dein#add('sbdchd/neoformat')
 " End Utility Plugins }}}
@@ -461,6 +460,7 @@ if executable("ag")
   let g:CtrlSpaceGlobCommand = 'ag -l --hidden --nocolor -g ""'
 endif
 
+let g:CtrlSpaceProjectRootMarkers = ['.projectroot', '.git']
 let g:CtrlSpaceLoadLastWorkspaceOnStart = 1
 let g:CtrlSpaceSaveWorkspaceOnSwitch = 1
 let g:CtrlSpaceSaveWorkspaceOnExit = 1
