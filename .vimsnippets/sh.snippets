@@ -1,3 +1,5 @@
+extends sh
+
 snippet ifcmd
 if hash ${1:cmd} 2>/dev/null; then
 	${2:${VISUAL}}
