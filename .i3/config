@@ -54,7 +54,6 @@ bindsym $mod+Ctrl+m exec pavucontrol
 
 # Start Applications
 bindsym $mod+Ctrl+b exec terminal -e 'bmenu'
-bindsym $mod+F2 exec palemoon
 bindsym Print exec --no-startup-id i3-scrot
 
 # start dmenu (a program launcher)
@@ -153,10 +152,10 @@ bindsym $mod+Shift+9 move container to workspace number 9
 bindsym $mod+Shift+0 move container to workspace number 10
 
 # Start App on workspace
-for_window [class="Spotify"] move to workspace 4 $music 
-for_window [class="PomoDoneApp"] move to workspace 3 $productivity 
+for_window [class="Spotify"] move to workspace number 4 $music 
+for_window [class="PomoDoneApp"] move to workspace number 3 $productivity 
 
-for_window [class="Slack"] move to workspace 6 $social
+for_window [class="Slack"] move to workspace number 6 $social
 
 # reload the configuration file
 bindsym $mod+Shift+c reload
@@ -248,9 +247,9 @@ bar {
 # exec_always --no-startup-id sleep 1 && ~/.i3/powerline-lemonbar.py --i3 --height 16
 
 # Pulse Audio controls
-bindsym XF86AudioRaiseVolume exec --no-startup-id pactl set-sink-volume 2 +5% #increase sound volume
-bindsym XF86AudioLowerVolume exec --no-startup-id pactl set-sink-volume 2 -5% #decrease sound volume
-bindsym XF86AudioMute exec --no-startup-id pactl set-sink-mute 2 toggle # mute sound
+bindsym XF86AudioRaiseVolume exec --no-startup-id amixer -D pulse sset Master 5%+
+bindsym XF86AudioLowerVolume exec --no-startup-id amixer -D pulse sset Master 5%-
+bindsym XF86AudioMute exec --no-startup-id amixer -D pulse sset Master toggle
 
 # Sreen brightness controls
 bindsym XF86MonBrightnessUp exec xbacklight -inc 1 # increase screen brightness
@@ -261,6 +260,8 @@ bindsym XF86AudioPlay exec playerctl --player=spotify play-pause
 bindsym XF86AudioPause exec playerctl --player=spotify play-pause
 bindsym XF86AudioNext exec playerctl --player=spotify next
 bindsym XF86AudioPrev exec playerctl --player=spotify previous
+bindsym $mod+Mod1+p exec playerctl --player=spotify play-pause
+bindsym $mod+Mod1+n exec playerctl --player=spotify next
 
 # Disable window titlebars entirely
 for_window [class="^.*"] border pixel 2
