@@ -112,8 +112,15 @@ endif
                                                           
 " Autocommands {{{                                        
 
+" docker-compose filetype {{{
+  augroup docker-compose
+    " this one is which you're most likely to use?
+    autocmd Filetype docker-compose setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab smarttab
+  augroup end
+" End docker-compose filetype }}}
+
 " TypeScript filetype {{{
-  au Filetype ts setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab smarttab
+  au Filetype ts setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab smarttab smartindent
 " End TypeScript filetype }}}
                                                           
 " gitcommit filetype {{{
