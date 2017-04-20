@@ -14,7 +14,7 @@ source ~/.zplug/init.zsh
 ZPLUG_CACHE_DIR="$HOME/.cache/zplug"
 
 # Let zplug manage itself
-zplug "zplug/zplug"
+zplug "zplug/zplug", hook-build:'zplug --self-manage'
 
 zplug "willghatch/zsh-hooks"
 
@@ -45,7 +45,11 @@ esac
 zplug "junegunn/fzf-bin", as:command, from:gh-r, rename-to:fzf, use:"*$BIN_ARCH*amd64*"
 
 zplug "peco/peco", as:command, from:gh-r, rename-to:peco, use:"*$BIN_ARCH*64*"
-
+zplug "clvv/fasd", as:command 
+zplug "stedolan/jq", \
+    from:gh-r, \
+    as:command, \
+    rename-to:jq
 
 # Suggestions
 zplug "tarruda/zsh-autosuggestions"
@@ -89,7 +93,8 @@ bindkey "$terminfo[kcud1]" history-substring-search-downstring plugin bindings
 bindkey -M vicmd 'k' history-substring-search-up
 bindkey -M vicmd 'j' history-substring-search-down
 
-
+# Setup Fasd
+eval "$(fasd --init auto)"
 # Prompt Config
 source $HOME/.shell/powerlevel9k.sh
 
