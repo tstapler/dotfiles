@@ -54,3 +54,9 @@ function gpg_agent_fix {
 function arch_fix_audio_quality {
 	pacmd set-card-profile 2 a2dp_sink
 }
+
+function rnsp {
+  if hash rename 2>/dev/null; then
+    rename 's/ /_/g' "$@"
+  fi
+}
