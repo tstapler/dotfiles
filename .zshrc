@@ -50,6 +50,7 @@ zplug "stedolan/jq", \
     from:gh-r, \
     as:command, \
     rename-to:jq
+zplug "jfgiraud/sandr", as:command
 
 # Suggestions
 zplug "tarruda/zsh-autosuggestions"
