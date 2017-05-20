@@ -197,6 +197,7 @@ augroup END
 if has('nvim')
   augroup nvim_term
       au!
+      " Fix conflict with vim crosshair/relative line number plugins
       au BufEnter * if &buftype == 'terminal' | setlocal colorcolumn=0 nonumber | endif
   augroup END
 endif
