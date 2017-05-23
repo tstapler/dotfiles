@@ -6,7 +6,7 @@
 
 # Load zplug, clone if not found
 if [[ ! -d ~/.zplug ]];then
-	curl -sL --proto-redir -all,https https://zplug.sh/installer | zsh
+	curl -sL --proto-redir -all,https https://raw.githubusercontent.com/zplug/installer/master/installer.zsh | zsh
 fi
 
 source ~/.zplug/init.zsh
@@ -33,7 +33,7 @@ zplug "lib/completion", from:oh-my-zsh
 
 # The file searchers
 
-case $(uname) in
+case $(uname -a) in
 	Darwin) 
 		BIN_ARCH=darwin
 		;;
@@ -109,11 +109,15 @@ source $HOME/.shell/aliases.sh
 source $HOME/.shell/functions.sh
 
 # By operating system
-OS="`uname`"
+OS="`uname -a`"
 case $OS in
 	'Darwin')
-	source ~/.shell/osx.sh
+		source ~/.shell/osx.sh
 	;;
+	'\#1-Microsoft')
+
+	;;
+
 esac
 
 # Machine Specific
