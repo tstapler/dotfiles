@@ -18,9 +18,15 @@ set t_Co=256
 "Enable mouse usage for scrolling and resizing splits
 set mouse+=a
 
-if !has("nvim") && &term =~ '^screen'
-  " tmux knows the extended mouse mode
-  set ttymouse=xterm2
+if !has("nvim") 
+  if term =~ '^screen'
+    " tmux knows the extended mouse mode
+    set ttymouse=xterm2
+  endif
+endif
+
+if exists('&inccommand')
+    set inccommand=nosplit
 endif
 
 if executable('zsh')
@@ -191,6 +197,7 @@ augroup END
 if has('nvim')
   augroup nvim_term
       au!
+      " Fix conflict with vim crosshair/relative line number plugins
       au BufEnter * if &buftype == 'terminal' | setlocal colorcolumn=0 nonumber | endif
   augroup END
 endif
