@@ -3,11 +3,11 @@ CLONE_DIR="$HOME/$REPO_NAME"
 DOTFILES_REPO="tstapler/$REPO_NAME"
 
 haveProg() {
-  [ -x "$(which $1)" ]
+  [ -x "$(which "$1")" ]
 }
 
 install_package() {
-if haveProg apt-get ; then sudo apt-get update && sudo apt-get install "$@"
+if haveProg apt-get ; then sudo apt-get update && sudo apt-get install -y "$@"
 elif haveProg yum ; then sudo yum install "$@"
 elif haveProg pacman ; then sudo pacman -S "$@"
 else
