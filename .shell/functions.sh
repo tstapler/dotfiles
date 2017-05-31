@@ -60,3 +60,7 @@ function rnsp {
     rename 's/ /_/g' "$@"
   fi
 }
+
+function fix_insecure_compaudit {
+  compaudit | xargs chmod g-w
+}
