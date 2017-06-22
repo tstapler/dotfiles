@@ -1,4 +1,4 @@
-[submodule "staplerlinker"]
-	path = staplerlinker
-	url = git@github.com:tstapler/stapler-linker
+[submodule "cfgcaddy"]
+	path = cfgcaddy
+	url = git@github.com:tstapler/cfgcaddy
 	branch = master
