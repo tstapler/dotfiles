@@ -114,6 +114,7 @@ call dein#add('sbdchd/neoformat')
 call dein#add('vim-airline/vim-airline')
 call dein#add('vim-airline/vim-airline-themes')
 call dein#add('flazz/vim-colorschemes')
+call dein#add('morhetz/gruvbox')
 call dein#add('myusuf3/numbers.vim')
 call dein#add('bronson/vim-crosshairs')
 call dein#add('t9md/vim-choosewin')
@@ -400,7 +401,7 @@ let g:neomake_python_isort_maker = {
       \ 'errorformat': '%f:%l:%m'
       \ }
 
-  let g:neomake_python_enabled_makers = ['python', 'pylama', 'frosted', 'flake8', 'isort']
+  let g:neomake_python_enabled_makers = ['python', 'pylama', 'frosted', 'flake8']
 
 let g:neomake_pandoc_proselint_maker = {
       \ 'exe': 'proselint',
@@ -627,8 +628,9 @@ let g:airline_left_sep = '▶'
 let g:airline_right_sep = '«'
 
 "Colorscheme
-colorscheme badwolf
-let g:airline_theme = 'badwolf'
+colorscheme gruvbox
+let g:airline_theme = 'gruvbox'
+set background=dark    " Setting dark mode"
 
 " End Airline Settings }}}
 
