@@ -5,19 +5,32 @@ if [[ -d $NVM_DIR ]]; then
 fi
 
 # Load .NET version manager
-if [[ -d "~/.dnx" ]]; then
-[ -s "/home/tstapler/.dnx/dnvm/dnvm.sh" ] && . "/home/tstapler/.dnx/dnvm/dnvm.sh" # Load dnvm
+DNX_DIR="$HOME/.dnx"
+if [[ -d "$DNX_DIR" ]]; then
+  DNX_SCRIPT="$DNX_DIR/dnvm/dnvm.sh"
+[ -s "$DNX_SCRIPT" ] && . "$DNX_SCRIPT" # Load dnvm
 fi
 
 # Load virtualenvwrapper
-if [[ -f "/usr/local/bin/virtualenvwrapper.sh" ]]; then
+GLOBAL_BIN="/usr/local/bin"
+USER_BIN="$HOME/.local/bin"
+VENV_WRAP_SH="virtualenvwrapper.sh"
+
+if [[ -d $USER_BIN ]]; then
+  VENV_WRAP_SCRIPT="$USER_BIN/$VENV_WRAP_SH"
+else
+  VENV_WRAP_SCRIPT="$GLOBAL_BIN/$VENV_WRAP_SH"
+fi
+
+if [[ -f "$VENV_WRAP_SCRIPT" ]]; then
 	if [[ $WORKIVA == true ]]; then
 		export PROJECT_HOME=$HOME/Workiva
 	else
 		export PROJECT_HOME=$HOME/Programming/Python
 	fi
+  mkdir -p "$PROJECT_HOME"
 	export WORKON_HOME=$HOME/.virtualenvs
-	source /usr/local/bin/virtualenvwrapper.sh
+	source $VENV_WRAP_SCRIPT
 fi
 
 if [[ -s "$HOME/.rvm/scripts/rvm" ]]; then
