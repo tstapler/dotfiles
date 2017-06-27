@@ -1,7 +1,17 @@
+# Load N (Node.js the version manager)
+export N_PREFIX="$HOME/n"; 
 
-export NVM_DIR="$HOME/.nvm"
-if [[ -d $NVM_DIR ]]; then
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
+if [ ! -d  "$N_PREFIX" ]; then
+  echo "Installing n (The Node.js version manager)"
+
+  # Remove old NVM install if present
+  NVM_DIR="$HOME/.nvm" 
+  if [[ -d $NVM_DIR ]]; then
+      rm -rf $NVM_DIR
+  fi
+  curl -L https://git.io/n-install | bash -s -- -y -n
+else
+  [[ :$PATH: == *":$N_PREFIX/bin:"*  ]] || PATH+=":$N_PREFIX/bin" 
 fi
 
 # Load .NET version manager
