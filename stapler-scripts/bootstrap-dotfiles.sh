@@ -29,13 +29,17 @@ fi
 echo "Checking out and updating submodules"
 cd "$CLONE_DIR" && git submodule update --init --recursive
 
+CFG_CADDY_DIR="$CLONE_DIR"/cfgcaddy
 
+if [[ -d "$CFG_CADDY_DIR" ]]; then
+  echo "Installing cfgcaddy dependencies."
+  if ! haveProg pip; then
+    install_package python-pip
+  fi
+  pip install --user -r "$CFG_CADDY_DIR"/requirements.txt
 
-echo "Installing cfgcaddy dependencies."
-if ! haveProg pip; then
-  install_package python-pip
+  echo "Linking Dotfiles"
+  "$CLONE_DIR"/bin/scripts/cfgcaddy link
+else 
+  echo "cfgcaddy repo is not present, cannot link dotfiles"
 fi
-pip install --user -r "$CLONE_DIR"/cfgcaddy/requirements.txt
-
-echo "Linking Dotfiles"
-"$CLONE_DIR"/bin/scripts/cfgcaddy link
