@@ -1,2 +1,0 @@
-#!/usr/bin/env bash
-isort -fss -df "$@" | isort_diff_parser.py
