@@ -31,7 +31,7 @@ cd "$CLONE_DIR" && git submodule update --init --recursive
 
 CFG_CADDY_DIR="$CLONE_DIR"/cfgcaddy
 
-if [[ -d "$CFG_CADDY_DIR" ]]; then
+if [ -d "$CFG_CADDY_DIR" ]; then
   echo "Installing cfgcaddy dependencies."
   if ! haveProg pip; then
     install_package python-pip
