@@ -1,3 +1,4 @@
+#!/usr/bin/env sh
 REPO_NAME=dotfiles
 CLONE_DIR="$HOME/$REPO_NAME"
 DOTFILES_REPO="tstapler/$REPO_NAME"
@@ -18,19 +19,19 @@ fi
 }
 
 
-if [[ ! -d $HOME/dotfiles ]]; then
+if [ ! -d $HOME/dotfiles ]; then
   echo "Cloning dotfiles"
   git clone "ssh://git@github.com/$DOTFILES_REPO" "$CLONE_DIR" || git clone "https://github.com/$DOTFILES_REPO" "$CLONE_DIR"
 else
   echo "Skipping directory creation, $CLONE_DIR already exists."
 fi
 
-echo "Checking out submodules"
-cd "$CLONE_DIR" && git submodule init && git submodule update --init --recursive
+echo "Checking out and updating submodules"
+cd "$CLONE_DIR" && git submodule update --init --recursive
 
 CFG_CADDY_DIR="$CLONE_DIR"/cfgcaddy
 
-if [[ -d "$CFG_CADDY_DIR" ]]; then
+if [ -d "$CFG_CADDY_DIR" ]; then
   echo "Installing cfgcaddy dependencies."
   if ! haveProg pip; then
     install_package python-pip
