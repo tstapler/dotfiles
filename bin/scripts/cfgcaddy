@@ -1,0 +1,2 @@
+SCRIPTPATH=$( cd $(dirname $0) ; pwd -P  )
+PYTHONPATH=$SCRIPTPATH/../../cfgcaddy python -m cfgcaddy

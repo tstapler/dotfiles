@@ -1,0 +1,29 @@
+preferences:
+  linker_src: $HOME/dotfiles
+  linker_dest: $HOME
+links:
+  - .vimsnippets:
+      - .vimsnippets
+      - .vim/bundle/.dein/stapler-snips
+  - .mixxx/controllers
+  - bin/scripts/*: bin/scripts
+  - .vimrc: .config/nvim/init.vim
+  - staplerlinker/staplerlinker/cli.py: bin/bin/staplerlinker
+  - stapler-scripts/*: bin/scripts
+ignore:
+#Globbing patterns to ignore when
+#linking config files to home dir
+  - .*stapler.*
+  - cfgcaddy
+  - .*\.git$
+  - .*\.swp
+  - .*\.yml
+  - .*\.zip
+  - env
+  - .*\.txt
+  - .ropeproject
+  - awesome.*
+  - .*linker.*
+  - tags
+  - nerd-fonts
+  - .customlinks
