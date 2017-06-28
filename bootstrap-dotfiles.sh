@@ -30,11 +30,11 @@ cd "$CLONE_DIR" && git submodule init && git submodule update --init --recursive
 
 
 
-echo "Installing staplerlinker dependencies."
+echo "Installing cfgcaddy dependencies."
 if ! haveProg pip; then
   install_package python-pip
 fi
-pip install --user click
+pip install --user -r "$CLONE_DIR"/cfgcaddy/requirements.txt
 
 echo "Linking Dotfiles"
-"$CLONE_DIR"/staplerlinker/staplerlinker/cli.py
+"$CLONE_DIR"/bin/scripts/cfgcaddy link
