@@ -6,8 +6,8 @@ if [ ! -d  "$N_PREFIX" ]; then
 
   # Remove old NVM install if present
   NVM_DIR="$HOME/.nvm" 
-  if [[ -d $NVM_DIR ]]; then
-      rm -rf $NVM_DIR
+  if [[ -d "$NVM_DIR" ]]; then
+      rm -rf "$NVM_DIR"
   fi
   curl -L https://git.io/n-install | bash -s -- -y -n
 else
@@ -22,17 +22,9 @@ if [[ -d "$DNX_DIR" ]]; then
 fi
 
 # Load virtualenvwrapper
-GLOBAL_BIN="/usr/local/bin"
-USER_BIN="$HOME/.local/bin"
 VENV_WRAP_SH="virtualenvwrapper.sh"
 
-if [[ -d $USER_BIN ]]; then
-  VENV_WRAP_SCRIPT="$USER_BIN/$VENV_WRAP_SH"
-else
-  VENV_WRAP_SCRIPT="$GLOBAL_BIN/$VENV_WRAP_SH"
-fi
-
-if [[ -f "$VENV_WRAP_SCRIPT" ]]; then
+if command -v $VENV_WRAP_SH >/dev/null 2>&1; then
 	if [[ $WORKIVA == true ]]; then
 		export PROJECT_HOME=$HOME/Workiva
 	else
@@ -40,11 +32,12 @@ if [[ -f "$VENV_WRAP_SCRIPT" ]]; then
 	fi
   mkdir -p "$PROJECT_HOME"
 	export WORKON_HOME=$HOME/.virtualenvs
-	source $VENV_WRAP_SCRIPT
+  source "$(which $VENV_WRAP_SH)"
 fi
 
-if [[ -s "$HOME/.rvm/scripts/rvm" ]]; then
+RVM_DIR="$HOME/.rvm"
+if [[ -s "$RVM_DIR/scripts/rvm" ]]; then
 	# Add RVM to PATH for scripting
-	export PATH="$PATH:$HOME/.rvm/bin" 
-	source "$HOME/.rvm/scripts/rvm"
+	export PATH="$PATH:$RVM_DIR/bin" 
+	source "$RVM_DIR/scripts/rvm"
 fi
