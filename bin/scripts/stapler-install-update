@@ -10,8 +10,8 @@ cd "$INSTALLER_DIR" || exit
 
 if [[ "$1" == "all" ]]; then
   sudo echo "Starting installer for all hosts"
-  debops -i dynamic-inventory.py "$INSTALLER_DIR"/ansible/playbooks/install_all_machines.yml
+  debops -i dynamic-inventory.py "$INSTALLER_DIR"/ansible/playbooks/install_all_machines.yml "${@:2}"
 else
   sudo echo "Starting installer for $HOSTNAME"
-  debops -i dynamic-inventory.py "$(find "$INSTALLER_DIR" -iname "*$HOSTNAME*")"
+  debops -i dynamic-inventory.py "$(find "$INSTALLER_DIR" -iname "*$HOSTNAME*")" "$@"
 fi
