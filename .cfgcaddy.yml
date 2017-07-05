@@ -2,7 +2,7 @@ preferences:
   linker_src: $HOME/dotfiles
   linker_dest: $HOME
 links:
-  - .vimsnippets:
+  - .vimsnippets: # You can link to multiple destinations
       - .vimsnippets
       - .vim/bundle/.dein/stapler-snips
   - .mixxx/controllers
@@ -11,8 +11,8 @@ links:
   - staplerlinker/staplerlinker/cli.py: bin/bin/staplerlinker
   - stapler-scripts/*: bin/scripts
 ignore:
-#Globbing patterns to ignore when
-#linking config files to home dir
+# Globbing patterns to ignore when
+# linking config files to home dir
   - .*stapler.*
   - cfgcaddy
   - .*\.git$
