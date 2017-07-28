@@ -9,26 +9,25 @@ links:
   - src: .mixxx/controllers
   - src: bin/scripts/*
     dest: bin/scripts
+    os: "Linux"
   - src: .vimrc
     dest: .config/nvim/init.vim
-  - src: staplerlinker/staplerlinker/cli.py
-    dest: bin/bin/staplerlinker
+    os: "Linux"
   - src: stapler-scripts/*
     dest: bin/scripts
+    os: "Linux"
+  - src: .vimrc
+    dest: "%userprofile%\\AppData\\Local\\nvim\\init.vim"
+    os: "Windows"
+
 ignore:
-# Globbing patterns to ignore when
-# linking config files to home dir
+  # Globbing patterns to ignore when
+  # linking config files to home dir
   - "*stapler*"
   - "cfgcaddy"
-  - "*.git$"
+  - "*.git"
   - "*.swp"
   - "*.yml"
   - "*.zip"
-  - "env"
-  - "*.txt"
-  - ".ropeproject"
-  - "awesome*"
-  - "*linker*"
   - "tags"
   - "nerd-fonts"
-  - ".customlinks"
