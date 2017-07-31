@@ -36,12 +36,14 @@ if exists('&inccommand')
     set inccommand=nosplit
 endif
 
-if executable('zsh')
-  let g:shell_location = exepath('zsh')
-  execute 'set shell=' . shell_location
-elseif executable('bash')
-  let g:shell_location = exepath('bash')
-  execute 'set shell=' . shell_location
+if has("unix")
+  if executable('zsh')
+    let g:shell_location = exepath('zsh')
+    execute 'set shell=' . shell_location
+  elseif executable('bash')
+    let g:shell_location = exepath('bash')
+    execute 'set shell=' . shell_location
+  endif
 endif
 
 "Set map leader
