@@ -30,13 +30,16 @@ export PATH=$PATH:"$GOPATH/bin"
 export PATH=$PATH:"$HOME/.cabal/bin"
 
 # Add LaTex files to PATH
-export TEXMFHOME=~/texmf
+export TEXMFHOME="$HOME/texmf"
 
 # Set environment varibles for Enhancd
 export ENHANCD_FILTER=fzf:peco:gawk
 
 # Enable colorized command output
 export CLICOLOR=1
+
+# Set time style to MM/DD/YYYY
+export TIME_STYLE=long-iso
 
 # Editor Variable
 if hash nvim 2>/dev/null; then
@@ -63,7 +66,7 @@ if [ -f "$HOME/.gpg-agent-info" ]; then
 fi
 
 # Completions for NativeScript
-if [ -f /home/tstapler/.tnsrc ]; then 
+if [ -f "$HOME/.tnsrc" ]; then 
     source "$HOME/.tnsrc" 
 fi
 
