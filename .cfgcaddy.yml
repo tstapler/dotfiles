@@ -16,9 +16,15 @@ links:
   - src: stapler-scripts/*
     dest: bin/scripts
     os: "Linux"
-  - src: .vimrc
-    dest: "%userprofile%\\AppData\\Local\\nvim\\init.vim"
+  - src: stapler-scripts/PowerShell
+    dest: '%userprofile%\My Documents\WindowsPowerShell\'
     os: "Windows"
+  - src: .vimrc
+    dest: '%userprofile%\AppData\Local\nvim\init.vim'
+    os: "Windows"
+    # Symlinks for git are broken on windows
+  - src: .gittemplates
+    os: "Linux"
 
 ignore:
   # Globbing patterns to ignore when
@@ -31,3 +37,4 @@ ignore:
   - "*.zip"
   - "tags"
   - "nerd-fonts"
+  - ".gittemplates"

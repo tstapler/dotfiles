@@ -27,7 +27,7 @@ alias gcv="git commit --verbose"
 alias xkp="gen_pass"
 
 if hash ag 2>/dev/null; then
-	alias ag='ag --path-to-agignore $HOME/.agignore'
+	alias ag='ag --path-to-ignore $HOME/.agignore'
 fi
 
 # Encourage the use of NeoVim when possible
