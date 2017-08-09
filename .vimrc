@@ -8,6 +8,7 @@
 "
 
 " Options {{{
+
 "Vim not vi
 if &compatible
   set nocompatible               " Be iMproved
@@ -25,16 +26,22 @@ set mouse+=a
 "   set t_ut=
 " endif
 
-if !has("nvim") 
-  if term =~ '^screen'
-    " tmux knows the extended mouse mode
-    set ttymouse=xterm2
-  endif
-endif
 
-if exists('&inccommand')
-    set inccommand=nosplit
-endif
+
+" Vim Only Settings {{{
+  if !has("nvim") 
+    if term =~ '^screen'
+      " tmux knows the extended mouse mode
+      set ttymouse=xterm2
+    endif
+  endif
+" End Vim Only Settings }}}
+
+" Neovim Settings {{{
+  if exists('&inccommand')
+      set inccommand=nosplit
+  endif
+" End Neovim Settings }}}
 
 if has("unix")
   if executable('zsh')
@@ -52,13 +59,6 @@ let mapleader=","
 "Folding options
 set foldnestmax=10
 set foldmethod=indent
-
-"Help enforce 80 column code if available
-if exists('colorcolumn')
-  set colorcolum=80
-else
-  "au BufWinEnter * let w:m2=matchadd('ErrorMsg', '\%>80v.\+', -1)
-endif
 
 "Show ex commands as they are being typed
 set showcmd
@@ -90,12 +90,15 @@ syntax on
 
 " Set persistent_undo for undotree
 if has("persistent_undo")
-  set undodir=~/.undodir/
+  let undo_directory = expand("~/.undodir/")
+  execute "set undodir=" . undo_directory
   set undofile
 endif
 
-
-" Not sure why this is here -> set omnifunc+=syntaxcomplete#Complete
+if filereadable(expand("~/.vim/spell/tylerwords.utf-8.add"))
+  let g:custom_spellfile=expand("~/.vim/spell/tylerwords.utf-8.add") 
+  execute "set spellfile=" . g:custom_spellfile
+endif
 
 " }}}
 
@@ -105,13 +108,20 @@ endif
 nnoremap <F3> :cn<Enter>
 nnoremap <S-F3> :cp<Enter>
 
-if has("nvim")
-  nnoremap <F7> :new term://zsh<Enter>
-endif
-
 " Fix inconsisent Y behavior
 nnoremap Y y$
 
+" Neovim Mappings {{{
+  if has("nvim")
+    if executable('zsh')
+      nnoremap <F7> :new term://zsh<Enter>
+    elseif executable('bash')
+      nnoremap <F7> :new term://bash<Enter>
+    elseif executable('powershell')
+      nnoremap <F7> :new term://powershell<Enter>
+    endif
+  endif
+" End Neovim Mappings }}}
 " }}}
 
 " Plugin Manager {{{
