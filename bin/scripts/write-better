@@ -1,2 +1,0 @@
-#!/usr/bin/env sh
-write-good "$@" | write-better.awk
