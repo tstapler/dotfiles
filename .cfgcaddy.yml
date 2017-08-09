@@ -17,10 +17,10 @@ links:
     dest: bin/scripts
     os: "Linux"
   - src: stapler-scripts/PowerShell
-    dest: '%userprofile%\My Documents\WindowsPowerShell\'
+    dest: "%userprofile%\\My Documents\\WindowsPowerShell\\"
     os: "Windows"
   - src: .vimrc
-    dest: '%userprofile%\AppData\Local\nvim\init.vim'
+    dest: "%userprofile%\\AppData\\Local\\nvim\\init.vim"
     os: "Windows"
     # Symlinks for git are broken on windows
   - src: .gittemplates
