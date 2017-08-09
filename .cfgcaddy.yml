@@ -25,6 +25,7 @@ links:
     # Symlinks for git are broken on windows
   - src: .gittemplates
     os: "Linux"
+  - src: .vim/spell
 
 ignore:
   # Globbing patterns to ignore when
