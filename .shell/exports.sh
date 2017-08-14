@@ -1,3 +1,4 @@
+
 # Fixes git + gpg error inside of tmux
 export GPG_TTY=$(tty)
 
@@ -11,7 +12,22 @@ export PATH=$PATH:"$HOME/bin/bin"
 export PATH=$PATH:"$HOME/bin/scripts"
 
 # Add user python executables to path
-export PATH=$PATH:"$HOME/.local/bin"
+OS="$(uname)"
+case $OS in
+  'Linux') 
+    export PATH=$PATH:"$HOME/.local/bin"
+    ;;
+  'FreeBSD')
+    ;;
+  'WindowsNT')
+    ;;
+  'Darwin') 
+    export PATH=$PATH:"$HOME/Library/Python/2.7/bin"
+    ;;
+  'SunOS') ;;
+  'AIX') ;;
+  *) ;;
+esac
 
 # Add Android Home to Path
 if [[ -d /opt/android-sdk ]]; then
