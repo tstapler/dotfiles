@@ -9,13 +9,13 @@ links:
   - src: .mixxx/controllers
   - src: bin/scripts/*
     dest: bin/scripts
-    os: "Linux"
+    os: "Linux Darwin"
   - src: .vimrc
     dest: .config/nvim/init.vim
-    os: "Linux"
+    os: "Linux Darwin"
   - src: stapler-scripts/*
     dest: bin/scripts
-    os: "Linux"
+    os: "Linux Darwin"
   - src: stapler-scripts/PowerShell
     dest: "%userprofile%\\My Documents\\WindowsPowerShell\\"
     os: "Windows"
@@ -24,8 +24,10 @@ links:
     os: "Windows"
     # Symlinks for git are broken on windows
   - src: .gittemplates
-    os: "Linux"
+    os: "Linux Darwin"
   - src: .vim/spell
+  - src: .shell
+    os: "Linux Darwin"
 
 ignore:
   # Globbing patterns to ignore when
