@@ -1,0 +1,11 @@
+bind -T copy-mode-vi v send-keys -X begin-selection 
+bind -T copy-mode-vi C-v send-keys -X rectangle-toggle 
+bind -T copy-mode-vi y send-keys -X copy-selection 
+bind -T copy-mode-vi H send-keys -X start-of-line 
+bind -T copy-mode-vi L send-keys -X end-of-line 
+bind -T choice-mode-vi h send-keys -X tree-collapse 
+bind -T choice-mode-vi l send-keys -X tree-expand 
+bind -T choice-mode-vi H send-keys -X tree-collapse-all 
+bind -T choice-mode-vi L send-keys -X tree-expand-all 
+bind -T copy-mode-emacs MouseDragEnd1Pane send-keys -X copy-pipe "pbcopy"
+bind -T copy-mode-vi MouseDragEnd1Pane send-keys -X copy-pipe "pbcopy"
