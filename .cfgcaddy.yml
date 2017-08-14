@@ -28,6 +28,7 @@ links:
   - src: .vim/spell
   - src: .shell
     os: "Linux Darwin"
+  - src: .tmux/*
 
 ignore:
   # Globbing patterns to ignore when
