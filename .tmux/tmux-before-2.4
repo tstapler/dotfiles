@@ -1,0 +1,9 @@
+bind -t vi-copy v begin-selection
+bind -t vi-copy C-v rectangle-toggle
+bind -t vi-copy y copy-selection
+bind -t vi-choice h tree-collapse
+bind -t vi-choice l tree-expand
+bind -t vi-choice H tree-collapse-all
+bind -t vi-choice L tree-expand-all
+bind -t emacs-copy MouseDragEnd1Pane copy-pipe "pbcopy"
+bind -t vi-copy MouseDragEnd1Pane copy-pipe "pbcopy"
