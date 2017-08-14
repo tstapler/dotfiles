@@ -11,12 +11,38 @@ install_package() {
 if haveProg apt-get ; then sudo apt-get update && sudo apt-get install -y "$@"
 elif haveProg yum ; then sudo yum install "$@"
 elif haveProg pacman ; then sudo pacman -S "$@"
+elif haveProg brew; then brew install "$@"
 else
   echo 'Current package manager not supported!'
   echo "Please install $@ manually"
   exit 2
 fi
 }
+
+PIP_PACKAGE_NAME=python-pip
+PIP_EXE_NAME=pip
+PIP_ARGS="--user"
+
+OS="$(uname -a)"
+
+case $OS in
+	*Debian*)
+		;;
+	*Ubuntu*)
+		;;
+  *\#1-Microsoft*)
+		;;
+	*MANJARO*)
+		;;	
+	*Darwin*)
+	echo "Detected OSX"
+	PIP_PACKAGE_NAME=python
+	PIP_EXE_NAME=pip2
+	PIP_ARGS=""
+		;;
+  *)
+    echo "OS Not supported"
+esac 
 
 
 if [ ! -d $HOME/dotfiles ]; then
@@ -33,13 +59,17 @@ CFG_CADDY_DIR="$CLONE_DIR"/cfgcaddy
 
 if [ -d "$CFG_CADDY_DIR" ]; then
   echo "Installing cfgcaddy dependencies."
-  if ! haveProg pip; then
-    install_package python-pip
+
+  if ! haveProg $PIP_EXE_NAME; then
+    install_package $PIP_PACKAGE_NAME
   fi
-  pip install --user -r "$CFG_CADDY_DIR"/requirements.txt
+
+  $PIP_EXE_NAME install $PIP_ARGS --editable "$CFG_CADDY_DIR"
+
+  cfgcaddy init $CLONE_DIR $HOME
 
   echo "Linking Dotfiles"
-  "$CLONE_DIR"/bin/scripts/cfgcaddy link
+  cfgcaddy link
 else 
   echo "cfgcaddy repo is not present, cannot link dotfiles"
 fi
