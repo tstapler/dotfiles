@@ -1,12 +1,9 @@
 function gen_pass {
+GEN_RANDOM_NUMBER="import random; print(random.randrange(0,10))"
+INPUT_TO_TITLE_CASE="import sys; sys.stdout.write(sys.stdin.read().title())"
 xkcdpass -c 20 -d "-" -n 3 |
-awk -v NUM=$(python -c "import random; print(random.randrange(0,10))") '{printf("%s-%d\n",$1,NUM)}'  |
-python -c 'import sys; sys.stdout.write(sys.stdin.read().title())'
-}
-
-function ssh-switch {
-	ssh-add -D
-	ssh-add ~/.ssh/$1
+awk -v NUM=$(python -c "$GEN_RANDOM_NUMBER") '{printf("%s-%d\n",$1,NUM)}'  |
+python -c "$INPUT_TO_TITLE_CASE"
 }
 
 function commited_files {
