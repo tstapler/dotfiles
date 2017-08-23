@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+__ScriptVersion="1.0.0"
+__ScriptName="ssh-switch"
+
+#===  FUNCTION  ================================================================
+#         NAME:  usage
+#  DESCRIPTION:  Display usage information.
+#===============================================================================
+usage ()
+{
+  echo "Usage : $__ScriptName [options] [SSH_KEYS...]
+
+  Options:
+  -h|help       Display this message
+  -v|version    Display script version"
+
+}    # ----------  end of function usage  ----------
+
+#-----------------------------------------------------------------------
+#  Handle command line arguments
+#-----------------------------------------------------------------------
+
+while getopts ":hv" opt
+do
+  case $opt in
+
+    h|help     )  usage; exit 0   ;;
+
+    v|version  )  echo "$__ScriptName -- Version $__ScriptVersion"; exit 0   ;;
+
+    * )  echo -e "\n  Option does not exist : $OPTARG\n"
+      usage; exit 1   ;;
+
+    esac    # --- end of case ---
+  done
+  shift $(($OPTIND-1))
+
+  if [[ 1 -gt "$#" ]]; then
+    echo "No SSH keys specified"
+    usage
+    exit 1
+  fi
+
+  echo "Removing SSH Keys"
+  ssh-add -D
+
+  PATH_PREFIX=""
+
+  if [[ "$1" != /* ]]; then
+    PATH_PREFIX="$HOME/.ssh"
+  fi
+
+  for KEY_NAME in "$@" ; do
+    SSH_KEY="$PATH_PREFIX/$KEY_NAME"
+    if [[ -f "$SSH_KEY" ]]; then
+      ssh-add "$SSH_KEY"
+    else
+      echo "Invalid ssh-key: $SSH_KEY"
+    fi
+  done
+
