@@ -96,6 +96,7 @@ bindkey -M vicmd 'j' history-substring-search-down
 
 # Setup Fasd
 eval "$(fasd --init auto)"
+
 # Prompt Config
 source $HOME/.shell/powerlevel9k.sh
 
@@ -109,18 +110,18 @@ source $HOME/.shell/aliases.sh
 source $HOME/.shell/functions.sh
 
 # By operating system
-OS="`uname -a`"
+OS=$(uname -a)
 case $OS in
-	'Darwin')
+	*Darwin*)
 		source ~/.shell/osx.sh
 	;;
-	'\#1-Microsoft')
+	*\#1-Microsoft*)
 
 	;;
 
 esac
 
-# Machine Specific
+# Machine Specific Configuration
 if [[ -f $HOME/.shell/local.sh ]]; then
 	source $HOME/.shell/local.sh
 fi
