@@ -33,7 +33,7 @@ zplug "lib/completion", from:oh-my-zsh
 
 # The file searchers
 
-case $(uname -a) in
+case $(uname) in
 	Darwin) 
 		BIN_ARCH=darwin
 		;;
@@ -42,7 +42,7 @@ case $(uname -a) in
 		;;
 esac
 
-zplug "junegunn/fzf-bin", as:command, from:gh-r, rename-to:fzf, use:"*$BIN_ARCH*amd64*"
+zplug "junegunn/fzf-bin", as:command, from:gh-r, rename-to:fzf, use:"*$BIN_ARCH*_amd64*"
 
 zplug "peco/peco", as:command, from:gh-r, rename-to:peco, use:"*$BIN_ARCH*64*"
 zplug "clvv/fasd", as:command 
