@@ -23,12 +23,12 @@ export TERM="xterm-256color"
 zplug "bhilburn/powerlevel9k", as:theme
 
 # Plugins
-#zplug "Vifon/deer"
 zplug "zsh-users/zsh-completions"
 zplug "Tarrasch/zsh-autoenv"
 zplug "b4b4r07/enhancd", use:"init.sh"
 zplug "zsh-users/zaw"
 
+zplug "greymd/docker-zsh-completion"
 zplug "lib/completion", from:oh-my-zsh
 
 # The file searchers
