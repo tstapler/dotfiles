@@ -13,5 +13,5 @@ if [[ "$1" == "all" ]]; then
   debops -i dynamic-inventory.py "$INSTALLER_DIR"/ansible/playbooks/install_all_machines.yml "${@:2}"
 else
   sudo echo "Starting installer for $HOSTNAME"
-  debops -i dynamic-inventory.py "$(find "$INSTALLER_DIR" -iname "*$HOSTNAME*")" "$@"
+  debops -i dynamic-inventory.py "$(find "$INSTALLER_DIR" -iname "*$HOSTNAME*.yml")" "$@"
 fi
