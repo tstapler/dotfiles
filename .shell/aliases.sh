@@ -39,3 +39,7 @@ fi
 if hash gpg2 2>/dev/null; then
 	alias gpg="gpg2"
 fi
+
+if [[ -x /usr/bin/vendor_perl/rename ]]; then
+  alias rename="/usr/bin/vendor_perl/rename"
+fi
