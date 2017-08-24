@@ -23,17 +23,17 @@ export TERM="xterm-256color"
 zplug "bhilburn/powerlevel9k", as:theme
 
 # Plugins
-#zplug "Vifon/deer"
 zplug "zsh-users/zsh-completions"
 zplug "Tarrasch/zsh-autoenv"
 zplug "b4b4r07/enhancd", use:"init.sh"
 zplug "zsh-users/zaw"
 
+zplug "greymd/docker-zsh-completion"
 zplug "lib/completion", from:oh-my-zsh
 
 # The file searchers
 
-case $(uname -a) in
+case $(uname) in
 	Darwin) 
 		BIN_ARCH=darwin
 		;;
@@ -42,7 +42,7 @@ case $(uname -a) in
 		;;
 esac
 
-zplug "junegunn/fzf-bin", as:command, from:gh-r, rename-to:fzf, use:"*$BIN_ARCH*amd64*"
+zplug "junegunn/fzf-bin", as:command, from:gh-r, rename-to:fzf, use:"*$BIN_ARCH*_amd64*"
 
 zplug "peco/peco", as:command, from:gh-r, rename-to:peco, use:"*$BIN_ARCH*64*"
 zplug "clvv/fasd", as:command 
@@ -96,6 +96,7 @@ bindkey -M vicmd 'j' history-substring-search-down
 
 # Setup Fasd
 eval "$(fasd --init auto)"
+
 # Prompt Config
 source $HOME/.shell/powerlevel9k.sh
 
@@ -109,18 +110,18 @@ source $HOME/.shell/aliases.sh
 source $HOME/.shell/functions.sh
 
 # By operating system
-OS="`uname -a`"
+OS=$(uname -a)
 case $OS in
-	'Darwin')
+	*Darwin*)
 		source ~/.shell/osx.sh
 	;;
-	'\#1-Microsoft')
+	*\#1-Microsoft*)
 
 	;;
 
 esac
 
-# Machine Specific
+# Machine Specific Configuration
 if [[ -f $HOME/.shell/local.sh ]]; then
 	source $HOME/.shell/local.sh
 fi
