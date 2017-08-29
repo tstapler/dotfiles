@@ -35,10 +35,24 @@ do
   done
   shift $(($OPTIND-1))
 
+  TARGET_KEYS="$*"
+
+  TMP_FILE="/tmp/ssh-switch.last_key"
+
   if [[ 1 -gt "$#" ]]; then
-    echo "No SSH keys specified"
-    usage
-    exit 1
+    if [[ -f $TMP_FILE ]]; then
+      echo "Adding previous ssh key(s)"
+      TARGET_KEYS="$(cat $TMP_FILE)"
+    fi
+    if [[ "$TARGET_KEYS" == "" ]]; then
+      echo "No SSH keys specified"
+      usage
+      exit 1
+    fi
+  fi
+
+  if [[ $(ssh-add -L) != "The agent has no identities." ]]; then
+    ssh-add -L | awk '{ print $3 }' > $TMP_FILE
   fi
 
   echo "Removing SSH Keys"
@@ -46,12 +60,12 @@ do
 
   PATH_PREFIX=""
 
-  if [[ "$1" != /* ]]; then
-    PATH_PREFIX="$HOME/.ssh"
+  if [[ "$TARGET_KEYS" != /* ]]; then
+    PATH_PREFIX="$HOME/.ssh/"
   fi
 
-  for KEY_NAME in "$@" ; do
-    SSH_KEY="$PATH_PREFIX/$KEY_NAME"
+  for KEY_NAME in $TARGET_KEYS ; do
+    SSH_KEY="$PATH_PREFIX$KEY_NAME"
     if [[ -f "$SSH_KEY" ]]; then
       ssh-add "$SSH_KEY"
     else
