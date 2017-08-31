@@ -760,6 +760,8 @@ let g:instant_markdown_autostart = 0
 " End InstantMarkdownPreview Settings }}}
 
 " Pandoc Settings {{{
+let g:pandoc#syntax#conceal#use = 0
+let g:pandoc#syntax#codeblocks#embeds#langs = ["ruby", "iteratehaskell=lhaskell", "bash=sh", "python", "shell=sh"]
 let g:pandoc#syntax#conceal#blacklist = ["block", "codeblock_start", "codeblock_delim"]
 let g:pandoc#keyboard#use_default_mappings = 1
 let g:pandoc#formatting#mode = "sA"
