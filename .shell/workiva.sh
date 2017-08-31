@@ -27,3 +27,5 @@ case $OS in
 esac
 
 alias erasereset="workon sky; python tools/erase_reset_data.py --admin=tyler.stapler@workiva.com --password=a"
+
+PATH="$PATH:$HOME/Workiva/pss/scripts"
