@@ -55,6 +55,8 @@ function arch_fix_audio_quality {
 function rnsp {
   if hash rename 2>/dev/null; then
     rename 's/ /_/g' "$@"
+  else
+    echo "Please install the perl-rename utility"
   fi
 }
 
