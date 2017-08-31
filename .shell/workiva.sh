@@ -17,12 +17,13 @@ OS="$(uname)"
 case $OS in
 	'Darwin')
 	# Setup Groovy
-	export GROOVY_HOME=/usr/local/opt/groovy/libexec
-	if [[ -f  '/opt/homebrew-cask/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc' ]]; then
-		source '/opt/homebrew-cask/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc'
-		source '/opt/homebrew-cask/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc'
-	fi
-	;;
+  export GROOVY_HOME='/usr/local/opt/groovy/libexec'
+  GCLOUD_PREFIX='/opt/homebrew-cask/Caskroom/google-cloud-sdk/latest/google-cloud-sdk'
+  if [[ -f  "$GCLOUD_PREFIX/path.zsh.inc" ]]; then
+    source "$GCLOUD_PREFIX/path.zsh.inc"
+    source "$GCLOUD_PREFIX/completion.zsh.inc"
+  fi
+  ;;
 esac
 
 alias erasereset="workon sky; python tools/erase_reset_data.py --admin=tyler.stapler@workiva.com --password=a"
