@@ -74,6 +74,12 @@ autoload edit-command-line
 
 zle -N edit-command-line
 
+# Add Completions
+autoload -U compinit
+compinit
+autoload -U bashcompinit
+bashcompinit
+
 # Vim Mode
 bindkey -v
 
