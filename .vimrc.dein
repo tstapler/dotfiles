@@ -35,6 +35,8 @@ if dein#load_state(expand('~/.vim/bundle'))
   call dein#add('fishbullet/deoplete-ruby')
   call dein#add('carlitux/deoplete-ternjs')
   call dein#add('mhartington/deoplete-typescript')
+  call dein#add('autozimu/LanguageClient-neovim')
+  call dein#add('roxma/nvim-completion-manager')
   " End Code Completion Sources }}}
 
   " Snippet Plugins {{{
@@ -81,6 +83,7 @@ if dein#load_state(expand('~/.vim/bundle'))
   " call dein#add('tungd/unite-session')
   " End Unite Vim }}}
 
+  call dein#add('haya14busa/dein-command.vim')
   call dein#add('jceb/vim-orgmode')
   call dein#add('benekastah/neomake')
   call dein#add('tpope/vim-fugitive')
@@ -90,7 +93,6 @@ if dein#load_state(expand('~/.vim/bundle'))
   call dein#add('Shougo/vimfiler.vim')
   call dein#add('dbakker/vim-projectroot')
   call dein#add('airblade/vim-gitgutter')
-  call dein#add('majutsushi/tagbar')
   call dein#add('tpope/vim-repeat')
   call dein#add('mbbill/undotree')
   call dein#add('LucHermitte/local_vimrc', {'depends': 'LucHermitte/lh-vim-lib'})
@@ -139,10 +141,6 @@ if dein#load_state(expand('~/.vim/bundle'))
   call dein#add('fatih/vim-go')
   " End Go }}}
 
-  " Java {{{
-  call dein#add('artur-shaik/vim-javacomplete2')
-  " End Java }}}
-
   " Javascript Plugins {{{
   call dein#add('pangloss/vim-javascript')
   call dein#add('ternjs/tern_for_vim')
@@ -190,6 +188,7 @@ if dein#load_state(expand('~/.vim/bundle'))
   call dein#add('endel/flashdevelop.vim', {'depends': ['airblade/vim-rooter', 'tomtom/tlib_vim']})
   call dein#add('cespare/vim-toml')
   call dein#add('chrisbra/csv.vim')
+  call dein#add('othree/csscomplete.vim')
 
   " End Language Specific Plugins }}}
 
@@ -208,7 +207,6 @@ if dein#load_state(expand('~/.vim/bundle'))
   " End Distraction Free Writing }}}
 
   call dein#add('tpope/vim-abolish')
-  call dein#add('suan/vim-instant-markdown')
   call dein#add('jamessan/vim-gnupg')
   call dein#add('vim-scripts/DoxygenToolkit.vim')
   call dein#add('johnsyweb/vim-makeshift')
@@ -316,10 +314,6 @@ inoremap <expr><TAB>  pumvisible() ? "\<C-n>" : "\<TAB>"
 
 " End neosnippet }}}
 
-" InstantMarkdownPreview {{{
-nnoremap  <leader>m :InstantMarkdownPreview<cr>
-" End InstantMarkdownPreview }}}
-
 " Radical Vim (Convert Base) {{{
 nmap g<C-A> <Plug>RadicalView
 xmap g<C-A> <Plug>RadicalView
@@ -338,6 +332,26 @@ nnoremap <silent><C-p> :CtrlSpace O<CR>
 " }}}
 
 " Plugin Settings {{{
+
+" Neoformat Settings {{{
+nnoremap <silent> <leader>f :Neoformat<CR>
+" End Neoformat Settings }}}
+
+" LanguageClient Settings {{{
+
+" Automatically start language servers.
+let g:LanguageClient_autoStart = 1
+
+let g:LanguageClient_serverCommands = {
+      \ 'javascript': ['javascript-typescript-langserver'],
+      \ 'typescript': ['javascript-typescript-langserver'],
+      \ }
+
+nnoremap <silent> K :call LanguageClient_textDocument_hover()<CR>
+nnoremap <silent> gd :call LanguageClient_textDocument_definition()<CR>
+nnoremap <silent> <F2> :call LanguageClient_textDocument_rename()<CR>
+
+" End LanguageClient Settings }}}
 
 " bash-support Settings {{{
 if exists(g:shell_location)
@@ -479,39 +493,39 @@ set hidden
 " End ctrlspace Settings }}}
 
 " Unite Settings {{{
-if dein#check_install(["Shougo/unite.vim"])
-  call unite#filters#matcher_default#use(['matcher_fuzzy'])
-  call unite#filters#sorter_default#use(['sorter_rank'])
-  call unite#custom#source('file,file/new,buffer,te -buffer-name=search -start-insert -auto-preview grep -custom-grep-command file_rec,line', 'matchers', 'matcher_fuzzy')
-
-  " Build the ctrlp function, using projectroot to define the
-  " working directory.
-  function! Unite_ctrlp()
-    execute ':Unite  -buffer-name=files -start-insert -match-input buffer file_rec/async'
-  endfunction
-
-  "Select Search
-  if executable('ag')
-    " Use ag (the silver searcher)
-    " https://github.com/ggreer/the_silver_searcher
-    let g:unite_source_grep_command = 'ag'
-    let g:unite_source_grep_default_opts =
-          \ '-i --hidden --ignore ' .
-          \ '''.hg'' --ignore ''.svn'' --ignore ''.git'' --ignore ''.bzr'' --ignore ''packages'''
-    let g:unite_source_grep_recursive_opt = ''
-  elseif executable('ack-grep')
-    " Use ack
-    " http://beyondgrep.com/
-    let g:unite_source_grep_command = 'ack-grep'
-    let g:unite_source_grep_default_opts = '-i --no-heading --no-color -k -H'
-    let g:unite_source_grep_recursive_opt = ''
-  endif
-
-  " Unite Options
-  let g:unite_source_history_yank_enable=1
-  let g:unite_enable_start_insert=1
-  let g:unite_ignore_source_files = [ 'packages' ]
-endif
+"if dein#check_install(["Shougo/unite.vim"])
+"  call unite#filters#matcher_default#use(['matcher_fuzzy'])
+"  call unite#filters#sorter_default#use(['sorter_rank'])
+"  call unite#custom#source('file,file/new,buffer,te -buffer-name=search -start-insert -auto-preview grep -custom-grep-command file_rec,line', 'matchers', 'matcher_fuzzy')
+"
+"  " Build the ctrlp function, using projectroot to define the
+"  " working directory.
+"  function! Unite_ctrlp()
+"    execute ':Unite  -buffer-name=files -start-insert -match-input buffer file_rec/async'
+"  endfunction
+"
+"  "Select Search
+"  if executable('ag')
+"    " Use ag (the silver searcher)
+"    " https://github.com/ggreer/the_silver_searcher
+"    let g:unite_source_grep_command = 'ag'
+"    let g:unite_source_grep_default_opts =
+"          \ '-i --hidden --ignore ' .
+"          \ '''.hg'' --ignore ''.svn'' --ignore ''.git'' --ignore ''.bzr'' --ignore ''packages'''
+"    let g:unite_source_grep_recursive_opt = ''
+"  elseif executable('ack-grep')
+"    " Use ack
+"    " http://beyondgrep.com/
+"    let g:unite_source_grep_command = 'ack-grep'
+"    let g:unite_source_grep_default_opts = '-i --no-heading --no-color -k -H'
+"    let g:unite_source_grep_recursive_opt = ''
+"  endif
+"
+"  " Unite Options
+"  let g:unite_source_history_yank_enable=1
+"  let g:unite_enable_start_insert=1
+"  let g:unite_ignore_source_files = [ 'packages' ]
+"   endif
 
 " End Unite Settings }}}
 
@@ -576,52 +590,13 @@ if has('nvim')
     let g:tern_request_timeout = 1
     let g:tern_show_signature_in_pum = 0  " This do disable full signature type on autocomplete
   " End deoplete-ternjs Settings }}}
-  
     let g:elm_detailed_complete = 0
 
 endif
 
 " End deoplete Settings }}}
 
-" NeoComplete Settings {{{
-if !has('nvim') " Disable in Neovim
-  let g:neocomplete#enable_at_startup = 1
-  let g:neocomplete#enable_auto_select = 0
-  let g:neocomplcache_enable_at_startup = 0
-  let g:neocomplete#use_vimproc = 1
-
-  if !exists('g:neocomplete#force_omni_input_patterns')
-    let g:neocomplete#force_omni_input_patterns = {}
-  endif
-  let g:neocomplete#force_omni_input_patterns.c =
-        \ '[^.[:digit:] *\t]\%(\.\|->\)\w*'
-  let g:neocomplete#force_omni_input_patterns.cpp =
-        \ '[^.[:digit:] *\t]\%(\.\|->\)\w*\|\h\w*::\w*'
-  let g:neocomplete#force_omni_input_patterns.objc =
-        \ '\[\h\w*\s\h\?\|\h\w*\%(\.\|->\)'
-  let g:neocomplete#force_omni_input_patterns.objcpp =
-        \ '\[\h\w*\s\h\?\|\h\w*\%(\.\|->\)\|\h\w*::\w*'
-  let g:clang_complete_auto = 0
-  let g:clang_auto_select = 0
-  let g:clang_omnicppcomplete_compliance = 0
-  let g:clang_make_default_keymappings = 0
-  "let g:clang_use_library = 1
-
-  if !exists('g:neocomplete#force_omni_input_patterns')
-    let g:neocomplete#force_omni_input_patterns = {}
-  endif
-  let g:neocomplete#force_omni_input_patterns.tex =
-        \ '\v\\%('
-        \ . '\a*cite\a*%(\s*\[[^]]*\]){0,2}\s*\{[^}]*'
-        \ . '|\a*ref%(\s*\{[^}]*|range\s*\{[^,}]*%(}\{)?)'
-        \ . '|includegraphics\*?%(\s*\[[^]]*\]){0,2}\s*\{[^}]*'
-        \ . '|%(include%(only)?|input)\s*\{[^}]*'
-        \ . ')'
-endif
-" End NeoComplete Settings }}}
-
 "Airline Settings {{{
-let g:airline#extensions#tabline#enabled = 1
 let g:airline#extensions#virtualenv#enabled = 1
 let g:airline_exclude_preview = 1
 
@@ -755,10 +730,6 @@ let g:makeshift_chdir = 1
 let g:neosnippet#snippets_directory='~/.vimsnippets'
 " End Neosnippet Settings }}}
 
-" InstantMarkdownPreview Settings {{{
-let g:instant_markdown_autostart = 0
-" End InstantMarkdownPreview Settings }}}
-
 " Pandoc Settings {{{
 let g:pandoc#syntax#conceal#use = 0
 let g:pandoc#syntax#codeblocks#embeds#langs = ["ruby", "iteratehaskell=lhaskell", "bash=sh", "python", "shell=sh"]
@@ -833,28 +804,12 @@ let g:UltiSnipsSnippetDirectories=["UltiSips", $HOME."/.vimsnippets"]
   autocmd FileType markdown TableModeEnable
 " End TableMode }}}
 
-" Delimit Mate {{{
-if dein#check_install(["Raimondi/delimitMate"])
-  augroup pandoc
-    au!
-    au Filetype pandoc let loaded_delimitMate = 1
-    au Filetype pandoc :DelimitMateSwitch
-  augroup END
-endif
-" End Delimit Mate }}}
-
-" javacomplete2 {{{
-if dein#check_install(["artur-shaik/vim-javacomplete2"])
-  autocmd FileType java setlocal omnifunc=javacomplete#Complete
-endif
-" End javacomplete2 }}}
-
 " NeoComplete {{{
-if dein#check_install(["Shougo/neocomplete.vim"]) && !has('nvim')
-  augroup pandoc
-    au FileType pandoc NeoCompleteLock
-  augroup END
-endif
+" if dein#check_install(["Shougo/neocomplete.vim"]) && !has('nvim')
+"   augroup pandoc
+"     au FileType pandoc NeoCompleteLock
+"   augroup END
+" endif
 " End NeoComplete }}}
 
 " Autoreload .vimrc {{{
