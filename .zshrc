@@ -28,8 +28,12 @@ zplug "Tarrasch/zsh-autoenv"
 zplug "b4b4r07/enhancd", use:"init.sh"
 zplug "zsh-users/zaw"
 
+zplug "aswitalski/oh-my-zsh-sensei-git-plugin"
+zplug "Schnouki/git-annex-zsh-completion"
 zplug "greymd/docker-zsh-completion"
 zplug "lib/completion", from:oh-my-zsh
+
+zplug "djui/alias-tips"
 
 # The file searchers
 
@@ -50,7 +54,6 @@ zplug "stedolan/jq", \
     from:gh-r, \
     as:command, \
     rename-to:jq
-zplug "jfgiraud/sandr", as:command
 
 # Suggestions
 zplug "tarruda/zsh-autosuggestions"
