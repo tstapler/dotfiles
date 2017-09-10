@@ -6,4 +6,4 @@ else
 	TARGET="stapler-config"
 fi
 ~/$TARGET/stapler-scripts/install-scripts/dein-install.sh
-staplerlinker
+cfgcaddy link
