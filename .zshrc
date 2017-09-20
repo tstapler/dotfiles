@@ -71,6 +71,9 @@ fi
 # Then, source plugins and add commands to $PATH
 zplug load
 
+autoload bashcompinit
+bashcompinit
+
 # Load the zshell mv module
 autoload zmv
 autoload edit-command-line
