@@ -83,6 +83,8 @@ compinit
 autoload -U bashcompinit
 bashcompinit
 
+setopt extendedglob
+
 # Vim Mode
 bindkey -v
 
@@ -118,18 +120,6 @@ source $HOME/.shell/aliases.sh
 # Utility Functions
 source $HOME/.shell/functions.sh
 
-# By operating system
-OS=$(uname -a)
-case $OS in
-	*Darwin*)
-		source ~/.shell/osx.sh
-	;;
-	*\#1-Microsoft*)
-
-	;;
-
-esac
-
 # Machine Specific Configuration
 if [[ -f $HOME/.shell/local.sh ]]; then
 	source $HOME/.shell/local.sh
@@ -142,3 +132,15 @@ fi
 
 # Language managers (RVM, NVM, PYENV, ...)
 source $HOME/.shell/languages.sh
+
+# By operating system
+OS=$(uname -a)
+case $OS in
+	*Darwin*)
+		source ~/.shell/osx.sh
+	;;
+	*\#1-Microsoft*)
+
+	;;
+
+esac
