@@ -87,5 +87,6 @@ if [ -f "$HOME/.tnsrc" ]; then
 fi
 
 if hash gr 2>/dev/null; then
+  unalias gr
   . <(gr completion)
 fi
