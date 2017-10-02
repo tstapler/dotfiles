@@ -35,12 +35,19 @@ if command -v $VENV_WRAP_SH >/dev/null 2>&1; then
   source "$(which $VENV_WRAP_SH)"
 fi
 
-RVM_DIR="$HOME/.rvm"
-if [[ -s "$RVM_DIR/scripts/rvm" ]]; then
-	# Add RVM to PATH for scripting
-	export PATH="$PATH:$RVM_DIR/bin" 
-	source "$RVM_DIR/scripts/rvm"
+# Load gvm
+GVM_DIR="$HOME/.gvm"
+GVM_SCRIPT="$GVM_DIR/scripts/gvm"
+
+if [[ ! -d "$GVM_DIR" ]]; then
+  curl -s -S -L "https://raw.githubusercontent.com/moovweb/gvm/master/binscripts/gvm-installer" | zsh
 fi
+
+if [[ -x "$GVM_SCRIPT" ]]; then
+ . "$GVM_SCRIPT" 
+ fi
+
+# Load rbenv
 
 if hash rbenv 2>/dev/null; then
   eval "$(rbenv init -)"
