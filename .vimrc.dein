@@ -334,6 +334,14 @@ nnoremap <silent><C-p> :CtrlSpace O<CR>
 " Plugin Settings {{{
 
 " Neoformat Settings {{{
+    let g:neoformat_run_all_formatters = 1
+" End Neoformat Settings }}}
+
+" vim-go Settings {{{
+  let g:go_fmt_command = "goimports"
+" End vim-go Settings }}}
+
+" Neoformat Settings {{{
 nnoremap <silent> <leader>f :Neoformat<CR>
 " End Neoformat Settings }}}
 

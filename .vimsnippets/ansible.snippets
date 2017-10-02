@@ -36,3 +36,11 @@ snippet ansplaybook
   tasks:
    - $3
 endsnippet
+
+snippet whendeb "When on an ubuntu or debian machine"
+when: ansible_os_family == "Debian"
+endsnippet
+
+snippet whenfed "When on an Fedora or Redhat Machine"
+when: ansible_os_family == "RedHat"
+endsnippet
