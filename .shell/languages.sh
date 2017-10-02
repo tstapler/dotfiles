@@ -41,3 +41,12 @@ if [[ -s "$RVM_DIR/scripts/rvm" ]]; then
 	export PATH="$PATH:$RVM_DIR/bin" 
 	source "$RVM_DIR/scripts/rvm"
 fi
+
+if hash rbenv 2>/dev/null; then
+  eval "$(rbenv init -)"
+  IFS=:
+    for GEM_PATH in $(gem env gempath); do
+      PATH="$PATH:$GEM_PATH/bin"
+    done
+  IFS=" "
+fi
