@@ -1,0 +1,93 @@
+#!/usr/bin/env sh
+
+__ScriptVersion="0.0.1"
+
+#===  FUNCTION  ================================================================
+#         NAME:  usage
+#  DESCRIPTION:  Display usage information.
+#===============================================================================
+usage ()
+{
+  echo "Usage :  $0 [options] [OLD_EMAIL] [NEW_EMAIL]
+  fix_emails is a tool to change commiter emails in git
+
+    Options:
+    -h|help       Display this message
+    -n|name       An updated name to use in the commits
+    -t|target-dir The directory containing the target git repo
+    -v|version    Display script version"
+
+}    # ----------  end of function usage  ----------
+
+#-----------------------------------------------------------------------
+#  Handle command line arguments
+#-----------------------------------------------------------------------
+
+while getopts ":hvn:t:" opt
+do
+  case $opt in
+
+  h|help     )  usage; exit 0   ;;
+  n|name     )  NEW_NAME=$OPTARG ;;
+  t|target-dir ) TARGET_DIR=$OPTARG;;
+  v|version  )  echo "$0 -- Version $__ScriptVersion"; exit 0   ;;
+
+  * )  echo -e "\n  Option does not exist : $OPTARG\n"
+      usage; exit 1   ;;
+
+  esac    # --- end of case ---
+done
+shift $(($OPTIND-1))
+
+if [ "$#" -ne 2 ]; then
+  echo "Incorrect number of arguments"
+  usage; exit 1
+fi
+
+if [ -n $TARGET_DIR ]; then
+  cd $TARGET_DIR || exit 1
+fi
+
+if ! git rev-parse --is-inside-git-dir > /dev/null 2>&1; then
+  echo "Command must be run inside of git repository"
+  usage; exit 1
+fi
+
+OLD_EMAIL=$1
+NEW_EMAIL=$2
+
+if [ "$GIT_COMMITTER_EMAIL" = "OLD_EMAIL" ]; then
+    if [ -n "NEW_NAME" ]; then
+      export GIT_COMMITTER_NAME="NEW_NAME"
+    fi
+    export GIT_COMMITTER_EMAIL="NEW_EMAIL"
+fi
+
+if [ "$GIT_AUTHOR_EMAIL" = "OLD_EMAIL" ]; then
+    if [ -n "NEW_NAME" ]; then
+      export GIT_AUTHOR_NAME="NEW_NAME"
+    fi
+    export GIT_AUTHOR_EMAIL="NEW_EMAIL"
+fi
+
+FILTER=' 
+if [ "$GIT_COMMITTER_EMAIL" = "OLD_EMAIL" ]; then
+    if [ -n "NEW_NAME" ]; then
+      export GIT_COMMITTER_NAME="NEW_NAME"
+    fi
+    export GIT_COMMITTER_EMAIL="NEW_EMAIL"
+fi
+
+if [ "$GIT_AUTHOR_EMAIL" = "OLD_EMAIL" ]; then
+    if [ -n "NEW_NAME" ]; then
+      export GIT_AUTHOR_NAME="NEW_NAME"
+    fi
+    export GIT_AUTHOR_EMAIL="NEW_EMAIL"
+fi
+'
+
+FILTER=$(sed -e "s/OLD_EMAIL/$OLD_EMAIL/; s/NEW_EMAIL/$NEW_EMAIL/; s/NEW_NAME/$NEW_NAME" <<< $FILTER)
+
+echo $FILTER
+
+git filter-branch --env-filter "$FILTER" --tag-name-filter cat -- --branches --tags
