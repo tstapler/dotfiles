@@ -117,17 +117,10 @@ if dein#load_state(expand('~/.vim/bundle'))
   call dein#add('vim-airline/vim-airline-themes')
   call dein#add('flazz/vim-colorschemes')
   call dein#add('morhetz/gruvbox')
-  call dein#add('myusuf3/numbers.vim')
-  call dein#add('bronson/vim-crosshairs')
   call dein#add('t9md/vim-choosewin')
   " End Interface Plugins }}}
 
   " Language Specific Plugins {{{
-
-  " Actionscript Plugins {{{
-  call dein#add('jeroenbourgois/vim-actionscript')
-  call dein#add('vim-scripts/Flex-Development-Support')
-  " End Actionscript Plugins }}}
 
   " C/C++ Plugins {{{
   call dein#add('Rip-Rip/clang_complete')
@@ -333,22 +326,19 @@ nnoremap <silent><C-p> :CtrlSpace O<CR>
 
 " Plugin Settings {{{
 
-" Neoformat Settings {{{
-    let g:neoformat_run_all_formatters = 1
-" End Neoformat Settings }}}
-
 " vim-go Settings {{{
   let g:go_fmt_command = "goimports"
 " End vim-go Settings }}}
 
 " Neoformat Settings {{{
 nnoremap <silent> <leader>f :Neoformat<CR>
+let g:neoformat_run_all_formatters = 1
 " End Neoformat Settings }}}
 
 " LanguageClient Settings {{{
 
 " Automatically start language servers.
-let g:LanguageClient_autoStart = 1
+let g:LanguageClient_autoStart = 0
 
 let g:LanguageClient_serverCommands = {
       \ 'javascript': ['javascript-typescript-langserver'],
@@ -386,12 +376,6 @@ let g:table_mode_corner_corner = '|'
 let g:vim_json_syntax_conceal = 0
 " End vim-json Settings }}}
 
-" numbers Settings {{{
-if exists("g:numbers_exclude")
-  let g:numbers_exclude = g:numbers_exclude + ['term']
-endif
-" End numbers Settings }}}
-
 " vim-test Settings {{{
 let test#strategy = "neovim"
 let test#python#runner = 'djangotest'
@@ -427,8 +411,6 @@ let g:neomake_python_isort_maker = {
       \ 'exe': 'isort-lint',
       \ 'errorformat': '%f:%l:%m'
       \ }
-
-  let g:neomake_python_enabled_makers = ['python', 'pylama', 'frosted', 'flake8']
 
 let g:neomake_pandoc_proselint_maker = {
       \ 'exe': 'proselint',
