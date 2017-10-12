@@ -46,3 +46,14 @@ fi
 if [[ -x "$GVM_SCRIPT" ]]; then
  . "$GVM_SCRIPT" 
  fi
+
+# Load rbenv
+
+if hash rbenv 2>/dev/null; then
+  eval "$(rbenv init -)"
+  IFS=:
+    for GEM_PATH in $(gem env gempath); do
+      PATH="$PATH:$GEM_PATH/bin"
+    done
+  IFS=" "
+fi
