@@ -45,6 +45,6 @@ if [[ -x /usr/bin/vendor_perl/rename ]]; then
 fi
 
 if hash mosh 2>/dev/null; then
-  alias mosh_leviathan="mosh --ssh='ssh -p 222' --port=60001 tstapler@Leviathan"
-  alias mosh_absis="mosh --ssh='ssh -p 2222' --port=60000 tstapler@Absis"
+  alias mosh_leviathan="mosh --server='pkill mosh-server;sleep 2; mosh-server' --ssh='ssh -p 222' --port=60001 tstapler@Leviathan"
+  alias mosh_absis="mosh --server='pkill mosh-server;sleep 2; mosh-server' --ssh='ssh -p 2222' --port=60000 tstapler@Absis"
 fi
