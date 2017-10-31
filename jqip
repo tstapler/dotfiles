@@ -35,4 +35,4 @@ do
 done
 shift $(($OPTIND-1))
 
-jq $1 $2 | sponge $2
+jq "$1" "$2" | sponge "$2"
