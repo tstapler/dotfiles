@@ -15,7 +15,7 @@ set $mod Mod4
 
 # This font is widely installed, provides lots of unicode glyphs, right-to-left
 # text rendering and scalability on retina/hidpi displays (thanks to pango).
-font pango:DejaVu Sans Mono 15
+font pango:DejaVu Sans Mono 8
 
 # Before i3 v4.8, we used to recommend this one as the default:
 # font -misc-fixed-medium-r-normal--13-120-75-75-C-70-iso10646-1
@@ -164,24 +164,7 @@ bindsym $mod+Shift+c reload
 bindsym $mod+Shift+r restart
 
 # exit i3 (logs you out of your X session)
-bindsym $mod+Shift+e exec "i3-nagbar -t warning -m 'You pressed the exit shortcut. Do you really want to exit i3? This will end your X session.' -b 'Yes, exit i3' 'i3-msg exit'"
-
-# # Set shut down, restart and locking features
-# bindsym $mod+. mode "$mode_system"
-# set $mode_system (l)ock, (e)xit, switch_(u)ser, (s)uspend, (h)ibernate, (r)eboot, (Shift+s)hutdown
-# mode "$mode_system" {
-#     bindsym l exec --no-startup-id i3exit lock, mode "default"
-#     bindsym s exec --no-startup-id i3exit suspend, mode "default"
-#     bindsym u exec --no-startup-id i3exit switch_user, mode "default"
-#     bindsym e exec --no-startup-id i3exit logout, mode "default"
-#     bindsym h exec --no-startup-id i3exit hibernate, mode "default"
-#     bindsym r exec --no-startup-id i3exit reboot, mode "default"
-#     bindsym Shift+s exec --no-startup-id i3exit shutdown, mode "default"
-
-#     # exit system mode: "Enter" or "Escape"
-#     bindsym Return mode "default"
-#     bindsym Escape mode "default"
-# }
+bindsym $mod+Shift+e exec "exec cinnamon-session-quit"
 
 # Add screenshot utility
 bindsym $mod+Control+s exec "shutter --select"
@@ -213,21 +196,15 @@ mode "resize" {
 bindsym $mod+r mode "resize"
 
 # Lock screen
-bindsym $mod+shift+x exec ~/.i3/i3lock-extra.sh -s -p
+bindsym $mod+shift+x exec cinnamon-screensaver-command -l
 
 # Autostart applications
-exec --no-startup-id /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
-exec --no-startup-id nitrogen --restore; sleep 1; compton -b
-exec --no-startup-id xfce4-power-manager
-exec --no-startup-id pamac-tray
 exec --no-startup-id clipit
 exec --no-startup-id blueman
 exec --no-startup-id nm-applet
-# exec_always --no-startup-id sbxkb
-exec --no-startup-id start_conky_maia
-# exec --no-startup-id start_conky_green
-# exec --no-startup-id xautolock -time 10 -locker blurlock
 exec_always --no-startup-id setcursor
+exec --no-startup-id dbus-launch --auto-syntax
+
 # Comptom Composer (Smooth Transitions)
 exec compton -f
 
@@ -238,13 +215,6 @@ bar {
 	position top
 	workspace_buttons yes
 }
-
-# # My bar
-# bar {
-#   i3bar_command ~/.local/lib/python2.7/site-packages/powerline/bindings/lemonbar/powerline-lemonbar.py --i3
-# }
-# exec_always --no-startup-id pkill -f 'python .*powerline-lemonbar\.py'
-# exec_always --no-startup-id sleep 1 && ~/.i3/powerline-lemonbar.py --i3 --height 16
 
 # Pulse Audio controls
 bindsym XF86AudioRaiseVolume exec --no-startup-id amixer -D pulse sset Master 5%+
@@ -270,13 +240,8 @@ for_window [class="^.*"] border pixel 2
 gaps inner 10
 gaps outer 10
 
-# Additionally, you can issue commands with the following syntax. This is useful to bind keys to changing the gap size.
-# gaps inner|outer current|all set|plus|minus <px>
-# gaps inner all set 10
-# gaps outer all plus 5
-
 # Smart gaps (gaps used if only more than one container on the workspace)
-# smart_gaps on
+smart_gaps on
 
 # Smart borders (draw borders around container only if it is not the only container on this workspace) 
 # on|no_gaps (on=always activate and no_gaps=only activate if the gap size to the edge of the screen is 0)
