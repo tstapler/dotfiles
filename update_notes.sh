@@ -40,20 +40,24 @@ shift $(($OPTIND-1))
 
 GLOB="${1:-CPRE}" 
 
+TEMP_FOLDER=temp
+
 # Unzip and flatten zipfile
 find . -maxdepth 1 -iname \*"${GLOB}"\*.zip \
-  -exec unzip -jn {} \; \
+  -exec unzip -jn {} -d $TEMP_FOLDER \; \
   -exec rm -f {} \; 
 
 # OCR Files without orc
-find . -maxdepth 1 -iname \*"${GLOB}"\*.pdf |  while read OLD_FILE; do
-  if [ $(pdffonts "$OLD_FILE" | wc -l) -eq 2 ]; then 
-    NEW_FILE=$(sed "s/.pdf/_ocr.pdf/" <<< "$OLD_FILE")
-    git annex unannex "$OLD_FILE"
-    pypdfocr "$OLD_FILE"
-    mv "$NEW_FILE" "$OLD_FILE"
-  fi
+find "$TEMP_FOLDER" -maxdepth 1 -iname \*"${GLOB}"\*.pdf |  while read OLD_FILE; do
+if  pdf_has_ocr "$OLD_FILE" && [ ! -f $(basename "$OLD_FILE") ]; then
+  NEW_FILE=$(sed "s/.pdf/_ocr.pdf/" <<< "$OLD_FILE")
+  git annex unannex "$OLD_FILE"
+  pypdfocr "$OLD_FILE"
+  mv "$TEMP_FOLDER/$NEW_FILE" "$(basename $OLD_FILE)"
+fi
 done
   
 # Add notes that aren't in git annex
 find . -maxdepth 1 -type f -iname \*"${GLOB}"\*.pdf | xargs -r git annex add
+
+rm -rf $TEMP_FOLDER

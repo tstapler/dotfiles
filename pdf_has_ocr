@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+
+OLD_FILE=$1
+
+if [ $(pdffonts "$OLD_FILE" | wc -l) -ne 2 ]; then 
+	exit 1
+fi
+
