@@ -63,3 +63,5 @@ CS_SESSION
 stapler-snips
 local.sh
 nerd-fonts/
+
+*.orig
