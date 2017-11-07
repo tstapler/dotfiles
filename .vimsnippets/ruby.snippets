@@ -1,0 +1,17 @@
+snippet opts "Option parser"
+#!/usr/bin/env ruby
+
+require 'optparse'
+
+options = { default: 'args' }
+
+OptionParser.options do |opts|
+  opts.banner = "Usage: #{File.basename($PROGRAM_NAME)}"
+  opts.on_tail("-h", "--help", "Show this help message") do
+    puts opts
+    exit
+  end
+end
+
+options = OptionParser.parse(ARGV)
+endsnippet
