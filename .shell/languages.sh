@@ -10,9 +10,18 @@ if [ ! -d  "$N_PREFIX" ]; then
       rm -rf "$NVM_DIR"
   fi
   curl -L https://git.io/n-install | bash -s -- -y -n
-else
-  [[ :$PATH: == *":$N_PREFIX/bin:"*  ]] || PATH+=":$N_PREFIX/bin" 
 fi
+
+if [ -d "$N_PREFIX" ]; then
+    [[ :$PATH: == *":$N_PREFIX/bin:"*  ]] || PATH+=":$N_PREFIX/bin" 
+    if hash npm 2>/dev/null; then
+      NPM_CONFIG_PREFIX="$HOME/.npm-global"
+      npm config set prefix "$NPM_CONFIG_PREFIX"
+      [[ :$PATH: == *":$NPM_CONFIG_PREFIX/bin:"*  ]] \
+        || PATH+=":$NPM_CONFIG_PREFIX/bin" 
+    fi
+fi
+
 
 # Load .NET version manager
 DNX_DIR="$HOME/.dnx"
