@@ -13,6 +13,8 @@ links:
   - src: .vimrc
     dest: .config/nvim/init.vim
     os: "Linux Darwin"
+  - src: .config/nixpkgs
+    os: "Linux Darwin"
   - src: stapler-scripts/*
     dest: bin/scripts
     os: "Linux Darwin"

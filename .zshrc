@@ -4,14 +4,16 @@
 #  |_| \_, |_\___|_|   |___/\__\__,_| .__/_\___|_|   /__/ (_)___/__/_||_|_| \__|
 #      |__/                         |_|
 
+
+# Language managers (RVM, NVM, PYENV, ...)
+source $HOME/.shell/languages.sh
+
 # Load zplug, clone if not found
 if [[ ! -d ~/.zplug ]];then
-	curl -sL --proto-redir -all,https https://raw.githubusercontent.com/zplug/installer/master/installer.zsh | zsh
+	curl -sL --proto-redir -all,https https://raw.githubusercontent.com/zplug/installer/master/installer.zsh| zsh
 fi
 
 source ~/.zplug/init.zsh
-
-ZPLUG_CACHE_DIR="$HOME/.cache/zplug"
 
 # Let zplug manage itself
 zplug "zplug/zplug", hook-build:'zplug --self-manage'
@@ -26,37 +28,12 @@ zplug "bhilburn/powerlevel9k", as:theme
 zplug "zsh-users/zsh-completions"
 zplug "Tarrasch/zsh-autoenv"
 zplug "b4b4r07/enhancd", use:"init.sh"
-zplug "zsh-users/zaw"
 
-zplug "Schnouki/git-annex-zsh-completion"
-zplug "greymd/docker-zsh-completion"
-zplug "lib/completion", from:oh-my-zsh
-zplug "plugins/httpie", from:oh-my-zsh
 zplug "aswitalski/oh-my-zsh-sensei-git-plugin"
-zplug "djui/alias-tips"
-
-# The file searchers
-
-case $(uname) in
-	Darwin) 
-		BIN_ARCH=darwin
-		;;
-	*)
-		BIN_ARCH=linux
-		;;
-esac
-
-zplug "junegunn/fzf-bin", as:command, from:gh-r, rename-to:fzf, use:"*$BIN_ARCH*_amd64*"
-
-zplug "peco/peco", as:command, from:gh-r, rename-to:peco, use:"*$BIN_ARCH*64*"
-zplug "clvv/fasd", as:command 
-zplug "stedolan/jq", \
-    from:gh-r, \
-    as:command, \
-    rename-to:jq
 
 # Suggestions
 zplug "tarruda/zsh-autosuggestions"
+zplug "djui/alias-tips"
 zplug "zsh-users/zsh-syntax-highlighting"
 zplug "zsh-users/zsh-history-substring-search"
 
@@ -76,8 +53,9 @@ bashcompinit
 
 # Load the zshell mv module
 autoload zmv
-autoload edit-command-line
 
+# Add line editing
+autoload edit-command-line
 zle -N edit-command-line
 
 # Add Completions
@@ -97,10 +75,11 @@ bindkey -M viins '^N' history-substring-search-down
 bindkey -M viins '^?' backward-delete-char
 bindkey -M viins '^h' backward-delete-char
 bindkey -M viins '^w' backward-kill-word
-bindkey -M viins '^r' zaw-history
 bindkey -M viins '^a' beginning-of-line
 bindkey -M viins '^e' end-of-line
+
 bindkey -M viins '^x^e' edit-command-line
+bindkey -M vicmd '^x^e' edit-command-line
 
 # History subzmodload zsh/terminfo
 bindkey "$terminfo[kcuu1]" history-substring-search-up
@@ -133,8 +112,6 @@ if [[ "$WORKIVA" == true ]] ; then
 	source $HOME/.shell/workiva.sh
 fi
 
-# Language managers (RVM, NVM, PYENV, ...)
-source $HOME/.shell/languages.sh
 
 # By operating system
 OS=$(uname -a)
@@ -145,5 +122,4 @@ case $OS in
 	*\#1-Microsoft*)
 
 	;;
-
 esac

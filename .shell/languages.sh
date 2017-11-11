@@ -66,3 +66,24 @@ if hash rbenv 2>/dev/null; then
     done
   IFS=" "
 fi
+
+
+
+NIX_SCRIPT="$HOME/.nix-profile/etc/profile.d/nix.sh"
+
+if [[ ! -f "$NIX_SCRIPT" ]]; then
+  echo "Installing Nix using install script"
+  curl https://nixos.org/nix/install | sh
+  echo "Setting proper permissions"
+  mkdir -m 0755 -p /nix/var/nix/{profiles,gcroots}/per-user/$USER
+fi
+
+if [[ -f "$NIX_SCRIPT" ]]; then
+  source "$NIX_SCRIPT"
+  if ! hash home-manager 2>/dev/null; then
+# Export nix homemanager config for use in bootstrap
+    export HM_PATH=https://github.com/rycee/home-manager/archive/master.tar.gz
+    cfgcaddy link
+    nix-shell $HM_PATH -A install --run 'home-manager switch'
+  fi
+fi
