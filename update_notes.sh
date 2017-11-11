@@ -38,8 +38,7 @@ do
 done
 shift $(($OPTIND-1))
 
-GLOB="${1:-CPRE}" 
-
+GLOB="${1:-CPRE}"
 TEMP_FOLDER=temp
 
 # Unzip and flatten zipfile
