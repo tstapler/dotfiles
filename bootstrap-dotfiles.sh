@@ -32,7 +32,7 @@ case $OS in
 		;;
   *\#1-Microsoft*)
 		;;
-	*MANJARO*)
+	*MANJARO*|*ARCH*)
 		;;	
 	*Darwin*)
 	echo "Detected OSX"
@@ -44,8 +44,11 @@ case $OS in
     echo "OS Not supported"
 esac 
 
+if ! haveProg git; then
+  install_package git
+fi
 
-if [ ! -d $HOME/dotfiles ]; then
+if [ ! -d "$HOME/dotfiles" ]; then
   echo "Cloning dotfiles"
   git clone "ssh://git@github.com/$DOTFILES_REPO" "$CLONE_DIR" || git clone "https://github.com/$DOTFILES_REPO" "$CLONE_DIR"
 else
@@ -66,7 +69,7 @@ if [ -d "$CFG_CADDY_DIR" ]; then
 
   $PIP_EXE_NAME install $PIP_ARGS --editable "$CFG_CADDY_DIR"
 
-  cfgcaddy init $CLONE_DIR $HOME
+  cfgcaddy init "$CLONE_DIR" "$HOME"
 
   echo "Linking Dotfiles"
   cfgcaddy link
