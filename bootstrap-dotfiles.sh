@@ -9,8 +9,8 @@ haveProg() {
 
 install_package() {
 if haveProg apt-get ; then sudo apt-get update && sudo apt-get install -y "$@"
-elif haveProg yum ; then sudo yum install "$@"
-elif haveProg pacman ; then sudo pacman -S "$@"
+elif haveProg yum ; then sudo yum install -y "$@"
+elif haveProg pacman ; then sudo pacman -S --noconfirm "$@"
 elif haveProg brew; then brew install "$@"
 else
   echo 'Current package manager not supported!'
