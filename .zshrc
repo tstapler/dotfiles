@@ -9,11 +9,11 @@
 source $HOME/.shell/languages.sh
 
 # Load zplug, clone if not found
-if [[ ! -d ~/.zplug ]];then
+if [[ ! -d $HOME/.zplug ]];then
 	curl -sL --proto-redir -all,https https://raw.githubusercontent.com/zplug/installer/master/installer.zsh| zsh
 fi
 
-source ~/.zplug/init.zsh
+source $HOME/.zplug/init.zsh
 
 # Let zplug manage itself
 zplug "zplug/zplug", hook-build:'zplug --self-manage'
@@ -38,7 +38,7 @@ zplug "zsh-users/zsh-syntax-highlighting"
 zplug "zsh-users/zsh-history-substring-search"
 
 # Install plugins if there are plugins that have not been installed
-if ! zplug check --verbose; then
+if ! zplug check; then
 	printf "Install? [y/N]: "
 	if read -q; then
 		echo; zplug install
@@ -48,23 +48,16 @@ fi
 # Then, source plugins and add commands to $PATH
 zplug load
 
-autoload bashcompinit
-bashcompinit
-
 # Load the zshell mv module
-autoload zmv
+autoload -U zmv
 
 # Add line editing
-autoload edit-command-line
+autoload -Uz edit-command-line
 zle -N edit-command-line
 
 # Add Completions
-autoload -U compinit
-compinit
-autoload -U bashcompinit
-bashcompinit
-
-setopt extendedglob
+autoload -U compinit && compinit
+autoload -U bashcompinit && bashcompinit
 
 # Vim Mode
 bindkey -v
@@ -88,7 +81,9 @@ bindkey -M vicmd 'k' history-substring-search-up
 bindkey -M vicmd 'j' history-substring-search-down
 
 # Setup Fasd
-eval "$(fasd --init auto)"
+if hash fasd 2>/dev/null; then
+	eval "$(fasd --init auto)"
+fi
 
 # Prompt Config
 source $HOME/.shell/powerlevel9k.sh
@@ -111,7 +106,6 @@ fi
 if [[ "$WORKIVA" == true ]] ; then
 	source $HOME/.shell/workiva.sh
 fi
-
 
 # By operating system
 OS=$(uname -a)
