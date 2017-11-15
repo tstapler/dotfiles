@@ -15,3 +15,34 @@ end
 
 options = OptionParser.parse(ARGV)
 endsnippet
+
+snippet get_password
+begin
+  require 'io/console'
+rescue LoadError
+end
+
+if STDIN.respond_to?(:noecho)
+  def get_password(prompt="Password: ")
+    print prompt
+    pass = STDIN.noecho(&:gets).chomp
+    puts
+    return pass
+  end
+else
+  def get_password(prompt="Password: ")
+    pass = `read -s -p "#{prompt}" password; echo $password`.chomp
+    puts
+    return pass
+  end
+end
+
+endsnippet
+
+snippet stream_output
+IO.popen("${1:${VISUAL}}") do |io|
+  while (line = io.gets) do
+    puts line
+  end
+end
+endsnippet
