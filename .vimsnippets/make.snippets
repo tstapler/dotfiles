@@ -16,15 +16,18 @@ DOCKER_PRETASK=cd /$(PROJECT_NAME) && ${3:make local-format}
 
 # Run run local make target in a docker container ex: check-cfn -> local-checkcfn
 RUN_LOCAL_COMMAND_IN_DOCKER=$(DOCKER_RUN) "$(DOCKER_PRETASK) && make local-$@"
-	
-	
-DOCKER_RULES=${4: all targets to create }
+
+# To execute 'local-{name}' rules in the docker container add '{name}' to DOCKER_RULES.
+DOCKER_RULES=${4: test format run}
 
 # Ignore files/directories with the same name as the target ex: "test"
 .PHONY=$(DOCKER_RULES)
 
+# When 'make test' is run, the makefile will run 'make local-test' in the docker container
 $(DOCKER_RULES):
 	$(RUN_LOCAL_COMMAND_IN_DOCKER)
+
+# Add local rules which are run in the docker container
 endsnippet
 
 
