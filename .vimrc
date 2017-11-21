@@ -96,8 +96,8 @@ if has("persistent_undo")
 endif
 
 if filereadable(expand("~/.vim/spell/tylerwords.utf-8.add"))
-  let g:custom_spellfile=expand("~/.vim/spell/tylerwords.utf-8.add") 
-  execute "set spellfile=" . g:custom_spellfile
+  " let g:custom_spellfile=expand("~/.vim/spell/tylerwords.utf-8.add") 
+  " execute "set spellfile=" . g:custom_spellfile
 endif
 
 " }}}
