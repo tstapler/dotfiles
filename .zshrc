@@ -8,45 +8,31 @@
 # Language managers (RVM, NVM, PYENV, ...)
 source $HOME/.shell/languages.sh
 
-# Load zplug, clone if not found
-if [[ ! -d $HOME/.zplug ]];then
-	curl -sL --proto-redir -all,https https://raw.githubusercontent.com/zplug/installer/master/installer.zsh| zsh
+# Check if zplug is installed
+if [[ ! -d ~/.zplug ]]; then
+  git clone https://github.com/zplug/zplug $HOME/.zplug
 fi
+
+export ZPLUG_LOADFILE=$HOME/.zplug_packages.zsh
 
 source $HOME/.zplug/init.zsh
 
-# Let zplug manage itself
-zplug "zplug/zplug", hook-build:'zplug --self-manage'
-
-zplug "willghatch/zsh-hooks"
-
-# Theme
-export TERM="xterm-256color"
-zplug "bhilburn/powerlevel9k", as:theme
-
-# Plugins
-zplug "zsh-users/zsh-completions"
-zplug "Tarrasch/zsh-autoenv"
-zplug "b4b4r07/enhancd", use:"init.sh"
-
-zplug "aswitalski/oh-my-zsh-sensei-git-plugin"
-
-# Suggestions
-zplug "tarruda/zsh-autosuggestions"
-zplug "djui/alias-tips"
-zplug "zsh-users/zsh-syntax-highlighting"
-zplug "zsh-users/zsh-history-substring-search"
-
-# Install plugins if there are plugins that have not been installed
-if ! zplug check; then
-	printf "Install? [y/N]: "
-	if read -q; then
-		echo; zplug install
-	fi
+# Install packages that have not been installed yet
+if ! zplug check --verbose; then
+    printf "Install? [y/N]: "
+    if read -q; then
+        echo; zplug install
+    else
+        echo
+    fi
 fi
 
+echo "Loading zplug"
+
 # Then, source plugins and add commands to $PATH
-zplug load
+zplug load --verbose
+
+echo "Loading finished"
 
 # Load the zshell mv module
 autoload -U zmv
@@ -56,15 +42,15 @@ autoload -Uz edit-command-line
 zle -N edit-command-line
 
 # Add Completions
-autoload -U compinit && compinit
-autoload -U bashcompinit && bashcompinit
+# autoload -U bashcompinit && bashcompinit
+
+setopt extendedglob
 
 # Vim Mode
 bindkey -v
 
 # Emacs like keybindings in insert mode
-bindkey -M viins '^P' history-substring-search-up
-bindkey -M viins '^N' history-substring-search-down
+bindkey -M viins '^R' zaw-history
 bindkey -M viins '^?' backward-delete-char
 bindkey -M viins '^h' backward-delete-char
 bindkey -M viins '^w' backward-kill-word
@@ -74,15 +60,15 @@ bindkey -M viins '^e' end-of-line
 bindkey -M viins '^x^e' edit-command-line
 bindkey -M vicmd '^x^e' edit-command-line
 
-# History subzmodload zsh/terminfo
-bindkey "$terminfo[kcuu1]" history-substring-search-up
-bindkey "$terminfo[kcud1]" history-substring-search-downstring plugin bindings
-bindkey -M vicmd 'k' history-substring-search-up
-bindkey -M vicmd 'j' history-substring-search-down
+export ZPLUG_FILTER=fzy:fzf-tmux:fzf:peco:percol:zaw
+
+_comp_options+=(NO_err_return)
 
 # Setup Fasd
 if hash fasd 2>/dev/null; then
 	eval "$(fasd --init auto)"
+else
+	echo "Fasd not installed!"
 fi
 
 # Prompt Config
