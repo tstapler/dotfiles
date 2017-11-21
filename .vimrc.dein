@@ -333,6 +333,7 @@ nnoremap <silent><C-p> :CtrlSpace O<CR>
 " Neoformat Settings {{{
 nnoremap <silent> <leader>f :Neoformat<CR>
 let g:neoformat_run_all_formatters = 1
+let g:neoformat_enabled_javascript = ['standard']
 " End Neoformat Settings }}}
 
 " LanguageClient Settings {{{
@@ -396,9 +397,11 @@ let g:jedi#auto_vim_configuration = 0
 " Open Automatically
 let g:neomake_open_list = 2
 
-let g:neomake_c_enable_markers=['clang']
+let g:neomake_javascript_enabled_makers=['standard']
+
+let g:neomake_c_enable_makers=['clang']
 let g:neomake_c_clang_args = ["-std=c11", "-Wextra", "-Wall", "-fsanitize=undefined","-g"]
-let g:neomake_cpp_enable_markers=['clang']
+let g:neomake_cpp_enable_makers=['clang']
 let g:neomake_cpp_clang_args = ["-std=c++14", "-Wextra", "-Wall", "-fsanitize=undefined","-g"]
 
 let g:neomake_python_pylama_maker = {
