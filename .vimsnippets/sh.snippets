@@ -22,3 +22,10 @@ case $OS in
   *) ;;
 esac
 endsnippet
+
+snippet ifnoargs
+if [ $# -eq 0 ] ; then
+    echo '${2:Some message}'
+    exit 1
+fi
+endsnippet
