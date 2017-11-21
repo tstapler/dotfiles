@@ -47,6 +47,7 @@ fi
 # Load gvm
 GVM_DIR="$HOME/.gvm"
 GVM_SCRIPT="$GVM_DIR/scripts/gvm"
+export GVM_NO_UPDATE_PROFILE=true
 
 if [[ ! -d "$GVM_DIR" ]]; then
   curl -s -S -L "https://raw.githubusercontent.com/moovweb/gvm/master/binscripts/gvm-installer" | zsh
@@ -55,19 +56,6 @@ fi
 if [[ -x "$GVM_SCRIPT" ]]; then
  . "$GVM_SCRIPT" 
  fi
-
-# Load rbenv
-
-if hash rbenv 2>/dev/null; then
-  eval "$(rbenv init -)"
-  IFS=:
-    for GEM_PATH in $(gem env gempath); do
-      PATH="$PATH:$GEM_PATH/bin"
-    done
-  IFS=" "
-fi
-
-
 
 NIX_SCRIPT="$HOME/.nix-profile/etc/profile.d/nix.sh"
 
@@ -86,4 +74,15 @@ if [[ -f "$NIX_SCRIPT" ]]; then
     cfgcaddy link
     nix-shell $HM_PATH -A install --run 'home-manager switch'
   fi
+fi
+
+# Load rbenv
+
+if hash rbenv 2>/dev/null; then
+  eval "$(rbenv init -)"
+  IFS=:
+    for GEM_PATH in $(gem env gempath); do
+      PATH="$PATH:$GEM_PATH/bin"
+    done
+  IFS=" "
 fi
