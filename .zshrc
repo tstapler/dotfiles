@@ -50,15 +50,24 @@ setopt extendedglob
 bindkey -v
 
 # Emacs like keybindings in insert mode
-bindkey -M viins '^R' zaw-history
+bindkey -M viins '^P' history-substring-search-up
+bindkey -M viins '^N' history-substring-search-down
 bindkey -M viins '^?' backward-delete-char
 bindkey -M viins '^h' backward-delete-char
 bindkey -M viins '^w' backward-kill-word
 bindkey -M viins '^a' beginning-of-line
 bindkey -M viins '^e' end-of-line
-
 bindkey -M viins '^x^e' edit-command-line
 bindkey -M vicmd '^x^e' edit-command-line
+
+# History subzmodload zsh/terminfo
+bindkey "$terminfo[kcuu1]" history-substring-search-up
+bindkey "$terminfo[kcud1]" history-substring-search-downstring plugin bindings
+bindkey -M vicmd 'k' history-substring-search-up
+bindkey -M vicmd 'j' history-substring-search-down
+
+bindkey '^R' zaw-history
+
 
 export ZPLUG_FILTER=fzy:fzf-tmux:fzf:peco:percol:zaw
 
