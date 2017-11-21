@@ -5,6 +5,7 @@
     pkgs.crystal
     pkgs.fzf
     pkgs.fzy
+    pkgs.gettext
     pkgs.htop
     pkgs.jq
     pkgs.lnav
