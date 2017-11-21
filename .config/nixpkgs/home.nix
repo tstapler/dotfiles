@@ -3,7 +3,6 @@
 {
   home.packages = [
     pkgs.crystal
-    pkgs.fasd
     pkgs.fzf
     pkgs.fzy
     pkgs.htop
