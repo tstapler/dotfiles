@@ -24,12 +24,9 @@ if ! zplug check --verbose; then
     fi
 fi
 
-echo "Loading zplug"
-
 # Then, source plugins and add commands to $PATH
-zplug load --verbose
+zplug load
 
-echo "Loading finished"
 
 # Load the zshell mv module
 autoload -U zmv
