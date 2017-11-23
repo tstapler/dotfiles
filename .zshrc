@@ -5,9 +5,6 @@
 #      |__/                         |_|
 
 
-# Language managers (RVM, NVM, PYENV, ...)
-source $HOME/.shell/languages.sh
-
 # Check if zplug is installed
 if [[ ! -d ~/.zplug ]]; then
   git clone https://github.com/zplug/zplug $HOME/.zplug
