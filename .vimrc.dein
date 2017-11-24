@@ -35,13 +35,13 @@ if dein#load_state(expand('~/.vim/bundle'))
   call dein#add('fishbullet/deoplete-ruby')
   call dein#add('carlitux/deoplete-ternjs')
   call dein#add('mhartington/deoplete-typescript')
-  call dein#add('autozimu/LanguageClient-neovim')
   call dein#add('roxma/nvim-completion-manager')
   " End Code Completion Sources }}}
 
   " Snippet Plugins {{{
   call dein#add('SirVer/ultisnips')
   call dein#add('honza/vim-snippets')
+  call dein#add('reconquest/snippets')
   call dein#add('chrisgillis/vim-bootstrap3-snippets')
   " End Snippet Plugins }}}
 
@@ -160,7 +160,7 @@ if dein#load_state(expand('~/.vim/bundle'))
   " End Ruby Plugins }}}
 
   " TypeScript Plugins {{{
-  call dein#add('HerringtonDarkholme/yats.vim') 
+  call dein#add('HerringtonDarkholme/yats.vim')
   " End TypeScript Plugins }}}
 
 
@@ -271,10 +271,10 @@ nnoremap <leader>t :TagbarToggle<cr>
     Unite -start-insert -winheight=100 -immediately -no-empty ultisnips
     return ''
   endfunction
-  
+
   inoremap <silent> <F12> <C-R>=(pumvisible()? "\<LT>C-E>":"")<CR><C-R>=UltiSnipsCallUnite()<CR>
   nnoremap <silent> <F12> a<C-R>=(pumvisible()? "\<LT>C-E>":"")<CR><C-R>=UltiSnipsCallUnite()<CR>
-  
+
 " End ultisnips }}}
 
 " End Unite }}}
@@ -334,22 +334,6 @@ nnoremap <silent> <leader>f :Neoformat<CR>
 let g:neoformat_run_all_formatters = 1
 let g:neoformat_enabled_javascript = ['standard']
 " End Neoformat Settings }}}
-
-" LanguageClient Settings {{{
-
-" Automatically start language servers.
-let g:LanguageClient_autoStart = 0
-
-let g:LanguageClient_serverCommands = {
-      \ 'javascript': ['javascript-typescript-langserver'],
-      \ 'typescript': ['javascript-typescript-langserver'],
-      \ }
-
-nnoremap <silent> K :call LanguageClient_textDocument_hover()<CR>
-nnoremap <silent> gd :call LanguageClient_textDocument_definition()<CR>
-nnoremap <silent> <F2> :call LanguageClient_textDocument_rename()<CR>
-
-" End LanguageClient Settings }}}
 
 " bash-support Settings {{{
 if exists(g:shell_location)
@@ -568,7 +552,7 @@ if has('nvim')
   let g:clang_omnicppcomplete_compliance = 0
   let g:clang_make_default_keymappings = 0
   let g:clang_library_path='/usr/lib/llvm-3.8/lib/libclang-3.8.so.1'
-   
+
   " deoplete-go Settings {{{
   let g:deoplete#sources#go#gocode_binary = $GOPATH.'/bin/gocode'
   let g:deoplete#sources#go#json_directory = ' ~/.cache/deoplete/go/$GOOS_$GOARCH'
@@ -776,8 +760,11 @@ let g:UltiSnipsEditSplit="vertical"
 
 let g:UltiSnipsSnippetsDir = $HOME."/.vimsnippets"
 
-let g:UltiSnipsSnippetDirectories=["UltiSips", $HOME."/.vimsnippets"]
-
+let g:UltiSnipsSnippetDirectories=[
+      \ "UltiSips",
+      \ $HOME."/.vimsnippets",
+      \ $HOME . '/.vim/bundle/snippets/'
+      \ ]
 
 " End utilisnips }}}
 
