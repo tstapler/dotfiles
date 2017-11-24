@@ -32,12 +32,6 @@ esac
 
 zplug "junegunn/fzf-bin", as:command, from:gh-r, rename-to:fzf, use:"*$BIN_ARCH*_amd64*"
 
-zplug "peco/peco", as:command, from:gh-r, rename-to:peco, use:"*$BIN_ARCH*64*"
-zplug "clvv/fasd", as:command 
-zplug "stedolan/jq", \
-    from:gh-r, \
-    as:command, \
-    rename-to:jq
 
 # Suggestions
 zplug "tarruda/zsh-autosuggestions"

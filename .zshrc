@@ -70,8 +70,6 @@ _comp_options+=(NO_err_return)
 # Setup Fasd
 if hash fasd 2>/dev/null; then
 	eval "$(fasd --init auto)"
-else
-	echo "Fasd not installed!"
 fi
 
 # Prompt Config
