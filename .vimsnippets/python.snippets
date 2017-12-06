@@ -1,3 +1,5 @@
+extends python 
+
 snippet deft "A function snippet for a unittest"
 def test_$1(${2:self}):
     """Test when $3"""
@@ -37,4 +39,13 @@ endsnippet
 snippet ipdbs "ipdb with sset_trace()"
 import ipdb
 ipdb.sset_trace()
+endsnippet
+
+snippet argparse "Simple arg parse"
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--$1', dest="$1", default="$2")
+
+args = parser.parse_args
 endsnippet
