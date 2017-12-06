@@ -4,6 +4,12 @@
 #  |_| \_, |_\___|_|   |___/\__\__,_| .__/_\___|_|   /__/ (_)___/__/_||_|_| \__|
 #      |__/                         |_|
 
+# Language managers (RVM, NVM, PYENV, ...)
+source $HOME/.shell/languages.sh
+
+if hash keychain 2>/dev/null; then
+	eval `keychain --eval id_rsa`
+fi
 
 # Check if zplug is installed
 if [[ ! -d ~/.zplug ]]; then
