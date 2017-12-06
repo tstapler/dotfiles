@@ -30,4 +30,29 @@ $(DOCKER_RULES):
 # Add local rules which are run in the docker container
 endsnippet
 
+snippet pandoc_ieee
+PAPER_NAME=$1
 
+STANDARD_ARGS= --filter pandoc-crossref --filter pandoc-citeproc --biblio $(PAPER_NAME).bib --standalone
+
+pdf-ieee:
+	pandoc $(STANDARD_ARGS) -o $(PAPER_NAME).pdf -t latex --highlight-style pygments --variable documentclass=assets/latex/ieee --csl=assets/csl/ieee.csl -o $(PAPER_NAME).pdf $(PAPER_NAME).md
+
+html-default:
+	pandoc $(STANDARD_ARGS) -t html5 -c assets/fonts/cm/cm.css -c assets/css/academic-pub.css --template assets/templates/academic-html5.template --highlight-style pygments --toc -o $(PAPER_NAME).html $(PAPER_NAME).md
+
+html-ieee:
+	pandoc $(STANDARD_ARGS) -t html5 -c assets/fonts/cm/cm.css -c assets/css/academic-pub.css -c assets/css/ieee.css --template assets/templates/academic-html5.template --highlight-style pygments --toc --csl=assets/csl/ieee.csl -o $(PAPER_NAME).html $(PAPER_NAME).md
+
+pdf-article:
+	pandoc $(STANDARD_ARGS) -t latex --highlight-style pygments --variable documentclass=article --variable biblio-style=acm -o $(PAPER_NAME).pdf $(PAPER_NAME).md
+
+pdf-memoir:
+	pandoc $(STANDARD_ARGS) -t latex --highlight-style pygments --variable documentclass=memoir --variable biblio-style=acm -o $(PAPER_NAME).pdf $(PAPER_NAME).md
+
+
+.PHONY:
+clean:
+	rm -f $(PAPER_NAME).html
+	rm -f $(PAPER_NAME).pdf
+endsnippet
