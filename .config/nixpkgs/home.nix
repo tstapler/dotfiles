@@ -7,6 +7,7 @@
     # pkgs.pdfgrep
     pkgs.ag
     pkgs.automake
+    pkgs.ccid
     pkgs.crystal
     pkgs.ctags
     pkgs.diffutils
@@ -28,8 +29,10 @@
     pkgs.ncat
     pkgs.neovim
     pkgs.nmap
+    pkgs.opensc
     pkgs.pandoc
     pkgs.patchutils
+    pkgs.pcsctools
     pkgs.peco
     pkgs.python27Packages.flake8
     pkgs.python27Packages.grip
