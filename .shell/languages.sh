@@ -66,6 +66,10 @@ if [[ ! -f "$NIX_SCRIPT" ]] && [[ ! -d "/nix" ]]; then
   mkdir -m 0755 -p /nix/var/nix/{profiles,gcroots}/per-user/$USER
 fi
 
+if [[ -f "$NIX_SCRIPT" ]]; then
+  . "$NIX_SCRIPT"
+fi
+
 if hash nix-shell 2>/dev/null && ! hash home-manager 2>/dev/null; then
 # Export nix homemanager config for use in bootstrap
     export HM_PATH=https://github.com/rycee/home-manager/archive/master.tar.gz
