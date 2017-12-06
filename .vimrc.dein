@@ -715,6 +715,7 @@ let g:pandoc#folding#mode = "relative"
 let g:pandoc#after#modules#enabled = ["nrrwrgn", "tablemode", "unite", "neosnippets"]
 let g:pandoc#completion#bib#mode = 'citeproc'
 let g:pandoc#folding#fold_yaml = 0
+let g:pandoc#spell#default_langs = ['en_us']
 "Pandoc Syntax
 let g:pandoc#syntax#colorcolumn = 1
 
