@@ -17,3 +17,5 @@
 [user]
 	name = Tyler Stapler
 	email = tystapler@gmail.com
+[commit]
+	gpgsign = true
