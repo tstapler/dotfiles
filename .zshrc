@@ -8,7 +8,7 @@
 source $HOME/.shell/languages.sh
 
 if hash keychain 2>/dev/null; then
-	eval `keychain --eval id_rsa`
+	eval `keychain --eval id_rsa --agents gpg,ssh`
 fi
 
 # Check if zplug is installed
