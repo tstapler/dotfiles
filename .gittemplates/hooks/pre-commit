@@ -20,5 +20,6 @@ case $ORIGIN_URL in
     export GIT_AUTHOR_EMAIL="tystapler@gmail.com"
     export GIT_COMITTER_EMAIL=$GIT_AUTHOR_EMAIL
 		git config --local user.email "$GIT_AUTHOR_EMAIL"
+    git config --local commit.gpgsign true
 	;;
 esac
