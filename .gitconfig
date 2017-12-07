@@ -4,6 +4,7 @@
 	editor = vim
 	excludesfile = ~/.gitignore
 	symlinks = true
+	hooksPath = $HOME/tylerstapler/.gittemplates
 [web]
 	browser = google-chrome
 [push]
