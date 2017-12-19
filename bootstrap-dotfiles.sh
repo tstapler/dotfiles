@@ -69,10 +69,10 @@ if [ -d "$CFG_CADDY_DIR" ]; then
 
   $PIP_EXE_NAME install $PIP_ARGS --editable "$CFG_CADDY_DIR"
 
-  cfgcaddy init "$CLONE_DIR" "$HOME"
+  python -m cfgcaddy init "$CLONE_DIR" "$HOME"
 
   echo "Linking Dotfiles"
-  cfgcaddy link
+  python -m cfgcaddy link
 else 
   echo "cfgcaddy repo is not present, cannot link dotfiles"
 fi
