@@ -191,6 +191,10 @@ au FileType c setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 " sh filetype {{{
 au FileType sh setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab smartindent
 " End sh filetype }}}
+"
+" haproxy filetype {{{
+au FileType haproxy setlocal tabstop=4 shiftwidth=4 softtabstop=4 expandtab smartindent
+" End haproxy filetype }}}
 
 " Dart filetype {{{
 augroup dart

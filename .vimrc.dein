@@ -163,7 +163,8 @@ if dein#load_state(expand('~/.vim/bundle'))
   call dein#add('HerringtonDarkholme/yats.vim')
   " End TypeScript Plugins }}}
 
-
+  call dein#add('m-kat/aws-vim')
+  call dein#add('zimbatm/haproxy.vim')
   call dein#add('elmcast/elm-vim')
   call dein#add('dag/vim-fish')
   call dein#add('plasticboy/vim-markdown')
@@ -764,7 +765,8 @@ let g:UltiSnipsSnippetsDir = $HOME."/.vimsnippets"
 let g:UltiSnipsSnippetDirectories=[
       \ "UltiSips",
       \ $HOME."/.vimsnippets",
-      \ $HOME . '/.vim/bundle/snippets/'
+      \ $HOME . '/.vim/bundle/snippets/',
+      \ $HOME . '/.vim/bundle/aws-vim/snips'
       \ ]
 
 " End utilisnips }}}
