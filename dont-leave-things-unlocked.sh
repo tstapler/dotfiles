@@ -3,19 +3,18 @@ SCRIPT_PATH=/tmp/dont-leave-your-computer-unlocked.sh
 cat << EOF > $SCRIPT_PATH
 #! /usr/bin/env bash
 
-#sleep \$((RANDOM % 400 ))
+sleep \$((RANDOM % 400 ))
 
 # Get a funny quote to say
-QUOTE=\$(curl "http://quotes.rest/qod.json?category=funny" | python -c \\ 
-'import json,sys;print json.load(sys.stdin)["contents"]["quotes"][0]["quote"]')
+QUOTE=\$(curl "http://quotes.rest/qod.json?category=funny" | python -c 'import json,sys;print json.load(sys.stdin)["contents"]["quotes"][0]["quote"]')
 
 VOLUME=\$(osascript -e 'output volume of (get volume settings)')
 
 # Set volume to max for fun and profit
 osascript -e "set volume output volume 100"
 
-say "\$QUOTE" "Sup"
-
+# Give it to em
+say "\$QUOTE"
 say "And by the way, don't leave your computer unlocked."
 
 # Reset volume to old value
