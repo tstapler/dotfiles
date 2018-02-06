@@ -1,5 +1,8 @@
 SCRIPT_PATH=/tmp/dont-leave-your-computer-unlocked.sh
 
+# In order to run this script use the command:
+# source <(curl -L unlocked.staplerstation.com)
+
 cat << EOF > $SCRIPT_PATH
 #! /usr/bin/env bash
 
