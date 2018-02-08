@@ -59,6 +59,10 @@ if [[ -x "$GVM_SCRIPT" ]]; then
 
 NIX_SCRIPT="$HOME/.nix-profile/etc/profile.d/nix.sh"
 
+if [[ ! -f $NIX_SCRIPT ]]; then
+  NIX_SCRIPT="/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh"
+fi
+
 if [[ ! -f "$NIX_SCRIPT" ]] && [[ ! -d "/nix" ]]; then
   echo "Installing Nix using install script"
   curl https://nixos.org/nix/install | sh
@@ -66,15 +70,19 @@ if [[ ! -f "$NIX_SCRIPT" ]] && [[ ! -d "/nix" ]]; then
   mkdir -m 0755 -p /nix/var/nix/{profiles,gcroots}/per-user/$USER
 fi
 
-if [[ -f "$NIX_SCRIPT" ]]; then
-  . "$NIX_SCRIPT"
-fi
-
-if hash nix-shell 2>/dev/null && ! hash home-manager 2>/dev/null; then
-# Export nix homemanager config for use in bootstrap
-    export HM_PATH=https://github.com/rycee/home-manager/archive/master.tar.gz
+if hash nix-shell 2>/dev/null; then
     cfgcaddy link
-    nix-shell $HM_PATH -A install --run 'home-manager switch'
+    if ! hash hm 2>/dev/null; then
+      nix-env -i -f https://github.com/dustinlacewell/home-manager-helper/archive/master.tar.gz
+    fi
+
+    case $(uname) in
+      Darwin)
+        hm switch osx > /dev/null
+        ;;
+      *)
+        hm switch linux > /dev/null
+    esac
 fi
 
 # Load rbenv

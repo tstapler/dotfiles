@@ -31,6 +31,7 @@ links:
   - src: .shell
     os: "Linux Darwin"
   - src: .tmux/*
+  - src: .home-manager
 
 ignore:
   # Globbing patterns to ignore when

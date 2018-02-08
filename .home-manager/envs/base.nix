@@ -1,13 +1,7 @@
-{ pkgs, ... }:
-
-{
+{ pkgs, ... }:{
   home.packages = [
-    # pkgs.gitAndTools.git-annex
-    # pkgs.gitAndTools.git-annex-remote-rclone
-    # pkgs.pdfgrep
     pkgs.ag
     pkgs.automake
-    pkgs.ccid
     pkgs.crystal
     pkgs.ctags
     pkgs.diffutils
@@ -29,14 +23,13 @@
     pkgs.ncat
     pkgs.neovim
     pkgs.nmap
+    pkgs.nerdfonts
     pkgs.opensc
     pkgs.pandoc
     pkgs.patchutils
-    pkgs.pcsctools
     pkgs.peco
     pkgs.python27Packages.flake8
     pkgs.python27Packages.grip
-    pkgs.python27Packages.htmltreediff
     pkgs.python27Packages.isort
     pkgs.python27Packages.neovim
     pkgs.python27Packages.pandocfilters
@@ -50,6 +43,8 @@
     pkgs.tree
     pkgs.valgrind
   ];
+
+ fonts.fontconfig.enableProfileFonts = true;
 
  programs.home-manager = {
     enable = true;
