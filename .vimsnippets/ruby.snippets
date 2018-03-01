@@ -1,19 +1,25 @@
 snippet opts "Option parser"
 #!/usr/bin/env ruby
-
 require 'optparse'
 
-options = { default: 'args' }
+# Options go here
+options = {}
 
-OptionParser.options do |opts|
-  opts.banner = "Usage: #{File.basename($PROGRAM_NAME)}"
-  opts.on_tail("-h", "--help", "Show this help message") do
-    puts opts
-    exit
-  end
+parser = OptionParser.new do|opts|
+	opts.banner = "Usage: "
+	opts.on('-h', '--help', 'Displays Help') do
+		puts opts
+		exit
+	end
 end
 
-options = OptionParser.parse(ARGV)
+parser.parse!
+endsnippet
+
+snippet opt
+opts.on('-$1', '--$2 ${3:$2}', '') do |$2|
+  options[:$2] = $2;
+end
 endsnippet
 
 snippet get_password
