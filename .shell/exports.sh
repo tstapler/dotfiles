@@ -1,6 +1,4 @@
 
-# Fixes git + gpg error inside of tmux
-export GPG_TTY=$(tty)
 
 # Add Dart pub files to PATH
 export PATH=$PATH:"$HOME/.pub-cache/bin"
@@ -74,12 +72,11 @@ fi
 
 export GIT_EDITOR=$EDITOR
 
-if [ -f "$HOME/.gpg-agent-info" ]; then
-	. "$HOME/.gpg-agent-info"
-	export GPG_AGENT_INFO
-	export SSH_AUTH_SOCK
-	export SSH_AGENT_PID
-fi
+# Fixes git + gpg error inside of tmux
+export GPG_TTY=$(tty)
+
+# Enable GPG SSH auth
+export SSH_AUTH_SOCK=$(gpgconf --list-dirs agent-ssh-socket)
 
 # Completions for NativeScript
 if [ -f "$HOME/.tnsrc" ]; then 
