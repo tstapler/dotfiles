@@ -4,21 +4,17 @@
 #  |_| \_, |_\___|_|   |___/\__\__,_| .__/_\___|_|   /__/ (_)___/__/_||_|_| \__|
 #      |__/                         |_|
 
-# Language managers (RVM, NVM, PYENV, ...)
-source $HOME/.shell/languages.sh
 
-if hash keychain 2>/dev/null; then
-	eval `keychain --eval id_rsa --agents gpg,ssh`
-fi
 
 # Check if zplug is installed
 if [[ ! -d ~/.zplug ]]; then
   git clone https://github.com/zplug/zplug $HOME/.zplug
 fi
 
-export ZPLUG_LOADFILE=$HOME/.zplug_packages.zsh
 
 source $HOME/.zplug/init.zsh
+
+export ZPLUG_LOADFILE=$HOME/.zplug_packages.zsh
 
 # Install packages that have not been installed yet
 if ! zplug check --verbose; then
@@ -33,6 +29,12 @@ fi
 # Then, source plugins and add commands to $PATH
 zplug load
 
+# Language managers (RVM, NVM, PYENV, ...)
+source $HOME/.shell/languages.sh
+
+if hash keychain 2>/dev/null; then
+	eval `keychain --eval --agents gpg`
+fi
 
 # Load the zshell mv module
 autoload -U zmv
