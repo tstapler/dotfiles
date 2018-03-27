@@ -95,3 +95,9 @@ if hash rbenv 2>/dev/null; then
     done
   IFS=" "
 fi
+
+# Install tmux plugin manager
+if [[ ! -d  "$HOME/.tmux/plugins/tpm" ]]; then
+  mkdir -p "$HOME/.tmux/plugins"
+  git clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
+fi
