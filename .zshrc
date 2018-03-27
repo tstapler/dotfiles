@@ -102,6 +102,10 @@ if [[ "$WORKIVA" == true ]] ; then
 	source $HOME/.shell/workiva.sh
 fi
 
+if hash kubectl 2>/dev/null; then
+  source <(kubectl completion zsh)
+fi
+
 # By operating system
 OS=$(uname -a)
 case $OS in
