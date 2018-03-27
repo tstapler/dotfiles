@@ -122,7 +122,7 @@ set $music Music
 set $misc Miscellaneous 
 set $social Social Media/Chat
 set $finance Finance
-set $school School
+set $kubernetes Kubernetes
 
 # switch to workspace with urgent window automatically
 for_window [urgent=latest] focus
@@ -135,7 +135,7 @@ bindsym $mod+4 workspace number 4 $music
 bindsym $mod+5 workspace number 5 $misc
 bindsym $mod+6 workspace number 6 $social
 bindsym $mod+7 workspace number 7 $finance
-bindsym $mod+8 workspace number 8 $school
+bindsym $mod+8 workspace number 8 $kubernetes
 bindsym $mod+9 workspace number 9
 bindsym $mod+0 workspace number 10
 
@@ -147,7 +147,7 @@ bindsym $mod+Shift+4 move container to workspace number 4 $music
 bindsym $mod+Shift+5 move container to workspace number 5 $misc
 bindsym $mod+Shift+6 move container to workspace number 6 $social
 bindsym $mod+Shift+7 move container to workspace number 7 $finance
-bindsym $mod+Shift+8 move container to workspace number 8 $school
+bindsym $mod+Shift+8 move container to workspace number 8 $kubernetes
 bindsym $mod+Shift+9 move container to workspace number 9
 bindsym $mod+Shift+0 move container to workspace number 10
 
