@@ -35,6 +35,7 @@ if dein#load_state(expand('~/.vim/bundle'))
   call dein#add('fishbullet/deoplete-ruby')
   call dein#add('carlitux/deoplete-ternjs')
   call dein#add('mhartington/deoplete-typescript')
+  call dein#add('tweekmonster/deoplete-clang2')
   call dein#add('roxma/nvim-completion-manager')
   " End Code Completion Sources }}}
 
@@ -123,7 +124,6 @@ if dein#load_state(expand('~/.vim/bundle'))
   " Language Specific Plugins {{{
 
   " C/C++ Plugins {{{
-  call dein#add('Rip-Rip/clang_complete')
   " End C/C++ Plugins }}}
 
   " Dart Plugins {{{
@@ -182,6 +182,7 @@ if dein#load_state(expand('~/.vim/bundle'))
   call dein#add('cespare/vim-toml')
   call dein#add('chrisbra/csv.vim')
   call dein#add('othree/csscomplete.vim')
+  call dein#add('editorconfig/editorconfig-vim')
 
   " End Language Specific Plugins }}}
 
@@ -547,12 +548,6 @@ if has('nvim')
     return deoplete#mappings#close_popup() . "\<CR>"
   endfunction
 
-  " for c and c++
-  let g:clang_complete_auto = 0
-  let g:clang_auto_select = 0
-  let g:clang_omnicppcomplete_compliance = 0
-  let g:clang_make_default_keymappings = 0
-  let g:clang_library_path='/usr/lib/llvm-3.8/lib/libclang-3.8.so.1'
 
   " deoplete-go Settings {{{
   let g:deoplete#sources#go#gocode_binary = $GOPATH.'/bin/gocode'
@@ -687,15 +682,6 @@ let g:javascript_enable_domhtmlcss = 1
 let g:javascript_plugin_jsdoc = 1
 " End Vim-Javascript Settings }}}
 
-" clang-format Settings {{{
-let g:clang_format#style_options = {
-      \ "AccessModifierOffset" : -2,
-      \ "AllowShortIfStatementsOnASingleLine" : "true",
-      \ "AlwaysBreakTemplateDeclarations" : "true",
-      \ "Standard" : "Auto",
-      \ "BreakBeforeBraces" : "GNU"}
-
-" End clang-format Settings }}}
 
 " makeshift Settings {{{
 let g:makeshift_chdir = 1
