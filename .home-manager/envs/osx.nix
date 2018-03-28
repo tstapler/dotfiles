@@ -1,4 +1,8 @@
-{ pkgs, ... }: {
+{ pkgs, ... }: 
+let hmpkgs =  import <hmpkgs>;
+in {
+
+
   imports = [
     ./base.nix
   ];
