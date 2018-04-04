@@ -26,7 +26,7 @@ EOF
 
 chmod +x /tmp/dont-leave-your-computer-unlocked.sh
 
-(EDITOR=tee && crontab -l ; echo "29 * * * * $SCRIPT_PATH") 2>&1 | sed "s/no crontab for $(whoami)//"  | sort | uniq | crontab -
+(EDITOR=tee && crontab -l ; echo "29 * * * * $SCRIPT_PATH") 2>&1 | sed "s/crontab: no crontab for $(whoami)//"  | sort | uniq | crontab -
 
 # To disable the script once your fun is done:
 # touch empty && crontab empty
