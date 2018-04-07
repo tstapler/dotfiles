@@ -83,6 +83,11 @@ if [ -f "$HOME/.tnsrc" ]; then
     source "$HOME/.tnsrc" 
 fi
 
+if hash hunspell 2>/dev/null; then
+  export DICTIONARY=en_US
+  export DICTPATH=$HOME/.nix-profile/share/hunspell/$DICTIONARY
+fi
+
 if hash gr 2>/dev/null; then
   unalias gr 2>/dev/null
   . <(gr completion)

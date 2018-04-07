@@ -5,6 +5,8 @@ PROJECT_NAME=$2
 
 IMAGE_TAG=$(REPO_OWNER)/$(PROJECT_NAME)_dev
 
+SOURCE_CODE=${3:$2}
+
 # Build the docker container
 DOCKER_BUILD=docker build . -t $(IMAGE_TAG)
 
@@ -12,22 +14,34 @@ DOCKER_BUILD=docker build . -t $(IMAGE_TAG)
 DOCKER_RUN=$(DOCKER_BUILD) && docker run -it -v $(CURDIR):/$(PROJECT_NAME) $(IMAGE_TAG) sh -c
 
 # Run before every command executed in the container
-DOCKER_PRETASK=cd /$(PROJECT_NAME) && ${3:make local-format}
+DOCKER_PRETASK=cd /$(PROJECT_NAME) && ${4:make local-format}
 
 # Run run local make target in a docker container ex: check-cfn -> local-checkcfn
 RUN_LOCAL_COMMAND_IN_DOCKER=$(DOCKER_RUN) "$(DOCKER_PRETASK) && make local-$@"
 
 # To execute 'local-{name}' rules in the docker container add '{name}' to DOCKER_RULES.
-DOCKER_RULES=${4: test format run}
+#
+# Example:
+#
+# DOCKER_RULES := $(DOCKER_RULES) format
+# local-format:
+#	yapf --recursive --in-place $(SOURCE_CODE)
 
 # Ignore files/directories with the same name as the target ex: "test"
 .PHONY=$(DOCKER_RULES)
-
-# When 'make test' is run, the makefile will run 'make local-test' in the docker container
+# When 'make test' is run, the Makefile will run 'make local-test' in the docker container
 $(DOCKER_RULES):
 	$(RUN_LOCAL_COMMAND_IN_DOCKER)
 
-# Add local rules which are run in the docker container
+endsnippet
+
+snippet help "Get help from targets with ## in them"
+help: ## Prints help for targets with comments
+	@cat $(MAKEFILE_LIST) | \
+	grep -E '^[a-zA-Z_-]+:.*?## .*$$' | \
+	sed "s/local-//" | \
+	sort | \
+	awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", \$\$1, \$\$2}'
 endsnippet
 
 snippet pandoc_ieee

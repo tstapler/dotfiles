@@ -29,3 +29,13 @@ if [ $# -eq 0 ] ; then
     exit 1
 fi
 endsnippet
+
+snippet ifcontains "If a file contains ..."
+if grep -q "${1:search pattern}" ${2:file}
+endsnippet
+
+snippet titlecase "Function that converts to titlecase"
+TitleCaseConverter() {
+  printf "%s" "\$1" | sed 's/.*/\L&/; s/[a-z]*/\u&/g'
+}
+endsnippet

@@ -1,9 +1,12 @@
 { pkgs, ... }:{
   home.packages = [
     pkgs.ag
+    pkgs.aspell
+    pkgs.aspellDicts.en
     pkgs.automake
     pkgs.crystal
     pkgs.ctags
+    pkgs.coreutils
     pkgs.diffutils
     pkgs.figlet
     pkgs.fzf
@@ -16,6 +19,8 @@
     pkgs.gnused
     pkgs.htop
     pkgs.httpie
+    pkgs.hunspell
+    pkgs.hunspellDicts.en-us
     pkgs.jq
     pkgs.keybase
     pkgs.keychain
@@ -25,6 +30,7 @@
     pkgs.nmap
     pkgs.nerdfonts
     pkgs.opensc
+    pkgs.proselint
     pkgs.pandoc
     pkgs.patchutils
     pkgs.peco
@@ -43,13 +49,11 @@
     pkgs.tmux
     pkgs.toilet
     pkgs.tree
+    pkgs.watch
     pkgs.valgrind
+    pkgs.vim-vint
   ];
 
  fonts.fontconfig.enableProfileFonts = true;
 
- programs.home-manager = {
-    enable = true;
-    path = "https://github.com/rycee/home-manager/archive/master.tar.gz";
-  };
 }
