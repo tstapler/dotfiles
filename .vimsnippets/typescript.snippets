@@ -39,3 +39,36 @@ snippet package "A package for the angular seed"
   path: 'node_modules/$2'
 },
 endsnippet
+
+snippet actiontypes
+export enum $1ActionTypes {
+  actiontype$2
+}
+endsnippet
+
+snippet actiontype
+`!p snip.rv = t[1].replace(' ', '')` = '[$2] $1'
+endsnippet
+
+snippet actionngrx "An ngrx action"
+export class $1 implements Action {
+  readonly type = $2ActionTypes.$1;
+
+  constructor(${3:public payload: string}) {}
+}
+endsnippet
+
+snippet effectngrx
+  @Effect()
+  ${1:effectName}$ = this.actions$.pipe(
+    ofType($2),
+    mergeMap(action =>
+      this.http.post('/auth', action.payload).pipe(
+        // If successful, dispatch success action with result
+        map(data => ({ type: 'LOGIN_SUCCESS', payload: data })),
+        // If request fails, dispatch failed action
+        catchError(() => of({ type: 'LOGIN_FAILED' }))
+      )
+    )
+  );
+endsnippet
