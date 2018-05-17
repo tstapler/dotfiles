@@ -46,6 +46,9 @@ zle -N edit-command-line
 # Add Completions
 # autoload -U bashcompinit && bashcompinit
 
+# Expand HISTZIZE
+export HISTSIZE=400
+
 setopt extendedglob
 
 # Vim Mode
