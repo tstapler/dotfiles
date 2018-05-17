@@ -39,3 +39,7 @@ TitleCaseConverter() {
   printf "%s" "\$1" | sed 's/.*/\L&/; s/[a-z]*/\u&/g'
 }
 endsnippet
+
+snippet setifnot "Set the variable if not already set"
+export $1="${$1:=$2}"
+endsnippet
