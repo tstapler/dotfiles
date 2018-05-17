@@ -1,5 +1,3 @@
-
-
 # Add Dart pub files to PATH
 export PATH=$PATH:"$HOME/.pub-cache/bin"
 
