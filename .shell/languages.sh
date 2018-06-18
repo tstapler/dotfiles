@@ -70,6 +70,10 @@ if [[ ! -f "$NIX_SCRIPT" ]] && [[ ! -d "/nix" ]]; then
   mkdir -m 0755 -p /nix/var/nix/{profiles,gcroots}/per-user/$USER
 fi
 
+if [[ -f "$NIX_SCRIPT" ]]; then
+  . "$NIX_SCRIPT"
+fi
+
 if hash nix-shell 2>/dev/null; then
     cfgcaddy link
     if ! hash hm 2>/dev/null; then
