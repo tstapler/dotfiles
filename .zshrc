@@ -29,13 +29,6 @@ fi
 # Then, source plugins and add commands to $PATH
 zplug load
 
-# Language managers (RVM, NVM, PYENV, ...)
-source $HOME/.shell/languages.sh
-
-if hash keychain 2>/dev/null; then
-	eval `keychain --eval --agents gpg`
-fi
-
 # Load the zshell mv module
 autoload -U zmv
 
@@ -72,8 +65,6 @@ bindkey '^R' zaw-history
 
 
 export ZPLUG_FILTER=fzy:fzf-tmux:fzf:peco:percol:zaw
-
-_comp_options+=(NO_err_return)
 
 # Setup Fasd
 if hash fasd 2>/dev/null; then
