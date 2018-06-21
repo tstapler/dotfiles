@@ -1,5 +1,5 @@
-snippet apt-get-install
-RUN apt-get update && \
-    apt-get install -y $1 \
-    && rm -rf /var/lib/apt/lists/*
+snippet apt-get
+RUN apt-get update && apt-get install -y \
+    $1 \
+ && rm -rf /var/lib/apt/lists/*
 endsnippet

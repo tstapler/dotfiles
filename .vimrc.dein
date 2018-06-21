@@ -381,8 +381,6 @@ let g:jedi#auto_vim_configuration = 0
 " Neomake Settings {{{
 
 " Open Automatically
-let g:neomake_open_list = 2
-
 let g:neomake_javascript_enabled_makers=['standard']
 
 let g:neomake_c_enable_makers=['clang']

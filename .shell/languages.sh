@@ -70,6 +70,10 @@ if [[ ! -f "$NIX_SCRIPT" ]] && [[ ! -d "/nix" ]]; then
   mkdir -m 0755 -p /nix/var/nix/{profiles,gcroots}/per-user/$USER
 fi
 
+if [[ -f "$NIX_SCRIPT" ]]; then
+  . "$NIX_SCRIPT"
+fi
+
 if hash nix-shell 2>/dev/null; then
     cfgcaddy link
     if ! hash hm 2>/dev/null; then
@@ -94,4 +98,10 @@ if hash rbenv 2>/dev/null; then
       PATH="$PATH:$GEM_PATH/bin"
     done
   IFS=" "
+fi
+
+# Install tmux plugin manager
+if [[ ! -d  "$HOME/.tmux/plugins/tpm" ]]; then
+  mkdir -p "$HOME/.tmux/plugins"
+  git clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
 fi

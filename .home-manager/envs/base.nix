@@ -41,6 +41,8 @@
     pkgs.python27Packages.neovim
     pkgs.python27Packages.pandocfilters
     pkgs.python36Packages.neovim
+    pkgs.python36Packages.powerline
+    pkgs.powerline-fonts
     pkgs.ranger
     pkgs.rclone
     pkgs.ripgrep
