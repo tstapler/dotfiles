@@ -28,7 +28,8 @@
     pkgs.ncat
     pkgs.neovim
     pkgs.nmap
-    pkgs.nerdfonts
+    pkgs.fontconfig
+    pkgs.powerline-fonts
     pkgs.opensc
     pkgs.proselint
     pkgs.pandoc
@@ -52,6 +53,5 @@
     pkgs.vim-vint
   ];
 
- fonts.fontconfig.enableProfileFonts = true;
-
+  fonts.fontconfig.enableProfileFonts = true;
 }
