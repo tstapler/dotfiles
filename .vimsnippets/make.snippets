@@ -35,6 +35,12 @@ $(DOCKER_RULES):
 
 endsnippet
 
+snippet docker-rule "A make rule for docker-run"
+DOCKER_RULES := $(DOCKER_RULES) $1
+local-$1:
+	$2
+endsnippet
+
 snippet help "Get help from targets with ## in them"
 help: ## Prints help for targets with comments
 	@cat $(MAKEFILE_LIST) | \

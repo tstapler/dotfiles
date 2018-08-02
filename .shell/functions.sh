@@ -63,3 +63,7 @@ function rnsp {
 function fix_insecure_compaudit {
   compaudit | xargs chmod g-w
 }
+
+get_pip_private_url() {
+  grep "@" $HOME/.pip/pip.conf | awk '{ print $3 }'
+}

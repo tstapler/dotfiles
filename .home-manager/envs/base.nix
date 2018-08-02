@@ -28,6 +28,8 @@
     pkgs.ncat
     pkgs.neovim
     pkgs.nmap
+    pkgs.fontconfig
+    pkgs.powerline-fonts
     pkgs.opensc
     pkgs.proselint
     pkgs.pandoc
@@ -55,6 +57,4 @@
   ];
 
   fonts.fontconfig.enableProfileFonts = true;
-  manual.manpages.enable = false;
-
 }
