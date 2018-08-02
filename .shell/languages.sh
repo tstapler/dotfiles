@@ -33,7 +33,7 @@ fi
 # Load virtualenvwrapper
 VENV_WRAP_SH="virtualenvwrapper.sh"
 
-if command -v $VENV_WRAP_SH >/dev/null 2>&1; then
+if hash $VENV_WRAP_SH >/dev/null 2>&1; then
 	if [[ $WORKIVA == true ]]; then
 		export PROJECT_HOME=$HOME/Workiva
 	else
@@ -75,7 +75,7 @@ if [[ -f "$NIX_SCRIPT" ]]; then
 fi
 
 if hash nix-shell 2>/dev/null; then
-    cfgcaddy link
+    cfgcaddy --quiet link
     if ! hash hm 2>/dev/null; then
       nix-env -i -f https://github.com/dustinlacewell/home-manager-helper/archive/master.tar.gz
     fi
