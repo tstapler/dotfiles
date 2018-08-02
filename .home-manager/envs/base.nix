@@ -1,4 +1,9 @@
 { pkgs, ... }:{
+
+  imports = [
+    ../nixstaples
+  ];
+
   home.packages = [
     pkgs.ag
     pkgs.aspell
@@ -35,6 +40,8 @@
     pkgs.pandoc
     pkgs.patchutils
     pkgs.peco
+    pkgs.rustup
+    pkgs.pypi2nix
     pkgs.python27Packages.flake8
     pkgs.python27Packages.grip
     pkgs.python27Packages.isort
