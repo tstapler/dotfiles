@@ -54,15 +54,17 @@ if [[ ! -d "$GVM_DIR" ]]; then
 fi
 
 if [[ -x "$GVM_SCRIPT" ]]; then
- . "$GVM_SCRIPT" 
- fi
+   . "$GVM_SCRIPT" 
+fi
 
+# Start Nix Config
 NIX_SCRIPT="$HOME/.nix-profile/etc/profile.d/nix.sh"
 
 if [[ ! -f $NIX_SCRIPT ]]; then
   NIX_SCRIPT="/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh"
 fi
 
+# Install nix if it doesnt exist
 if [[ ! -f "$NIX_SCRIPT" ]] && [[ ! -d "/nix" ]]; then
   echo "Installing Nix using install script"
   curl https://nixos.org/nix/install | sh
@@ -77,27 +79,33 @@ fi
 if hash nix-shell 2>/dev/null; then
     cfgcaddy --quiet link
     if ! hash hm 2>/dev/null; then
-      nix-env -i -f https://github.com/dustinlacewell/home-manager-helper/archive/master.tar.gz
+      nix-env -i -f https://github.com/tstapler/home-manager-helper/archive/master.tar.gz
     fi
 
-    case $(uname) in
-      Darwin)
-        hm switch osx > /dev/null
-        ;;
-      *)
-        hm switch linux > /dev/null
-    esac
+    if hash hm 2>/dev/null; then
+      case $(uname) in
+        Darwin)
+          hm switch osx > /dev/null
+          ;;
+        *)
+          hm switch linux > /dev/null
+      esac
+    fi
 fi
+
+# End Nix Config
 
 # Load rbenv
 
 if hash rbenv 2>/dev/null; then
   eval "$(rbenv init -)"
-  IFS=:
-    for GEM_PATH in $(gem env gempath); do
-      PATH="$PATH:$GEM_PATH/bin"
-    done
-  IFS=" "
+  if hash gem 2>/dev/null; then
+    IFS=:
+      for GEM_PATH in $(gem env gempath); do
+        PATH="$PATH:$GEM_PATH/bin"
+      done
+    IFS=" "
+  fi
 fi
 
 # Install tmux plugin manager

@@ -58,6 +58,7 @@
     pkgs.toilet
     pkgs.tree
     pkgs.watch
+    pkgs.watchman
     pkgs.valgrind
     pkgs.vim-vint
   ];
