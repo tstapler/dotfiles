@@ -66,6 +66,13 @@ bindkey '^R' zaw-history
 
 export ZPLUG_FILTER=fzy:fzf-tmux:fzf:peco:percol:zaw
 
+# Language managers (RVM, NVM, PYENV, ...)
+source $HOME/.shell/languages.sh
+
+if hash keychain 2>/dev/null; then
+	eval `keychain --agents gpg --eval`
+fi
+
 # Setup Fasd
 if hash fasd 2>/dev/null; then
 	eval "$(fasd --init auto)"
