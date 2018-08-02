@@ -24,6 +24,7 @@ if dein#load_state(expand('~/.vim/bundle'))
 
   " Code Completion {{{
   call dein#add('Shougo/deoplete.nvim')
+  call dein#add('autozimu/LanguageClient-neovim', {'build': 'sh install.sh'})
   " End Code Completion }}}
 
   " Code Completion Sources {{{
@@ -327,6 +328,19 @@ nnoremap <silent><C-p> :CtrlSpace O<CR>
 " }}}
 
 " Plugin Settings {{{
+
+" LanguageClient Settings {{{
+" Required for operations modifying multiple buffers like rename.
+set hidden
+
+let g:LanguageClient_serverCommands = {
+			\ 'rust': ['rustup', 'run', 'stable', 'rls'],
+			\ 'python': ['pyls'],
+			\ 'ruby': ['docker', 'run', '--rm', 'mtsmfm/language_server-ruby'],
+			\ }
+
+nnoremap <F5> :call LanguageClient_contextMenu()<CR><Paste>
+" End LanguageClient Settings }}}
 
 " vim-go Settings {{{
   let g:go_fmt_command = "goimports"
