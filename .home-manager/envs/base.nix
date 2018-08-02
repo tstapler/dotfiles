@@ -28,7 +28,6 @@
     pkgs.ncat
     pkgs.neovim
     pkgs.nmap
-    pkgs.nerdfonts
     pkgs.opensc
     pkgs.proselint
     pkgs.pandoc
@@ -50,10 +49,12 @@
     pkgs.toilet
     pkgs.tree
     pkgs.watch
+    pkgs.watchman
     pkgs.valgrind
     pkgs.vim-vint
   ];
 
- fonts.fontconfig.enableProfileFonts = true;
+  fonts.fontconfig.enableProfileFonts = true;
+  manual.manpages.enable = false;
 
 }
