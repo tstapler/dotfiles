@@ -202,6 +202,7 @@ if dein#load_state(expand('~/.vim/bundle'))
   call dein#add('junegunn/limelight.vim')
   " End Distraction Free Writing }}}
 
+  call dein#add('rhysd/vim-grammarous')
   call dein#add('tpope/vim-abolish')
   call dein#add('jamessan/vim-gnupg')
   call dein#add('vim-scripts/DoxygenToolkit.vim')
@@ -328,6 +329,10 @@ nnoremap <silent><C-p> :CtrlSpace O<CR>
 " }}}
 
 " Plugin Settings {{{
+
+" grammerous Settings {{{
+  let g:grammarous#languagetool_cmd = 'languagetool'
+" End grammerous Settings }}}
 
 " LanguageClient Settings {{{
 " Required for operations modifying multiple buffers like rename.
