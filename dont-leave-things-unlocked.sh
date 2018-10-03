@@ -1,4 +1,4 @@
-SCRIPT_PATH=/tmp/dont-leave-your-computer-unlocked.sh
+export SCRIPT_PATH=/tmp/dont-leave-your-computer-unlocked.sh
 
 # In order to run this script use the command:
 # Make sure to include the leading space so it doesn't get logged to history
