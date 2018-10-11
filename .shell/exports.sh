@@ -35,6 +35,9 @@ fi
 # Create Go Path
 export GOPATH="$HOME/.local/lib/go"
 
+# Create Workiva Gopath
+export WGOPATH="$GOPATH/src/github.com/Workiva"
+
 # Add GO executables to PATH
 export PATH=$PATH:"$GOPATH/bin"
 
