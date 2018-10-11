@@ -19,6 +19,9 @@ if dein#load_state(expand('~/.vim/bundle'))
   " Let dein manage dein
   " Required:
   call dein#add('Shougo/dein.vim')
+  call dein#add('wsdjeg/dein-ui.vim')
+  call dein#add('roxma/nvim-yarp')
+  call dein#add('roxma/vim-hug-neovim-rpc')
 
   " Editing Plugins {{{
 
@@ -331,7 +334,6 @@ nnoremap <silent><C-p> :CtrlSpace O<CR>
 " Plugin Settings {{{
 
 " grammerous Settings {{{
-  let g:grammarous#languagetool_cmd = 'languagetool'
 " End grammerous Settings }}}
 
 " LanguageClient Settings {{{
@@ -349,6 +351,9 @@ nnoremap <F5> :call LanguageClient_contextMenu()<CR><Paste>
 
 " vim-go Settings {{{
   let g:go_fmt_command = "goimports"
+
+  let g:go_term_enabled = 1
+  let g:go_template_autocreate = 0
 " End vim-go Settings }}}
 
 " Neoformat Settings {{{
