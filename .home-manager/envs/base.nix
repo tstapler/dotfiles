@@ -23,6 +23,7 @@
     pkgs.gitAndTools.hub
     pkgs.gnupg1
     pkgs.gnused
+    pkgs.kubernetes-helm
     pkgs.htop
     pkgs.httpie
     pkgs.hunspell
