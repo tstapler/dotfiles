@@ -6,4 +6,3 @@ set -o nounset                              # Treat unset variables as an error
 rm -rf $HOME/.zplug
 rm -rf $HOME/.cache/zplug
 rm -f $HOME/.zcompdump
-

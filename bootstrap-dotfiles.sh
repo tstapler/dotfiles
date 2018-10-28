@@ -76,3 +76,7 @@ if [ -d "$CFG_CADDY_DIR" ]; then
 else 
   echo "cfgcaddy repo is not present, cannot link dotfiles"
 fi
+
+if ! hash zsh 2>/dev/null; then
+  install_package zsh
+fi
