@@ -1,5 +1,29 @@
 extends ansible
 
+snippet k8s_deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: $1-deployment
+  labels:
+    app: $1
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: $1
+  template:
+    metadata:
+      labels:
+        app: $1
+    spec:
+      containers:
+      - name: $1
+        image: $1:latest
+        ports:
+        - containerPort: 80
+endsnippet
+
 snippet helm-service "A helm service"
 apiVersion: v1
 kind: Service

@@ -33,7 +33,7 @@ fi
 # Load virtualenvwrapper
 VENV_WRAP_SH="virtualenvwrapper.sh"
 
-if command -v $VENV_WRAP_SH >/dev/null 2>&1; then
+if hash $VENV_WRAP_SH >/dev/null 2>&1; then
 	if [[ $WORKIVA == true ]]; then
 		export PROJECT_HOME=$HOME/Workiva
 	else
