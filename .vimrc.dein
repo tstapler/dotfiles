@@ -141,6 +141,8 @@ if dein#load_state(expand('~/.vim/bundle'))
   call dein#add('jacoborus/vim-jsdoc')
   call dein#add('heavenshell/vim-jsdoc')
   call dein#add('briancollins/vim-jst')
+  call dein#add('mxw/vim-jsx')
+  call dein#add('epilande/vim-react-snippets')
   " End Javascript Plugins }}}
 
   " PHP Plugins {{{
@@ -184,6 +186,7 @@ if dein#load_state(expand('~/.vim/bundle'))
   call dein#add('chrisbra/csv.vim')
   call dein#add('othree/csscomplete.vim')
   call dein#add('editorconfig/editorconfig-vim')
+  call dein#add('jparise/vim-graphql')
 
   " End Language Specific Plugins }}}
 
