@@ -5,16 +5,14 @@
 #      |__/                         |_|
 
 
-
 # Check if zplug is installed
 if [[ ! -d ~/.zplug ]]; then
   git clone https://github.com/zplug/zplug $HOME/.zplug
 fi
 
 
-source $HOME/.zplug/init.zsh
-
 export ZPLUG_LOADFILE=$HOME/.zplug_packages.zsh
+source $HOME/.zplug/init.zsh
 
 # Install packages that have not been installed yet
 if ! zplug check --verbose; then
