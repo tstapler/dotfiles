@@ -344,6 +344,7 @@ set hidden
 let g:LanguageClient_serverCommands = {
 			\ 'rust': ['rustup', 'run', 'stable', 'rls'],
 			\ 'python': ['pyls'],
+      \ 'java': ['jdtls'],
 			\ 'ruby': ['docker', 'run', '--rm', 'mtsmfm/language_server-ruby'],
 			\ }
 
