@@ -95,3 +95,6 @@ if hash kubectl 2>/dev/null; then
   source <(kubectl completion zsh)
 fi
 
+if hash helm 2>/dev/null; then
+  source <(helm completion zsh)
+fi
