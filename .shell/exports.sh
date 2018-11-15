@@ -11,7 +11,7 @@ export PATH=$PATH:"$HOME/bin/scripts"
 OS="$(uname)"
 case $OS in
   'Linux') 
-    export PATH=$PATH:"$HOME/.local/bin"
+    export PATH="$HOME/.local/bin:$PATH"
     ;;
   'FreeBSD')
     ;;
