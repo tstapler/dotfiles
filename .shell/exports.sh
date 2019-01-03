@@ -98,3 +98,6 @@ if hash kubectl 2>/dev/null; then
   source <(kubectl completion zsh)
 fi
 
+# Add krew the kubectl plugin manager to path
+export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"
+
