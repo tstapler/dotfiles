@@ -241,6 +241,7 @@ endif
 
 " Plugin Mappings {{{
 
+
 " vim-fugitive {{{
   nnoremap <silent> <leader>g :Gstatus<CR>
 " End vim-fugitive }}}
@@ -333,14 +334,34 @@ nnoremap <silent><C-p> :CtrlSpace O<CR>
 
 " Plugin Settings {{{
 
-" grammerous Settings {{{
-" End grammerous Settings }}}
+" grammarout Settings {{{
+let g:grammarous#hooks = {}
+function! g:grammarous#hooks.on_check(errs) abort
+    nmap <buffer>gn <Plug>(grammarous-move-to-next-error)
+    nmap <buffer>gp <Plug>(grammarous-move-to-previous-error)
+    nmap <buffer>gr <Plug>(grammarous-move-to-info-window)r
+    nmap <buffer>gf <Plug>(grammarous-move-to-info-window)f
+    nmap <buffer>gR <Plug>(grammarous-move-to-info-window)R
+endfunction
+function! g:grammarous#hooks.on_reset(errs) abort
+    nunmap <buffer>gn
+    nunmap <buffer>gp
+    nunmap <buffer>gr
+    nunmap <buffer>gf
+    nunmap <buffer>gR
+endfunction
+let g:grammarous#disabled_categories = {
+            \ 'pandoc' : ['TYPOGRAPHY', 'PUNCTUATION'],
+            \ }
+
+" End grammarout Settings }}}
 
 " LanguageClient Settings {{{
 " Required for operations modifying multiple buffers like rename.
 set hidden
 
 let g:LanguageClient_serverCommands = {
+      \ 'dart': ['dart_language_server'],
 			\ 'rust': ['rustup', 'run', 'stable', 'rls'],
 			\ 'python': ['pyls'],
 			\ 'ruby': ['docker', 'run', '--rm', 'mtsmfm/language_server-ruby'],
@@ -412,6 +433,7 @@ let g:neomake_c_clang_args = ["-std=c11", "-Wextra", "-Wall", "-fsanitize=undefi
 let g:neomake_cpp_enable_makers=['clang']
 let g:neomake_cpp_clang_args = ["-std=c++14", "-Wextra", "-Wall", "-fsanitize=undefined","-g"]
 
+let g:neomake_python_pep8_exe = 'python3'
 let g:neomake_python_pylama_maker = {
       \ 'exe': 'pylama',
       \ 'args': ['--format', 'pep8', '-o','~/.config/pylama/pylama.ini'],
