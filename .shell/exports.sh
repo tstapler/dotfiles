@@ -11,7 +11,7 @@ export PATH=$PATH:"$HOME/bin/scripts"
 OS="$(uname)"
 case $OS in
   'Linux') 
-    export PATH=$PATH:"$HOME/.local/bin"
+    export PATH="$HOME/.local/bin:$PATH"
     ;;
   'FreeBSD')
     ;;
@@ -101,3 +101,6 @@ fi
 # Add krew the kubectl plugin manager to path
 export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"
 
+if hash helm 2>/dev/null; then
+  source <(helm completion zsh)
+fi

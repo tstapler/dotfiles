@@ -145,6 +145,8 @@ if dein#load_state(expand('~/.vim/bundle'))
   call dein#add('jacoborus/vim-jsdoc')
   call dein#add('heavenshell/vim-jsdoc')
   call dein#add('briancollins/vim-jst')
+  call dein#add('mxw/vim-jsx')
+  call dein#add('epilande/vim-react-snippets')
   " End Javascript Plugins }}}
 
   " PHP Plugins {{{
@@ -188,6 +190,7 @@ if dein#load_state(expand('~/.vim/bundle'))
   call dein#add('chrisbra/csv.vim')
   call dein#add('othree/csscomplete.vim')
   call dein#add('editorconfig/editorconfig-vim')
+  call dein#add('jparise/vim-graphql')
 
   " End Language Specific Plugins }}}
 
@@ -364,6 +367,7 @@ let g:LanguageClient_serverCommands = {
       \ 'dart': ['dart_language_server'],
 			\ 'rust': ['rustup', 'run', 'stable', 'rls'],
 			\ 'python': ['pyls'],
+      \ 'java': ['jdtls'],
 			\ 'ruby': ['docker', 'run', '--rm', 'mtsmfm/language_server-ruby'],
 			\ }
 
