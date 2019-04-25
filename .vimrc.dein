@@ -449,6 +449,8 @@ let g:neomake_python_isort_maker = {
       \ 'errorformat': '%f:%l:%m'
       \ }
 
+let g:neomake_python_enable_makers = ['yapf', 'isort']
+
 let g:neomake_pandoc_proselint_maker = {
       \ 'exe': 'proselint',
       \ 'errorformat': '%f:%l:%c: %m'
