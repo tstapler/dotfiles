@@ -366,6 +366,8 @@ set hidden
 let g:LanguageClient_serverCommands = {
       \ 'dart': ['dart_language_server'],
 			\ 'rust': ['rustup', 'run', 'stable', 'rls'],
+			\ 'javascript.jsx': ['javascript-typescript-stdio'],
+      \ 'javascript': ['javascript-typescript-stdio'],
 			\ 'python': ['pyls'],
       \ 'java': ['jdtls'],
 			\ 'ruby': ['docker', 'run', '--rm', 'mtsmfm/language_server-ruby'],
