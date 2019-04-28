@@ -12,6 +12,7 @@
     pkgs.neovim
     pkgs.peco
     pkgs.httpie
+    pkgs.rclone
   ];
 
  programs.home-manager = {

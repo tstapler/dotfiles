@@ -55,7 +55,7 @@ fi
 
 if [[ -x "$GVM_SCRIPT" ]]; then
  . "$GVM_SCRIPT" 
- fi
+fi
 
 NIX_SCRIPT="$HOME/.nix-profile/etc/profile.d/nix.sh"
 
@@ -64,6 +64,10 @@ if [[ ! -f "$NIX_SCRIPT" ]] && [[ ! -d "/nix" ]]; then
   curl https://nixos.org/nix/install | sh
   echo "Setting proper permissions"
   mkdir -m 0755 -p /nix/var/nix/{profiles,gcroots}/per-user/$USER
+fi
+
+if [[ -f "$NIX_SCRIPT" ]]; then
+  . "$NIX_SCRIPT"
 fi
 
 if hash nix-shell 2>/dev/null && ! hash home-manager 2>/dev/null; then
