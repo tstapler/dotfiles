@@ -10,7 +10,7 @@ cat << EOF > $SCRIPT_PATH
 sleep \$((RANDOM % 400 ))
 
 # Get a funny quote to say
-QUOTE=\$(curl "http://quotes.rest/qod.json?category=funny" | python -c 'import json,sys;print json.load(sys.stdin)["contents"]["quotes"][0]["quote"]')
+QUOTE=\$(curl "http://quotes.rest/qod.json?category=funny" | python -c 'import json,sys;print(json.load(sys.stdin)["contents"]["quotes"][0]["quote"])')
 
 VOLUME=\$(osascript -e 'output volume of (get volume settings)')
 
