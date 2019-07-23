@@ -19,6 +19,9 @@ if dein#load_state(expand('~/.vim/bundle'))
   " Let dein manage dein
   " Required:
   call dein#add('Shougo/dein.vim')
+  call dein#add('wsdjeg/dein-ui.vim')
+  call dein#add('roxma/nvim-yarp')
+  call dein#add('roxma/vim-hug-neovim-rpc')
 
   " Editing Plugins {{{
 
@@ -243,6 +246,7 @@ endif
 
 " Plugin Mappings {{{
 
+
 " vim-fugitive {{{
   nnoremap <silent> <leader>g :Gstatus<CR>
 " End vim-fugitive }}}
@@ -335,15 +339,34 @@ nnoremap <silent><C-p> :CtrlSpace O<CR>
 
 " Plugin Settings {{{
 
-" grammerous Settings {{{
-  let g:grammarous#languagetool_cmd = 'languagetool'
-" End grammerous Settings }}}
+" grammarout Settings {{{
+let g:grammarous#hooks = {}
+function! g:grammarous#hooks.on_check(errs) abort
+    nmap <buffer>gn <Plug>(grammarous-move-to-next-error)
+    nmap <buffer>gp <Plug>(grammarous-move-to-previous-error)
+    nmap <buffer>gr <Plug>(grammarous-move-to-info-window)r
+    nmap <buffer>gf <Plug>(grammarous-move-to-info-window)f
+    nmap <buffer>gR <Plug>(grammarous-move-to-info-window)R
+endfunction
+function! g:grammarous#hooks.on_reset(errs) abort
+    nunmap <buffer>gn
+    nunmap <buffer>gp
+    nunmap <buffer>gr
+    nunmap <buffer>gf
+    nunmap <buffer>gR
+endfunction
+let g:grammarous#disabled_categories = {
+            \ 'pandoc' : ['TYPOGRAPHY', 'PUNCTUATION'],
+            \ }
+
+" End grammarout Settings }}}
 
 " LanguageClient Settings {{{
 " Required for operations modifying multiple buffers like rename.
 set hidden
 
 let g:LanguageClient_serverCommands = {
+      \ 'dart': ['dart_language_server'],
 			\ 'rust': ['rustup', 'run', 'stable', 'rls'],
 			\ 'javascript.jsx': ['javascript-typescript-stdio'],
       \ 'javascript': ['javascript-typescript-stdio'],
@@ -357,6 +380,9 @@ nnoremap <F5> :call LanguageClient_contextMenu()<CR><Paste>
 
 " vim-go Settings {{{
   let g:go_fmt_command = "goimports"
+
+  let g:go_term_enabled = 1
+  let g:go_template_autocreate = 0
 " End vim-go Settings }}}
 
 " Neoformat Settings {{{
@@ -415,6 +441,7 @@ let g:neomake_c_clang_args = ["-std=c11", "-Wextra", "-Wall", "-fsanitize=undefi
 let g:neomake_cpp_enable_makers=['clang']
 let g:neomake_cpp_clang_args = ["-std=c++14", "-Wextra", "-Wall", "-fsanitize=undefined","-g"]
 
+let g:neomake_python_pep8_exe = 'python3'
 let g:neomake_python_pylama_maker = {
       \ 'exe': 'pylama',
       \ 'args': ['--format', 'pep8', '-o','~/.config/pylama/pylama.ini'],
@@ -425,6 +452,8 @@ let g:neomake_python_isort_maker = {
       \ 'exe': 'isort-lint',
       \ 'errorformat': '%f:%l:%m'
       \ }
+
+let g:neomake_python_enable_makers = ['yapf', 'isort']
 
 let g:neomake_pandoc_proselint_maker = {
       \ 'exe': 'proselint',

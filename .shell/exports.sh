@@ -35,6 +35,9 @@ fi
 # Create Go Path
 export GOPATH="$HOME/.local/lib/go"
 
+# Create Workiva Gopath
+export WGOPATH="$GOPATH/src/github.com/Workiva"
+
 # Add GO executables to PATH
 export PATH=$PATH:"$GOPATH/bin"
 
@@ -94,6 +97,9 @@ fi
 if hash kubectl 2>/dev/null; then
   source <(kubectl completion zsh)
 fi
+
+# Add krew the kubectl plugin manager to path
+export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"
 
 if hash helm 2>/dev/null; then
   source <(helm completion zsh)

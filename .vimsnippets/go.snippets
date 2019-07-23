@@ -1,0 +1,30 @@
+extends go 
+
+snippet mkdirp "Make directory if doesn't exist"
+os.MkdirAll(filepath.Dir($1), os.ModePerm)
+endsnippet
+
+snippet iferr "If error"
+if err != nil {
+	return errors.Wrapf(err, "${1:msg}")$2
+}
+endsnippet
+
+snippet awsreq "A request for an aws resource"
+svc := ${1:servicename}.New(cfg)
+req := svc.${2:DescribeSomeThing}Request(&$1.$2Input{
+
+		})
+resp, err := req.Send()
+
+if err != nil {
+	return err, nil
+}
+
+return nil, &resp.$3
+endsnippet
+
+snippet getFile "get a file"
+data, err := ioutil.ReadFile(${1:"./filename"})
+iferr$2
+endsnippet

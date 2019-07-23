@@ -53,6 +53,8 @@ if hash mosh 2>/dev/null; then
   alias mosh_absis="mosh --server='pkill mosh-server;sleep 2; mosh-server' --ssh='ssh -p 2222' --port=60000 tstapler@Absis"
 fi
 
+alias thelm="helm --tls --tls-cert=$HOME/.helm/tls/server.crt --tls-key=$HOME/.helm/tls/server-key.pem"
+
 
 if hash xsel 2>/dev/null; then
   alias pbcopy='xsel --clipboard --input'
