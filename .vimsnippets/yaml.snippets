@@ -1,12 +1,33 @@
 extends ansible
+extends yaml
+
+snippet checksum
+checksum/configmap: {{ include (print $.Template.BasePath "${1:filepath}") . | sha256sum }}
+endsnippet
+
+snippet helm_labels
+  labels:
+    app.kubernetes.io/name: {{ include "${1:chart-name}.name" . }}
+    helm.sh/chart: {{ include "$1.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+endsnippet
+
+snippet configmap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+helm_labels$1
+data:
+  ${2:key}: "${3:data}"
+endsnippet
 
 snippet k8s_deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: $1-deployment
-  labels:
-    app: $1
+  helm_labels$2
 spec:
   replicas: 3
   selector:

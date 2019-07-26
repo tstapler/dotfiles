@@ -41,6 +41,7 @@ if dein#load_state(expand('~/.vim/bundle'))
   call dein#add('mhartington/deoplete-typescript')
   call dein#add('tweekmonster/deoplete-clang2')
   call dein#add('roxma/nvim-completion-manager')
+  call dein#add('slashmili/alchemist.vim')
   " End Code Completion Sources }}}
 
   " Snippet Plugins {{{
@@ -48,6 +49,7 @@ if dein#load_state(expand('~/.vim/bundle'))
   call dein#add('honza/vim-snippets')
   call dein#add('reconquest/snippets')
   call dein#add('chrisgillis/vim-bootstrap3-snippets')
+  call dein#add('andrewstuart/vim-kubernetes')
   " End Snippet Plugins }}}
 
   call dein#add('dhruvasagar/vim-table-mode')
