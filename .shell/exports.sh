@@ -79,6 +79,8 @@ export GPG_TTY=$(tty)
 # Enable GPG SSH auth
 export SSH_AUTH_SOCK=$(gpgconf --list-dirs agent-ssh-socket)
 
+export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"
+
 # Completions for NativeScript
 if [ -f "$HOME/.tnsrc" ]; then 
     source "$HOME/.tnsrc" 
