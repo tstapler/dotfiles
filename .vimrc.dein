@@ -27,14 +27,14 @@ if dein#load_state(expand('~/.vim/bundle'))
 
   " Code Completion {{{
   call dein#add('Shougo/deoplete.nvim')
-  call dein#add('autozimu/LanguageClient-neovim', {'build': 'sh install.sh'})
+  call dein#add('autozimu/LanguageClient-neovim', {'build': 'bash install.sh'})
   " End Code Completion }}}
 
   " Code Completion Sources {{{
   call dein#add('Shougo/neoinclude.vim')
   call dein#add('Shougo/neco-syntax')
   call dein#add('Shougo/neco-vim')
-  call dein#add('zchee/deoplete-jedi')
+  " call dein#add('zchee/deoplete-jedi')
   call dein#add('zchee/deoplete-go', {'build': 'make'})
   call dein#add('fishbullet/deoplete-ruby')
   call dein#add('carlitux/deoplete-ternjs')
@@ -71,6 +71,7 @@ if dein#load_state(expand('~/.vim/bundle'))
   call dein#add('glts/vim-magnum')
   call dein#add('fadein/FIGlet.vim')
   call dein#add('triglav/vim-visual-increment')
+  call dein#add('junegunn/fzf')
 
   " End Editing Plugins }}}
 
@@ -90,7 +91,7 @@ if dein#load_state(expand('~/.vim/bundle'))
 
   call dein#add('haya14busa/dein-command.vim')
   call dein#add('jceb/vim-orgmode')
-  call dein#add('benekastah/neomake')
+  call dein#add('w0rp/ale')
   call dein#add('tpope/vim-fugitive')
   call dein#add('vim-scripts/Merginal')
   call dein#add('junkblocker/patchreview-vim')
@@ -159,7 +160,7 @@ if dein#load_state(expand('~/.vim/bundle'))
   " Python Plugins {{{
   call dein#add('heavenshell/vim-pydocstring')
   "call dein#add('klen/python-mode')
-  call dein#add('davidhalter/jedi-vim')
+  "call dein#add('davidhalter/jedi-vim')
   " End Python Plugins }}}
 
   " Ruby Plugins {{{
@@ -370,10 +371,15 @@ let g:LanguageClient_serverCommands = {
       \ 'javascript': ['javascript-typescript-stdio'],
 			\ 'python': ['pyls'],
       \ 'java': ['jdtls'],
+      \ 'go': ['go-langserver'],
 			\ 'ruby': ['docker', 'run', '--rm', 'mtsmfm/language_server-ruby'],
+      \ 'yaml': ['yaml-language-server', '--stdio'] ,
 			\ }
 
 nnoremap <F5> :call LanguageClient_contextMenu()<CR><Paste>
+nnoremap <silent> K :call LanguageClient#textDocument_hover()<CR>
+nnoremap <silent> gd :call LanguageClient#textDocument_definition()<CR>
+nnoremap <silent> <F2> :call LanguageClient#textDocument_rename()<CR>
 " End LanguageClient Settings }}}
 
 " vim-go Settings {{{
@@ -387,6 +393,7 @@ nnoremap <F5> :call LanguageClient_contextMenu()<CR><Paste>
 nnoremap <silent> <leader>f :Neoformat<CR>
 let g:neoformat_run_all_formatters = 1
 let g:neoformat_enabled_javascript = ['standard']
+let g:neoformat_enabled_python = ['yapf']
 " End Neoformat Settings }}}
 
 " bash-support Settings {{{
@@ -429,81 +436,15 @@ let g:jedi#completions_enabled = 0
 let g:jedi#auto_vim_configuration = 0
 " End jedi-vim Settings }}}
 
-" Neomake Settings {{{
+" ALE Settings {{{
+let g:ale_linters = {
+\   'python': ['prospector', 'mypy', 'pyls'],
+\}
+let g:ale_fixers = {
+\   'python': ['yapf', 'isort'],
+\}
 
-" Open Automatically
-let g:neomake_javascript_enabled_makers=['standard']
-
-let g:neomake_c_enable_makers=['clang']
-let g:neomake_c_clang_args = ["-std=c11", "-Wextra", "-Wall", "-fsanitize=undefined","-g"]
-let g:neomake_cpp_enable_makers=['clang']
-let g:neomake_cpp_clang_args = ["-std=c++14", "-Wextra", "-Wall", "-fsanitize=undefined","-g"]
-
-let g:neomake_python_pep8_exe = 'python3'
-let g:neomake_python_pylama_maker = {
-      \ 'exe': 'pylama',
-      \ 'args': ['--format', 'pep8', '-o','~/.config/pylama/pylama.ini'],
-      \ 'errorformat': '%f:%l:%c: %m'
-      \ }
-
-let g:neomake_python_isort_maker = {
-      \ 'exe': 'isort-lint',
-      \ 'errorformat': '%f:%l:%m'
-      \ }
-
-let g:neomake_python_enable_makers = ['yapf', 'isort']
-
-let g:neomake_pandoc_proselint_maker = {
-      \ 'exe': 'proselint',
-      \ 'errorformat': '%f:%l:%c: %m'
-      \ }
-
-let g:neomake_pandoc_markdownlint_maker = {
-      \ 'exe': 'markdownlint',
-      \ 'errorformat': '%f:%l:%c: %m'
-      \ }
-
-let g:neomake_pandoc_writegood_maker= {
-      \ 'exe': 'write-better',
-      \ 'errorformat': '%f:%m\ on line %l at column %c',
-      \ }
-let g:neomake_pandoc_enabled_makers = ['proselint', 'writegood', 'markdownlint']
-
-let g:neomake_gitcommit_gitlint_maker = {
-      \ 'exe': 'gitlint',
-      \ 'args': ['-vvv'],
-      \ 'error_format': '%m',
-      \ 'remove_invalid_entries': 0,
-      \ 'append_file': 0
-      \ }
-
-let g:neomake_gitcommit_enabled_makers = ['gitlint']
-
-" let g:neomake_ansible_ansiblelint_maker = {
-"       \ 'exe': 'ansible-lint',
-"       \ 'error_format': '%E[ANSIBLE%n]\ %m,%C%f:%l,%Z%s',
-"       \ 'buffer_output': 1
-"       \ }
-" let g:neomake_ansible_ansiblelint_remove_invalid_entries = 0
-
-" let g:neomake_ansible_enabled_makers = ["ansiblelint"]
-
-let g:neomake_html_enabled_makers = []
-
-let g:win_sep = (has('win32') || has('win64')) ? '/' : ''
-
-let g:dart_efm = '%-GAnalyzing%.%#,[%.%#] %m. (%f\, line %l\, col %c),%-G%.%# error %.%# warnings found.'
-
-let g:neomake_dart_dartanalyzer_maker = {
-  \ 'exe': 'dartanalyzer',
-  \ 'errorformat':  g:dart_efm
-  \ }
-
-let g:neomake_dart_enabled_makers = ['dartanalyzer']
-
-let g:neomake_verbose = 1
-
-" End Neomake Settings }}}
+" End ALE Settings }}}
 
 " ctrlspace Settings {{{
 
