@@ -11,7 +11,6 @@ endif
 set runtimepath^=~/.vim/bundle/repos/github.com/Shougo/dein.vim
 
 filetype off
-
 " Required:
 if dein#load_state(expand('~/.vim/bundle'))
   call dein#begin(expand('~/.vim/bundle'))
@@ -28,6 +27,7 @@ if dein#load_state(expand('~/.vim/bundle'))
   " Code Completion {{{
   call dein#add('Shougo/deoplete.nvim')
   call dein#add('autozimu/LanguageClient-neovim', {'build': 'bash install.sh'})
+  call dein#add('Shougo/echodoc.vim')
   " End Code Completion }}}
 
   " Code Completion Sources {{{
@@ -40,8 +40,8 @@ if dein#load_state(expand('~/.vim/bundle'))
   call dein#add('carlitux/deoplete-ternjs')
   call dein#add('mhartington/deoplete-typescript')
   call dein#add('tweekmonster/deoplete-clang2')
-  call dein#add('roxma/nvim-completion-manager')
   call dein#add('slashmili/alchemist.vim')
+  call dein#add('ujihisa/neco-look')
   " End Code Completion Sources }}}
 
   " Snippet Plugins {{{
@@ -106,6 +106,7 @@ if dein#load_state(expand('~/.vim/bundle'))
   call dein#add('mbbill/undotree')
   call dein#add('LucHermitte/local_vimrc', {'depends': 'LucHermitte/lh-vim-lib'})
   call dein#add('vim-ctrlspace/vim-ctrlspace')
+  call dein#add('ctrlpvim/ctrlp.vim')
   " End Management Plugins }}}
 
   " Utility Plugins {{{
@@ -139,7 +140,7 @@ if dein#load_state(expand('~/.vim/bundle'))
   " End Dart Plugins }}}
 
   " Go Plugins {{{
-  call dein#add('fatih/vim-go')
+  "call dein#add('fatih/vim-go')
   " End Go }}}
 
   " Javascript Plugins {{{
@@ -194,6 +195,7 @@ if dein#load_state(expand('~/.vim/bundle'))
   call dein#add('othree/csscomplete.vim')
   call dein#add('editorconfig/editorconfig-vim')
   call dein#add('jparise/vim-graphql')
+  call dein#add('udalov/kotlin-vim')
 
   " End Language Specific Plugins }}}
 
@@ -247,8 +249,12 @@ endif
 
 " Plugin Mappings {{{
 
+" echodoc Settings {{{
+let g:echodoc#enable_at_startup = 1
+let g:echodoc#type = 'floating'
+" End ec Settings }}}
 
-" vim-fugitive {{{
+"vim-fugitive {{{
   nnoremap <silent> <leader>g :Gstatus<CR>
 " End vim-fugitive }}}
 
@@ -331,13 +337,6 @@ nmap crb <Plug>RadicalCoerceToBinary
 
 " End Radical Vim (Convert Base) }}}
 
-" ctrl-space {{{
-"Fuzzy search like ctrl-p
-nnoremap <silent><C-p> :CtrlSpace O<CR>
-" End ctrl-space }}}
-
-" }}}
-
 " Plugin Settings {{{
 
 " grammarout Settings {{{
@@ -374,6 +373,7 @@ let g:LanguageClient_serverCommands = {
 			\ 'python': ['pyls'],
       \ 'java': ['jdtls'],
       \ 'go': ['go-langserver'],
+      \ 'kotlin': ['kotlin-language-server'],
 			\ 'ruby': ['docker', 'run', '--rm', 'mtsmfm/language_server-ruby'],
       \ 'yaml': ['yaml-language-server', '--stdio'] ,
 			\ }
@@ -385,8 +385,6 @@ nnoremap <silent> <F2> :call LanguageClient#textDocument_rename()<CR>
 " End LanguageClient Settings }}}
 
 " vim-go Settings {{{
-  let g:go_fmt_command = "goimports"
-
   let g:go_term_enabled = 1
   let g:go_template_autocreate = 0
 " End vim-go Settings }}}
@@ -446,9 +444,20 @@ let g:ale_fixers = {
 \   'python': ['yapf', 'isort'],
 \}
 
-" End ALE Settings }}}
+let g:ale_open_list = 1
 
-" ctrlspace Settings {{{
+
+let g:ale_java_javalsp_executable = '/Users/tylerstapler/Programming/java-language-server/dist/mac/bin/launcher'
+let g:ale_completion_enabled = 1
+
+" End ALE Settings }}}
+" ctrlp Settings {{{
+if executable("ag")
+  let g:ctrlp_user_command = 'ag -l --hidden --nocolor -g ""'
+endif
+" End ctrlp Settings }}}
+"
+"" ctrlspace Settings {{{
 
 if executable("ag")
   let g:CtrlSpaceGlobCommand = 'ag -l --hidden --nocolor -g ""'
@@ -520,29 +529,12 @@ let g:vimfiler_as_default_explorer = 1
 
 " deoplete Settings {{{
 if has('nvim')
-  " neocomplete like
-   set completeopt+=noinsert
-  " deoplete.nvim recommend
-   set completeopt+=noselect
-
-  let g:deoplete#enable_at_startup = 1
-
   let g:deoplete#sources#jedi#show_docstring = 1
 
   " Use deoplete.
   let g:deoplete#enable_at_startup = 1
   " Use smartcase.
   let g:deoplete#enable_smart_case = 1
-
-  " <C-h>, <BS>: close popup and delete backword char.
-  inoremap <expr><C-h> deoplete#mappings#smart_close_popup()."\<C-h>"
-  inoremap <expr><BS>  deoplete#mappings#smart_close_popup()."\<C-h>"
-
-  " <CR>: close popup and save indent.
-  inoremap <silent> <CR> <C-r>=<SID>my_cr_function()<CR>
-  function! s:my_cr_function() abort
-    return deoplete#mappings#close_popup() . "\<CR>"
-  endfunction
 
 
   " deoplete-go Settings {{{
@@ -766,6 +758,12 @@ let g:UltiSnipsSnippetDirectories=[
   autocmd FileType markdown TableModeEnable
 " End TableMode }}}
 
+" Name cloudformation {{
+  augroup cloudformation
+    au FileType cloudformation expandtab tabstop=4 shiftwidth=4
+  augroup END
+" End cloudformation }}}
+
 " NeoComplete {{{
 " if dein#check_install(["Shougo/neocomplete.vim"]) && !has('nvim')
 "   augroup pandoc
@@ -780,9 +778,4 @@ augroup myvimrc
 augroup END
 
 " End Autoreload .vimrc }}}
-
-" Neomake {{{
-au BufWritePost * Neomake
-" End Neomake }}}
-
 " End Auto Groups }}}
