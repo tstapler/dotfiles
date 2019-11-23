@@ -1,6 +1,0 @@
-{
-  imports = [
-    ./python-language-server
-  ];
-}
-
