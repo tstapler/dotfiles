@@ -38,6 +38,9 @@ export GOPATH="$HOME/.local/lib/go"
 # Create Workiva Gopath
 export WGOPATH="$GOPATH/src/github.com/Workiva"
 
+# Enable go modules
+export GO111MODULES=auto
+
 # Add GO executables to PATH
 export PATH=$PATH:"$GOPATH/bin"
 
@@ -77,7 +80,9 @@ export GIT_EDITOR=$EDITOR
 export GPG_TTY=$(tty)
 
 # Enable GPG SSH auth
+if hash gpgconf 2>/dev/null; then
 export SSH_AUTH_SOCK=$(gpgconf --list-dirs agent-ssh-socket)
+fi
 
 export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"
 
