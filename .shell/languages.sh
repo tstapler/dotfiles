@@ -53,12 +53,13 @@ if [[ ! -d "$GVM_DIR" ]]; then
   curl -s -S -L "https://raw.githubusercontent.com/moovweb/gvm/master/binscripts/gvm-installer" | zsh
 fi
 
-if [[ -x "$GVM_SCRIPT" ]]; then
+if [[ -f "$GVM_SCRIPT" ]]; then
    . "$GVM_SCRIPT" 
 fi
 
 # Start Nix Config
 NIX_SCRIPT="$HOME/.nix-profile/etc/profile.d/nix.sh"
+NIXCFG_PATH="$HOME/.home-manager/envs/"
 
 if [[ ! -f $NIX_SCRIPT ]]; then
   NIX_SCRIPT="/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh"
