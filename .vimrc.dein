@@ -372,7 +372,7 @@ let g:LanguageClient_serverCommands = {
       \ 'javascript': ['javascript-typescript-stdio'],
 			\ 'python': ['pyls'],
       \ 'java': ['jdtls'],
-      \ 'go': ['go-langserver'],
+      \ 'go': ['gopls'],
       \ 'kotlin': ['kotlin-language-server'],
 			\ 'ruby': ['docker', 'run', '--rm', 'mtsmfm/language_server-ruby'],
       \ 'yaml': ['yaml-language-server', '--stdio'] ,
@@ -455,6 +455,7 @@ let g:ale_completion_enabled = 1
 if executable("ag")
   let g:ctrlp_user_command = 'ag -l --hidden --nocolor -g ""'
 endif
+  let g:ctrlp_show_hidden = 1
 " End ctrlp Settings }}}
 "
 "" ctrlspace Settings {{{
@@ -760,7 +761,7 @@ let g:UltiSnipsSnippetDirectories=[
 
 " Name cloudformation {{
   augroup cloudformation
-    au FileType cloudformation expandtab tabstop=4 shiftwidth=4
+    au FileType cloudformation setlocal expandtab tabstop=4 shiftwidth=4
   augroup END
 " End cloudformation }}}
 
