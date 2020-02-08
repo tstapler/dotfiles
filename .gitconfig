@@ -4,6 +4,7 @@
 	editor = vim
 	excludesfile = ~/.gitignore
 	symlinks = true
+	hooksPath = $HOME/tylerstapler/.gittemplates
 [web]
 	browser = google-chrome
 [push]
@@ -11,9 +12,16 @@
 [color]
 	ui = auto
 [diff]
-	tool = vimdiff
+	tool = meld
 [hub]
 	protocol = ssh
 [user]
 	name = Tyler Stapler
 	email = tystapler@gmail.com
+[commit]
+	gpgsign = true
+[alias]
+	meld = !git difftool -t meld --dir-diff
+
+[mergetool "meld"]
+    cmd = meld "$LOCAL" "$MERGED" "$REMOTE" --output "$MERGED"

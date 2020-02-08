@@ -1,30 +1,33 @@
 <?xml version='1.0' encoding='utf-8'?>
 <MixxxControllerPreset mixxxVersion="1.11.0+" schemaVersion="1">
     <info>
-        <name>[mixco] Novation Twitch</name>
-        <author>Juan Pedro Bolivar Puente</author>
+        <name>Novation Twitch</name>
+        <author>Juan Pedro Bolivar Puente &lt;raskolnikov@gnu.org></author>
+        <description>Controller mapping for Novation Twitch (in basic mode).</description>
+        <forums>https://github.com/arximboldi/mixco/issues</forums>
+        <wiki>https://sinusoid.es/mixco/script/korg_nanokontrol2.mixco.html</wiki>
     </info>
     <controller id="Twitch">
         <scriptfiles>
-            <file functionprefix="novation_twitch" filename="novation_twitch.mixco.output.js"/>
+            <file functionprefix="novation_twitch" filename="novation_twitch.mixco.output.1.js"/>
         </scriptfiles>
         <controls>
             <control>
-                <group>[Master]</group>
-                <key>novation_twitch.__handle_x9b_x22</key>
+                <group>[EffectRack1_EffectUnit1]</group>
+                <key>enabled</key>
                 <status>0x9B</status>
                 <midino>0x22</midino>
                 <options>
-                    <script-binding/>
+                    <normal/>
                 </options>
             </control>
             <control>
-                <group>[Channel1]</group>
-                <key>flanger</key>
+                <group>[EffectRack1_EffectUnit1]</group>
+                <key>group_[Channel1]_enable</key>
                 <status>0x9B</status>
                 <midino>0x20</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -42,17 +45,16 @@
                 <status>0x87</status>
                 <midino>0x53</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
-                <group>[Playlist]</group>
-                <key>ToggleSelectedSidebarItem</key>
-                <description>MIDI Learned from 2 messages.</description>
+                <group>[Master]</group>
+                <key>novation_twitch.__handle_x97_x55</key>
                 <status>0x97</status>
                 <midino>0x55</midino>
                 <options>
-                    <normal/>
+                    <script-binding/>
                 </options>
             </control>
             <control>
@@ -70,7 +72,7 @@
                 <status>0x87</status>
                 <midino>0x16</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -79,7 +81,7 @@
                 <status>0x88</status>
                 <midino>0x16</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -88,7 +90,7 @@
                 <status>0x97</status>
                 <midino>0x53</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -97,7 +99,7 @@
                 <status>0x89</status>
                 <midino>0x16</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -106,7 +108,7 @@
                 <status>0x8A</status>
                 <midino>0x16</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -124,7 +126,7 @@
                 <status>0x97</status>
                 <midino>0x16</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -133,7 +135,7 @@
                 <status>0x98</status>
                 <midino>0x16</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -142,7 +144,7 @@
                 <status>0x87</status>
                 <midino>0x12</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -151,7 +153,7 @@
                 <status>0x99</status>
                 <midino>0x16</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -160,7 +162,7 @@
                 <status>0x88</status>
                 <midino>0x12</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -169,7 +171,7 @@
                 <status>0x9A</status>
                 <midino>0x16</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -191,13 +193,12 @@
                 </options>
             </control>
             <control>
-                <group>[Playlist]</group>
-                <key>SelectTrackKnob</key>
-                <description>MIDI Learned from 248 messages.</description>
+                <group>[Master]</group>
+                <key>novation_twitch.__handle_xb7_x55</key>
                 <status>0xB7</status>
                 <midino>0x55</midino>
                 <options>
-                    <selectknob/>
+                    <script-binding/>
                 </options>
             </control>
             <control>
@@ -206,7 +207,7 @@
                 <status>0x87</status>
                 <midino>0x10</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -215,7 +216,7 @@
                 <status>0x88</status>
                 <midino>0x10</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -224,7 +225,7 @@
                 <status>0x89</status>
                 <midino>0x10</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -233,7 +234,7 @@
                 <status>0x8A</status>
                 <midino>0x10</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -242,7 +243,7 @@
                 <status>0x97</status>
                 <midino>0x12</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -251,7 +252,7 @@
                 <status>0x98</status>
                 <midino>0x12</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -296,7 +297,7 @@
                 <status>0x97</status>
                 <midino>0x10</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -305,7 +306,7 @@
                 <status>0x98</status>
                 <midino>0x10</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -314,7 +315,7 @@
                 <status>0x99</status>
                 <midino>0x10</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -323,25 +324,25 @@
                 <status>0x9A</status>
                 <midino>0x10</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatlooproll_4_activate</key>
+                <key>beatlooproll_2_activate</key>
                 <status>0x87</status>
                 <midino>0x7E</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatlooproll_4_activate</key>
+                <key>beatlooproll_2_activate</key>
                 <status>0x88</status>
                 <midino>0x7E</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -355,11 +356,11 @@
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatlooproll_64_activate</key>
+                <key>beatlooproll_32_activate</key>
                 <status>0x89</status>
                 <midino>0x7E</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -373,11 +374,11 @@
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatlooproll_64_activate</key>
+                <key>beatlooproll_32_activate</key>
                 <status>0x8A</status>
                 <midino>0x7E</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -418,121 +419,128 @@
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatlooproll_1_activate</key>
+                <key>beatlooproll_0.5_activate</key>
                 <status>0x87</status>
                 <midino>0x7C</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatlooproll_1_activate</key>
+                <key>beatlooproll_0.5_activate</key>
                 <status>0x88</status>
                 <midino>0x7C</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatlooproll_16_activate</key>
+                <key>beatlooproll_8_activate</key>
                 <status>0x89</status>
                 <midino>0x7C</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatlooproll_16_activate</key>
+                <key>beatlooproll_8_activate</key>
                 <status>0x8A</status>
                 <midino>0x7C</midino>
                 <options>
-                    <button/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel1]</group>
-                <key>beatlooproll_4_activate</key>
-                <status>0x97</status>
-                <midino>0x7E</midino>
-                <options>
-                    <button/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel2]</group>
-                <key>beatlooproll_4_activate</key>
-                <status>0x98</status>
-                <midino>0x7E</midino>
-                <options>
-                    <button/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel1]</group>
-                <key>pfl</key>
-                <description>MIDI Learned from 4 messages.</description>
-                <status>0x97</status>
-                <midino>0x0A</midino>
-                <options>
                     <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatlooproll_0.25_activate</key>
-                <status>0x87</status>
-                <midino>0x7A</midino>
-                <options>
-                    <button/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel1]</group>
-                <key>beatlooproll_64_activate</key>
-                <status>0x99</status>
+                <key>beatlooproll_2_activate</key>
+                <status>0x97</status>
                 <midino>0x7E</midino>
-                <options>
-                    <button/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel2]</group>
-                <key>pfl</key>
-                <description>MIDI Learned from 2 messages.</description>
-                <status>0x98</status>
-                <midino>0x0A</midino>
                 <options>
                     <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatlooproll_0.25_activate</key>
-                <status>0x88</status>
-                <midino>0x7A</midino>
-                <options>
-                    <button/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel2]</group>
-                <key>beatlooproll_64_activate</key>
-                <status>0x9A</status>
+                <key>beatlooproll_2_activate</key>
+                <status>0x98</status>
                 <midino>0x7E</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Master]</group>
-                <key>novation_twitch.__handle_x97_x6</key>
+                <key>novation_twitch.__handle_x97_xa</key>
+                <status>0x97</status>
+                <midino>0x0A</midino>
+                <options>
+                    <script-binding/>
+                </options>
+            </control>
+            <control>
+                <group>[EffectRack1_EffectUnit1]</group>
+                <key>chain_selector</key>
+                <status>0xBB</status>
+                <midino>0x12</midino>
+                <options>
+                    <normal/>
+                </options>
+            </control>
+            <control>
+                <group>[Channel1]</group>
+                <key>beatlooproll_0.125_activate</key>
+                <status>0x87</status>
+                <midino>0x7A</midino>
+                <options>
+                    <normal/>
+                </options>
+            </control>
+            <control>
+                <group>[Channel1]</group>
+                <key>beatlooproll_32_activate</key>
+                <status>0x99</status>
+                <midino>0x7E</midino>
+                <options>
+                    <normal/>
+                </options>
+            </control>
+            <control>
+                <group>[Master]</group>
+                <key>novation_twitch.__handle_x98_xa</key>
+                <status>0x98</status>
+                <midino>0x0A</midino>
+                <options>
+                    <script-binding/>
+                </options>
+            </control>
+            <control>
+                <group>[Channel2]</group>
+                <key>beatlooproll_0.125_activate</key>
+                <status>0x88</status>
+                <midino>0x7A</midino>
+                <options>
+                    <normal/>
+                </options>
+            </control>
+            <control>
+                <group>[Channel2]</group>
+                <key>beatlooproll_32_activate</key>
+                <status>0x9A</status>
+                <midino>0x7E</midino>
+                <options>
+                    <normal/>
+                </options>
+            </control>
+            <control>
+                <group>[QuickEffectRack1_[Channel1]]</group>
+                <key>enabled</key>
                 <status>0x87</status>
                 <midino>0x06</midino>
                 <options>
-                    <script-binding/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -546,20 +554,20 @@
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatlooproll_4_activate</key>
+                <key>beatlooproll_2_activate</key>
                 <status>0x89</status>
                 <midino>0x7A</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
-                <group>[Master]</group>
-                <key>novation_twitch.__handle_x98_x6</key>
+                <group>[QuickEffectRack1_[Channel2]]</group>
+                <key>enabled</key>
                 <status>0x88</status>
                 <midino>0x06</midino>
                 <options>
-                    <script-binding/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -573,52 +581,52 @@
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatlooproll_4_activate</key>
+                <key>beatlooproll_2_activate</key>
                 <status>0x8A</status>
                 <midino>0x7A</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
-                <group>[Master]</group>
-                <key>novation_twitch.__handle_x97_x6</key>
+                <group>[QuickEffectRack1_[Channel1]]</group>
+                <key>enabled</key>
                 <status>0x89</status>
                 <midino>0x06</midino>
                 <options>
-                    <script-binding/>
+                    <normal/>
                 </options>
             </control>
             <control>
-                <group>[Master]</group>
-                <key>novation_twitch.__handle_x98_x6</key>
+                <group>[QuickEffectRack1_[Channel2]]</group>
+                <key>enabled</key>
                 <status>0x8A</status>
                 <midino>0x06</midino>
                 <options>
-                    <script-binding/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatlooproll_1_activate</key>
+                <key>beatlooproll_0.5_activate</key>
                 <status>0x97</status>
                 <midino>0x7C</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatlooproll_1_activate</key>
+                <key>beatlooproll_0.5_activate</key>
                 <status>0x98</status>
                 <midino>0x7C</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
-                <group>[Flanger]</group>
-                <key>lfoDepth</key>
+                <group>[EffectRack1_EffectUnit1]</group>
+                <key>mix</key>
                 <status>0xBB</status>
                 <midino>0x10</midino>
                 <options>
@@ -627,74 +635,74 @@
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatlooproll_0.0625_activate</key>
+                <key>beatlooproll_0.03125_activate</key>
                 <status>0x87</status>
                 <midino>0x78</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatlooproll_16_activate</key>
+                <key>beatlooproll_8_activate</key>
                 <status>0x99</status>
                 <midino>0x7C</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatlooproll_0.0625_activate</key>
+                <key>beatlooproll_0.03125_activate</key>
                 <status>0x88</status>
                 <midino>0x78</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatlooproll_16_activate</key>
+                <key>beatlooproll_8_activate</key>
                 <status>0x9A</status>
                 <midino>0x7C</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatlooproll_1_activate</key>
+                <key>beatlooproll_0.5_activate</key>
                 <status>0x89</status>
                 <midino>0x78</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatlooproll_1_activate</key>
+                <key>beatlooproll_0.5_activate</key>
                 <status>0x8A</status>
                 <midino>0x78</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatlooproll_0.25_activate</key>
+                <key>beatlooproll_0.125_activate</key>
                 <status>0x97</status>
                 <midino>0x7A</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatlooproll_0.25_activate</key>
+                <key>beatlooproll_0.125_activate</key>
                 <status>0x98</status>
                 <midino>0x7A</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -707,36 +715,44 @@
                 </options>
             </control>
             <control>
-                <group>[Master]</group>
-                <key>novation_twitch.__handle_x97_x6</key>
+                <group>[QuickEffectRack1_[Channel1]]</group>
+                <key>enabled</key>
                 <status>0x97</status>
                 <midino>0x06</midino>
                 <options>
-                    <script-binding/>
+                    <normal/>
+                </options>
+            </control>
+            <control>
+                <group>[EffectRack1_EffectUnit1]</group>
+                <key>chain_selector</key>
+                <status>0xBB</status>
+                <midino>0x0E</midino>
+                <options>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatloop_4_toggle</key>
+                <key>beatloop_32_toggle</key>
                 <status>0x87</status>
                 <midino>0x76</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatlooproll_4_activate</key>
+                <key>beatlooproll_2_activate</key>
                 <status>0x99</status>
                 <midino>0x7A</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
-                <group>[EqualizerRack1_[Channel2]_Effect1]</group>
-                <key>parameter2</key>
-                <description>MIDI Learned from 1068 messages.</description>
+                <group>[Channel2]</group>
+                <key>filterMid</key>
                 <status>0xB8</status>
                 <midino>0x47</midino>
                 <options>
@@ -744,30 +760,30 @@
                 </options>
             </control>
             <control>
-                <group>[Master]</group>
-                <key>novation_twitch.__handle_x98_x6</key>
+                <group>[QuickEffectRack1_[Channel2]]</group>
+                <key>enabled</key>
                 <status>0x98</status>
                 <midino>0x06</midino>
                 <options>
-                    <script-binding/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatloop_4_toggle</key>
+                <key>beatloop_32_toggle</key>
                 <status>0x88</status>
                 <midino>0x76</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatlooproll_4_activate</key>
+                <key>beatlooproll_2_activate</key>
                 <status>0x9A</status>
                 <midino>0x7A</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -780,21 +796,21 @@
                 </options>
             </control>
             <control>
-                <group>[Master]</group>
-                <key>novation_twitch.__handle_x97_x6</key>
+                <group>[QuickEffectRack1_[Channel1]]</group>
+                <key>enabled</key>
                 <status>0x99</status>
                 <midino>0x06</midino>
                 <options>
-                    <script-binding/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatloop_64_toggle</key>
+                <key>beatloop_2_toggle</key>
                 <status>0x89</status>
                 <midino>0x76</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -807,44 +823,44 @@
                 </options>
             </control>
             <control>
-                <group>[Master]</group>
-                <key>novation_twitch.__handle_x98_x6</key>
+                <group>[QuickEffectRack1_[Channel2]]</group>
+                <key>enabled</key>
                 <status>0x9A</status>
                 <midino>0x06</midino>
                 <options>
-                    <script-binding/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatloop_64_toggle</key>
+                <key>beatloop_2_toggle</key>
                 <status>0x8A</status>
                 <midino>0x76</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatlooproll_0.0625_activate</key>
+                <key>beatlooproll_0.03125_activate</key>
                 <status>0x97</status>
                 <midino>0x78</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatlooproll_0.0625_activate</key>
+                <key>beatlooproll_0.03125_activate</key>
                 <status>0x98</status>
                 <midino>0x78</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
-                <group>[Flanger]</group>
-                <key>lfoDepth</key>
+                <group>[EffectRack1_EffectUnit1]</group>
+                <key>mix</key>
                 <status>0xBB</status>
                 <midino>0x0C</midino>
                 <options>
@@ -853,128 +869,137 @@
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatloop_1_toggle</key>
+                <key>beatloop_8_toggle</key>
                 <status>0x87</status>
                 <midino>0x74</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatlooproll_1_activate</key>
+                <key>beatlooproll_0.5_activate</key>
                 <status>0x99</status>
                 <midino>0x78</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatloop_1_toggle</key>
+                <key>beatloop_8_toggle</key>
                 <status>0x88</status>
                 <midino>0x74</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatlooproll_1_activate</key>
+                <key>beatlooproll_0.5_activate</key>
                 <status>0x9A</status>
                 <midino>0x78</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatloop_16_toggle</key>
+                <key>beatloop_0.5_toggle</key>
                 <status>0x89</status>
                 <midino>0x74</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatloop_16_toggle</key>
+                <key>beatloop_0.5_toggle</key>
                 <status>0x8A</status>
                 <midino>0x74</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatloop_4_toggle</key>
+                <key>beatloop_32_toggle</key>
                 <status>0x97</status>
                 <midino>0x76</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatloop_4_toggle</key>
+                <key>beatloop_32_toggle</key>
                 <status>0x98</status>
                 <midino>0x76</midino>
                 <options>
-                    <button/>
+                    <normal/>
+                </options>
+            </control>
+            <control>
+                <group>[EffectRack1_EffectUnit1]</group>
+                <key>chain_selector</key>
+                <status>0xBB</status>
+                <midino>0x0A</midino>
+                <options>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatloop_0.25_toggle</key>
+                <key>beatloop_2_toggle</key>
                 <status>0x87</status>
                 <midino>0x72</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatloop_64_toggle</key>
+                <key>beatloop_2_toggle</key>
                 <status>0x99</status>
                 <midino>0x76</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatloop_0.25_toggle</key>
+                <key>beatloop_2_toggle</key>
                 <status>0x88</status>
                 <midino>0x72</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatloop_64_toggle</key>
+                <key>beatloop_2_toggle</key>
                 <status>0x9A</status>
                 <midino>0x76</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatloop_4_toggle</key>
+                <key>beatloop_0.125_toggle</key>
                 <status>0x89</status>
                 <midino>0x72</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatloop_4_toggle</key>
+                <key>beatloop_0.125_toggle</key>
                 <status>0x8A</status>
                 <midino>0x72</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -988,25 +1013,25 @@
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatloop_1_toggle</key>
+                <key>beatloop_8_toggle</key>
                 <status>0x97</status>
                 <midino>0x74</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatloop_1_toggle</key>
+                <key>beatloop_8_toggle</key>
                 <status>0x98</status>
                 <midino>0x74</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
-                <group>[Flanger]</group>
-                <key>lfoDepth</key>
+                <group>[EffectRack1_EffectUnit1]</group>
+                <key>mix</key>
                 <status>0xBB</status>
                 <midino>0x08</midino>
                 <options>
@@ -1015,56 +1040,56 @@
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatloop_0.0625_toggle</key>
+                <key>beatloop_0.5_toggle</key>
                 <status>0x87</status>
                 <midino>0x70</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatloop_16_toggle</key>
+                <key>beatloop_0.5_toggle</key>
                 <status>0x99</status>
                 <midino>0x74</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatloop_0.0625_toggle</key>
+                <key>beatloop_0.5_toggle</key>
                 <status>0x88</status>
                 <midino>0x70</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatloop_16_toggle</key>
+                <key>beatloop_0.5_toggle</key>
                 <status>0x9A</status>
                 <midino>0x74</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatloop_1_toggle</key>
+                <key>beatloop_0.03125_toggle</key>
                 <status>0x89</status>
                 <midino>0x70</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatloop_1_toggle</key>
+                <key>beatloop_0.03125_toggle</key>
                 <status>0x8A</status>
                 <midino>0x70</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1096,11 +1121,11 @@
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatloop_0.25_toggle</key>
+                <key>beatloop_2_toggle</key>
                 <status>0x97</status>
                 <midino>0x72</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1114,11 +1139,20 @@
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatloop_0.25_toggle</key>
+                <key>beatloop_2_toggle</key>
                 <status>0x98</status>
                 <midino>0x72</midino>
                 <options>
-                    <button/>
+                    <normal/>
+                </options>
+            </control>
+            <control>
+                <group>[EffectRack1_EffectUnit1]</group>
+                <key>chain_selector</key>
+                <status>0xBB</status>
+                <midino>0x06</midino>
+                <options>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1132,11 +1166,11 @@
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatloop_4_toggle</key>
+                <key>beatloop_0.125_toggle</key>
                 <status>0x99</status>
                 <midino>0x72</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1150,11 +1184,11 @@
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatloop_4_toggle</key>
+                <key>beatloop_0.125_toggle</key>
                 <status>0x9A</status>
                 <midino>0x72</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1177,25 +1211,25 @@
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatloop_0.0625_toggle</key>
+                <key>beatloop_0.5_toggle</key>
                 <status>0x97</status>
                 <midino>0x70</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatloop_0.0625_toggle</key>
+                <key>beatloop_0.5_toggle</key>
                 <status>0x98</status>
                 <midino>0x70</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
-                <group>[Flanger]</group>
-                <key>lfoDepth</key>
+                <group>[EffectRack1_EffectUnit1]</group>
+                <key>mix</key>
                 <status>0xBB</status>
                 <midino>0x04</midino>
                 <options>
@@ -1213,11 +1247,11 @@
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatloop_1_toggle</key>
+                <key>beatloop_0.03125_toggle</key>
                 <status>0x99</status>
                 <midino>0x70</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1231,11 +1265,11 @@
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatloop_1_toggle</key>
+                <key>beatloop_0.03125_toggle</key>
                 <status>0x9A</status>
                 <midino>0x70</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1275,12 +1309,21 @@
                 </options>
             </control>
             <control>
+                <group>[EffectRack1_EffectUnit1]</group>
+                <key>chain_selector</key>
+                <status>0xBB</status>
+                <midino>0x02</midino>
+                <options>
+                    <normal/>
+                </options>
+            </control>
+            <control>
                 <group>[Sampler3]</group>
                 <key>cue_preview</key>
                 <status>0x87</status>
                 <midino>0x6A</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1298,7 +1341,7 @@
                 <status>0x88</status>
                 <midino>0x6A</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1316,7 +1359,7 @@
                 <status>0x89</status>
                 <midino>0x6A</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1325,7 +1368,7 @@
                 <status>0x8A</status>
                 <midino>0x6A</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1347,8 +1390,8 @@
                 </options>
             </control>
             <control>
-                <group>[Flanger]</group>
-                <key>lfoDepth</key>
+                <group>[EffectRack1_EffectUnit1]</group>
+                <key>mix</key>
                 <status>0xBB</status>
                 <midino>0x00</midino>
                 <options>
@@ -1361,7 +1404,7 @@
                 <status>0x87</status>
                 <midino>0x68</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1379,7 +1422,7 @@
                 <status>0x88</status>
                 <midino>0x68</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1397,7 +1440,7 @@
                 <status>0x89</status>
                 <midino>0x68</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1406,7 +1449,7 @@
                 <status>0x8A</status>
                 <midino>0x68</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1415,7 +1458,7 @@
                 <status>0x97</status>
                 <midino>0x6A</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1424,7 +1467,7 @@
                 <status>0x98</status>
                 <midino>0x6A</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1433,7 +1476,7 @@
                 <status>0x87</status>
                 <midino>0x66</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1442,7 +1485,7 @@
                 <status>0x99</status>
                 <midino>0x6A</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1451,7 +1494,7 @@
                 <status>0x88</status>
                 <midino>0x66</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1460,7 +1503,7 @@
                 <status>0x9A</status>
                 <midino>0x6A</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1469,7 +1512,7 @@
                 <status>0x89</status>
                 <midino>0x66</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1478,7 +1521,7 @@
                 <status>0x8A</status>
                 <midino>0x66</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1487,7 +1530,7 @@
                 <status>0x97</status>
                 <midino>0x68</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1496,7 +1539,7 @@
                 <status>0x98</status>
                 <midino>0x68</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1514,7 +1557,7 @@
                 <status>0x87</status>
                 <midino>0x64</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1523,7 +1566,7 @@
                 <status>0x99</status>
                 <midino>0x68</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1541,7 +1584,7 @@
                 <status>0x88</status>
                 <midino>0x64</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1550,7 +1593,7 @@
                 <status>0x9A</status>
                 <midino>0x68</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1568,7 +1611,7 @@
                 <status>0x89</status>
                 <midino>0x64</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1586,7 +1629,7 @@
                 <status>0x8A</status>
                 <midino>0x64</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1595,7 +1638,7 @@
                 <status>0x97</status>
                 <midino>0x66</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1604,7 +1647,7 @@
                 <status>0x98</status>
                 <midino>0x66</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1613,7 +1656,7 @@
                 <status>0x87</status>
                 <midino>0x62</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1622,7 +1665,7 @@
                 <status>0x99</status>
                 <midino>0x66</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1631,7 +1674,7 @@
                 <status>0x88</status>
                 <midino>0x62</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1640,7 +1683,7 @@
                 <status>0x9A</status>
                 <midino>0x66</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1649,7 +1692,7 @@
                 <status>0x89</status>
                 <midino>0x62</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1658,7 +1701,7 @@
                 <status>0x8A</status>
                 <midino>0x62</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1667,7 +1710,7 @@
                 <status>0x97</status>
                 <midino>0x64</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1676,7 +1719,7 @@
                 <status>0x98</status>
                 <midino>0x64</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1685,7 +1728,7 @@
                 <status>0x87</status>
                 <midino>0x60</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1694,7 +1737,7 @@
                 <status>0x99</status>
                 <midino>0x64</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1703,7 +1746,7 @@
                 <status>0x88</status>
                 <midino>0x60</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1712,7 +1755,7 @@
                 <status>0x9A</status>
                 <midino>0x64</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1721,7 +1764,7 @@
                 <status>0x89</status>
                 <midino>0x60</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1730,7 +1773,7 @@
                 <status>0x8A</status>
                 <midino>0x60</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1739,7 +1782,7 @@
                 <status>0x97</status>
                 <midino>0x62</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1748,7 +1791,7 @@
                 <status>0x98</status>
                 <midino>0x62</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1757,7 +1800,7 @@
                 <status>0x99</status>
                 <midino>0x62</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1766,7 +1809,7 @@
                 <status>0x9A</status>
                 <midino>0x62</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1775,7 +1818,7 @@
                 <status>0x97</status>
                 <midino>0x60</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1784,7 +1827,7 @@
                 <status>0x98</status>
                 <midino>0x60</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1793,7 +1836,7 @@
                 <status>0x99</status>
                 <midino>0x60</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1802,7 +1845,7 @@
                 <status>0x8B</status>
                 <midino>0x23</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1811,16 +1854,16 @@
                 <status>0x9A</status>
                 <midino>0x60</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
-                <group>[Channel2]</group>
-                <key>flanger</key>
+                <group>[EffectRack1_EffectUnit1]</group>
+                <key>group_[Channel2]_enable</key>
                 <status>0x8B</status>
                 <midino>0x21</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1829,16 +1872,16 @@
                 <status>0x9B</status>
                 <midino>0x23</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
-                <group>[Channel2]</group>
-                <key>flanger</key>
+                <group>[EffectRack1_EffectUnit1]</group>
+                <key>group_[Channel2]_enable</key>
                 <status>0x9B</status>
                 <midino>0x21</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1847,7 +1890,7 @@
                 <status>0x87</status>
                 <midino>0x56</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1856,7 +1899,7 @@
                 <status>0x87</status>
                 <midino>0x54</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1865,7 +1908,7 @@
                 <status>0x97</status>
                 <midino>0x56</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1874,7 +1917,7 @@
                 <status>0x87</status>
                 <midino>0x52</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1883,7 +1926,7 @@
                 <status>0x87</status>
                 <midino>0x17</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1892,7 +1935,7 @@
                 <status>0x88</status>
                 <midino>0x17</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1901,7 +1944,7 @@
                 <status>0x97</status>
                 <midino>0x54</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1910,7 +1953,7 @@
                 <status>0x89</status>
                 <midino>0x17</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1919,16 +1962,16 @@
                 <status>0x8A</status>
                 <midino>0x17</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
-                <group>[Playlist]</group>
-                <key>ToggleSelectedSidebarItem</key>
+                <group>[Master]</group>
+                <key>maximize_library</key>
                 <status>0x87</status>
                 <midino>0x50</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1937,7 +1980,7 @@
                 <status>0x97</status>
                 <midino>0x52</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1946,7 +1989,7 @@
                 <status>0x97</status>
                 <midino>0x17</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1955,16 +1998,16 @@
                 <status>0x98</status>
                 <midino>0x17</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatsync</key>
+                <key>sync_enabled</key>
                 <status>0x87</status>
                 <midino>0x13</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1973,16 +2016,16 @@
                 <status>0x99</status>
                 <midino>0x17</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatsync</key>
+                <key>sync_enabled</key>
                 <status>0x88</status>
                 <midino>0x13</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -1991,34 +2034,34 @@
                 <status>0x9A</status>
                 <midino>0x17</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
-                <group>[Playlist]</group>
-                <key>ToggleSelectedSidebarItem</key>
+                <group>[Master]</group>
+                <key>maximize_library</key>
                 <status>0x97</status>
                 <midino>0x50</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatsync_tempo</key>
+                <key>sync_enabled</key>
                 <status>0x89</status>
                 <midino>0x13</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatsync_tempo</key>
+                <key>sync_enabled</key>
                 <status>0x8A</status>
                 <midino>0x13</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -2027,7 +2070,7 @@
                 <status>0x87</status>
                 <midino>0x11</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -2036,7 +2079,7 @@
                 <status>0x88</status>
                 <midino>0x11</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -2045,7 +2088,7 @@
                 <status>0x89</status>
                 <midino>0x11</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -2054,43 +2097,43 @@
                 <status>0x8A</status>
                 <midino>0x11</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatsync</key>
+                <key>sync_enabled</key>
                 <status>0x97</status>
                 <midino>0x13</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatsync</key>
+                <key>sync_enabled</key>
                 <status>0x98</status>
                 <midino>0x13</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatsync_tempo</key>
+                <key>sync_enabled</key>
                 <status>0x99</status>
                 <midino>0x13</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatsync_tempo</key>
+                <key>sync_enabled</key>
                 <status>0x9A</status>
                 <midino>0x13</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -2099,7 +2142,7 @@
                 <status>0x97</status>
                 <midino>0x11</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -2108,16 +2151,16 @@
                 <status>0x98</status>
                 <midino>0x11</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
-                <group>[Master]</group>
-                <key>novation_twitch.__handle_x97_xd</key>
+                <group>[QuickEffectRack1_[Channel1]]</group>
+                <key>enabled</key>
                 <status>0x87</status>
                 <midino>0x0D</midino>
                 <options>
-                    <script-binding/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -2126,16 +2169,16 @@
                 <status>0x99</status>
                 <midino>0x11</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
-                <group>[Master]</group>
-                <key>novation_twitch.__handle_x98_xd</key>
+                <group>[QuickEffectRack1_[Channel2]]</group>
+                <key>enabled</key>
                 <status>0x88</status>
                 <midino>0x0D</midino>
                 <options>
-                    <script-binding/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -2144,138 +2187,147 @@
                 <status>0x9A</status>
                 <midino>0x11</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
-                <group>[Master]</group>
-                <key>novation_twitch.__handle_x97_xd</key>
+                <group>[QuickEffectRack1_[Channel1]]</group>
+                <key>enabled</key>
                 <status>0x89</status>
                 <midino>0x0D</midino>
                 <options>
-                    <script-binding/>
+                    <normal/>
                 </options>
             </control>
             <control>
-                <group>[Master]</group>
-                <key>novation_twitch.__handle_x98_xd</key>
+                <group>[QuickEffectRack1_[Channel2]]</group>
+                <key>enabled</key>
                 <status>0x8A</status>
                 <midino>0x0D</midino>
                 <options>
-                    <script-binding/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatlooproll_8_activate</key>
+                <key>beatlooproll_4_activate</key>
                 <status>0x87</status>
                 <midino>0x7F</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatlooproll_8_activate</key>
+                <key>beatlooproll_4_activate</key>
                 <status>0x88</status>
                 <midino>0x7F</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
-                <group>[Master]</group>
-                <key>novation_twitch.__handle_x97_xd</key>
+                <group>[Channel1]</group>
+                <key>beatlooproll_64_activate</key>
+                <status>0x89</status>
+                <midino>0x7F</midino>
+                <options>
+                    <normal/>
+                </options>
+            </control>
+            <control>
+                <group>[Channel2]</group>
+                <key>beatlooproll_64_activate</key>
+                <status>0x8A</status>
+                <midino>0x7F</midino>
+                <options>
+                    <normal/>
+                </options>
+            </control>
+            <control>
+                <group>[QuickEffectRack1_[Channel1]]</group>
+                <key>enabled</key>
                 <status>0x97</status>
                 <midino>0x0D</midino>
                 <options>
-                    <script-binding/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatlooproll_2_activate</key>
+                <key>beatlooproll_1_activate</key>
                 <status>0x87</status>
                 <midino>0x7D</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
-                <group>[Master]</group>
-                <key>novation_twitch.__handle_x98_xd</key>
+                <group>[QuickEffectRack1_[Channel2]]</group>
+                <key>enabled</key>
                 <status>0x98</status>
                 <midino>0x0D</midino>
                 <options>
-                    <script-binding/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatlooproll_2_activate</key>
+                <key>beatlooproll_1_activate</key>
                 <status>0x88</status>
                 <midino>0x7D</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
-                <group>[Master]</group>
-                <key>novation_twitch.__handle_x97_xd</key>
+                <group>[QuickEffectRack1_[Channel1]]</group>
+                <key>enabled</key>
                 <status>0x99</status>
                 <midino>0x0D</midino>
                 <options>
-                    <script-binding/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatlooproll_32_activate</key>
+                <key>beatlooproll_16_activate</key>
                 <status>0x89</status>
                 <midino>0x7D</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
-                <group>[Master]</group>
-                <key>novation_twitch.__handle_x98_xd</key>
+                <group>[QuickEffectRack1_[Channel2]]</group>
+                <key>enabled</key>
                 <status>0x9A</status>
                 <midino>0x0D</midino>
                 <options>
-                    <script-binding/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatlooproll_32_activate</key>
+                <key>beatlooproll_16_activate</key>
                 <status>0x8A</status>
                 <midino>0x7D</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatlooproll_8_activate</key>
+                <key>beatlooproll_4_activate</key>
                 <status>0x97</status>
                 <midino>0x7F</midino>
                 <options>
-                    <button/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel2]</group>
-                <key>beatlooproll_8_activate</key>
-                <status>0x98</status>
-                <midino>0x7F</midino>
-                <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Microphone]</group>
-                <key>volume</key>
+                <key>pregain</key>
                 <status>0xBB</status>
                 <midino>0x13</midino>
                 <options>
@@ -2283,57 +2335,75 @@
                 </options>
             </control>
             <control>
+                <group>[Channel2]</group>
+                <key>beatlooproll_4_activate</key>
+                <status>0x98</status>
+                <midino>0x7F</midino>
+                <options>
+                    <normal/>
+                </options>
+            </control>
+            <control>
                 <group>[Channel1]</group>
-                <key>beatlooproll_0.5_activate</key>
+                <key>beatlooproll_0.25_activate</key>
                 <status>0x87</status>
                 <midino>0x7B</midino>
                 <options>
-                    <button/>
+                    <normal/>
+                </options>
+            </control>
+            <control>
+                <group>[Channel1]</group>
+                <key>beatlooproll_64_activate</key>
+                <status>0x99</status>
+                <midino>0x7F</midino>
+                <options>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatlooproll_0.5_activate</key>
+                <key>beatlooproll_0.25_activate</key>
                 <status>0x88</status>
                 <midino>0x7B</midino>
                 <options>
-                    <button/>
+                    <normal/>
+                </options>
+            </control>
+            <control>
+                <group>[Channel2]</group>
+                <key>beatlooproll_64_activate</key>
+                <status>0x9A</status>
+                <midino>0x7F</midino>
+                <options>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatlooproll_8_activate</key>
+                <key>beatlooproll_4_activate</key>
                 <status>0x89</status>
                 <midino>0x7B</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatlooproll_8_activate</key>
+                <key>beatlooproll_4_activate</key>
                 <status>0x8A</status>
                 <midino>0x7B</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatlooproll_2_activate</key>
+                <key>beatlooproll_1_activate</key>
                 <status>0x97</status>
                 <midino>0x7D</midino>
                 <options>
-                    <button/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel2]</group>
-                <key>beatlooproll_2_activate</key>
-                <status>0x98</status>
-                <midino>0x7D</midino>
-                <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -2346,66 +2416,75 @@
                 </options>
             </control>
             <control>
+                <group>[Channel2]</group>
+                <key>beatlooproll_1_activate</key>
+                <status>0x98</status>
+                <midino>0x7D</midino>
+                <options>
+                    <normal/>
+                </options>
+            </control>
+            <control>
                 <group>[Channel1]</group>
-                <key>beatlooproll_0.125_activate</key>
+                <key>beatlooproll_0.0625_activate</key>
                 <status>0x87</status>
                 <midino>0x79</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatlooproll_32_activate</key>
+                <key>beatlooproll_16_activate</key>
                 <status>0x99</status>
                 <midino>0x7D</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatlooproll_0.125_activate</key>
+                <key>beatlooproll_0.0625_activate</key>
                 <status>0x88</status>
                 <midino>0x79</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatlooproll_32_activate</key>
+                <key>beatlooproll_16_activate</key>
                 <status>0x9A</status>
                 <midino>0x7D</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatlooproll_2_activate</key>
+                <key>beatlooproll_1_activate</key>
                 <status>0x89</status>
                 <midino>0x79</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatlooproll_2_activate</key>
+                <key>beatlooproll_1_activate</key>
                 <status>0x8A</status>
                 <midino>0x79</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatlooproll_0.5_activate</key>
+                <key>beatlooproll_0.25_activate</key>
                 <status>0x97</status>
                 <midino>0x7B</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -2419,7 +2498,7 @@
             </control>
             <control>
                 <group>[Microphone]</group>
-                <key>volume</key>
+                <key>pregain</key>
                 <status>0xBB</status>
                 <midino>0x0F</midino>
                 <options>
@@ -2428,35 +2507,34 @@
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatlooproll_0.5_activate</key>
+                <key>beatlooproll_0.25_activate</key>
                 <status>0x98</status>
                 <midino>0x7B</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatloop_8_toggle</key>
+                <key>beatloop_64_toggle</key>
                 <status>0x87</status>
                 <midino>0x77</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatlooproll_8_activate</key>
+                <key>beatlooproll_4_activate</key>
                 <status>0x99</status>
                 <midino>0x7B</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
-                <group>[EqualizerRack1_[Channel2]_Effect1]</group>
-                <key>parameter3</key>
-                <description>MIDI Learned from 995 messages.</description>
+                <group>[Channel2]</group>
+                <key>filterHigh</key>
                 <status>0xB8</status>
                 <midino>0x48</midino>
                 <options>
@@ -2483,20 +2561,29 @@
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatloop_8_toggle</key>
+                <key>beatloop_64_toggle</key>
                 <status>0x88</status>
                 <midino>0x77</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatlooproll_8_activate</key>
+                <key>beatlooproll_4_activate</key>
                 <status>0x9A</status>
                 <midino>0x7B</midino>
                 <options>
-                    <button/>
+                    <normal/>
+                </options>
+            </control>
+            <control>
+                <group>[Channel1]</group>
+                <key>beatloop_4_toggle</key>
+                <status>0x89</status>
+                <midino>0x77</midino>
+                <options>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -2527,6 +2614,15 @@
                 </options>
             </control>
             <control>
+                <group>[Channel2]</group>
+                <key>beatloop_4_toggle</key>
+                <status>0x8A</status>
+                <midino>0x77</midino>
+                <options>
+                    <normal/>
+                </options>
+            </control>
+            <control>
                 <group>[Master]</group>
                 <key>novation_twitch.__handle_x98_x3</key>
                 <status>0x8A</status>
@@ -2537,11 +2633,11 @@
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatlooproll_0.125_activate</key>
+                <key>beatlooproll_0.0625_activate</key>
                 <status>0x97</status>
                 <midino>0x79</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -2564,29 +2660,29 @@
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatlooproll_0.125_activate</key>
+                <key>beatlooproll_0.0625_activate</key>
                 <status>0x98</status>
                 <midino>0x79</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatloop_2_toggle</key>
+                <key>beatloop_16_toggle</key>
                 <status>0x87</status>
                 <midino>0x75</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatlooproll_2_activate</key>
+                <key>beatlooproll_1_activate</key>
                 <status>0x99</status>
                 <midino>0x79</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -2609,29 +2705,29 @@
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatloop_2_toggle</key>
+                <key>beatloop_16_toggle</key>
                 <status>0x88</status>
                 <midino>0x75</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatlooproll_2_activate</key>
+                <key>beatlooproll_1_activate</key>
                 <status>0x9A</status>
                 <midino>0x79</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatloop_32_toggle</key>
+                <key>beatloop_1_toggle</key>
                 <status>0x89</status>
                 <midino>0x75</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -2645,20 +2741,20 @@
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatloop_32_toggle</key>
+                <key>beatloop_1_toggle</key>
                 <status>0x8A</status>
                 <midino>0x75</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatloop_8_toggle</key>
+                <key>beatloop_64_toggle</key>
                 <status>0x97</status>
                 <midino>0x77</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -2672,7 +2768,7 @@
             </control>
             <control>
                 <group>[Microphone]</group>
-                <key>volume</key>
+                <key>pregain</key>
                 <status>0xBB</status>
                 <midino>0x0B</midino>
                 <options>
@@ -2681,20 +2777,29 @@
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatloop_8_toggle</key>
+                <key>beatloop_64_toggle</key>
                 <status>0x98</status>
                 <midino>0x77</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatloop_0.5_toggle</key>
+                <key>beatloop_4_toggle</key>
                 <status>0x87</status>
                 <midino>0x73</midino>
                 <options>
-                    <button/>
+                    <normal/>
+                </options>
+            </control>
+            <control>
+                <group>[Channel1]</group>
+                <key>beatloop_4_toggle</key>
+                <status>0x99</status>
+                <midino>0x77</midino>
+                <options>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -2717,20 +2822,29 @@
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatloop_0.5_toggle</key>
+                <key>beatloop_4_toggle</key>
                 <status>0x88</status>
                 <midino>0x73</midino>
                 <options>
-                    <button/>
+                    <normal/>
+                </options>
+            </control>
+            <control>
+                <group>[Channel2]</group>
+                <key>beatloop_4_toggle</key>
+                <status>0x9A</status>
+                <midino>0x77</midino>
+                <options>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatloop_8_toggle</key>
+                <key>beatloop_0.25_toggle</key>
                 <status>0x89</status>
                 <midino>0x73</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -2744,17 +2858,16 @@
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatloop_8_toggle</key>
+                <key>beatloop_0.25_toggle</key>
                 <status>0x8A</status>
                 <midino>0x73</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
                 <key>pregain</key>
-                <description>MIDI Learned from 976 messages.</description>
                 <status>0xB7</status>
                 <midino>0x09</midino>
                 <options>
@@ -2764,7 +2877,6 @@
             <control>
                 <group>[Channel2]</group>
                 <key>pregain</key>
-                <description>MIDI Learned from 618 messages.</description>
                 <status>0xB8</status>
                 <midino>0x09</midino>
                 <options>
@@ -2782,11 +2894,11 @@
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatloop_2_toggle</key>
+                <key>beatloop_16_toggle</key>
                 <status>0x97</status>
                 <midino>0x75</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -2809,65 +2921,65 @@
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatloop_2_toggle</key>
+                <key>beatloop_16_toggle</key>
                 <status>0x98</status>
                 <midino>0x75</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatloop_0.125_toggle</key>
+                <key>beatloop_1_toggle</key>
                 <status>0x87</status>
                 <midino>0x71</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatloop_32_toggle</key>
+                <key>beatloop_1_toggle</key>
                 <status>0x99</status>
                 <midino>0x75</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatloop_0.125_toggle</key>
+                <key>beatloop_1_toggle</key>
                 <status>0x88</status>
                 <midino>0x71</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatloop_32_toggle</key>
+                <key>beatloop_1_toggle</key>
                 <status>0x9A</status>
                 <midino>0x75</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatloop_2_toggle</key>
+                <key>beatloop_0.0625_toggle</key>
                 <status>0x89</status>
                 <midino>0x71</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatloop_2_toggle</key>
+                <key>beatloop_0.0625_toggle</key>
                 <status>0x8A</status>
                 <midino>0x71</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -2899,11 +3011,11 @@
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatloop_0.5_toggle</key>
+                <key>beatloop_4_toggle</key>
                 <status>0x97</status>
                 <midino>0x73</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -2917,7 +3029,7 @@
             </control>
             <control>
                 <group>[Microphone]</group>
-                <key>volume</key>
+                <key>pregain</key>
                 <status>0xBB</status>
                 <midino>0x07</midino>
                 <options>
@@ -2926,11 +3038,11 @@
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatloop_0.5_toggle</key>
+                <key>beatloop_4_toggle</key>
                 <status>0x98</status>
                 <midino>0x73</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -2944,11 +3056,11 @@
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatloop_8_toggle</key>
+                <key>beatloop_0.25_toggle</key>
                 <status>0x99</status>
                 <midino>0x73</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -2962,11 +3074,11 @@
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatloop_8_toggle</key>
+                <key>beatloop_0.25_toggle</key>
                 <status>0x9A</status>
                 <midino>0x73</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -2988,21 +3100,12 @@
                 </options>
             </control>
             <control>
-                <group>[Master]</group>
-                <key>novation_twitch.__handle_xb0_x3</key>
-                <status>0xB0</status>
-                <midino>0x03</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
                 <group>[Channel1]</group>
-                <key>beatloop_0.125_toggle</key>
+                <key>beatloop_1_toggle</key>
                 <status>0x97</status>
                 <midino>0x71</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3016,11 +3119,11 @@
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatloop_0.125_toggle</key>
+                <key>beatloop_1_toggle</key>
                 <status>0x98</status>
                 <midino>0x71</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3034,11 +3137,11 @@
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>beatloop_2_toggle</key>
+                <key>beatloop_0.0625_toggle</key>
                 <status>0x99</status>
                 <midino>0x71</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3052,11 +3155,11 @@
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>beatloop_2_toggle</key>
+                <key>beatloop_0.0625_toggle</key>
                 <status>0x9A</status>
                 <midino>0x71</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3124,7 +3227,7 @@
             </control>
             <control>
                 <group>[Microphone]</group>
-                <key>volume</key>
+                <key>pregain</key>
                 <status>0xBB</status>
                 <midino>0x03</midino>
                 <options>
@@ -3146,7 +3249,7 @@
                 <status>0x87</status>
                 <midino>0x6B</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3164,7 +3267,7 @@
                 <status>0x88</status>
                 <midino>0x6B</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3182,7 +3285,7 @@
                 <status>0x89</status>
                 <midino>0x6B</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3191,7 +3294,7 @@
                 <status>0x8A</status>
                 <midino>0x6B</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3227,7 +3330,7 @@
                 <status>0x87</status>
                 <midino>0x69</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3245,7 +3348,7 @@
                 <status>0x88</status>
                 <midino>0x69</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3263,7 +3366,7 @@
                 <status>0x89</status>
                 <midino>0x69</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3272,7 +3375,7 @@
                 <status>0x8A</status>
                 <midino>0x69</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3281,7 +3384,7 @@
                 <status>0x97</status>
                 <midino>0x6B</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3290,7 +3393,7 @@
                 <status>0x98</status>
                 <midino>0x6B</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3299,7 +3402,7 @@
                 <status>0x87</status>
                 <midino>0x67</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3308,7 +3411,7 @@
                 <status>0x99</status>
                 <midino>0x6B</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3317,7 +3420,7 @@
                 <status>0x88</status>
                 <midino>0x67</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3326,7 +3429,7 @@
                 <status>0x9A</status>
                 <midino>0x6B</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3335,7 +3438,7 @@
                 <status>0x89</status>
                 <midino>0x67</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3344,7 +3447,7 @@
                 <status>0x8A</status>
                 <midino>0x67</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3353,7 +3456,7 @@
                 <status>0x97</status>
                 <midino>0x69</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3362,7 +3465,7 @@
                 <status>0x98</status>
                 <midino>0x69</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3371,7 +3474,7 @@
                 <status>0x87</status>
                 <midino>0x65</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3380,7 +3483,7 @@
                 <status>0x99</status>
                 <midino>0x69</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3389,7 +3492,7 @@
                 <status>0x88</status>
                 <midino>0x65</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3398,7 +3501,7 @@
                 <status>0x9A</status>
                 <midino>0x69</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3407,7 +3510,7 @@
                 <status>0x89</status>
                 <midino>0x65</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3416,7 +3519,7 @@
                 <status>0x8A</status>
                 <midino>0x65</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3425,7 +3528,7 @@
                 <status>0x97</status>
                 <midino>0x67</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3443,7 +3546,7 @@
                 <status>0x98</status>
                 <midino>0x67</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3452,7 +3555,7 @@
                 <status>0x87</status>
                 <midino>0x63</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3461,7 +3564,7 @@
                 <status>0x99</status>
                 <midino>0x67</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3479,7 +3582,7 @@
                 <status>0x88</status>
                 <midino>0x63</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3488,7 +3591,7 @@
                 <status>0x9A</status>
                 <midino>0x67</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3497,7 +3600,7 @@
                 <status>0x89</status>
                 <midino>0x63</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3506,7 +3609,7 @@
                 <status>0x8A</status>
                 <midino>0x63</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3515,7 +3618,7 @@
                 <status>0x97</status>
                 <midino>0x65</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3524,7 +3627,7 @@
                 <status>0x98</status>
                 <midino>0x65</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3533,7 +3636,7 @@
                 <status>0x87</status>
                 <midino>0x61</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3542,7 +3645,7 @@
                 <status>0x99</status>
                 <midino>0x65</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3551,7 +3654,7 @@
                 <status>0x88</status>
                 <midino>0x61</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3560,7 +3663,7 @@
                 <status>0x9A</status>
                 <midino>0x65</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3569,7 +3672,7 @@
                 <status>0x89</status>
                 <midino>0x61</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3578,7 +3681,7 @@
                 <status>0x8A</status>
                 <midino>0x61</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3587,7 +3690,7 @@
                 <status>0x97</status>
                 <midino>0x63</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3596,7 +3699,7 @@
                 <status>0x98</status>
                 <midino>0x63</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3605,7 +3708,7 @@
                 <status>0x99</status>
                 <midino>0x63</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3614,7 +3717,7 @@
                 <status>0x9A</status>
                 <midino>0x63</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3623,7 +3726,7 @@
                 <status>0x97</status>
                 <midino>0x61</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3632,7 +3735,7 @@
                 <status>0x98</status>
                 <midino>0x61</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3641,7 +3744,7 @@
                 <status>0x99</status>
                 <midino>0x61</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
@@ -3650,30 +3753,44 @@
                 <status>0x9A</status>
                 <midino>0x61</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
             <control>
-                <group>[Master]</group>
-                <key>novation_twitch.__handle_x9b_x22</key>
+                <group>[EffectRack1_EffectUnit1]</group>
+                <key>enabled</key>
                 <status>0x8B</status>
                 <midino>0x22</midino>
                 <options>
-                    <script-binding/>
+                    <normal/>
                 </options>
             </control>
             <control>
-                <group>[Channel1]</group>
-                <key>flanger</key>
+                <group>[EffectRack1_EffectUnit1]</group>
+                <key>group_[Channel1]_enable</key>
                 <status>0x8B</status>
                 <midino>0x20</midino>
                 <options>
-                    <button/>
+                    <normal/>
                 </options>
             </control>
         </controls>
         <outputs>
             <output>
+                <group>[EffectRack1_EffectUnit1]</group>
+                <key>group_[Channel1]_enable</key>
+                <status>0x9B</status>
+                <midino>0x20</midino>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[EffectRack1_EffectUnit1]</group>
+                <key>enabled</key>
+                <status>0x9B</status>
+                <midino>0x22</midino>
+                <minimum>1</minimum>
+            </output>
+            <output>
                 <group>[Sampler1]</group>
                 <key>cue_preview</key>
                 <status>0x9A</status>
@@ -3710,15 +3827,182 @@
                 <minimum>1</minimum>
             </output>
             <output>
-                <group>[Channel1]</group>
-                <key>flanger</key>
-                <status>0x9B</status>
-                <midino>0x20</midino>
+                <group>[Channel2]</group>
+                <key>beatloop_64_enabled</key>
+                <status>0x9A</status>
+                <midino>0x7F</midino>
+                <off>0x71</off>
                 <minimum>1</minimum>
             </output>
             <output>
                 <group>[Channel2]</group>
                 <key>beatloop_64_enabled</key>
+                <status>0x98</status>
+                <midino>0x77</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Sampler2]</group>
+                <key>cue_preview</key>
+                <status>0x9A</status>
+                <midino>0x69</midino>
+                <on>0x0F</on>
+                <off>0x01</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Sampler2]</group>
+                <key>cue_preview</key>
+                <status>0x98</status>
+                <midino>0x69</midino>
+                <on>0x0F</on>
+                <off>0x01</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Sampler2]</group>
+                <key>cue_preview</key>
+                <status>0x99</status>
+                <midino>0x69</midino>
+                <on>0x0F</on>
+                <off>0x01</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Sampler2]</group>
+                <key>cue_preview</key>
+                <status>0x97</status>
+                <midino>0x69</midino>
+                <on>0x0F</on>
+                <off>0x01</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>play</key>
+                <status>0x99</status>
+                <midino>0x17</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>play</key>
+                <status>0x97</status>
+                <midino>0x17</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>hotcue_7_enabled</key>
+                <status>0x9A</status>
+                <midino>0x66</midino>
+                <on>0x4F</on>
+                <off>0x41</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>hotcue_7_enabled</key>
+                <status>0x98</status>
+                <midino>0x66</midino>
+                <on>0x4F</on>
+                <off>0x41</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>hotcue_8_enabled</key>
+                <status>0x9A</status>
+                <midino>0x67</midino>
+                <on>0x4F</on>
+                <off>0x41</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>hotcue_8_enabled</key>
+                <status>0x98</status>
+                <midino>0x67</midino>
+                <on>0x4F</on>
+                <off>0x41</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>beatloop_64_enabled</key>
+                <status>0x99</status>
+                <midino>0x7F</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>beatloop_64_enabled</key>
+                <status>0x97</status>
+                <midino>0x77</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>hotcue_3_enabled</key>
+                <status>0x9A</status>
+                <midino>0x62</midino>
+                <on>0x4F</on>
+                <off>0x41</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>hotcue_3_enabled</key>
+                <status>0x98</status>
+                <midino>0x62</midino>
+                <on>0x4F</on>
+                <off>0x41</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Sampler3]</group>
+                <key>cue_preview</key>
+                <status>0x9A</status>
+                <midino>0x6A</midino>
+                <on>0x0F</on>
+                <off>0x01</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Sampler3]</group>
+                <key>cue_preview</key>
+                <status>0x98</status>
+                <midino>0x6A</midino>
+                <on>0x0F</on>
+                <off>0x01</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Sampler3]</group>
+                <key>cue_preview</key>
+                <status>0x99</status>
+                <midino>0x6A</midino>
+                <on>0x0F</on>
+                <off>0x01</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Sampler3]</group>
+                <key>cue_preview</key>
+                <status>0x97</status>
+                <midino>0x6A</midino>
+                <on>0x0F</on>
+                <off>0x01</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>beatloop_32_enabled</key>
                 <status>0x9A</status>
                 <midino>0x7E</midino>
                 <off>0x71</off>
@@ -3726,696 +4010,547 @@
             </output>
             <output>
                 <group>[Channel2]</group>
-                <key>beatloop_64_enabled</key>
+                <key>beatloop_32_enabled</key>
+                <status>0x98</status>
+                <midino>0x76</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>hotcue_5_enabled</key>
+                <status>0x9A</status>
+                <midino>0x64</midino>
+                <on>0x4F</on>
+                <off>0x41</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>hotcue_5_enabled</key>
+                <status>0x98</status>
+                <midino>0x64</midino>
+                <on>0x4F</on>
+                <off>0x41</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>hotcue_4_enabled</key>
+                <status>0x9A</status>
+                <midino>0x63</midino>
+                <on>0x4F</on>
+                <off>0x41</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>hotcue_4_enabled</key>
+                <status>0x98</status>
+                <midino>0x63</midino>
+                <on>0x4F</on>
+                <off>0x41</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>play</key>
+                <status>0x9A</status>
+                <midino>0x17</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>play</key>
+                <status>0x98</status>
+                <midino>0x17</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>hotcue_7_enabled</key>
+                <status>0x99</status>
+                <midino>0x66</midino>
+                <on>0x4F</on>
+                <off>0x41</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>hotcue_7_enabled</key>
+                <status>0x97</status>
+                <midino>0x66</midino>
+                <on>0x4F</on>
+                <off>0x41</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>hotcue_6_enabled</key>
+                <status>0x9A</status>
+                <midino>0x65</midino>
+                <on>0x4F</on>
+                <off>0x41</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>hotcue_6_enabled</key>
+                <status>0x98</status>
+                <midino>0x65</midino>
+                <on>0x4F</on>
+                <off>0x41</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>hotcue_1_enabled</key>
+                <status>0x9A</status>
+                <midino>0x60</midino>
+                <on>0x4F</on>
+                <off>0x41</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>hotcue_1_enabled</key>
+                <status>0x98</status>
+                <midino>0x60</midino>
+                <on>0x4F</on>
+                <off>0x41</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>hotcue_8_enabled</key>
+                <status>0x99</status>
+                <midino>0x67</midino>
+                <on>0x4F</on>
+                <off>0x41</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>hotcue_8_enabled</key>
+                <status>0x97</status>
+                <midino>0x67</midino>
+                <on>0x4F</on>
+                <off>0x41</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>hotcue_3_enabled</key>
+                <status>0x99</status>
+                <midino>0x62</midino>
+                <on>0x4F</on>
+                <off>0x41</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>hotcue_3_enabled</key>
+                <status>0x97</status>
+                <midino>0x62</midino>
+                <on>0x4F</on>
+                <off>0x41</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Sampler4]</group>
+                <key>cue_preview</key>
+                <status>0x9A</status>
+                <midino>0x6B</midino>
+                <on>0x0F</on>
+                <off>0x01</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Sampler4]</group>
+                <key>cue_preview</key>
+                <status>0x98</status>
+                <midino>0x6B</midino>
+                <on>0x0F</on>
+                <off>0x01</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Sampler4]</group>
+                <key>cue_preview</key>
+                <status>0x99</status>
+                <midino>0x6B</midino>
+                <on>0x0F</on>
+                <off>0x01</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Sampler4]</group>
+                <key>cue_preview</key>
+                <status>0x97</status>
+                <midino>0x6B</midino>
+                <on>0x0F</on>
+                <off>0x01</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>beatloop_32_enabled</key>
+                <status>0x99</status>
+                <midino>0x7E</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>beatloop_32_enabled</key>
+                <status>0x97</status>
+                <midino>0x76</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>hotcue_2_enabled</key>
+                <status>0x9A</status>
+                <midino>0x61</midino>
+                <on>0x4F</on>
+                <off>0x41</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>hotcue_2_enabled</key>
+                <status>0x98</status>
+                <midino>0x61</midino>
+                <on>0x4F</on>
+                <off>0x41</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>hotcue_5_enabled</key>
+                <status>0x99</status>
+                <midino>0x64</midino>
+                <on>0x4F</on>
+                <off>0x41</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>hotcue_5_enabled</key>
+                <status>0x97</status>
+                <midino>0x64</midino>
+                <on>0x4F</on>
+                <off>0x41</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>hotcue_4_enabled</key>
+                <status>0x99</status>
+                <midino>0x63</midino>
+                <on>0x4F</on>
+                <off>0x41</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>hotcue_4_enabled</key>
+                <status>0x97</status>
+                <midino>0x63</midino>
+                <on>0x4F</on>
+                <off>0x41</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>hotcue_6_enabled</key>
+                <status>0x99</status>
+                <midino>0x65</midino>
+                <on>0x4F</on>
+                <off>0x41</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>hotcue_6_enabled</key>
+                <status>0x97</status>
+                <midino>0x65</midino>
+                <on>0x4F</on>
+                <off>0x41</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>hotcue_1_enabled</key>
+                <status>0x99</status>
+                <midino>0x60</midino>
+                <on>0x4F</on>
+                <off>0x41</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>hotcue_1_enabled</key>
+                <status>0x97</status>
+                <midino>0x60</midino>
+                <on>0x4F</on>
+                <off>0x41</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>hotcue_2_enabled</key>
+                <status>0x99</status>
+                <midino>0x61</midino>
+                <on>0x4F</on>
+                <off>0x41</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>hotcue_2_enabled</key>
+                <status>0x97</status>
+                <midino>0x61</midino>
+                <on>0x4F</on>
+                <off>0x41</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>beatloop_0.03125_enabled</key>
+                <status>0x98</status>
+                <midino>0x78</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>beatloop_0.03125_enabled</key>
+                <status>0x9A</status>
+                <midino>0x70</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Master]</group>
+                <key>maximize_library</key>
+                <status>0x97</status>
+                <midino>0x50</midino>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>beatloop_0.03125_enabled</key>
+                <status>0x97</status>
+                <midino>0x78</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>beatloop_0.03125_enabled</key>
+                <status>0x99</status>
+                <midino>0x70</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>beatloop_1_enabled</key>
+                <status>0x9A</status>
+                <midino>0x79</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>beatloop_1_enabled</key>
+                <status>0x98</status>
+                <midino>0x7D</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>beatloop_1_enabled</key>
+                <status>0x9A</status>
+                <midino>0x75</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>beatloop_1_enabled</key>
+                <status>0x98</status>
+                <midino>0x71</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>beatloop_0.0625_enabled</key>
+                <status>0x98</status>
+                <midino>0x79</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>beatloop_0.0625_enabled</key>
+                <status>0x9A</status>
+                <midino>0x71</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>beatloop_2_enabled</key>
+                <status>0x9A</status>
+                <midino>0x7A</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>beatloop_2_enabled</key>
+                <status>0x98</status>
+                <midino>0x7E</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>beatloop_2_enabled</key>
                 <status>0x9A</status>
                 <midino>0x76</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
             <output>
-                <group>[Sampler2]</group>
-                <key>cue_preview</key>
-                <status>0x9A</status>
-                <midino>0x69</midino>
-                <on>0x0F</on>
-                <off>0x01</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Sampler2]</group>
-                <key>cue_preview</key>
-                <status>0x98</status>
-                <midino>0x69</midino>
-                <on>0x0F</on>
-                <off>0x01</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Sampler2]</group>
-                <key>cue_preview</key>
-                <status>0x99</status>
-                <midino>0x69</midino>
-                <on>0x0F</on>
-                <off>0x01</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Sampler2]</group>
-                <key>cue_preview</key>
-                <status>0x97</status>
-                <midino>0x69</midino>
-                <on>0x0F</on>
-                <off>0x01</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
                 <group>[Channel2]</group>
-                <key>flanger</key>
+                <key>beatloop_2_enabled</key>
+                <status>0x98</status>
+                <midino>0x72</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[EffectRack1_EffectUnit1]</group>
+                <key>group_[Channel2]_enable</key>
                 <status>0x9B</status>
                 <midino>0x21</midino>
                 <minimum>1</minimum>
             </output>
             <output>
                 <group>[Channel1]</group>
-                <key>play</key>
+                <key>pfl</key>
                 <status>0x99</status>
-                <midino>0x17</midino>
-                <off>0x71</off>
+                <midino>0x0A</midino>
                 <minimum>1</minimum>
             </output>
             <output>
                 <group>[Channel1]</group>
-                <key>play</key>
+                <key>pfl</key>
                 <status>0x97</status>
-                <midino>0x17</midino>
+                <midino>0x0A</midino>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>beatloop_0.125_enabled</key>
+                <status>0x98</status>
+                <midino>0x7A</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
             <output>
                 <group>[Channel2]</group>
-                <key>hotcue_7_enabled</key>
+                <key>beatloop_0.125_enabled</key>
                 <status>0x9A</status>
-                <midino>0x66</midino>
-                <on>0x4F</on>
-                <off>0x41</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>hotcue_7_enabled</key>
-                <status>0x98</status>
-                <midino>0x66</midino>
-                <on>0x4F</on>
-                <off>0x41</off>
+                <midino>0x72</midino>
+                <off>0x71</off>
                 <minimum>1</minimum>
             </output>
             <output>
                 <group>[Channel1]</group>
-                <key>beatsync_tempo</key>
+                <key>beatloop_1_enabled</key>
                 <status>0x99</status>
-                <midino>0x13</midino>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>hotcue_8_enabled</key>
-                <status>0x9A</status>
-                <midino>0x67</midino>
-                <on>0x4F</on>
-                <off>0x41</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>hotcue_8_enabled</key>
-                <status>0x98</status>
-                <midino>0x67</midino>
-                <on>0x4F</on>
-                <off>0x41</off>
+                <midino>0x79</midino>
+                <off>0x71</off>
                 <minimum>1</minimum>
             </output>
             <output>
                 <group>[Channel1]</group>
-                <key>beatloop_64_enabled</key>
+                <key>beatloop_1_enabled</key>
+                <status>0x97</status>
+                <midino>0x7D</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>beatloop_1_enabled</key>
                 <status>0x99</status>
+                <midino>0x75</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>beatloop_1_enabled</key>
+                <status>0x97</status>
+                <midino>0x71</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>beatloop_0.0625_enabled</key>
+                <status>0x97</status>
+                <midino>0x79</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>beatloop_0.0625_enabled</key>
+                <status>0x99</status>
+                <midino>0x71</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>beatloop_2_enabled</key>
+                <status>0x99</status>
+                <midino>0x7A</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>beatloop_2_enabled</key>
+                <status>0x97</status>
                 <midino>0x7E</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
             <output>
                 <group>[Channel1]</group>
-                <key>beatloop_64_enabled</key>
+                <key>beatloop_2_enabled</key>
                 <status>0x99</status>
                 <midino>0x76</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
             <output>
-                <group>[Channel2]</group>
-                <key>hotcue_3_enabled</key>
-                <status>0x9A</status>
-                <midino>0x62</midino>
-                <on>0x4F</on>
-                <off>0x41</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>hotcue_3_enabled</key>
-                <status>0x98</status>
-                <midino>0x62</midino>
-                <on>0x4F</on>
-                <off>0x41</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Sampler3]</group>
-                <key>cue_preview</key>
-                <status>0x9A</status>
-                <midino>0x6A</midino>
-                <on>0x0F</on>
-                <off>0x01</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Sampler3]</group>
-                <key>cue_preview</key>
-                <status>0x98</status>
-                <midino>0x6A</midino>
-                <on>0x0F</on>
-                <off>0x01</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Sampler3]</group>
-                <key>cue_preview</key>
-                <status>0x99</status>
-                <midino>0x6A</midino>
-                <on>0x0F</on>
-                <off>0x01</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Sampler3]</group>
-                <key>cue_preview</key>
-                <status>0x97</status>
-                <midino>0x6A</midino>
-                <on>0x0F</on>
-                <off>0x01</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>beatloop_32_enabled</key>
-                <status>0x9A</status>
-                <midino>0x7D</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>beatloop_32_enabled</key>
-                <status>0x9A</status>
-                <midino>0x75</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>hotcue_5_enabled</key>
-                <status>0x9A</status>
-                <midino>0x64</midino>
-                <on>0x4F</on>
-                <off>0x41</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>hotcue_5_enabled</key>
-                <status>0x98</status>
-                <midino>0x64</midino>
-                <on>0x4F</on>
-                <off>0x41</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>hotcue_4_enabled</key>
-                <status>0x9A</status>
-                <midino>0x63</midino>
-                <on>0x4F</on>
-                <off>0x41</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>hotcue_4_enabled</key>
-                <status>0x98</status>
-                <midino>0x63</midino>
-                <on>0x4F</on>
-                <off>0x41</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>play</key>
-                <status>0x9A</status>
-                <midino>0x17</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>play</key>
-                <status>0x98</status>
-                <midino>0x17</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>hotcue_7_enabled</key>
-                <status>0x99</status>
-                <midino>0x66</midino>
-                <on>0x4F</on>
-                <off>0x41</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>hotcue_7_enabled</key>
-                <status>0x97</status>
-                <midino>0x66</midino>
-                <on>0x4F</on>
-                <off>0x41</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>hotcue_6_enabled</key>
-                <status>0x9A</status>
-                <midino>0x65</midino>
-                <on>0x4F</on>
-                <off>0x41</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>hotcue_6_enabled</key>
-                <status>0x98</status>
-                <midino>0x65</midino>
-                <on>0x4F</on>
-                <off>0x41</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>beatsync_tempo</key>
-                <status>0x9A</status>
-                <midino>0x13</midino>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>hotcue_1_enabled</key>
-                <status>0x9A</status>
-                <midino>0x60</midino>
-                <on>0x4F</on>
-                <off>0x41</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>hotcue_1_enabled</key>
-                <status>0x98</status>
-                <midino>0x60</midino>
-                <on>0x4F</on>
-                <off>0x41</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>hotcue_8_enabled</key>
-                <status>0x99</status>
-                <midino>0x67</midino>
-                <on>0x4F</on>
-                <off>0x41</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>hotcue_8_enabled</key>
-                <status>0x97</status>
-                <midino>0x67</midino>
-                <on>0x4F</on>
-                <off>0x41</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>hotcue_3_enabled</key>
-                <status>0x99</status>
-                <midino>0x62</midino>
-                <on>0x4F</on>
-                <off>0x41</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>hotcue_3_enabled</key>
-                <status>0x97</status>
-                <midino>0x62</midino>
-                <on>0x4F</on>
-                <off>0x41</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Sampler4]</group>
-                <key>cue_preview</key>
-                <status>0x9A</status>
-                <midino>0x6B</midino>
-                <on>0x0F</on>
-                <off>0x01</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Sampler4]</group>
-                <key>cue_preview</key>
-                <status>0x98</status>
-                <midino>0x6B</midino>
-                <on>0x0F</on>
-                <off>0x01</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Sampler4]</group>
-                <key>cue_preview</key>
-                <status>0x99</status>
-                <midino>0x6B</midino>
-                <on>0x0F</on>
-                <off>0x01</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Sampler4]</group>
-                <key>cue_preview</key>
-                <status>0x97</status>
-                <midino>0x6B</midino>
-                <on>0x0F</on>
-                <off>0x01</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>beatloop_32_enabled</key>
-                <status>0x99</status>
-                <midino>0x7D</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>beatloop_32_enabled</key>
-                <status>0x99</status>
-                <midino>0x75</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>hotcue_2_enabled</key>
-                <status>0x9A</status>
-                <midino>0x61</midino>
-                <on>0x4F</on>
-                <off>0x41</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>hotcue_2_enabled</key>
-                <status>0x98</status>
-                <midino>0x61</midino>
-                <on>0x4F</on>
-                <off>0x41</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>hotcue_5_enabled</key>
-                <status>0x99</status>
-                <midino>0x64</midino>
-                <on>0x4F</on>
-                <off>0x41</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>hotcue_5_enabled</key>
-                <status>0x97</status>
-                <midino>0x64</midino>
-                <on>0x4F</on>
-                <off>0x41</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>hotcue_4_enabled</key>
-                <status>0x99</status>
-                <midino>0x63</midino>
-                <on>0x4F</on>
-                <off>0x41</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>hotcue_4_enabled</key>
-                <status>0x97</status>
-                <midino>0x63</midino>
-                <on>0x4F</on>
-                <off>0x41</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>hotcue_6_enabled</key>
-                <status>0x99</status>
-                <midino>0x65</midino>
-                <on>0x4F</on>
-                <off>0x41</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>hotcue_6_enabled</key>
-                <status>0x97</status>
-                <midino>0x65</midino>
-                <on>0x4F</on>
-                <off>0x41</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>hotcue_1_enabled</key>
-                <status>0x99</status>
-                <midino>0x60</midino>
-                <on>0x4F</on>
-                <off>0x41</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>hotcue_1_enabled</key>
-                <status>0x97</status>
-                <midino>0x60</midino>
-                <on>0x4F</on>
-                <off>0x41</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>hotcue_2_enabled</key>
-                <status>0x99</status>
-                <midino>0x61</midino>
-                <on>0x4F</on>
-                <off>0x41</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>hotcue_2_enabled</key>
-                <status>0x97</status>
-                <midino>0x61</midino>
-                <on>0x4F</on>
-                <off>0x41</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>beatloop_1_enabled</key>
-                <status>0x9A</status>
-                <midino>0x78</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>beatloop_1_enabled</key>
-                <status>0x98</status>
-                <midino>0x7C</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>beatloop_1_enabled</key>
-                <status>0x9A</status>
-                <midino>0x70</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>beatloop_1_enabled</key>
-                <status>0x98</status>
-                <midino>0x74</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>beatloop_0.0625_enabled</key>
-                <status>0x98</status>
-                <midino>0x78</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>beatloop_0.0625_enabled</key>
-                <status>0x98</status>
-                <midino>0x70</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>beatloop_2_enabled</key>
-                <status>0x9A</status>
-                <midino>0x79</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>beatloop_2_enabled</key>
-                <status>0x98</status>
-                <midino>0x7D</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>beatloop_2_enabled</key>
-                <status>0x9A</status>
-                <midino>0x71</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>beatloop_2_enabled</key>
-                <status>0x98</status>
-                <midino>0x75</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>pfl</key>
-                <status>0x99</status>
-                <midino>0x0A</midino>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>pfl</key>
-                <status>0x97</status>
-                <midino>0x0A</midino>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>beatloop_0.125_enabled</key>
-                <status>0x98</status>
-                <midino>0x79</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>beatloop_0.125_enabled</key>
-                <status>0x98</status>
-                <midino>0x71</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>beatloop_1_enabled</key>
-                <status>0x99</status>
-                <midino>0x78</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>beatloop_1_enabled</key>
-                <status>0x97</status>
-                <midino>0x7C</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>beatloop_1_enabled</key>
-                <status>0x99</status>
-                <midino>0x70</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>beatloop_1_enabled</key>
-                <status>0x97</status>
-                <midino>0x74</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>beatloop_0.0625_enabled</key>
-                <status>0x97</status>
-                <midino>0x78</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>beatloop_0.0625_enabled</key>
-                <status>0x97</status>
-                <midino>0x70</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>beatloop_2_enabled</key>
-                <status>0x99</status>
-                <midino>0x79</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
                 <group>[Channel1]</group>
                 <key>beatloop_2_enabled</key>
                 <status>0x97</status>
-                <midino>0x7D</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>beatloop_2_enabled</key>
-                <status>0x99</status>
-                <midino>0x71</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>beatloop_2_enabled</key>
-                <status>0x97</status>
-                <midino>0x75</midino>
+                <midino>0x72</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
@@ -4451,70 +4586,47 @@
                 <group>[Channel2]</group>
                 <key>beatloop_8_enabled</key>
                 <status>0x9A</status>
-                <midino>0x7B</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>beatloop_8_enabled</key>
-                <status>0x98</status>
-                <midino>0x7F</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>beatloop_8_enabled</key>
-                <status>0x9A</status>
-                <midino>0x73</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>beatloop_8_enabled</key>
-                <status>0x98</status>
-                <midino>0x77</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>beatloop_0.125_enabled</key>
-                <status>0x97</status>
-                <midino>0x79</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>beatloop_0.125_enabled</key>
-                <status>0x97</status>
-                <midino>0x71</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Playlist]</group>
-                <key>ToggleSelectedSidebarItem</key>
-                <status>0x97</status>
-                <midino>0x50</midino>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>beatloop_16_enabled</key>
-                <status>0x9A</status>
                 <midino>0x7C</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
             <output>
                 <group>[Channel2]</group>
+                <key>beatloop_8_enabled</key>
+                <status>0x98</status>
+                <midino>0x74</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>beatloop_0.125_enabled</key>
+                <status>0x97</status>
+                <midino>0x7A</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>beatloop_0.125_enabled</key>
+                <status>0x99</status>
+                <midino>0x72</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
                 <key>beatloop_16_enabled</key>
                 <status>0x9A</status>
-                <midino>0x74</midino>
+                <midino>0x7D</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>beatloop_16_enabled</key>
+                <status>0x98</status>
+                <midino>0x75</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
@@ -4536,54 +4648,38 @@
                 <group>[Channel1]</group>
                 <key>beatloop_8_enabled</key>
                 <status>0x99</status>
-                <midino>0x7B</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>beatloop_8_enabled</key>
-                <status>0x97</status>
-                <midino>0x7F</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>beatloop_8_enabled</key>
-                <status>0x99</status>
-                <midino>0x73</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>beatloop_8_enabled</key>
-                <status>0x97</status>
-                <midino>0x77</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>beatloop_16_enabled</key>
-                <status>0x99</status>
                 <midino>0x7C</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
             <output>
                 <group>[Channel1]</group>
-                <key>beatloop_16_enabled</key>
-                <status>0x99</status>
+                <key>beatloop_8_enabled</key>
+                <status>0x97</status>
                 <midino>0x74</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
             <output>
-                <group>[Channel2]</group>
-                <key>cue_default</key>
-                <status>0x98</status>
+                <group>[Channel1]</group>
+                <key>beatloop_16_enabled</key>
+                <status>0x99</status>
+                <midino>0x7D</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>beatloop_16_enabled</key>
+                <status>0x97</status>
+                <midino>0x75</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>cue_indicator</key>
+                <status>0x97</status>
                 <midino>0x16</midino>
                 <on>0x0F</on>
                 <off>0x01</off>
@@ -4604,9 +4700,9 @@
                 <minimum>1</minimum>
             </output>
             <output>
-                <group>[Channel1]</group>
-                <key>cue_default</key>
-                <status>0x97</status>
+                <group>[Channel2]</group>
+                <key>cue_indicator</key>
+                <status>0x98</status>
                 <midino>0x16</midino>
                 <on>0x0F</on>
                 <off>0x01</off>
@@ -4621,9 +4717,23 @@
             </output>
             <output>
                 <group>[Channel2]</group>
-                <key>beatloop_0.5_enabled</key>
+                <key>sync_enabled</key>
+                <status>0x9A</status>
+                <midino>0x13</midino>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>sync_enabled</key>
                 <status>0x98</status>
-                <midino>0x7B</midino>
+                <midino>0x13</midino>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>beatloop_0.5_enabled</key>
+                <status>0x9A</status>
+                <midino>0x78</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
@@ -4631,7 +4741,23 @@
                 <group>[Channel2]</group>
                 <key>beatloop_0.5_enabled</key>
                 <status>0x98</status>
-                <midino>0x73</midino>
+                <midino>0x7C</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>beatloop_0.5_enabled</key>
+                <status>0x9A</status>
+                <midino>0x74</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>beatloop_0.5_enabled</key>
+                <status>0x98</status>
+                <midino>0x70</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
@@ -4650,6 +4776,34 @@
                 <minimum>1</minimum>
             </output>
             <output>
+                <group>[QuickEffectRack1_[Channel2]]</group>
+                <key>enabled</key>
+                <status>0x9A</status>
+                <midino>0x0D</midino>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[QuickEffectRack1_[Channel2]]</group>
+                <key>enabled</key>
+                <status>0x98</status>
+                <midino>0x0D</midino>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[QuickEffectRack1_[Channel2]]</group>
+                <key>enabled</key>
+                <status>0x9A</status>
+                <midino>0x06</midino>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[QuickEffectRack1_[Channel2]]</group>
+                <key>enabled</key>
+                <status>0x98</status>
+                <midino>0x06</midino>
+                <minimum>1</minimum>
+            </output>
+            <output>
                 <group>[Channel2]</group>
                 <key>keylock</key>
                 <status>0x98</status>
@@ -4658,7 +4812,14 @@
             </output>
             <output>
                 <group>[Channel1]</group>
-                <key>beatsync</key>
+                <key>sync_enabled</key>
+                <status>0x99</status>
+                <midino>0x13</midino>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>sync_enabled</key>
                 <status>0x97</status>
                 <midino>0x13</midino>
                 <minimum>1</minimum>
@@ -4673,50 +4834,94 @@
                 <minimum>1</minimum>
             </output>
             <output>
-                <group>[Channel2]</group>
-                <key>beatloop_4_enabled</key>
-                <status>0x9A</status>
-                <midino>0x7A</midino>
-                <off>0x71</off>
+                <group>[QuickEffectRack1_[Channel1]]</group>
+                <key>enabled</key>
+                <status>0x99</status>
+                <midino>0x0D</midino>
                 <minimum>1</minimum>
             </output>
             <output>
-                <group>[Channel2]</group>
-                <key>beatloop_4_enabled</key>
-                <status>0x98</status>
-                <midino>0x7E</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>beatloop_4_enabled</key>
-                <status>0x9A</status>
-                <midino>0x72</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>beatloop_4_enabled</key>
-                <status>0x98</status>
-                <midino>0x76</midino>
-                <off>0x71</off>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>beatloop_0.5_enabled</key>
+                <group>[QuickEffectRack1_[Channel1]]</group>
+                <key>enabled</key>
                 <status>0x97</status>
+                <midino>0x0D</midino>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[QuickEffectRack1_[Channel1]]</group>
+                <key>enabled</key>
+                <status>0x99</status>
+                <midino>0x06</midino>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[QuickEffectRack1_[Channel1]]</group>
+                <key>enabled</key>
+                <status>0x97</status>
+                <midino>0x06</midino>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>beatloop_4_enabled</key>
+                <status>0x9A</status>
                 <midino>0x7B</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
             <output>
+                <group>[Channel2]</group>
+                <key>beatloop_4_enabled</key>
+                <status>0x98</status>
+                <midino>0x7F</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>beatloop_4_enabled</key>
+                <status>0x9A</status>
+                <midino>0x77</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel2]</group>
+                <key>beatloop_4_enabled</key>
+                <status>0x98</status>
+                <midino>0x73</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>beatloop_0.5_enabled</key>
+                <status>0x99</status>
+                <midino>0x78</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
                 <group>[Channel1]</group>
                 <key>beatloop_0.5_enabled</key>
                 <status>0x97</status>
-                <midino>0x73</midino>
+                <midino>0x7C</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>beatloop_0.5_enabled</key>
+                <status>0x99</status>
+                <midino>0x74</midino>
+                <off>0x71</off>
+                <minimum>1</minimum>
+            </output>
+            <output>
+                <group>[Channel1]</group>
+                <key>beatloop_0.5_enabled</key>
+                <status>0x97</status>
+                <midino>0x70</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
@@ -4738,15 +4943,15 @@
                 <group>[Channel2]</group>
                 <key>beatloop_0.25_enabled</key>
                 <status>0x98</status>
-                <midino>0x7A</midino>
+                <midino>0x7B</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
             <output>
                 <group>[Channel2]</group>
                 <key>beatloop_0.25_enabled</key>
-                <status>0x98</status>
-                <midino>0x72</midino>
+                <status>0x9A</status>
+                <midino>0x73</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
@@ -4755,13 +4960,6 @@
                 <key>keylock</key>
                 <status>0x97</status>
                 <midino>0x12</midino>
-                <minimum>1</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>beatsync</key>
-                <status>0x98</status>
-                <midino>0x13</midino>
                 <minimum>1</minimum>
             </output>
             <output>
@@ -4777,7 +4975,7 @@
                 <group>[Channel1]</group>
                 <key>beatloop_4_enabled</key>
                 <status>0x99</status>
-                <midino>0x7A</midino>
+                <midino>0x7B</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
@@ -4785,7 +4983,7 @@
                 <group>[Channel1]</group>
                 <key>beatloop_4_enabled</key>
                 <status>0x97</status>
-                <midino>0x7E</midino>
+                <midino>0x7F</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
@@ -4793,7 +4991,7 @@
                 <group>[Channel1]</group>
                 <key>beatloop_4_enabled</key>
                 <status>0x99</status>
-                <midino>0x72</midino>
+                <midino>0x77</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
@@ -4801,7 +4999,7 @@
                 <group>[Channel1]</group>
                 <key>beatloop_4_enabled</key>
                 <status>0x97</status>
-                <midino>0x76</midino>
+                <midino>0x73</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
@@ -4809,15 +5007,15 @@
                 <group>[Channel1]</group>
                 <key>beatloop_0.25_enabled</key>
                 <status>0x97</status>
-                <midino>0x7A</midino>
+                <midino>0x7B</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>
             <output>
                 <group>[Channel1]</group>
                 <key>beatloop_0.25_enabled</key>
-                <status>0x97</status>
-                <midino>0x72</midino>
+                <status>0x99</status>
+                <midino>0x73</midino>
                 <off>0x71</off>
                 <minimum>1</minimum>
             </output>

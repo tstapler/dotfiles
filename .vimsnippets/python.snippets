@@ -1,3 +1,5 @@
+extends python 
+
 snippet deft "A function snippet for a unittest"
 def test_$1(${2:self}):
     """Test when $3"""
@@ -37,4 +39,29 @@ endsnippet
 snippet ipdbs "ipdb with sset_trace()"
 import ipdb
 ipdb.sset_trace()
+endsnippet
+
+snippet argparse "Simple arg parse"
+import argparse
+
+parser = argparse.ArgumentParser()
+argument$1
+
+args = parser.parse_args()
+endsnippet
+
+snippet argument "ArgumentParser Argument"
+parser.add_argument('--$1', dest="$1", default="$2")
+endsnippet
+
+snippet jinjafile
+templateLoader = jinja2.FileSystemLoader(searchpath="./")
+templateEnv = jinja2.Environment(loader=templateLoader)
+TEMPLATE_FILE = "$1"
+template = templateEnv.get_template(TEMPLATE_FILE)
+outputText = template.render($2)  
+endsnippet
+
+snippet mkdir
+pathlib.Path($1).mkdir(parents=True, exist_ok=True) 
 endsnippet

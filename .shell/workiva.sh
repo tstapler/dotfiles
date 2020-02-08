@@ -27,3 +27,12 @@ esac
 alias erasereset="workon sky; python tools/erase_reset_data.py --admin=tyler.stapler@workiva.com --password=a"
 
 PATH="$PATH:$HOME/Workiva/pss/scripts"
+
+eval "$(docker run --rm drydock.workiva.net/workiva/skynet-cli:latest shell)"
+
+EKS_CONFIG=$HOME/Workiva/EKS/kubeconfigs.yaml
+if [ -f $EKS_CONFIG ] && [[ $KUBECONFIG != *$EKS_CONFIG* ]]; then
+  echo $KUBECONFIG
+  export KUBECONFIG="${KUBECONFIG:=$HOME/.kube/config}:$HOME/Workiva/EKS/kubeconfigs.yaml"
+fi
+

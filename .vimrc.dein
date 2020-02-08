@@ -19,11 +19,15 @@ if dein#load_state(expand('~/.vim/bundle'))
   " Let dein manage dein
   " Required:
   call dein#add('Shougo/dein.vim')
+  call dein#add('wsdjeg/dein-ui.vim')
+  call dein#add('roxma/nvim-yarp')
+  call dein#add('roxma/vim-hug-neovim-rpc')
 
   " Editing Plugins {{{
 
   " Code Completion {{{
   call dein#add('Shougo/deoplete.nvim')
+  call dein#add('autozimu/LanguageClient-neovim', {'build': 'sh install.sh'})
   " End Code Completion }}}
 
   " Code Completion Sources {{{
@@ -35,6 +39,7 @@ if dein#load_state(expand('~/.vim/bundle'))
   call dein#add('fishbullet/deoplete-ruby')
   call dein#add('carlitux/deoplete-ternjs')
   call dein#add('mhartington/deoplete-typescript')
+  call dein#add('tweekmonster/deoplete-clang2')
   call dein#add('roxma/nvim-completion-manager')
   " End Code Completion Sources }}}
 
@@ -87,6 +92,7 @@ if dein#load_state(expand('~/.vim/bundle'))
   call dein#add('jceb/vim-orgmode')
   call dein#add('benekastah/neomake')
   call dein#add('tpope/vim-fugitive')
+  call dein#add('vim-scripts/Merginal')
   call dein#add('junkblocker/patchreview-vim')
   call dein#add('codegram/vim-codereview', {'depends': 'junkblocker/patchreview-vim'})
   call dein#add('mattn/gist-vim')
@@ -123,7 +129,6 @@ if dein#load_state(expand('~/.vim/bundle'))
   " Language Specific Plugins {{{
 
   " C/C++ Plugins {{{
-  call dein#add('Rip-Rip/clang_complete')
   " End C/C++ Plugins }}}
 
   " Dart Plugins {{{
@@ -140,6 +145,8 @@ if dein#load_state(expand('~/.vim/bundle'))
   call dein#add('jacoborus/vim-jsdoc')
   call dein#add('heavenshell/vim-jsdoc')
   call dein#add('briancollins/vim-jst')
+  call dein#add('mxw/vim-jsx')
+  call dein#add('epilande/vim-react-snippets')
   " End Javascript Plugins }}}
 
   " PHP Plugins {{{
@@ -163,7 +170,8 @@ if dein#load_state(expand('~/.vim/bundle'))
   call dein#add('HerringtonDarkholme/yats.vim')
   " End TypeScript Plugins }}}
 
-
+  call dein#add('m-kat/aws-vim')
+  call dein#add('zimbatm/haproxy.vim')
   call dein#add('elmcast/elm-vim')
   call dein#add('dag/vim-fish')
   call dein#add('plasticboy/vim-markdown')
@@ -181,6 +189,8 @@ if dein#load_state(expand('~/.vim/bundle'))
   call dein#add('cespare/vim-toml')
   call dein#add('chrisbra/csv.vim')
   call dein#add('othree/csscomplete.vim')
+  call dein#add('editorconfig/editorconfig-vim')
+  call dein#add('jparise/vim-graphql')
 
   " End Language Specific Plugins }}}
 
@@ -198,6 +208,7 @@ if dein#load_state(expand('~/.vim/bundle'))
   call dein#add('junegunn/limelight.vim')
   " End Distraction Free Writing }}}
 
+  call dein#add('rhysd/vim-grammarous')
   call dein#add('tpope/vim-abolish')
   call dein#add('jamessan/vim-gnupg')
   call dein#add('vim-scripts/DoxygenToolkit.vim')
@@ -232,6 +243,7 @@ endif
 " }}}
 
 " Plugin Mappings {{{
+
 
 " vim-fugitive {{{
   nnoremap <silent> <leader>g :Gstatus<CR>
@@ -325,8 +337,50 @@ nnoremap <silent><C-p> :CtrlSpace O<CR>
 
 " Plugin Settings {{{
 
+" grammarout Settings {{{
+let g:grammarous#hooks = {}
+function! g:grammarous#hooks.on_check(errs) abort
+    nmap <buffer>gn <Plug>(grammarous-move-to-next-error)
+    nmap <buffer>gp <Plug>(grammarous-move-to-previous-error)
+    nmap <buffer>gr <Plug>(grammarous-move-to-info-window)r
+    nmap <buffer>gf <Plug>(grammarous-move-to-info-window)f
+    nmap <buffer>gR <Plug>(grammarous-move-to-info-window)R
+endfunction
+function! g:grammarous#hooks.on_reset(errs) abort
+    nunmap <buffer>gn
+    nunmap <buffer>gp
+    nunmap <buffer>gr
+    nunmap <buffer>gf
+    nunmap <buffer>gR
+endfunction
+let g:grammarous#disabled_categories = {
+            \ 'pandoc' : ['TYPOGRAPHY', 'PUNCTUATION'],
+            \ }
+
+" End grammarout Settings }}}
+
+" LanguageClient Settings {{{
+" Required for operations modifying multiple buffers like rename.
+set hidden
+
+let g:LanguageClient_serverCommands = {
+      \ 'dart': ['dart_language_server'],
+			\ 'rust': ['rustup', 'run', 'stable', 'rls'],
+			\ 'javascript.jsx': ['javascript-typescript-stdio'],
+      \ 'javascript': ['javascript-typescript-stdio'],
+			\ 'python': ['pyls'],
+      \ 'java': ['jdtls'],
+			\ 'ruby': ['docker', 'run', '--rm', 'mtsmfm/language_server-ruby'],
+			\ }
+
+nnoremap <F5> :call LanguageClient_contextMenu()<CR><Paste>
+" End LanguageClient Settings }}}
+
 " vim-go Settings {{{
   let g:go_fmt_command = "goimports"
+
+  let g:go_term_enabled = 1
+  let g:go_template_autocreate = 0
 " End vim-go Settings }}}
 
 " Neoformat Settings {{{
@@ -378,8 +432,6 @@ let g:jedi#auto_vim_configuration = 0
 " Neomake Settings {{{
 
 " Open Automatically
-let g:neomake_open_list = 2
-
 let g:neomake_javascript_enabled_makers=['standard']
 
 let g:neomake_c_enable_makers=['clang']
@@ -387,6 +439,7 @@ let g:neomake_c_clang_args = ["-std=c11", "-Wextra", "-Wall", "-fsanitize=undefi
 let g:neomake_cpp_enable_makers=['clang']
 let g:neomake_cpp_clang_args = ["-std=c++14", "-Wextra", "-Wall", "-fsanitize=undefined","-g"]
 
+let g:neomake_python_pep8_exe = 'python3'
 let g:neomake_python_pylama_maker = {
       \ 'exe': 'pylama',
       \ 'args': ['--format', 'pep8', '-o','~/.config/pylama/pylama.ini'],
@@ -397,6 +450,8 @@ let g:neomake_python_isort_maker = {
       \ 'exe': 'isort-lint',
       \ 'errorformat': '%f:%l:%m'
       \ }
+
+let g:neomake_python_enable_makers = ['yapf', 'isort']
 
 let g:neomake_pandoc_proselint_maker = {
       \ 'exe': 'proselint',
@@ -546,12 +601,6 @@ if has('nvim')
     return deoplete#mappings#close_popup() . "\<CR>"
   endfunction
 
-  " for c and c++
-  let g:clang_complete_auto = 0
-  let g:clang_auto_select = 0
-  let g:clang_omnicppcomplete_compliance = 0
-  let g:clang_make_default_keymappings = 0
-  let g:clang_library_path='/usr/lib/llvm-3.8/lib/libclang-3.8.so.1'
 
   " deoplete-go Settings {{{
   let g:deoplete#sources#go#gocode_binary = $GOPATH.'/bin/gocode'
@@ -686,15 +735,6 @@ let g:javascript_enable_domhtmlcss = 1
 let g:javascript_plugin_jsdoc = 1
 " End Vim-Javascript Settings }}}
 
-" clang-format Settings {{{
-let g:clang_format#style_options = {
-      \ "AccessModifierOffset" : -2,
-      \ "AllowShortIfStatementsOnASingleLine" : "true",
-      \ "AlwaysBreakTemplateDeclarations" : "true",
-      \ "Standard" : "Auto",
-      \ "BreakBeforeBraces" : "GNU"}
-
-" End clang-format Settings }}}
 
 " makeshift Settings {{{
 let g:makeshift_chdir = 1
@@ -715,6 +755,7 @@ let g:pandoc#folding#mode = "relative"
 let g:pandoc#after#modules#enabled = ["nrrwrgn", "tablemode", "unite", "neosnippets"]
 let g:pandoc#completion#bib#mode = 'citeproc'
 let g:pandoc#folding#fold_yaml = 0
+let g:pandoc#spell#default_langs = ['en_us']
 "Pandoc Syntax
 let g:pandoc#syntax#colorcolumn = 1
 
@@ -763,7 +804,8 @@ let g:UltiSnipsSnippetsDir = $HOME."/.vimsnippets"
 let g:UltiSnipsSnippetDirectories=[
       \ "UltiSips",
       \ $HOME."/.vimsnippets",
-      \ $HOME . '/.vim/bundle/snippets/'
+      \ $HOME . '/.vim/bundle/snippets/',
+      \ $HOME . '/.vim/bundle/aws-vim/snips'
       \ ]
 
 " End utilisnips }}}

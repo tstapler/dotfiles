@@ -10,8 +10,8 @@ if [[ ! -d ~/.zplug ]]; then
   git clone https://github.com/zplug/zplug $HOME/.zplug
 fi
 
-export ZPLUG_LOADFILE=$HOME/.zplug_packages.zsh
 
+export ZPLUG_LOADFILE=$HOME/.zplug_packages.zsh
 source $HOME/.zplug/init.zsh
 
 # Install packages that have not been installed yet
@@ -27,7 +27,6 @@ fi
 # Then, source plugins and add commands to $PATH
 zplug load
 
-
 # Load the zshell mv module
 autoload -U zmv
 
@@ -37,6 +36,9 @@ zle -N edit-command-line
 
 # Add Completions
 # autoload -U bashcompinit && bashcompinit
+
+# Expand HISTZIZE
+export HISTSIZE=400
 
 setopt extendedglob
 
@@ -65,7 +67,12 @@ bindkey '^R' zaw-history
 
 export ZPLUG_FILTER=fzy:fzf-tmux:fzf:peco:percol:zaw
 
-_comp_options+=(NO_err_return)
+# Language managers (RVM, NVM, PYENV, ...)
+source $HOME/.shell/languages.sh
+
+if hash keychain 2>/dev/null; then
+	eval `keychain --agents gpg --eval`
+fi
 
 # Setup Fasd
 if hash fasd 2>/dev/null; then

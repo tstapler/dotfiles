@@ -1,0 +1,9 @@
+snippet k8s-labels "Kubernetes helm labels"
+{{- define "$1.labels" -}}
+app: {{ template "$1.name" . }}
+chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+release: {{ .Release.Name }}
+heritage: {{ .Release.Service }}
+{{- end -}}
+endsnippet
+	

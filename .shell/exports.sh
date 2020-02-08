@@ -1,7 +1,3 @@
-
-# Fixes git + gpg error inside of tmux
-export GPG_TTY=$(tty)
-
 # Add Dart pub files to PATH
 export PATH=$PATH:"$HOME/.pub-cache/bin"
 
@@ -15,7 +11,7 @@ export PATH=$PATH:"$HOME/bin/scripts"
 OS="$(uname)"
 case $OS in
   'Linux') 
-    export PATH=$PATH:"$HOME/.local/bin"
+    export PATH="$HOME/.local/bin:$PATH"
     ;;
   'FreeBSD')
     ;;
@@ -38,6 +34,9 @@ fi
 
 # Create Go Path
 export GOPATH="$HOME/.local/lib/go"
+
+# Create Workiva Gopath
+export WGOPATH="$GOPATH/src/github.com/Workiva"
 
 # Add GO executables to PATH
 export PATH=$PATH:"$GOPATH/bin"
@@ -74,19 +73,34 @@ fi
 
 export GIT_EDITOR=$EDITOR
 
-if [ -f "$HOME/.gpg-agent-info" ]; then
-	. "$HOME/.gpg-agent-info"
-	export GPG_AGENT_INFO
-	export SSH_AUTH_SOCK
-	export SSH_AGENT_PID
-fi
+# Fixes git + gpg error inside of tmux
+export GPG_TTY=$(tty)
+
+# Enable GPG SSH auth
+export SSH_AUTH_SOCK=$(gpgconf --list-dirs agent-ssh-socket)
 
 # Completions for NativeScript
 if [ -f "$HOME/.tnsrc" ]; then 
     source "$HOME/.tnsrc" 
 fi
 
+if hash hunspell 2>/dev/null; then
+  export DICTIONARY=en_US
+  export DICTPATH=$HOME/.nix-profile/share/hunspell/$DICTIONARY
+fi
+
 if hash gr 2>/dev/null; then
-  unalias gr
+  unalias gr 2>/dev/null
   . <(gr completion)
+fi
+
+if hash kubectl 2>/dev/null; then
+  source <(kubectl completion zsh)
+fi
+
+# Add krew the kubectl plugin manager to path
+export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"
+
+if hash helm 2>/dev/null; then
+  source <(helm completion zsh)
 fi
