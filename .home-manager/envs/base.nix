@@ -54,7 +54,6 @@
     pkgs.ranger
     pkgs.rclone
     pkgs.ripgrep
-    pkgs.rustup
     pkgs.shellcheck
     pkgs.tmux
     pkgs.toilet
