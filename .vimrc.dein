@@ -34,7 +34,6 @@ if dein#load_state(expand('~/.vim/bundle'))
   call dein#add('Shougo/neoinclude.vim')
   call dein#add('Shougo/neco-syntax')
   call dein#add('Shougo/neco-vim')
-  " call dein#add('zchee/deoplete-jedi')
   call dein#add('zchee/deoplete-go', {'build': 'make'})
   call dein#add('fishbullet/deoplete-ruby')
   call dein#add('carlitux/deoplete-ternjs')
@@ -71,7 +70,6 @@ if dein#load_state(expand('~/.vim/bundle'))
         \ ]})
   call dein#add('google/vim-maktaba')
   call dein#add('glts/vim-magnum')
-  call dein#add('fadein/FIGlet.vim')
   call dein#add('triglav/vim-visual-increment')
   call dein#add('junegunn/fzf')
 
@@ -97,105 +95,181 @@ if dein#load_state(expand('~/.vim/bundle'))
   call dein#add('tpope/vim-fugitive')
   call dein#add('vim-scripts/Merginal')
   call dein#add('junkblocker/patchreview-vim')
-  call dein#add('codegram/vim-codereview', {'depends': 'junkblocker/patchreview-vim'})
-  call dein#add('mattn/gist-vim')
   call dein#add('Shougo/vimfiler.vim')
   call dein#add('dbakker/vim-projectroot')
   call dein#add('airblade/vim-gitgutter')
   call dein#add('tpope/vim-repeat')
   call dein#add('mbbill/undotree')
-  call dein#add('LucHermitte/local_vimrc', {'depends': 'LucHermitte/lh-vim-lib'})
   call dein#add('vim-ctrlspace/vim-ctrlspace')
   call dein#add('ctrlpvim/ctrlp.vim')
   " End Management Plugins }}}
 
   " Utility Plugins {{{
-  call dein#add('rking/ag.vim')
-  call dein#add('Chun-Yang/vim-action-ag')
-  call dein#add('scrooloose/syntastic')
-  call dein#add('myint/syntastic-extras')
-  call dein#add('tpope/vim-dispatch')
   call dein#add('Konfekt/FastFold')
-  call dein#add('janko-m/vim-test')
-  call dein#add('dyng/ctrlsf.vim')
-  call dein#add('tomtom/tlib_vim')
-  call dein#add('sbdchd/neoformat')
   " End Utility Plugins }}}
 
   " Interface Plugins {{{
   call dein#add('vim-airline/vim-airline')
   call dein#add('vim-airline/vim-airline-themes')
-  call dein#add('flazz/vim-colorschemes')
+  " colorscheme
   call dein#add('morhetz/gruvbox')
+  " Select windows using leader w
   call dein#add('t9md/vim-choosewin')
   " End Interface Plugins }}}
 
   " Language Specific Plugins {{{
-
-  " C/C++ Plugins {{{
-  " End C/C++ Plugins }}}
-
-  " Dart Plugins {{{
-  call dein#add('dart-lang/dart-vim-plugin')
-  " End Dart Plugins }}}
-
-  " Go Plugins {{{
-  "call dein#add('fatih/vim-go')
-  " End Go }}}
-
-  " Javascript Plugins {{{
-  call dein#add('pangloss/vim-javascript')
-  call dein#add('ternjs/tern_for_vim')
-  call dein#add('jacoborus/vim-jsdoc')
-  call dein#add('heavenshell/vim-jsdoc')
-  call dein#add('briancollins/vim-jst')
-  call dein#add('mxw/vim-jsx')
-  call dein#add('epilande/vim-react-snippets')
-  " End Javascript Plugins }}}
-
-  " PHP Plugins {{{
-  call dein#add('spf13/PIV')
-  call dein#add('arnaud-lb/vim-php-namespace')
-  call dein#add('beyondwords/vim-twig')
-  call dein#add('beanworks/vim-phpfmt')
-  " End PHP Plugins }}}
-
-  " Python Plugins {{{
-  call dein#add('heavenshell/vim-pydocstring')
-  "call dein#add('klen/python-mode')
-  "call dein#add('davidhalter/jedi-vim')
-  " End Python Plugins }}}
-
-  " Ruby Plugins {{{
-  call dein#add('vim-ruby/vim-ruby')
-  " End Ruby Plugins }}}
-
-  " TypeScript Plugins {{{
-  call dein#add('HerringtonDarkholme/yats.vim')
-  " End TypeScript Plugins }}}
-
+  "
   call dein#add('m-kat/aws-vim')
-  call dein#add('zimbatm/haproxy.vim')
-  call dein#add('elmcast/elm-vim')
-  call dein#add('dag/vim-fish')
-  call dein#add('plasticboy/vim-markdown')
-  call dein#add('vim-scripts/scons.vim')
-  call dein#add('tmux-plugins/vim-tmux')
-  call dein#add('saltstack/salt-vim')
-  call dein#add('pearofducks/ansible-vim')
-  call dein#add('lervag/vimtex')
-  call dein#add('ekalinin/Dockerfile.vim')
-  call dein#add('elzr/vim-json')
-  call dein#add('groenewege/vim-less')
-  call dein#add('tapichu/asm2d-vim')
+  " sheerun/vim-polyglot includes a rediculous abount of languages
+  " Language packs
+  " acpiasl (syntax)
+  " ansible (syntax, indent, ftplugin)
+  " apiblueprint (syntax, ctags)
+  " applescript (syntax, indent)
+  " arduino (syntax, indent)
+  " asciidoc (syntax)
+  " autohotkey (indent)
+  " blade (syntax, indent, ftplugin)
+  " c++11 (syntax)
+  " c/c++ (syntax)
+  " caddyfile (syntax, indent, ftplugin)
+  " carp (syntax)
+  " cjsx (syntax, ftplugin)
+  " clojure (syntax, indent, autoload, ftplugin)
+  " cmake (syntax, indent)
+  " coffee-script (syntax, compiler, indent, autoload, ftplugin)
+  " cql (syntax)
+  " cryptol (syntax, compiler, ftplugin)
+  " crystal (syntax, indent, autoload, ftplugin)
+  " csv (syntax, autoload, ftplugin)
+  " cucumber (syntax, indent, compiler, ftplugin)
+  " cue (syntax)
+  " dart (syntax, indent, autoload, ftplugin)
+  " dhall (syntax, ftplugin)
+  " dlang (syntax, indent)
+  " dockerfile (syntax, indent, ftplugin)
+  " elixir (syntax, indent, compiler, autoload, ftplugin)
+  " elm (syntax, indent, autoload, ftplugin)
+  " emberscript (syntax, indent, ftplugin)
+  " emblem (syntax, indent, ftplugin)
+  " erlang (syntax, indent)
+  " ferm (syntax)
+  " fish (syntax, indent, compiler, autoload, ftplugin)
+  " flatbuffers (syntax)
+  " fsharp (syntax, indent)
+  " git (syntax, indent, ftplugin)
+  " glsl (syntax, indent)
+  " gmpl (syntax)
+  " gnuplot (syntax)
+  " go (syntax, compiler, indent)
+  " gradle (compiler)
+  " graphql (syntax, indent, autoload, ftplugin, after)
+  " haml (syntax, indent, compiler, ftplugin)
+  " handlebars (syntax, indent, ftplugin)
+  " haproxy (syntax)
+  " haskell (syntax, indent, ftplugin)
+  " haxe (syntax)
+  " hcl (syntax, indent, ftplugin)
+  " helm (syntax)
+  " hive (syntax, ftplugin)
+  " html5 (syntax, indent, autoload, ftplugin)
+  " i3 (syntax, ftplugin)
+  " idris (syntax, indent, ftplugin)
+  " ion (syntax, ftplugin)
+  " javascript (syntax, indent, compiler, ftplugin, extras)
+  " jenkins (syntax, indent)
+  " jinja (syntax, indent)
+  " json5 (syntax)
+  " json (syntax, indent, ftplugin)
+  " jst (syntax, indent)
+  " jsx (autoload, after)
+  " julia (syntax, indent, autoload, ftplugin)
+  " kotlin (syntax, indent, ftplugin)
+  " latex (syntax, indent, ftplugin)
+  " less (syntax, indent, ftplugin)
+  " lilypond (syntax, indent, compiler, ftplugin)
+  " livescript (syntax, indent, compiler, ftplugin)
+  " llvm (syntax, indent, ftplugin)
+  " log (syntax)
+  " lua (syntax, indent)
+  " mako (syntax, indent, ftplugin)
+  " markdown (syntax, indent, ftplugin)
+  " mathematica (syntax, ftplugin)
+  " mdx (syntax)
+  " meson (syntax, indent, ftplugin)
+  " moonscript (syntax, indent, ftplugin)
+  " nginx (syntax, indent, ftplugin)
+  " nim (syntax, compiler, indent)
+  " nix (syntax, indent, compiler, ftplugin)
+  " objc (ftplugin, syntax, indent)
+  " ocaml (syntax, indent, compiler, ftplugin)
+  " octave (syntax, indent)
+  " opencl (syntax, indent, ftplugin)
+  " perl (syntax, indent, ftplugin)
+  " pgsql (syntax, indent)
+  " php (syntax)
+  " plantuml (syntax, indent, ftplugin)
+  " pony (syntax, indent, autoload, ftplugin)
+  " powershell (syntax, indent, compiler, ftplugin)
+  " protobuf (syntax, indent)
+  " pug (syntax, indent, ftplugin)
+  " puppet (syntax, indent, autoload, ftplugin, ctags)
+  " purescript (syntax, indent, ftplugin)
+  " python-compiler (compiler, autoload)
+  " python-indent (indent)
+  " python (syntax)
+  " qmake (syntax)
+  " qml (syntax, indent, ftplugin)
+  " r-lang (syntax)
+  " racket (syntax, indent, ftplugin)
+  " ragel (syntax)
+  " raml (syntax, ftplugin)
+  " razor (syntax, indent, ftplugin)
+  " reason (syntax, indent)
+  " rspec (syntax)
+  " rst (syntax, indent, autoload, ftplugin)
+  " ruby (syntax, indent, compiler, autoload, ftplugin)
+  " rust (syntax, indent, compiler, autoload, ftplugin, ctags)
+  " sbt (syntax)
+  " scala (syntax, indent, compiler, ftplugin, ctags)
+  " scss (syntax, indent, ftplugin)
+  " slim (syntax, indent, ftplugin)
+  " slime (syntax, indent)
+  " smt2 (syntax, autoload, ftplugin)
+  " solidity (syntax, indent, ftplugin)
+  " stylus (syntax, indent, ftplugin)
+  " svelte (syntax, indent)
+  " svg-indent (indent)
+  " svg (syntax)
+  " swift (syntax, indent, compiler, ftplugin, ctags)
+  " sxhkd (syntax)
+  " systemd (syntax, ftplugin)
+  " terraform (syntax, indent, autoload, ftplugin)
+  " textile (syntax, ftplugin)
+  " thrift (syntax)
+  " tmux (syntax, ftplugin)
+  " tomdoc (syntax)
+  " toml (syntax, ftplugin)
+  " tptp (syntax)
+  " twig (syntax, indent, ftplugin)
+  " typescript (syntax, indent, compiler, ftplugin, ctags)
+  " v (syntax, indent, ftplugin)
+  " vala (syntax, indent, ftplugin)
+  " vbnet (syntax)
+  " vcl (syntax)
+  " vifm (syntax, autoload, ftplugin)
+  " vm (syntax, indent)
+  " vue (syntax, indent, ftplugin)
+  " xdc (syntax)
+  " xls (syntax)
+  " xml (syntax)
+  " yaml (syntax, ftplugin)
+  " yard (syntax)
+  " zephir (syntax)
+  " zig (syntax, autoload, ftplugin)
+  " zinit (syntax)
   call dein#add('sheerun/vim-polyglot')
-  call dein#add('endel/flashdevelop.vim', {'depends': ['airblade/vim-rooter', 'tomtom/tlib_vim']})
-  call dein#add('cespare/vim-toml')
-  call dein#add('chrisbra/csv.vim')
-  call dein#add('othree/csscomplete.vim')
   call dein#add('editorconfig/editorconfig-vim')
-  call dein#add('jparise/vim-graphql')
-  call dein#add('udalov/kotlin-vim')
 
   " End Language Specific Plugins }}}
 
@@ -216,8 +290,6 @@ if dein#load_state(expand('~/.vim/bundle'))
   call dein#add('rhysd/vim-grammarous')
   call dein#add('tpope/vim-abolish')
   call dein#add('jamessan/vim-gnupg')
-  call dein#add('vim-scripts/DoxygenToolkit.vim')
-  call dein#add('johnsyweb/vim-makeshift')
 
   " End Documentation & Word Processing Plugins }}}
 
@@ -308,25 +380,6 @@ nnoremap <silent> <leader>z :Goyo<cr>
 nnoremap <C-e> :VimFilerExplorer<cr>
 " End vimfiler }}}
 
-" neosnippet {{{
-"imap <C-k>     <Plug>(neosnippet_expand_or_jump)
-"smap <C-k>     <Plug>(neosnippet_expand_or_jump)
-"xmap <C-k>     <Plug>(neosnippet_expand_target)
-
-" SuperTab like snippets behavior.
-"imap <expr><TAB>
-"      \ pumvisible() ? "\<C-n>" :
-"      \ neosnippet#expandable_or_jumpable() ?
-"      \    "\<Plug>(neosnippet_expand_or_jump)" : "\<TAB>"
-"smap <expr><TAB> neosnippet#expandable_or_jumpable() ?
-"      \ "\<Plug>(neosnippet_expand_or_jump)" : "\<TAB>"
-
-" <TAB>: completion.
-inoremap <expr><TAB>  pumvisible() ? "\<C-n>" : "\<TAB>"
-" Recommended key-mappings.
-
-" End neosnippet }}}
-
 " Radical Vim (Convert Base) {{{
 nmap g<C-A> <Plug>RadicalView
 xmap g<C-A> <Plug>RadicalView
@@ -365,8 +418,42 @@ let g:grammarous#disabled_categories = {
 " Required for operations modifying multiple buffers like rename.
 set hidden
 
+function! s:FindDart() abort
+  if executable('dart') | return resolve(exepath('dart')) | endif
+  if executable('flutter')
+    let l:flutter = resolve(exepath('flutter'))
+    let l:flutter_bin = fnamemodify(l:flutter,':h')
+    let l:dart = l:flutter_bin.'/cache/dart-sdk/bin/dart'
+    if executable(l:dart) | return l:dart | endif
+  endif
+  echoerr 'Could not find a `dart` executable'
+endfunction
+
+function! s:FindCommand() abort
+  let l:dart = s:FindDart()
+  if type(l:dart) != type('') | return v:null | endif
+  let l:bin = fnamemodify(l:dart, ':h')
+  let l:snapshot = l:bin.'/snapshots/analysis_server.dart.snapshot'
+  if !filereadable(l:snapshot)
+    echoerr 'Could not find analysis server snapshot at '.l:snapshot
+    return v:null
+  endif
+  let l:cmd = [l:dart, l:snapshot, '--lsp']
+  let l:sdk_root = fnamemodify(l:bin, ':h')
+  let l:language_model = l:sdk_root.'/model/lexeme'
+  if isdirectory(l:language_model)
+    call add(l:cmd, '--completion-model='.l:language_model)
+  endif
+  if get(g:, 'lsc_dart_enable_log', v:false)
+    let l:log_file = tempname()
+    call add(l:cmd, '--instrumentation-log-file='.l:log_file)
+    echom 'Dart instrumentation log: '.l:log_file
+  endif
+  return l:cmd
+endfunction
+
 let g:LanguageClient_serverCommands = {
-      \ 'dart': ['dart_language_server'],
+      \ 'dart': s:FindCommand(),
 			\ 'rust': ['rustup', 'run', 'stable', 'rls'],
 			\ 'javascript.jsx': ['javascript-typescript-stdio'],
       \ 'javascript': ['javascript-typescript-stdio'],
@@ -421,11 +508,6 @@ let g:table_mode_corner_corner = '|'
 let g:vim_json_syntax_conceal = 0
 " End vim-json Settings }}}
 
-" vim-test Settings {{{
-let test#strategy = "neovim"
-let test#python#runner = 'djangotest'
-" End vim-test Settings }}}
-
 " Vim Crosshairs Settings {{{
 set cursorline
 set cursorcolumn
@@ -436,21 +518,6 @@ let g:jedi#completions_enabled = 0
 let g:jedi#auto_vim_configuration = 0
 " End jedi-vim Settings }}}
 
-" ALE Settings {{{
-let g:ale_linters = {
-\   'python': ['prospector', 'mypy', 'pyls'],
-\}
-let g:ale_fixers = {
-\   'python': ['yapf', 'isort'],
-\}
-
-let g:ale_open_list = 1
-
-
-let g:ale_java_javalsp_executable = '/Users/tylerstapler/Programming/java-language-server/dist/mac/bin/launcher'
-let g:ale_completion_enabled = 1
-
-" End ALE Settings }}}
 " ctrlp Settings {{{
 if executable("ag")
   let g:ctrlp_user_command = 'ag -l --hidden --nocolor -g ""'
@@ -577,36 +644,6 @@ set background=dark    " Setting dark mode"
 let g:ag_working_path_mode='r'
 " End Ag.vim Settings }}}
 
-"Syntastic Settings {{{
-set statusline+=%#warningmsg#
-set statusline+=%{SyntasticStatuslineFlag()}
-set statusline+=%*
-
-"let g:syntastic_always_populate_loc_list = 1
-"let g:syntastic_auto_loc_list = 2
-let g:syntastic_check_on_open = 0
-let g:syntastic_check_on_wq = 0
-let g:syntastic_aggregate_errors = 1
-let g:syntastic_error_symbol = "✗"
-let g:syntastic_id_checkers = 1
-let g:syntastic_auto_jump = 0
-let g:syntastic_quiet_messages = { "level": "warnings" }
-
-let g:syntastic_text_checkers = ['language_check']
-let g:syntastic_language_check_args = '--language=en-US'
-
-let g:syntastic_mode_map = { "mode": "passive",
-      \ "passive_filetypes": ["dart"] }
-
-let g:syntastic_disabled_filetypes=['python']
-"Syntastic Extras Settings
-let g:syntastic_make_checkers = ['gnumake']
-let g:syntastic_javascript_checkers = ['json_tool']
-let g:syntastic_yaml_checkers = ['pyyaml']
-let g:syntastic_gitcommit_checkers = ['language_check']
-let g:syntastic_svn_checkers = ['language_check']
-
-" End Syntastic Settings }}}
 
 " Tagbar Settings {{{
 let g:tagbar_type_vimwiki = {
@@ -661,16 +698,6 @@ let g:tagbar_type_vhdl = {
       \]
       \}
 " End Tagbar Settings }}}
-
-" GitGutter Settings {{{
-let g:gitgutter_max_signs = 1000
-" End GitGutter Settings }}}
-
-" Vim-Javascript Settings {{{
-let g:javascript_enable_domhtmlcss = 1
-let g:javascript_plugin_jsdoc = 1
-" End Vim-Javascript Settings }}}
-
 
 " makeshift Settings {{{
 let g:makeshift_chdir = 1
