@@ -1,327 +1,175 @@
 " vim:fdm=marker
 
-" dein Plugins {{{
-
-"dein Scripts-----------------------------
 if &compatible
   set nocompatible               " Be iMproved
 endif
 
-" Required:
-set runtimepath^=~/.vim/bundle/repos/github.com/Shougo/dein.vim
-
-filetype off
-" Required:
-if dein#load_state(expand('~/.vim/bundle'))
-  call dein#begin(expand('~/.vim/bundle'))
-
-  " Let dein manage dein
-  " Required:
-  call dein#add('Shougo/dein.vim')
-  call dein#add('wsdjeg/dein-ui.vim')
-  call dein#add('roxma/nvim-yarp')
-  call dein#add('roxma/vim-hug-neovim-rpc')
-
-  " Editing Plugins {{{
-
-  " Code Completion {{{
-  call dein#add('Shougo/deoplete.nvim')
-  call dein#add('autozimu/LanguageClient-neovim', {'build': 'bash install.sh'})
-  call dein#add('Shougo/echodoc.vim')
-  " End Code Completion }}}
-
-  " Code Completion Sources {{{
-  call dein#add('Shougo/neoinclude.vim')
-  call dein#add('Shougo/neco-syntax')
-  call dein#add('Shougo/neco-vim')
-  call dein#add('zchee/deoplete-go', {'build': 'make'})
-  call dein#add('fishbullet/deoplete-ruby')
-  call dein#add('carlitux/deoplete-ternjs')
-  call dein#add('mhartington/deoplete-typescript')
-  call dein#add('tweekmonster/deoplete-clang2')
-  call dein#add('slashmili/alchemist.vim')
-  call dein#add('ujihisa/neco-look')
-  " End Code Completion Sources }}}
-
-  " Snippet Plugins {{{
-  call dein#add('SirVer/ultisnips')
-  call dein#add('honza/vim-snippets')
-  call dein#add('reconquest/snippets')
-  call dein#add('chrisgillis/vim-bootstrap3-snippets')
-  call dein#add('andrewstuart/vim-kubernetes')
-  " End Snippet Plugins }}}
-
-  call dein#add('dhruvasagar/vim-table-mode')
-  call dein#add('Chiel92/vim-autoformat')
-  call dein#add('Shougo/context_filetype.vim')
-  call dein#add('godlygeek/tabular')
-  call dein#add('tpope/vim-surround')
-  call dein#add('tpope/vim-commentary')
-  call dein#add('tpope/vim-speeddating')
-  call dein#add('mattn/emmet-vim')
-  call dein#add('christoomey/vim-sort-motion')
-  call dein#add('jiangmiao/auto-pairs')
-  call dein#add('christoomey/vim-titlecase')
-  call dein#add('fidian/hexmode')
-  call dein#add('glts/vim-radical', {'depends':
-        \ [
-        \   'google/vim-maktaba',
-        \   'glts/vim-magnum'
-        \ ]})
-  call dein#add('google/vim-maktaba')
-  call dein#add('glts/vim-magnum')
-  call dein#add('triglav/vim-visual-increment')
-  call dein#add('junegunn/fzf')
-
-  " End Editing Plugins }}}
-
-  " Management Plugins {{{
-
-  " Unite Vim {{{
-  call dein#add('Shougo/unite.vim')
-  call dein#add('kmnk/vim-unite-giti')
-  call dein#add('tsukkee/unite-tag')
-  call dein#add('tsukkee/unite-help')
-  call dein#add('Shougo/unite-outline')
-  call dein#add('ujihisa/unite-colorscheme')
-  call dein#add('ujihisa/unite-locate')
-  call dein#add('tacroe/unite-mark')
-  call dein#add('tungd/unite-session')
-  " End Unite Vim }}}
-
-  call dein#add('haya14busa/dein-command.vim')
-  call dein#add('jceb/vim-orgmode')
-  call dein#add('w0rp/ale')
-  call dein#add('tpope/vim-fugitive')
-  call dein#add('vim-scripts/Merginal')
-  call dein#add('junkblocker/patchreview-vim')
-  call dein#add('Shougo/vimfiler.vim')
-  call dein#add('dbakker/vim-projectroot')
-  call dein#add('airblade/vim-gitgutter')
-  call dein#add('tpope/vim-repeat')
-  call dein#add('mbbill/undotree')
-  call dein#add('vim-ctrlspace/vim-ctrlspace')
-  call dein#add('ctrlpvim/ctrlp.vim')
-  " End Management Plugins }}}
-
-  " Utility Plugins {{{
-  call dein#add('Konfekt/FastFold')
-  " End Utility Plugins }}}
-
-  " Interface Plugins {{{
-  call dein#add('vim-airline/vim-airline')
-  call dein#add('vim-airline/vim-airline-themes')
-  " colorscheme
-  call dein#add('morhetz/gruvbox')
-  " Select windows using leader w
-  call dein#add('t9md/vim-choosewin')
-  " End Interface Plugins }}}
-
-  " Language Specific Plugins {{{
-  "
-  call dein#add('m-kat/aws-vim')
-  " sheerun/vim-polyglot includes a rediculous abount of languages
-  " Language packs
-  " acpiasl (syntax)
-  " ansible (syntax, indent, ftplugin)
-  " apiblueprint (syntax, ctags)
-  " applescript (syntax, indent)
-  " arduino (syntax, indent)
-  " asciidoc (syntax)
-  " autohotkey (indent)
-  " blade (syntax, indent, ftplugin)
-  " c++11 (syntax)
-  " c/c++ (syntax)
-  " caddyfile (syntax, indent, ftplugin)
-  " carp (syntax)
-  " cjsx (syntax, ftplugin)
-  " clojure (syntax, indent, autoload, ftplugin)
-  " cmake (syntax, indent)
-  " coffee-script (syntax, compiler, indent, autoload, ftplugin)
-  " cql (syntax)
-  " cryptol (syntax, compiler, ftplugin)
-  " crystal (syntax, indent, autoload, ftplugin)
-  " csv (syntax, autoload, ftplugin)
-  " cucumber (syntax, indent, compiler, ftplugin)
-  " cue (syntax)
-  " dart (syntax, indent, autoload, ftplugin)
-  " dhall (syntax, ftplugin)
-  " dlang (syntax, indent)
-  " dockerfile (syntax, indent, ftplugin)
-  " elixir (syntax, indent, compiler, autoload, ftplugin)
-  " elm (syntax, indent, autoload, ftplugin)
-  " emberscript (syntax, indent, ftplugin)
-  " emblem (syntax, indent, ftplugin)
-  " erlang (syntax, indent)
-  " ferm (syntax)
-  " fish (syntax, indent, compiler, autoload, ftplugin)
-  " flatbuffers (syntax)
-  " fsharp (syntax, indent)
-  " git (syntax, indent, ftplugin)
-  " glsl (syntax, indent)
-  " gmpl (syntax)
-  " gnuplot (syntax)
-  " go (syntax, compiler, indent)
-  " gradle (compiler)
-  " graphql (syntax, indent, autoload, ftplugin, after)
-  " haml (syntax, indent, compiler, ftplugin)
-  " handlebars (syntax, indent, ftplugin)
-  " haproxy (syntax)
-  " haskell (syntax, indent, ftplugin)
-  " haxe (syntax)
-  " hcl (syntax, indent, ftplugin)
-  " helm (syntax)
-  " hive (syntax, ftplugin)
-  " html5 (syntax, indent, autoload, ftplugin)
-  " i3 (syntax, ftplugin)
-  " idris (syntax, indent, ftplugin)
-  " ion (syntax, ftplugin)
-  " javascript (syntax, indent, compiler, ftplugin, extras)
-  " jenkins (syntax, indent)
-  " jinja (syntax, indent)
-  " json5 (syntax)
-  " json (syntax, indent, ftplugin)
-  " jst (syntax, indent)
-  " jsx (autoload, after)
-  " julia (syntax, indent, autoload, ftplugin)
-  " kotlin (syntax, indent, ftplugin)
-  " latex (syntax, indent, ftplugin)
-  " less (syntax, indent, ftplugin)
-  " lilypond (syntax, indent, compiler, ftplugin)
-  " livescript (syntax, indent, compiler, ftplugin)
-  " llvm (syntax, indent, ftplugin)
-  " log (syntax)
-  " lua (syntax, indent)
-  " mako (syntax, indent, ftplugin)
-  " markdown (syntax, indent, ftplugin)
-  " mathematica (syntax, ftplugin)
-  " mdx (syntax)
-  " meson (syntax, indent, ftplugin)
-  " moonscript (syntax, indent, ftplugin)
-  " nginx (syntax, indent, ftplugin)
-  " nim (syntax, compiler, indent)
-  " nix (syntax, indent, compiler, ftplugin)
-  " objc (ftplugin, syntax, indent)
-  " ocaml (syntax, indent, compiler, ftplugin)
-  " octave (syntax, indent)
-  " opencl (syntax, indent, ftplugin)
-  " perl (syntax, indent, ftplugin)
-  " pgsql (syntax, indent)
-  " php (syntax)
-  " plantuml (syntax, indent, ftplugin)
-  " pony (syntax, indent, autoload, ftplugin)
-  " powershell (syntax, indent, compiler, ftplugin)
-  " protobuf (syntax, indent)
-  " pug (syntax, indent, ftplugin)
-  " puppet (syntax, indent, autoload, ftplugin, ctags)
-  " purescript (syntax, indent, ftplugin)
-  " python-compiler (compiler, autoload)
-  " python-indent (indent)
-  " python (syntax)
-  " qmake (syntax)
-  " qml (syntax, indent, ftplugin)
-  " r-lang (syntax)
-  " racket (syntax, indent, ftplugin)
-  " ragel (syntax)
-  " raml (syntax, ftplugin)
-  " razor (syntax, indent, ftplugin)
-  " reason (syntax, indent)
-  " rspec (syntax)
-  " rst (syntax, indent, autoload, ftplugin)
-  " ruby (syntax, indent, compiler, autoload, ftplugin)
-  " rust (syntax, indent, compiler, autoload, ftplugin, ctags)
-  " sbt (syntax)
-  " scala (syntax, indent, compiler, ftplugin, ctags)
-  " scss (syntax, indent, ftplugin)
-  " slim (syntax, indent, ftplugin)
-  " slime (syntax, indent)
-  " smt2 (syntax, autoload, ftplugin)
-  " solidity (syntax, indent, ftplugin)
-  " stylus (syntax, indent, ftplugin)
-  " svelte (syntax, indent)
-  " svg-indent (indent)
-  " svg (syntax)
-  " swift (syntax, indent, compiler, ftplugin, ctags)
-  " sxhkd (syntax)
-  " systemd (syntax, ftplugin)
-  " terraform (syntax, indent, autoload, ftplugin)
-  " textile (syntax, ftplugin)
-  " thrift (syntax)
-  " tmux (syntax, ftplugin)
-  " tomdoc (syntax)
-  " toml (syntax, ftplugin)
-  " tptp (syntax)
-  " twig (syntax, indent, ftplugin)
-  " typescript (syntax, indent, compiler, ftplugin, ctags)
-  " v (syntax, indent, ftplugin)
-  " vala (syntax, indent, ftplugin)
-  " vbnet (syntax)
-  " vcl (syntax)
-  " vifm (syntax, autoload, ftplugin)
-  " vm (syntax, indent)
-  " vue (syntax, indent, ftplugin)
-  " xdc (syntax)
-  " xls (syntax)
-  " xml (syntax)
-  " yaml (syntax, ftplugin)
-  " yard (syntax)
-  " zephir (syntax)
-  " zig (syntax, autoload, ftplugin)
-  " zinit (syntax)
-  call dein#add('sheerun/vim-polyglot')
-  call dein#add('editorconfig/editorconfig-vim')
-
-  " End Language Specific Plugins }}}
-
-  " Documentation & Word Processing Plugins {{{
-
-  " Pandoc {{{
-  call dein#add('vim-pandoc/vim-pandoc')
-  call dein#add('vim-pandoc/vim-pandoc-syntax')
-  call dein#add('vim-pandoc/vim-pandoc-after')
-  " End Pandoc }}}
-
-  " Distraction Free Writing {{{
-  call dein#add('amix/vim-zenroom2')
-  call dein#add('junegunn/goyo.vim')
-  call dein#add('junegunn/limelight.vim')
-  " End Distraction Free Writing }}}
-
-  call dein#add('rhysd/vim-grammarous')
-  call dein#add('tpope/vim-abolish')
-  call dein#add('jamessan/vim-gnupg')
-
-  " End Documentation & Word Processing Plugins }}}
-
-  " Miscellaneous Plugins {{{
-  call dein#add('Shougo/vimproc.vim', {'build' : 'make'})
-  call dein#add('xolox/vim-misc')
-  call dein#add('mattn/webapi-vim')
-  call dein#add('LucHermitte/lh-vim-lib')
-  call dein#add('jceb/vim-hier')
-  " End Miscellaneous Plugins }}}
-
+if empty(glob(stdpath('data') . 'autoload'))
+  silent !curl -fLo ~/.config/nvim/autoload/plug.vim --create-dirs
+    \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 endif
 
-" Required:
-call dein#end()
+  call plug#begin(stdpath('data') . '/plugged')
+  Plug 'tpope/vim-fugitive'
+  "" Editing Plugins {{{
 
-" Required:
-filetype plugin indent on
-syntax enable
+  "" Code Completion {{{
+  Plug 'Shougo/deoplete.nvim'
+  Plug 'autozimu/LanguageClient-neovim', {
+    \ 'branch': 'next',
+    \ 'do': 'bash install.sh',
+    \ }
+  Plug 'Shougo/echodoc.vim'
+  "" End Code Completion }}}
 
-" If you want to install not installed plugins on startup.
-if dein#check_install()
-  call dein#install()
-endif
+  "" Code Completion Sources {{{
+  Plug 'Shougo/neoinclude.vim'
+  Plug 'Shougo/neco-syntax'
+  Plug 'Shougo/neco-vim'
+  Plug 'zchee/deoplete-go', {'do': 'make'}
+  Plug 'fishbullet/deoplete-ruby'
+  Plug 'carlitux/deoplete-ternjs'
+  Plug 'mhartington/deoplete-typescript'
+  Plug 'tweekmonster/deoplete-clang2'
+  Plug 'slashmili/alchemist.vim'
+  Plug 'ujihisa/neco-look'
+  "" End Code Completion Sources }}}
 
-"End dein Scripts-------------------------
+  Plug 'sheerun/vim-polyglot'
+
+
+  "" Snippet Plugins {{{
+  Plug 'SirVer/ultisnips'
+  Plug 'honza/vim-snippets'
+  Plug 'reconquest/snippets'
+  Plug 'chrisgillis/vim-bootstrap3-snippets'
+  Plug 'andrewstuart/vim-kubernetes'
+  "" End Snippet Plugins }}}
+
+  " Narrow region plugin
+  Plug 'chrisbra/NrrwRgn'
+  Plug 'dhruvasagar/vim-table-mode'
+  Plug 'Chiel92/vim-autoformat'
+  Plug 'Shougo/context_filetype.vim'
+  Plug 'godlygeek/tabular'
+
+  " Requires godlygeek/tabular
+  Plug 'plasticboy/vim-markdown'
+  Plug 'tpope/vim-surround'
+  Plug 'tpope/vim-commentary'
+  Plug 'tpope/vim-speeddating'
+  Plug 'mattn/emmet-vim'
+  Plug 'christoomey/vim-sort-motion'
+  Plug 'jiangmiao/auto-pairs'
+  Plug 'christoomey/vim-titlecase'
+  Plug 'fidian/hexmode'
+  Plug 'google/vim-maktaba'
+  Plug 'glts/vim-magnum'
+  "call dein#add('glts/vim-radical', {'depends':
+  "      \ [
+  "      \   'google/vim-maktaba',
+  "      \   'glts/vim-magnum'
+  "      \ ]})
+  Plug 'triglav/vim-visual-increment'
+
+  " vim-zettel and requirements
+  Plug 'vimwiki/vimwiki'
+  Plug 'junegunn/fzf'
+  Plug 'junegunn/fzf.vim'
+  Plug 'michal-h21/vim-zettel'
+  Plug 'alok/notational-fzf-vim'
+
+  "" End Editing Plugins }}}
+
+  "" Management Plugins {{{
+
+  "" Unite Vim {{{
+   Plug 'Shougo/unite.vim'
+  Plug 'kmnk/vim-unite-giti'
+  Plug 'tsukkee/unite-tag'
+  Plug 'tsukkee/unite-help'
+  Plug 'Shougo/unite-outline'
+  Plug 'ujihisa/unite-colorscheme'
+  Plug 'ujihisa/unite-locate'
+  Plug 'tacroe/unite-mark'
+  Plug 'tungd/unite-session'
+  "" End Unite Vim }}}
+
+  Plug 'jceb/vim-orgmode'
+  Plug 'w0rp/ale'
+  Plug 'vim-scripts/Merginal'
+  Plug 'junkblocker/patchreview-vim'
+  Plug 'Shougo/vimfiler.vim'
+  Plug 'airblade/vim-gitgutter'
+  Plug 'tpope/vim-repeat'
+  Plug 'mbbill/undotree'
+  Plug 'vim-ctrlspace/vim-ctrlspace'
+  Plug 'ctrlpvim/ctrlp.vim'
+  "" End Management Plugins }}}
+
+  "" Utility Plugins {{{
+  Plug 'Konfekt/FastFold'
+  "" End Utility Plugins }}}
+
+  "" Interface Plugins {{{
+   Plug 'vim-airline/vim-airline'
+   Plug 'vim-airline/vim-airline-themes'
+  "" colorscheme
+  Plug 'morhetz/gruvbox'
+  "" Select windows using leader w
+  Plug 't9md/vim-choosewin'
+  "" End Interface Plugins }}}
+
+  "" Documentation & Word Processing Plugins {{{
+
+  "" Pandoc {{{
+  Plug 'vim-pandoc/vim-pandoc'
+  Plug 'vim-pandoc/vim-pandoc-syntax'
+  Plug 'vim-pandoc/vim-pandoc-after'
+  "" End Pandoc }}}
+
+  "" Distraction Free Writing {{{
+  Plug 'amix/vim-zenroom2'
+  Plug 'junegunn/goyo.vim'
+  Plug 'junegunn/limelight.vim'
+  "" End Distraction Free Writing }}}
+
+  " zettel Settings {{{
+  " End zettel Settings }}}
+
+  Plug 'rhysd/vim-grammarous'
+  Plug 'tpope/vim-abolish'
+  Plug 'jamessan/vim-gnupg'
+
+  "" End Documentation & Word Processing Plugins }}}
+
+  "" Miscellaneous Plugins {{{
+  Plug 'Shougo/vimproc.vim', {'build' : 'make'}
+  Plug 'xolox/vim-misc'
+  Plug 'mattn/webapi-vim'
+  Plug 'LucHermitte/lh-vim-lib'
+  Plug 'jceb/vim-hier'
+  "" End Miscellaneous Plugins }}}
+
+  call plug#end()
 
 " }}}
 
 " Plugin Mappings {{{
 
-" echodoc Settings {{{
+" vim-zettel Settings {{{
+   let g:zettel_format = "%y%m%d-%H%M-%title"
+" End vim-zettel Settings }}}
+" vimwiki Settings {{{
+   " Settings for Vimwiki
+   let g:vimwiki_list = [ {'path':'~/personal-wiki/markdown/','auto_tags':1, 'auto_toc':1, 'ext':'.md', 'syntax':'markdown'} ]
+" End vimwiki Settings }}}
+
+" noational-fzf Settings {{{
+  let g:nv_search_paths = ['~/personal-wiki/']
+" End noational-fzf Settings }}}
+
+"echodoc Settings {{{
 let g:echodoc#enable_at_startup = 1
 let g:echodoc#type = 'floating'
 " End ec Settings }}}
@@ -544,41 +392,45 @@ set hidden
 " End ctrlspace Settings }}}
 
 " Unite Settings {{{
-call unite#filters#matcher_default#use(['matcher_fuzzy'])
-call unite#filters#sorter_default#use(['sorter_rank'])
-call unite#custom#source('file,file/new,buffer,te -buffer-name=search -start-insert -auto-preview grep -custom-grep-command file_rec,line', 'matchers', 'matcher_fuzzy')
-"
-"  " Build the ctrlp function, using projectroot to define the
-"  " working directory.
-"  function! Unite_ctrlp()
-"    execute ':Unite  -buffer-name=files -start-insert -match-input buffer file_rec/async'
-"  endfunction
-"
-"Select Search
-if executable('ag')
-  " Use ag (the silver searcher)
-  " https://github.com/ggreer/the_silver_searcher
-  let g:unite_source_grep_command = 'ag'
-  let g:unite_source_grep_default_opts =
-        \ '-i --hidden --ignore ' .
-        \ '''.hg'' --ignore ''.svn'' --ignore ''.git'' --ignore ''.bzr'' --ignore ''packages'''
-  let g:unite_source_grep_recursive_opt = ''
-elseif executable('ack-grep')
-  " Use ack
-  " http://beyondgrep.com/
-  let g:unite_source_grep_command = 'ack-grep'
-  let g:unite_source_grep_default_opts = '-i --no-heading --no-color -k -H'
-  let g:unite_source_grep_recursive_opt = ''
-endif
+if has_key(g:plugs, 'unite.vim')
 
-" Unite Options
-let g:unite_source_history_yank_enable=1
-let g:unite_enable_start_insert=1
-let g:unite_ignore_source_files = [ 'packages' ]
+  call unite#filters#matcher_default#use(['matcher_fuzzy'])
+  call unite#filters#sorter_default#use(['sorter_rank'])
+  call unite#custom#source('file,file/new,buffer,te -buffer-name=search -start-insert -auto-preview grep -custom-grep-command file_rec,line', 'matchers', 'matcher_fuzzy')
+  "
+  "  " Build the ctrlp function, using projectroot to define the
+  "  " working directory.
+  "  function! Unite_ctrlp()
+  "    execute ':Unite  -buffer-name=files -start-insert -match-input buffer file_rec/async'
+  "  endfunction
+  "
+  "Select Search
+  if executable('ag')
+    " Use ag (the silver searcher)
+    " https://github.com/ggreer/the_silver_searcher
+    let g:unite_source_grep_command = 'ag'
+    let g:unite_source_grep_default_opts =
+          \ '-i --hidden --ignore ' .
+          \ '''.hg'' --ignore ''.svn'' --ignore ''.git'' --ignore ''.bzr'' --ignore ''packages'''
+    let g:unite_source_grep_recursive_opt = ''
+  elseif executable('ack-grep')
+    " Use ack
+    " http://beyondgrep.com/
+    let g:unite_source_grep_command = 'ack-grep'
+    let g:unite_source_grep_default_opts = '-i --no-heading --no-color -k -H'
+    let g:unite_source_grep_recursive_opt = ''
+  endif
+
+  " Unite Options
+  let g:unite_source_history_yank_enable=1
+  let g:unite_enable_start_insert=1
+  let g:unite_ignore_source_files = [ 'packages' ]
+endif
 
 " End Unite Settings }}}
 
 " Vimfiler Settings {{{
+if has_key(g:plugs, 'vimfiler.vim')
 " Enable file operation commands.
 " Edit file by tabedit.
 call vimfiler#custom#profile('default', 'context', {
@@ -593,16 +445,22 @@ let g:vimfiler_file_icon = '-'
 let g:vimfiler_marked_file_icon = '*'
 
 let g:vimfiler_as_default_explorer = 1
+endif
 " End Vimfiler Settings }}}
 
 " deoplete Settings {{{
-if has('nvim')
+if has('nvim') && has_key(g:plugs, 'deoplete.nvim')
+  " <TAB>: completion.
+  inoremap <expr><TAB>  pumvisible() ? "\<C-n>" : "\<TAB>"
+
   let g:deoplete#sources#jedi#show_docstring = 1
 
   " Use deoplete.
   let g:deoplete#enable_at_startup = 1
-  " Use smartcase.
-  let g:deoplete#enable_smart_case = 1
+  call deoplete#custom#option({
+  \ 'auto_complete_delay': 200,
+  \ 'smart_case': v:true,
+  \ })
 
 
   " deoplete-go Settings {{{
@@ -626,7 +484,7 @@ endif
 let g:airline#extensions#virtualenv#enabled = 1
 let g:airline_exclude_preview = 1
 
-if !exists('g:airline_symbols')
+if has_key(g:plugs, 'vim-airline')
   let g:airline_symbols = {}
 endif
 
@@ -634,8 +492,11 @@ let g:airline_left_sep = '▶'
 let g:airline_right_sep = '«'
 
 "Colorscheme
+try
 colorscheme gruvbox
 let g:airline_theme = 'gruvbox'
+catch
+endtry
 set background=dark    " Setting dark mode"
 
 " End Airline Settings }}}
@@ -792,18 +653,4 @@ let g:UltiSnipsSnippetDirectories=[
   augroup END
 " End cloudformation }}}
 
-" NeoComplete {{{
-" if dein#check_install(["Shougo/neocomplete.vim"]) && !has('nvim')
-"   augroup pandoc
-"     au FileType pandoc NeoCompleteLock
-"   augroup END
-" endif
-" End NeoComplete }}}
-
-" Autoreload .vimrc {{{
-augroup myvimrc
-  au BufWritePost .vimrc,_vimrc,vimrc,.gvimrc,_gvimrc,gvimrc so $MYVIMRC | if has('gui_running') | so $MYGVIMRC | endif
-augroup END
-
-" End Autoreload .vimrc }}}
 " End Auto Groups }}}
