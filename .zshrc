@@ -35,7 +35,7 @@ autoload -Uz edit-command-line
 zle -N edit-command-line
 
 # Add Completions
-# autoload -U bashcompinit && bashcompinit
+ autoload -U bashcompinit && bashcompinit
 
 # Expand HISTZIZE
 export HISTSIZE=400
@@ -80,7 +80,8 @@ if hash fasd 2>/dev/null; then
 fi
 
 # Prompt Config
-source $HOME/.shell/powerlevel9k.sh
+# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 # Export Environment Variables
 source $HOME/.shell/exports.sh

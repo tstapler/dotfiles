@@ -5,7 +5,7 @@ zplug "willghatch/zsh-hooks"
 
 # Theme
 export TERM="xterm-256color"
-zplug "bhilburn/powerlevel9k", as:theme
+zplug "romkatv/powerlevel10k", as:theme, depth:1
 
 # Plugins
 zplug "zsh-users/zsh-completions"
@@ -20,6 +20,7 @@ zplug "clvv/fasd", as:command
 
 zplug "lib/completion", from:oh-my-zsh
 zplug "plugins/httpie", from:oh-my-zsh
+zplug "plugins/kubectl", from:oh-my-zsh
 zplug "aswitalski/oh-my-zsh-sensei-git-plugin"
 zplug "plugins/git", from:oh-my-zsh
 zplug "djui/alias-tips"
