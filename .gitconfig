@@ -13,6 +13,7 @@
 	ui = auto
 [diff]
 	tool = meld
+
 [hub]
 	protocol = ssh
 [user]
@@ -25,3 +26,6 @@
 
 [mergetool "meld"]
     cmd = meld "$LOCAL" "$MERGED" "$REMOTE" --output "$MERGED"
+
+[url "git@github.com:"]
+	insteadOf = https://github.com/
