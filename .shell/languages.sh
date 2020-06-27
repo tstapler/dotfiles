@@ -114,3 +114,10 @@ if [[ ! -d  "$HOME/.tmux/plugins/tpm" ]]; then
   mkdir -p "$HOME/.tmux/plugins"
   git clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
 fi
+
+if ! hash pyenv 2>/dev/null && [[ ! -d "$HOME/.pyenv" ]]; then
+  curl https://pyenv.run | bash
+fi
+if command -v pyenv 1>/dev/null 2>&1; then
+  eval "$(pyenv init -)"
+fi
