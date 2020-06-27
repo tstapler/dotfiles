@@ -19,7 +19,7 @@ alias npm-exec='PATH=$(npm bin):$PATH'
 
 # Use hub which gives git github integration
 if hash hub 2>/dev/null; then
-	alias git=hub
+  function git() { hub $@; }
 fi
 
 alias gcv="git commit --verbose"
