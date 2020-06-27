@@ -1,6 +1,8 @@
 # Skaardb tools
 export VENV=local
 
+export GOPRIVATE="github.com/Workiva/*"
+
 alias ddev='pub run dart_dev'
 
 OS="$(uname)"
