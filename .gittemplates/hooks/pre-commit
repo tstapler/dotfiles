@@ -1,25 +1,2 @@
-# vim: ai ts=2 sw=2 et sts=2 ft=sh
-
-ORIGIN_URL=$(git ls-remote --get-url 'origin')
-
-export GIT_AUTHOR_NAME="Tyler Stapler"
-export GIT_COMMITTER_NAME=$GIT_AUTHOR_NAME
-git config --local user.name "$GIT_AUTHOR_NAME"
-
-case $ORIGIN_URL in
-  *github.com/Workiva*|*github.com:Workiva*|\
-  *github.com/*-wf*|*github.com:*-wf*|\
-  *github.com/*-wk*|*github.com:*-wk*)
-    echo "Setting Workiva Account"
-    export GIT_AUTHOR_EMAIL="tyler.stapler@workiva.com"
-    export GIT_COMITTER_EMAIL=$GIT_AUTHOR_EMAIL
-		git config --local user.email "$GIT_AUTHOR_EMAIL"
-	;;
-	*)
-    echo "Setting Personal Account"
-    export GIT_AUTHOR_EMAIL="tystapler@gmail.com"
-    export GIT_COMITTER_EMAIL=$GIT_AUTHOR_EMAIL
-		git config --local user.email "$GIT_AUTHOR_EMAIL"
-    git config --local commit.gpgsign true
-	;;
-esac
+#!/usr/bin/env sh
+$HOME/dotfiles/stapler-scripts/set_git_emails

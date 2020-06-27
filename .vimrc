@@ -148,9 +148,9 @@ endif
   au Filetype ts setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab smarttab smartindent
 " End TypeScript filetype }}}
                                                           
-" gitcommit filetype {{{
-au FileType gitcommit setlocal spell
-" End gitcommit filetype }}}
+" " gitcommit filetype {{{
+" au FileType gitcommit setlocal spell
+" " End gitcommit filetype }}}
 
 " Makefile filetype {{{                                   
 au FileType make setlocal noexpandtab                     

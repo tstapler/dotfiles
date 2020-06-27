@@ -11,6 +11,8 @@ case $OS in
   ;;
 esac
 
+export SBT_CREDENTIALS=$HOME/.sbt/.credentials
+
 alias erasereset="workon sky; python tools/erase_reset_data.py --admin=tyler.stapler@workiva.com --password=a"
 
 PATH="$PATH:$HOME/Workiva/onboarding-tools/bin"
