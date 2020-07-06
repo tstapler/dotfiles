@@ -6,6 +6,7 @@ links:
     dest:
       - .vimsnippets
       - .vim/bundle/.dein/stapler-snips
+      - .config/coc/ultisnips
   - src: .mixxx/controllers
   - src: bin/scripts/*
     dest: bin/scripts
@@ -13,6 +14,7 @@ links:
   - src: .vimrc
     dest: .config/nvim/init.vim
     os: "Linux Darwin"
+  - src: .config/nvim/coc-settings.json
   - src: .config/nixpkgs
     os: "Linux Darwin"
   - src: stapler-scripts/*
