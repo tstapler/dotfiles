@@ -10,56 +10,55 @@ if empty(glob(stdpath('data') . 'autoload'))
 endif
 
   call plug#begin(stdpath('data') . '/plugged')
-  Plug 'tpope/vim-fugitive'
   "" Editing Plugins {{{
 
   "" Code Completion {{{
-  " Plug 'Shougo/deoplete.nvim'
+  Plug 'w0rp/ale'
   " Use release branch (recommend)
   Plug 'neoclide/coc.nvim', {'branch': 'release'}
-  " Plug 'autozimu/LanguageClient-neovim', {
-  "   \ 'branch': 'next',
-  "   \ 'do': 'bash install.sh',
-  "   \ }
-  Plug 'Shougo/echodoc.vim'
   "" End Code Completion }}}
 
   "" Code Completion Sources {{{
   Plug 'Shougo/neoinclude.vim'
   Plug 'Shougo/neco-syntax'
   Plug 'Shougo/neco-vim'
-  Plug 'zchee/deoplete-go', {'do': 'make'}
-  Plug 'fishbullet/deoplete-ruby'
-  Plug 'carlitux/deoplete-ternjs'
-  Plug 'mhartington/deoplete-typescript'
-  Plug 'tweekmonster/deoplete-clang2'
+  " Elixir editing plugin
   Plug 'slashmili/alchemist.vim'
   Plug 'ujihisa/neco-look'
   "" End Code Completion Sources }}}
 
+  " A multi language syntax highlighting plugin
   Plug 'sheerun/vim-polyglot'
 
 
   "" Snippet Plugins {{{
-  Plug 'SirVer/ultisnips'
   Plug 'honza/vim-snippets'
   Plug 'reconquest/snippets'
   Plug 'chrisgillis/vim-bootstrap3-snippets'
   Plug 'andrewstuart/vim-kubernetes'
   "" End Snippet Plugins }}}
 
+  "" Navigation Plugins {{{
+  "" Select windows using leader w
+  Plug 't9md/vim-choosewin'
+
+  "" End Naviation Plugins }}}"
+
   " Narrow region plugin
   Plug 'chrisbra/NrrwRgn'
+
   Plug 'dhruvasagar/vim-table-mode'
   Plug 'Chiel92/vim-autoformat'
   Plug 'Shougo/context_filetype.vim'
+
   Plug 'godlygeek/tabular'
 
   " Requires godlygeek/tabular
-  Plug 'plasticboy/vim-markdown'
   Plug 'tpope/vim-surround'
+  " Comment out blocks of code easily
   Plug 'tpope/vim-commentary'
   Plug 'tpope/vim-speeddating'
+  " Quickly write html using shorthand
   Plug 'mattn/emmet-vim'
   Plug 'christoomey/vim-sort-motion'
   Plug 'jiangmiao/auto-pairs'
@@ -67,59 +66,63 @@ endif
   Plug 'fidian/hexmode'
   Plug 'google/vim-maktaba'
   Plug 'glts/vim-magnum'
-  "call dein#add('glts/vim-radical', {'depends':
-  "      \ [
-  "      \   'google/vim-maktaba',
-  "      \   'glts/vim-magnum'
-  "      \ ]})
   Plug 'triglav/vim-visual-increment'
 
-  " vim-zettel and requirements
-  Plug 'vimwiki/vimwiki'
-  Plug 'junegunn/fzf'
-  Plug 'junegunn/fzf.vim'
-  Plug 'michal-h21/vim-zettel'
-  Plug 'alok/notational-fzf-vim'
+    " vim-zettel and requirements
+    Plug 'vimwiki/vimwiki'
+    Plug 'junegunn/fzf'
+    Plug 'junegunn/fzf.vim'
+    Plug 'michal-h21/vim-zettel'
+    Plug 'alok/notational-fzf-vim'
 
   "" End Editing Plugins }}}
 
   "" Management Plugins {{{
 
+  "" Git Plugins {{{
+    " Critical vim plugin adds interfaces for managing a git repo from vim
+    Plug 'tpope/vim-fugitive'
+    " An extension of fugitive to provide better support for merges
+    Plug 'vim-scripts/Merginal'
+    " A clone of the emacs Magit plugin which makes it easy to stage commits
+    Plug 'jreybert/vimagit'
+  "" End Git Plugins }}}
+
   "" Unite Vim {{{
-   Plug 'Shougo/unite.vim'
-  Plug 'kmnk/vim-unite-giti'
-  Plug 'tsukkee/unite-tag'
-  Plug 'tsukkee/unite-help'
-  Plug 'Shougo/unite-outline'
-  Plug 'ujihisa/unite-colorscheme'
-  Plug 'ujihisa/unite-locate'
-  Plug 'tacroe/unite-mark'
-  Plug 'tungd/unite-session'
+    Plug 'Shougo/unite.vim'
+    Plug 'kmnk/vim-unite-giti'
+    Plug 'tsukkee/unite-tag'
+    Plug 'tsukkee/unite-help'
+    Plug 'Shougo/unite-outline'
+    Plug 'ujihisa/unite-colorscheme'
+    Plug 'ujihisa/unite-locate'
+    Plug 'tacroe/unite-mark'
+    Plug 'tungd/unite-session'
   "" End Unite Vim }}}
 
-  Plug 'jceb/vim-orgmode'
-  Plug 'w0rp/ale'
-  Plug 'vim-scripts/Merginal'
-  Plug 'junkblocker/patchreview-vim'
-  Plug 'Shougo/vimfiler.vim'
-  Plug 'airblade/vim-gitgutter'
   Plug 'tpope/vim-repeat'
+  " View your undo history tree
   Plug 'mbbill/undotree'
+  " A project management plugin which adds the ability to
+  " save workspaces and resume sessions
   Plug 'vim-ctrlspace/vim-ctrlspace'
+  " Easy fuzzy searching for files
   Plug 'ctrlpvim/ctrlp.vim'
+  " Search for file contents much like Sublime Text's <c>+<shift>+f
+  Plug 'dyng/ctrlsf.vim'
   "" End Management Plugins }}}
 
   "" Utility Plugins {{{
   Plug 'Konfekt/FastFold'
   "" End Utility Plugins }}}
 
-  "" Interface Plugins {{{
+  "" UI Plugins {{{
    Plug 'vim-airline/vim-airline'
    Plug 'vim-airline/vim-airline-themes'
-  "" colorscheme
+  "" A nice dark colorscheme
   Plug 'morhetz/gruvbox'
-  "" Select windows using leader w
-  Plug 't9md/vim-choosewin'
+
+  Plug 'Shougo/vimfiler.vim'
   "" End Interface Plugins }}}
 
   "" Documentation & Word Processing Plugins {{{
@@ -146,7 +149,7 @@ endif
   "" End Documentation & Word Processing Plugins }}}
 
   "" Miscellaneous Plugins {{{
-  Plug 'Shougo/vimproc.vim', {'build' : 'make'}
+  Plug 'Shougo/vimproc.vim', {'do' : 'make'}
   Plug 'xolox/vim-misc'
   Plug 'mattn/webapi-vim'
   Plug 'LucHermitte/lh-vim-lib'
@@ -158,8 +161,29 @@ endif
 " }}}
 
 " Plugin Mappings {{{
+" coc-snippets Settings {{{
+
+" Format the current buffer
+nnoremap <silent> <leader>f :Format<CR>
+
+" Use <C-l> for trigger snippet expand.
+imap <C-l> <Plug>(coc-snippets-expand)
+
+" Use <C-j> for select text for visual placeholder of snippet.
+vmap <C-j> <Plug>(coc-snippets-select)
+
+" Use <C-j> for jump to next placeholder, it's default of coc.nvim
+let g:coc_snippet_next = '<c-j>'
+
+" Use <C-k> for jump to previous placeholder, it's default of coc.nvim
+let g:coc_snippet_prev = '<c-k>'
+
+" Use <C-j> for both expand and jump (make expand higher priority.)
+imap <C-j> <Plug>(coc-snippets-expand-jump)
+" End coc-snippets Settings }}}
 
 " coc-vim Settings {{{
+let g:coc_global_extensions = ["coc-marketplace", "coc-json", "coc-tsserver", "coc-go", "coc-markdownlint", "coc-snippets", "coc-flutter", "coc-rust-analyzer", "coc-solargraph", "coc-yaml", "coc-yank", "coc-sql", "coc-stylelintplus", "coc-pyright",  "coc-python", "coc-java", "coc-git", "coc-html", "coc-cfn-lint", 'coc-diagnostic']
   " TextEdit might fail if hidden is not set.
 set hidden
 
@@ -313,10 +337,12 @@ nnoremap <silent><nowait> <space>p  :<C-u>CocListResume<CR>
 
 
 " vim-zettel Settings {{{
-   let g:zettel_format = "%y%m%d-%H%M-%title"
+   let g:zettel_format = "%y-%m-%d-%H%M-%title"
 " End vim-zettel Settings }}}
+
 " vimwiki Settings {{{
    " Settings for Vimwiki
+   let g:vimwiki_table_mappings = 0
    let g:vimwiki_list = [ {'path':'~/personal-wiki/markdown/','auto_tags':1, 'auto_toc':1, 'ext':'.md', 'syntax':'markdown'} ]
 " End vimwiki Settings }}}
 
@@ -350,15 +376,6 @@ let g:echodoc#type = 'floating'
 " vim-choosewin {{{
   nmap <leader>w <Plug>(choosewin)
 " End vim-choosewin }}}
-
-" vim-test {{{
-  nmap <silent> <leader>u :TestNearest<CR>
-  nmap <silent> <leader>U :TestFile<CR>
-" End vim-test }}}
-
-" tagbar {{{
-nnoremap <leader>t :TagbarToggle<cr>
-" End tagbar }}}
 
 " Unite {{{
 
@@ -395,7 +412,7 @@ nmap crb <Plug>RadicalCoerceToBinary
 
 " Plugin Settings {{{
 
-" grammarout Settings {{{
+" grammarous Settings {{{
 let g:grammarous#hooks = {}
 function! g:grammarous#hooks.on_check(errs) abort
     nmap <buffer>gn <Plug>(grammarous-move-to-next-error)
@@ -416,75 +433,6 @@ let g:grammarous#disabled_categories = {
             \ }
 
 " End grammarout Settings }}}
-
-" LanguageClient Settings {{{
-" Required for operations modifying multiple buffers like rename.
-set hidden
-
-function! s:FindDart() abort
-  if executable('dart') | return resolve(exepath('dart')) | endif
-  if executable('flutter')
-    let l:flutter = resolve(exepath('flutter'))
-    let l:flutter_bin = fnamemodify(l:flutter,':h')
-    let l:dart = l:flutter_bin.'/cache/dart-sdk/bin/dart'
-    if executable(l:dart) | return l:dart | endif
-  endif
-  echoerr 'Could not find a `dart` executable'
-endfunction
-
-function! s:FindCommand() abort
-  let l:dart = s:FindDart()
-  if type(l:dart) != type('') | return v:null | endif
-  let l:bin = fnamemodify(l:dart, ':h')
-  let l:snapshot = l:bin.'/snapshots/analysis_server.dart.snapshot'
-  if !filereadable(l:snapshot)
-    echoerr 'Could not find analysis server snapshot at '.l:snapshot
-    return v:null
-  endif
-  let l:cmd = [l:dart, l:snapshot, '--lsp']
-  let l:sdk_root = fnamemodify(l:bin, ':h')
-  let l:language_model = l:sdk_root.'/model/lexeme'
-  if isdirectory(l:language_model)
-    call add(l:cmd, '--completion-model='.l:language_model)
-  endif
-  if get(g:, 'lsc_dart_enable_log', v:false)
-    let l:log_file = tempname()
-    call add(l:cmd, '--instrumentation-log-file='.l:log_file)
-    echom 'Dart instrumentation log: '.l:log_file
-  endif
-  return l:cmd
-endfunction
-
-let g:LanguageClient_serverCommands = {
-      \ 'dart': s:FindCommand(),
-			\ 'rust': ['rustup', 'run', 'stable', 'rls'],
-			\ 'javascript.jsx': ['javascript-typescript-stdio'],
-      \ 'javascript': ['javascript-typescript-stdio'],
-			\ 'python': ['pyls'],
-      \ 'java': ['jdtls'],
-      \ 'go': ['gopls'],
-      \ 'kotlin': ['kotlin-language-server'],
-			\ 'ruby': ['docker', 'run', '--rm', 'mtsmfm/language_server-ruby'],
-      \ 'yaml': ['yaml-language-server', '--stdio'] ,
-			\ }
-
-nnoremap <F5> :call LanguageClient_contextMenu()<CR><Paste>
-nnoremap <silent> K :call LanguageClient#textDocument_hover()<CR>
-nnoremap <silent> gd :call LanguageClient#textDocument_definition()<CR>
-nnoremap <silent> <F2> :call LanguageClient#textDocument_rename()<CR>
-" End LanguageClient Settings }}}
-
-" vim-go Settings {{{
-  let g:go_term_enabled = 1
-  let g:go_template_autocreate = 0
-" End vim-go Settings }}}
-
-" Neoformat Settings {{{
-nnoremap <silent> <leader>f :Neoformat<CR>
-let g:neoformat_run_all_formatters = 1
-let g:neoformat_enabled_javascript = ['standard']
-let g:neoformat_enabled_python = ['yapf']
-" End Neoformat Settings }}}
 
 " bash-support Settings {{{
 if exists(g:shell_location)
@@ -515,11 +463,6 @@ let g:vim_json_syntax_conceal = 0
 set cursorline
 set cursorcolumn
 " End Vim Crosshairs Settings }}}
-
-" jedi-vim Settings {{{
-let g:jedi#completions_enabled = 0
-let g:jedi#auto_vim_configuration = 0
-" End jedi-vim Settings }}}
 
 " ctrlp Settings {{{
 if executable("ag")
@@ -603,38 +546,6 @@ let g:vimfiler_as_default_explorer = 1
 endif
 " End Vimfiler Settings }}}
 
-" deoplete Settings {{{
-if has('nvim') && has_key(g:plugs, 'deoplete.nvim')
-  " <TAB>: completion.
-  inoremap <expr><TAB>  pumvisible() ? "\<C-n>" : "\<TAB>"
-
-  let g:deoplete#sources#jedi#show_docstring = 1
-
-  " Use deoplete.
-  let g:deoplete#enable_at_startup = 1
-  call deoplete#custom#option({
-  \ 'auto_complete_delay': 200,
-  \ 'smart_case': v:true,
-  \ })
-
-
-  " deoplete-go Settings {{{
-  let g:deoplete#sources#go#gocode_binary = $GOPATH.'/bin/gocode'
-  let g:deoplete#sources#go#json_directory = ' ~/.cache/deoplete/go/$GOOS_$GOARCH'
-  let g:deoplete#sources#go#sort_class = ['package', 'func', 'type', 'var', 'const']
-  let g:deoplete#sources#go#use_cache = 1
-  " End deoplete-go Settings }}}
-
-  " deoplete-ternjs Settings {{{
-    let g:tern_request_timeout = 1
-    let g:tern_show_signature_in_pum = 0  " This do disable full signature type on autocomplete
-  " End deoplete-ternjs Settings }}}
-    let g:elm_detailed_complete = 0
-
-endif
-
-" End deoplete Settings }}}
-
 "Airline Settings {{{
 let g:airline#extensions#virtualenv#enabled = 1
 let g:airline_exclude_preview = 1
@@ -656,156 +567,24 @@ set background=dark    " Setting dark mode"
 
 " End Airline Settings }}}
 
-" Ag.vim Settings {{{
-let g:ag_working_path_mode='r'
-" End Ag.vim Settings }}}
-
-
-" Tagbar Settings {{{
-let g:tagbar_type_vimwiki = {
-      \ 'ctagstype' : 'wiki',
-      \ 'kinds'     : [
-      \ 'h:headers'
-      \ ]
-      \ }
-let g:tagbar_type_mkd= {
-      \ 'ctagstype' : 'md',
-      \ 'kinds' : [
-      \ 'h:headings'
-      \ ],
-      \ 'sort' : 0,
-      \ }
-let g:tagbar_type_css= {
-      \ 'ctagstype' : 'css',
-      \ 'kinds' : [
-      \ 'c:classes',
-      \ 'i:ids',
-      \ 't:tags',
-      \ 'm:media',
-      \ 'f:fonts',
-      \ 'k:keyframes'
-      \ ],
-      \ 'sort' : 0,
-      \ }
-let g:tagbar_type_html= {
-      \ 'ctagstype' : 'html',
-      \ 'kinds'     : [
-      \ 'i:ids',
-      \ 'c:classes',
-      \ ]
-      \ }
-let g:tagbar_type_vhdl = {
-      \ 'ctagstype': 'vhdl',
-      \ 'kinds' : [
-      \'d:prototypes',
-      \'b:package bodies',
-      \'e:entities',
-      \'a:architectures',
-      \'t:types',
-      \'p:processes',
-      \'f:functions',
-      \'r:procedures',
-      \'c:constants',
-      \'T:subtypes',
-      \'r:records',
-      \'C:components',
-      \'P:packages',
-      \'l:locals'
-      \]
-      \}
-" End Tagbar Settings }}}
-
-" makeshift Settings {{{
-let g:makeshift_chdir = 1
-" End makeshift Settings }}}
-
-" Neosnippet Settings {{{
-let g:neosnippet#snippets_directory='~/.vimsnippets'
-" End Neosnippet Settings }}}
-
 " Pandoc Settings {{{
-let g:pandoc#syntax#conceal#use = 0
 let g:pandoc#syntax#codeblocks#embeds#langs = ["ruby", "iteratehaskell=lhaskell", "bash=sh", "python", "shell=sh"]
 let g:pandoc#syntax#conceal#blacklist = ["block", "codeblock_start", "codeblock_delim"]
 let g:pandoc#keyboard#use_default_mappings = 1
 let g:pandoc#formatting#mode = "sA"
 let g:pandoc#folding#level = 2
 let g:pandoc#folding#mode = "relative"
-let g:pandoc#after#modules#enabled = ["nrrwrgn", "tablemode", "unite", "neosnippets"]
+let g:pandoc#after#modules#enabled = ["tablemode", "unite"]
 let g:pandoc#completion#bib#mode = 'citeproc'
 let g:pandoc#folding#fold_yaml = 0
 let g:pandoc#spell#default_langs = ['en_us']
 "Pandoc Syntax
 let g:pandoc#syntax#colorcolumn = 1
 
-if has('conceal')
-  set conceallevel=2 concealcursor=niv
-endif
-
 " End Pandoc Settings }}}
-
-" Tex Mode {{{
-let g:tex_conceal = "ab"
-" End Tex Mode }}}
 
 " Emmet Settings {{{
 let g:user_emmet_leader_key='<leader>e'
 " End Emmet Settings }}}
 
-" JsDoc Settings {{{
-let g:jsdoc_allow_input_prompt = 1
-" End JsDoc Settings }}}
-
-" Gutentags Settings {{{
-let g:gutentags_cache_dir = "~/.vim"
-" End Gutentags Settings }}}
-
-" pymode Settings {{{
-let g:pymode_rope_completion = 0
-let g:pymode_lint = 0
-let g:pymode_rope_regenerate_on_write = 0
-" End pymode Settings }}}
-
-" utilisnips {{{
-
-" Trigger configuration. Do not use <tab> if you use
-" https://github.com/Valloric/YouCompleteMe.
-let g:UltiSnipsExpandTrigger="<c-k>"
-let g:UltiSnipsJumpForwardTrigger="<c-k>"
-let g:UltiSnipsJumpBackwardTrigger="<leader>p"
-let g:UltiSnipsListSnippets="<leader>l"
-
-" If you want :UltiSnipsEdit to split your window.
-let g:UltiSnipsEditSplit="vertical"
-
-let g:UltiSnipsSnippetsDir = $HOME."/.vimsnippets"
-
-let g:UltiSnipsSnippetDirectories=[
-      \ "UltiSips",
-      \ $HOME."/.vimsnippets",
-      \ $HOME . '/.vim/bundle/snippets/',
-      \ $HOME . '/.vim/bundle/aws-vim/snips'
-      \ ]
-
-" End utilisnips }}}
-
 "}}}
-
-" Auto Groups {{{
-" Dart filetype {{{
-  augroup dart
-    au Filetype dart BufWritePre * Neoformat
-  augroup END
-" End Dart filetype }}}
-
-" TableMode {{{
-  autocmd FileType markdown TableModeEnable
-" End TableMode }}}
-
-" Name cloudformation {{
-  augroup cloudformation
-    au FileType cloudformation setlocal expandtab tabstop=4 shiftwidth=4
-  augroup END
-" End cloudformation }}}
-
-" End Auto Groups }}}
