@@ -57,45 +57,6 @@ if [[ -f "$GVM_SCRIPT" ]]; then
    . "$GVM_SCRIPT" 
 fi
 
-# Start Nix Config
-NIX_SCRIPT="$HOME/.nix-profile/etc/profile.d/nix.sh"
-NIXCFG_PATH="$HOME/.home-manager/envs/"
-
-if [[ ! -f $NIX_SCRIPT ]]; then
-  NIX_SCRIPT="/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh"
-fi
-
-# Install nix if it doesnt exist
-if [[ ! -f "$NIX_SCRIPT" ]] && [[ ! -d "/nix" ]]; then
-  echo "Installing Nix using install script"
-  curl https://nixos.org/nix/install | sh
-  echo "Setting proper permissions"
-  mkdir -m 0755 -p /nix/var/nix/{profiles,gcroots}/per-user/$USER
-fi
-
-if [[ -f "$NIX_SCRIPT" ]]; then
-  . "$NIX_SCRIPT"
-fi
-
-if hash nix-shell 2>/dev/null; then
-    cfgcaddy --quiet link
-    if ! hash hm 2>/dev/null; then
-      nix-env -i -f https://github.com/tstapler/home-manager-helper/archive/master.tar.gz
-    fi
-
-    if hash hm 2>/dev/null; then
-      case $(uname) in
-        Darwin)
-          hm switch osx > /dev/null
-          ;;
-        *)
-          hm switch linux > /dev/null
-      esac
-    fi
-fi
-
-# End Nix Config
-
 # Load rbenv
 
 if hash rbenv 2>/dev/null; then
