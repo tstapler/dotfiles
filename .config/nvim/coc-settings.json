@@ -6,9 +6,13 @@
 		"<C-c>": "do:exit"
 	},
 	"snippets.userSnippetsDirectory": "~/.vimsnippets",
+	"diagnostic-languageserver.debug": true,
 	"diagnostic-languageserver.filetypes": {
 		"text": [
 			"proselint"
+		],
+		"vimwiki": [
+			"proselint", "languagetool"
 		]
 	},
 	"diagnostic-languageserver.linters": {
@@ -63,6 +67,28 @@
 			"securities": {
 				" ": "info"
 			}
+		},
+		"languagetool": {
+			"command": "languagetool",
+			"debounce": 200,
+			"args": [
+				"/dev/fd/0"
+			],
+			"offsetLine": 0,
+			"offsetColumn": 0,
+			"sourceName": "languagetool",
+			"formatLines": 2,
+			"formatPattern": [
+				"^\\d+?\\.\\)\\s+Line\\s+(\\d+),\\s+column\\s+(\\d+),\\s+([^\\n]+)\nMessage:\\s+(.*)(\\r|\\n)*$",
+				{
+					"line": 1,
+					"column": 2,
+					"message": [
+						4,
+						3
+					]
+				}
+			]
 		}
 	}
 }
