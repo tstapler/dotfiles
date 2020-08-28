@@ -19,8 +19,8 @@
 [user]
 	name = Tyler Stapler
 	email = tystapler@gmail.com
-[commit]
-	gpgsign = true
+; [commit]
+; 	gpgsign = true
 [alias]
 	meld = !git difftool -t meld --dir-diff
 
