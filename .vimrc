@@ -56,10 +56,6 @@ endif
 "Set map leader
 let mapleader=","
 
-"Folding options
-set foldnestmax=10
-set foldmethod=indent
-
 "Show ex commands as they are being typed
 set showcmd
 

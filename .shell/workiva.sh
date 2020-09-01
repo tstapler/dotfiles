@@ -27,4 +27,3 @@ if [ -f $EKS_CONFIG ] && [[ $KUBECONFIG != *$EKS_CONFIG* ]]; then
   echo $KUBECONFIG
   export KUBECONFIG="${KUBECONFIG:=$HOME/.kube/config}:$HOME/Workiva/EKS/kubeconfigs.yaml"
 fi
-

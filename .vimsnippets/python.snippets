@@ -65,3 +65,13 @@ endsnippet
 snippet mkdir
 pathlib.Path($1).mkdir(parents=True, exist_ok=True) 
 endsnippet
+
+snippet signal
+handlers: List[Callable] = []
+def recieve_signal(signalNumber, frame):
+    for handler in handlers:
+        handler()
+for sig in [signal.SIGTERM, signal.SIGINT]:
+    signal.signal(sig, recieve_signal)
+signal.signal()
+endsnippet

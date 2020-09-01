@@ -30,6 +30,7 @@ endif
   " A multi language syntax highlighting plugin
   Plug 'sheerun/vim-polyglot'
 
+Plug 'cappyzawa/starlark.vim'
 
   "" Snippet Plugins {{{
   Plug 'honza/vim-snippets'
@@ -74,6 +75,7 @@ endif
     Plug 'junegunn/fzf.vim'
     Plug 'michal-h21/vim-zettel'
     Plug 'alok/notational-fzf-vim'
+    Plug 'christianrondeau/vim-base64'
 
   "" End Editing Plugins }}}
 

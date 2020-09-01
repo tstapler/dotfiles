@@ -39,6 +39,23 @@ zle -N edit-command-line
 
 # Expand HISTZIZE
 export HISTSIZE=400
+export HISTFILE=$HOME/.zsh_history
+
+# Appends every command to the history file once it is executed
+setopt inc_append_history
+export HISTTIMEFORMAT="[%F %T] "
+export HISTSIZE=1000
+export SAVEHIST=100000
+# Add the time of the history command
+setopt inc_append_history_time
+# Reloads the history whenever you use it
+setopt share_history
+
+# Dont search for dupes when using Ctrl+R
+setopt HIST_FIND_NO_DUPS
+
+# Only save unique commands
+setopt HIST_IGNORE_ALL_DUPS
 
 setopt extendedglob
 

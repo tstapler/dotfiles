@@ -21,6 +21,7 @@ zplug "clvv/fasd", as:command
 zplug "lib/completion", from:oh-my-zsh
 zplug "plugins/httpie", from:oh-my-zsh
 zplug "plugins/kubectl", from:oh-my-zsh
+zplug "plugins/aws", from:oh-my-zsh
 zplug "aswitalski/oh-my-zsh-sensei-git-plugin"
 zplug "plugins/git", from:oh-my-zsh
 zplug "djui/alias-tips"
