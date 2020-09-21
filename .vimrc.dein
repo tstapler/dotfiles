@@ -71,7 +71,7 @@ Plug 'cappyzawa/starlark.vim'
 
     " vim-zettel and requirements
     Plug 'vimwiki/vimwiki'
-    Plug 'junegunn/fzf'
+    Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
     Plug 'junegunn/fzf.vim'
     Plug 'michal-h21/vim-zettel'
     Plug 'alok/notational-fzf-vim'
