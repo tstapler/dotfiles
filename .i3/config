@@ -167,7 +167,7 @@ bindsym $mod+Shift+r restart
 bindsym $mod+Shift+e exec "exec cinnamon-session-quit"
 
 # Add screenshot utility
-bindsym $mod+Control+s exec "shutter --select"
+bindsym $mod+Control+s exec "flameshot gui"
 
 # resize window (you can also use the mouse for that)
 mode "resize" {
