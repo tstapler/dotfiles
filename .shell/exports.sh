@@ -1,24 +1,23 @@
 # Add Dart pub files to PATH
-export PATH=$PATH:"$HOME/.pub-cache/bin"
+pathadd "$HOME/.pub-cache/bin"
 
 # Add personal executables to path
-export PATH=$PATH:"$HOME/bin/bin"
+pathadd "$HOME/bin/bin"
 
 # Add personal scripts to path
-export PATH=$PATH:"$HOME/bin/scripts"
+pathadd "$HOME/bin/scripts"
 
 # Add user python executables to path
 OS="$(uname)"
 case $OS in
   'Linux') 
-    export PATH="$HOME/.local/bin:$PATH"
+    pathadd "$HOME/.local/bin"
     ;;
   'FreeBSD')
     ;;
   'WindowsNT')
     ;;
   'Darwin') 
-    export PATH=$PATH:"$HOME/Library/Python/2.7/bin"
     ;;
   'SunOS') ;;
   'AIX') ;;
@@ -84,7 +83,6 @@ if hash gpgconf 2>/dev/null; then
 export SSH_AUTH_SOCK=$(gpgconf --list-dirs agent-ssh-socket)
 fi
 
-export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"
 
 # Completions for NativeScript
 if [ -f "$HOME/.tnsrc" ]; then 
@@ -106,8 +104,12 @@ if hash kubectl 2>/dev/null; then
 fi
 
 # Add krew the kubectl plugin manager to path
-export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"
+pathadd "${KREW_ROOT:-$HOME/.krew}/bin"
 
 if hash helm 2>/dev/null; then
   source <(helm completion zsh)
 fi
+
+pathadd "$HOME/.yarn/bin"
+pathadd "$HOME/.config/yarn/global/node_modules/.bin"
+pathadd "$HOME/.poetry/bin"

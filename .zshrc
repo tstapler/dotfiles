@@ -84,6 +84,13 @@ bindkey '^R' zaw-history
 
 export ZPLUG_FILTER=fzy:fzf-tmux:fzf:peco:percol:zaw
 
+# Add a helper function to append to path
+export -f pathadd() {
+    if [ -d "$1" ] && [[ ":$PATH:" != *":$1:"* ]]; then
+        PATH="${PATH:+"$PATH:"}$1"
+    fi
+}
+
 # Language managers (RVM, NVM, PYENV, ...)
 source $HOME/.shell/languages.sh
 
