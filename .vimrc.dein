@@ -436,12 +436,6 @@ let g:grammarous#disabled_categories = {
 
 " End grammarout Settings }}}
 
-" bash-support Settings {{{
-if exists(g:shell_location)
-  let g:BASH_Executable = g:shell_location
-endif
-" End bash-support Settings }}}
-
 " Dart-Vim Settings {{{
   let g:dart_style_guide = 'yup'
 " End Dart-Vim Settings }}}
