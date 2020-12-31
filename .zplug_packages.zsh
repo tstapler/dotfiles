@@ -27,6 +27,7 @@ zplug "plugins/kubectl", from:oh-my-zsh
 zplug "aswitalski/oh-my-zsh-sensei-git-plugin"
 zplug "plugins/git", from:oh-my-zsh
 zplug "djui/alias-tips"
+zplug "plugins/asdf", from:oh-my-zsh
 
 # The file searchers
 
