@@ -75,7 +75,7 @@ bindkey -M vicmd '^x^e' edit-command-line
 
 # History subzmodload zsh/terminfo
 bindkey "$terminfo[kcuu1]" history-substring-search-up
-bindkey "$terminfo[kcud1]" history-substring-search-downstring plugin bindings
+bindkey "$terminfo[kcud1]" history-substring-search-down
 bindkey -M vicmd 'k' history-substring-search-up
 bindkey -M vicmd 'j' history-substring-search-down
 
