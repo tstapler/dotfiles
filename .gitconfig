@@ -4,7 +4,6 @@
 	editor = vim
 	excludesfile = ~/.gitignore
 	symlinks = true
-	hooksPath = $HOME/tylerstapler/.gittemplates
 [web]
 	browser = google-chrome
 [push]
@@ -28,3 +27,5 @@
 
 [url "git@github.com:"]
 	insteadOf = https://github.com/
+[rebase]
+	instructionFormat = (%an <%ae>) %s
