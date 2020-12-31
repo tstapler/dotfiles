@@ -34,6 +34,7 @@ links:
     os: "Linux Darwin"
   - src: .tmux/*
   - src: .home-manager
+  - src: .ideavimrc
 
 ignore:
   # Globbing patterns to ignore when
