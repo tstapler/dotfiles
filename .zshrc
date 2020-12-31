@@ -88,7 +88,7 @@ export ZPLUG_FILTER=fzy:fzf-tmux:fzf:peco:percol:zaw
 source $HOME/.shell/languages.sh
 
 if hash keychain 2>/dev/null; then
-	eval `keychain --agents gpg --eval`
+	eval `keychain --agents gpg,ssh --quick --inherit any --eval DFA2FB32C3126156`
 fi
 
 # Setup Fasd
@@ -124,8 +124,5 @@ OS=$(uname -a)
 case $OS in
 	*Darwin*)
 		source ~/.shell/osx.sh
-	;;
-	*\#1-Microsoft*)
-
 	;;
 esac
