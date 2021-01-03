@@ -19,6 +19,7 @@ else
 fi
 }
 
+PYTHON_EXE=python
 PIP_PACKAGE_NAME=python-pip
 PIP_EXE_NAME=pip
 PIP_ARGS="--user"
@@ -35,10 +36,17 @@ case $OS in
 	*MANJARO*|*ARCH*)
 		;;	
 	*Darwin*)
+	if ! haveProg brew; then
+		/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+		brew install python
+	fi
 	echo "Detected OSX"
+	PYTHON_EXE=python3
 	PIP_PACKAGE_NAME=python
-	PIP_EXE_NAME=pip2
-	PIP_ARGS=""
+	PIP_EXE_NAME=pip3
+	BREW_PATH="export PATH="$PATH:$(brew --prefix)/lib/$(python3 --version | awk '{ print $2}')/site-packages
+	PROFILE="$HOME/.profile"
+	grep -qxF "$BREW_PATH" "$PROFILE" || sudo echo "$BREW_PATH" >> "$PROFILE"
 		;;
   *)
     echo "OS Not supported"
@@ -69,14 +77,14 @@ if [ -d "$CFG_CADDY_DIR" ]; then
 
   $PIP_EXE_NAME install $PIP_ARGS --editable "$CFG_CADDY_DIR"
 
-  python -m cfgcaddy init "$CLONE_DIR" "$HOME"
+  $PYTHON_EXE -m cfgcaddy init "$CLONE_DIR" "$HOME"
 
   echo "Linking Dotfiles"
-  python -m cfgcaddy link
+  $PYTHON_EXE -m cfgcaddy link
 else 
   echo "cfgcaddy repo is not present, cannot link dotfiles"
 fi
 
 if ! hash zsh 2>/dev/null; then
-  install_package zsh
+  install_package zsh gpg keychain
 fi
