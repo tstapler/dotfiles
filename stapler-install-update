@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 INSTALLER_DIR="$HOME/stapler-installer"
+DYNAMIC_HOSTFILE="$INSTALLER_DIR/dynamic-inventory.py" 
 
 if [[ -z "$HOSTNAME" ]]; then
   HOSTNAME=$(hostname)
@@ -10,8 +11,8 @@ cd "$INSTALLER_DIR" || exit
 
 if [[ "$1" == "all" ]]; then
   sudo echo "Starting installer for all hosts"
-  debops -i dynamic-inventory.py "$INSTALLER_DIR"/ansible/playbooks/install_all_machines.yml "${@:2}"
+  ansible-playbook -i "$DYNAMIC_HOSTFILE" "$INSTALLER_DIR"/ansible/playbooks/install_all_machines.yml "${@:2}"
 else
   sudo echo "Starting installer for $HOSTNAME"
-  debops -i dynamic-inventory.py "$(find "$INSTALLER_DIR" -iname "*$HOSTNAME*.yml")" "$@"
+  ansible-playbook -i "$DYNAMIC_HOSTFILE" "$(find "$INSTALLER_DIR" -iname "*$HOSTNAME*.yml")" "$@"
 fi
