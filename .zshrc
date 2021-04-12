@@ -95,7 +95,7 @@ export -f pathadd() {
 source $HOME/.shell/languages.sh
 
 if hash keychain 2>/dev/null; then
-	eval `keychain --agents gpg,ssh --quick --inherit any`
+	eval `keychain --agents gpg,ssh --quick --quiet --noask --inherit any`
 fi
 
 # Setup Fasd
