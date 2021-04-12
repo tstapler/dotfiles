@@ -1,13 +1,28 @@
 ASDF_PLUGIN_DIR="$ASDF_DIR/plugins"
 
-# Add ASDF plugins if they don't exist
-for plug in nodejs python java
-do
-  if [ ! -d "$ASDF_PLUGIN_DIR/$plug" ]; then
-    asdf plugin add $plug
-  fi
-done
+ASDF_SETUP="$HOME/.asdf/asdf.sh" 
+if [ -f "$ASDF_SETUP" ]; then
+  . $ASDF_SETUP
+fi
+if ! hash asdf 2>/dev/null; then
+  git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.8.0
+fi
 
+if hash asdf 2>/dev/null; then
+# Add ASDF plugins if they don't exist
+  for plug in nodejs python java
+  do
+    if [ ! -d "$ASDF_PLUGIN_DIR/$plug" ]; then
+      asdf plugin add $plug
+    fi
+  done
+fi
+
+
+SET_JAVA_HOME="$HOME/.asdf/plugins/java/set-java-home.zsh"
+if [ -f "$SET_JAVA_HOME" ]; then
+  . "$SET_JAVA_HOME"
+fi
 # Load N (Node.js the version manager)
 # export N_PREFIX="$HOME/n"; 
 
@@ -54,43 +69,10 @@ if hash $VENV_WRAP_SH >/dev/null 2>&1; then
   source "$(which $VENV_WRAP_SH)"
 fi
 
-# # Load gvm
-# GVM_DIR="$HOME/.gvm"
-# GVM_SCRIPT="$GVM_DIR/scripts/gvm"
-# export GVM_NO_UPDATE_PROFILE=true
-
-# if [[ ! -d "$GVM_DIR" ]]; then
-#   curl -s -S -L "https://raw.githubusercontent.com/moovweb/gvm/master/binscripts/gvm-installer" | zsh
-# fi
-
-# if [[ -f "$GVM_SCRIPT" ]]; then
-#    . "$GVM_SCRIPT" 
-# fi
-
-# # Load rbenv
-
-# if hash rbenv 2>/dev/null; then
-#   eval "$(rbenv init -)"
-#   if hash gem 2>/dev/null; then
-#     IFS=:
-#       for GEM_PATH in $(gem env gempath); do
-#         PATH="$PATH:$GEM_PATH/bin"
-#       done
-#     IFS=" "
-#   fi
-# fi
-
 # Install tmux plugin manager
 if [[ ! -d  "$HOME/.tmux/plugins/tpm" ]]; then
   mkdir -p "$HOME/.tmux/plugins"
   git clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
-fi
-
-if ! hash pyenv 2>/dev/null && [[ ! -d "$HOME/.pyenv" ]]; then
-  curl https://pyenv.run | bash
-fi
-if command -v pyenv 1>/dev/null 2>&1; then
-  eval "$(pyenv init -)"
 fi
 
 if ! hash poetry 2>/dev/null; then
