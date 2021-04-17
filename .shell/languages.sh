@@ -1,7 +1,18 @@
+ASDF_DIR="$HOME/.asdf"
 ASDF_PLUGIN_DIR="$ASDF_DIR/plugins"
 
+if [ ! -d "$ASDF_DIR" ]; then
+  git clone "https://github.com/asdf-vm/asdf.git" "$ASDF_DIR"
+  cd ~/.asdf
+  git checkout "$(git describe --abbrev=0 --tags)"
+fi
+
+if [ -d "$ASDF_DIR" ]; then
+  . "$ASDF_DIR/asdf.sh"
+fi
+
 # Add ASDF plugins if they don't exist
-for plug in nodejs python java
+for plug in nodejs python java golang
 do
   if [ ! -d "$ASDF_PLUGIN_DIR/$plug" ]; then
     asdf plugin add $plug
