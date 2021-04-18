@@ -17,8 +17,10 @@ ASDF_PLUGIN_DIR="$ASDF_DIR/plugins"
   do
     if [ ! -d "$ASDF_PLUGIN_DIR/$plug" ]; then
       asdf plugin add $plug
+      asdf install $plug
     fi
   done
+
 fi
 
 
