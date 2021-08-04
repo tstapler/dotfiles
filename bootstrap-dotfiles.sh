@@ -85,6 +85,9 @@ else
   echo "cfgcaddy repo is not present, cannot link dotfiles"
 fi
 
-if ! hash zsh 2>/dev/null; then
-  install_package zsh gpg keychain
-fi
+for dep in zsh gpg keychain; do
+  if ! hash $dep 2>/dev/null; then
+    echo "Installing missing dependency $dep"
+    install_package $dep
+  fi
+done
