@@ -14,14 +14,14 @@ case $ORIGIN_URL in
   *github.com/*-wf*|*github.com:*-wf*|\
   *github.com/*-wk*|*github.com:*-wk*)
     export GIT_AUTHOR_EMAIL="tyler.stapler@workiva.com"
-    export GIT_COMITTER_EMAIL=$GIT_AUTHOR_EMAIL
-		git config --local user.email "$GIT_AUTHOR_EMAIL"
-    git config --local commit.gpgsign false
 	;;
+  *.googlesource.com*|sso://*)
+    export GIT_AUTHOR_EMAIL="tstapler@google.com"
+  ;;
 	*)
     export GIT_AUTHOR_EMAIL="tystapler@gmail.com"
-    export GIT_COMITTER_EMAIL=$GIT_AUTHOR_EMAIL
-		git config --local user.email "$GIT_AUTHOR_EMAIL"
-    git config --local commit.gpgsign true
 	;;
 esac
+
+export GIT_COMITTER_EMAIL=$GIT_AUTHOR_EMAIL
+git config --local user.email "$GIT_AUTHOR_EMAIL"
