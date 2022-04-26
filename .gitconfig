@@ -36,3 +36,6 @@
 
 [rebase]
 	instructionFormat = (%an <%ae>) %s
+
+[http]
+	cookiefile = ~/.gitcookies
