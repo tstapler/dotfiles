@@ -59,6 +59,9 @@ setopt HIST_IGNORE_ALL_DUPS
 
 setopt extendedglob
 
+# Allow comments in interactive shells to mimic ksh, sh, bash behavior
+setopt interactivecomments
+
 # Vim Mode
 bindkey -v
 
