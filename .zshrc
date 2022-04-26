@@ -7,7 +7,8 @@
 
 # Check if zplug is installed
 if [[ ! -d ~/.zplug ]]; then
-  git clone https://github.com/zplug/zplug $HOME/.zplug
+  # Ignore the system .gitconfig in case it tries to force SSH
+  GIT_CONFIG_NOSYSTEM=1 git clone https://github.com/zplug/zplug $HOME/.zplug
 fi
 
 
@@ -46,6 +47,7 @@ setopt inc_append_history
 export HISTTIMEFORMAT="[%F %T] "
 export HISTSIZE=1000
 export SAVEHIST=100000
+
 # Add the time of the history command
 setopt inc_append_history_time
 # Reloads the history whenever you use it
