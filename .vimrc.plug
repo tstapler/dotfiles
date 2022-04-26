@@ -460,11 +460,6 @@ let g:table_mode_corner_corner = '|'
 let g:vim_json_syntax_conceal = 0
 " End vim-json Settings }}}
 
-" Vim Crosshairs Settings {{{
-set cursorline
-set cursorcolumn
-" End Vim Crosshairs Settings }}}
-
 " ctrlp Settings {{{
 if executable("ag")
   let g:ctrlp_user_command = 'ag -l --hidden --nocolor -g ""'
