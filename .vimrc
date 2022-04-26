@@ -119,8 +119,7 @@ if isdirectory(expand("~/.vim/local"))
 endif
 
 " Plugin Manager {{{
-if filereadable(expand("~/.vimrc.dein")) 
-   \ && isdirectory(expand("~/.vim/bundle/repos")) 
+if filereadable(expand("~/.vimrc.dein"))
    \ && (has("nvim") || version > 703)
   source ~/.vimrc.dein
 else
