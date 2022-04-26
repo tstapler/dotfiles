@@ -1,20 +1,26 @@
 [init]
 	templatedir = ~/.gittemplates
+
 [core]
 	editor = vim
 	excludesfile = ~/.gitignore
 	symlinks = true
+
 [web]
 	browser = google-chrome
+
 [push]
 	default = matching
+
 [color]
 	ui = auto
+
 [diff]
 	tool = meld
 
 [hub]
 	protocol = ssh
+
 [user]
 	name = Tyler Stapler
 	email = tystapler@gmail.com
@@ -27,5 +33,6 @@
 
 [url "git@github.com:"]
 	insteadOf = https://github.com/
+
 [rebase]
 	instructionFormat = (%an <%ae>) %s
