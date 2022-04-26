@@ -1,9 +1,24 @@
 function gen_pass {
-GEN_RANDOM_NUMBER="import random; print(random.randrange(0,10))"
-INPUT_TO_TITLE_CASE="import sys; sys.stdout.write(sys.stdin.read().title())"
-xkcdpass -c 20 -d "-" -n 3 |
-awk -v NUM=$(python -c "$GEN_RANDOM_NUMBER") '{printf("%s-%d\n",$1,NUM)}'  |
-python -c "$INPUT_TO_TITLE_CASE"
+  local PYTHON_BIN
+  for bin in python python3 python2; do
+    if hash $bin 2>/dev/null; then
+      PYTHON_BIN=$bin
+      break
+    fi
+  done
+
+  if ! hash xkcdpass 2>/dev/null; then
+    echo Please install xkcd pass:
+    echo $PYTHON_BIN -m pip install pipx
+    echo pipx install xkcdpass
+    return
+  fi
+
+  GEN_RANDOM_NUMBER="import random; print(random.randrange(0,10))"
+  INPUT_TO_TITLE_CASE="import sys; sys.stdout.write(sys.stdin.read().title())"
+  xkcdpass -c 20 -d "-" -n 3 |
+  awk -v NUM=$($PYTHON_BIN -c "$GEN_RANDOM_NUMBER") '{printf("%s-%d\n",$1,NUM)}'  |
+  $PYTHON_BIN -c "$INPUT_TO_TITLE_CASE"
 }
 
 function commited_files {
