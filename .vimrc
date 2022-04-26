@@ -111,6 +111,13 @@ nnoremap Y y$
 " End Neovim Mappings }}}
 " }}}
 
+" Local vimscript files
+if isdirectory(expand("~/.vim/local"))
+  for path in split(globpath('~/.vim/local/', '*'), '\n')
+    execute 'source ' . path
+  endfor
+endif
+
 " Plugin Manager {{{
 if filereadable(expand("~/.vimrc.dein")) 
    \ && isdirectory(expand("~/.vim/bundle/repos")) 
