@@ -1,0 +1,62 @@
+---
+# tasks file for bootstrap
+- include_vars: "{{ item }}"
+  with_first_found:
+    - "../vars/{{ ansible_distribution }}-{{ ansible_distribution_major_version | int}}.yml"
+    - "../vars/{{ ansible_distribution }}.yml"
+    - "../vars/{{ ansible_os_family }}.yml"
+    - "../vars/default.yml"
+- include_tasks: "{{ item }}"
+  with_first_found:
+    - files:
+        - "../tasks/{{ ansible_distribution }}-{{ ansible_distribution_major_version | int}}.yml"
+        - "../tasks/{{ ansible_distribution }}.yml"
+        - "../tasks/{{ ansible_os_family }}.yml"
+      skip: true
+- name: Install packages
+  package:
+    name: "{{ zsh_package_name }}"
+#      - "{{ git_package_name }}"
+  become: yes
+- name: Download dotfiles
+  ansible.builtin.git:
+    repo: 'https://github.com/tstapler/dotfiles'
+    recursive: true
+    dest: ~/dotfiles
+    update: no
+    track_submodules: yes
+    version: master
+- name: Download stapler-scripts
+  ansible.builtin.git:
+    repo: 'https://github.com/tstapler/stapler-scripts'
+    recursive: true
+    dest: ~/stapler-scripts
+    update: no
+    track_submodules: yes
+    version: master
+- name: Install github cli
+  package:
+    name:
+      - "{{ github_cli_name }}"
+  become: yes
+- name: "Generate an OpenSSH keypair with the default values (4096 bits, rsa)"
+  community.crypto.openssh_keypair:
+    path: ~/.ssh/id_rsa
+#    creates: ~/.ssh/id_rsa
+
+- name: "Check if ssh key is registered in github"
+  shell: 'gh ssh-key list | grep -q "$(head -c 100 ~/.ssh/id_rsa.pub)"'
+  register: key_registered
+
+- name: "Add key to github"
+  shell: 'gh ssh-key add ~/.ssh/id_rsa.pub'
+  when: key_registered.rc != 0
+
+- name: Download stapler-installer
+  ansible.builtin.git:
+    repo: 'ssh://git@github.com:tstapler/stapler-installer'
+    recursive: true
+    dest: ~/stapler-installer
+    update: no
+    track_submodules: yes
+    version: master

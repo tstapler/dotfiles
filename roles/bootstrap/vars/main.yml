@@ -1,0 +1,6 @@
+---
+# vars file for bootstrap
+
+zsh_package_name: zsh
+git_package_name: git
+github_cli_name: gh
