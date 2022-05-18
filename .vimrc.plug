@@ -1,0 +1,536 @@
+" vim:fdm=marker
+
+if &compatible
+  set nocompatible               " Be iMproved
+endif
+
+if empty(glob('~/.vim/autoload/plug.vim'))
+  silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs
+    \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+endif
+
+call plug#begin('~/.vim/plugged')
+  "" Editing Plugins {{{
+
+  "" Code Completion {{{
+  Plug 'w0rp/ale'
+  " Use release branch (recommend)
+  Plug 'neoclide/coc.nvim', {'branch': 'release'}
+  "" End Code Completion }}}
+
+  "" Code Completion Sources {{{
+  Plug 'Shougo/neoinclude.vim'
+  Plug 'Shougo/neco-syntax'
+  Plug 'Shougo/neco-vim'
+  " Elixir editing plugin
+  Plug 'slashmili/alchemist.vim'
+  Plug 'ujihisa/neco-look'
+  "" End Code Completion Sources }}}
+
+  " A multi language syntax highlighting plugin
+  Plug 'sheerun/vim-polyglot'
+
+  Plug 'cappyzawa/starlark.vim'
+
+  "" Snippet Plugins {{{
+  Plug 'honza/vim-snippets'
+  Plug 'reconquest/snippets'
+  Plug 'chrisgillis/vim-bootstrap3-snippets'
+  Plug 'andrewstuart/vim-kubernetes'
+  "" End Snippet Plugins }}}
+
+  "" Navigation Plugins {{{
+  "" Select windows using leader w
+  Plug 't9md/vim-choosewin'
+
+  "" End Naviation Plugins }}}"
+
+  " Narrow region plugin
+  Plug 'chrisbra/NrrwRgn'
+
+  Plug 'dhruvasagar/vim-table-mode'
+  Plug 'Chiel92/vim-autoformat'
+  Plug 'Shougo/context_filetype.vim'
+
+  Plug 'godlygeek/tabular'
+
+  " Requires godlygeek/tabular
+  Plug 'tpope/vim-surround'
+  " Comment out blocks of code easily
+  Plug 'tpope/vim-commentary'
+  Plug 'tpope/vim-speeddating'
+  " Quickly write html using shorthand
+  Plug 'mattn/emmet-vim'
+  Plug 'christoomey/vim-sort-motion'
+  Plug 'jiangmiao/auto-pairs'
+  Plug 'christoomey/vim-titlecase'
+  Plug 'fidian/hexmode'
+  Plug 'google/vim-maktaba'
+  Plug 'glts/vim-magnum'
+  Plug 'triglav/vim-visual-increment'
+
+    " vim-zettel and requirements
+    Plug 'vimwiki/vimwiki'
+    Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+    Plug 'junegunn/fzf.vim'
+    Plug 'michal-h21/vim-zettel'
+    " todo decide on a way to make this work better
+    "Plug 'alok/notational-fzf-vim'
+    Plug 'christianrondeau/vim-base64'
+
+  "" End Editing Plugins }}}
+
+  "" Management Plugins {{{
+
+  "" Git Plugins {{{
+    " Critical vim plugin adds interfaces for managing a git repo from vim
+    Plug 'tpope/vim-fugitive'
+    " An extension of fugitive to provide better support for merges
+    Plug 'vim-scripts/Merginal'
+    " A clone of the emacs Magit plugin which makes it easy to stage commits
+    Plug 'jreybert/vimagit'
+  "" End Git Plugins }}}
+
+  Plug 'tpope/vim-repeat'
+  " View your undo history tree
+  Plug 'mbbill/undotree'
+
+  " A project management plugin which adds the ability to
+  " save workspaces and resume sessions
+  Plug 'vim-ctrlspace/vim-ctrlspace'
+
+  " Easy fuzzy searching for files
+  Plug 'ctrlpvim/ctrlp.vim'
+
+  " Search for file contents much like Sublime Text's <c>+<shift>+f
+  Plug 'dyng/ctrlsf.vim'
+  "" End Management Plugins }}}
+
+  "" Utility Plugins {{{
+  Plug 'Konfekt/FastFold'
+
+  " A plugin for measuring vimrc startup time
+  " use the --startuptime argument then the command :StartupTime
+  Plug 'dstein64/vim-startuptime'
+
+  "" End Utility Plugins }}}
+
+  "" UI Plugins {{{
+   Plug 'vim-airline/vim-airline'
+   Plug 'vim-airline/vim-airline-themes'
+  "" A nice dark colorscheme
+  Plug 'morhetz/gruvbox'
+
+  Plug 'Shougo/vimfiler.vim'
+  "" End Interface Plugins }}}
+
+  "" Documentation & Word Processing Plugins {{{
+
+  "" Pandoc {{{
+  Plug 'vim-pandoc/vim-pandoc'
+  Plug 'vim-pandoc/vim-pandoc-syntax'
+  Plug 'vim-pandoc/vim-pandoc-after'
+  "" End Pandoc }}}
+
+  "" Distraction Free Writing {{{
+  Plug 'amix/vim-zenroom2'
+  Plug 'junegunn/goyo.vim'
+  Plug 'junegunn/limelight.vim'
+  "" End Distraction Free Writing }}}
+
+  " zettel Settings {{{
+  " End zettel Settings }}}
+
+  Plug 'rhysd/vim-grammarous'
+  Plug 'tpope/vim-abolish'
+  Plug 'jamessan/vim-gnupg'
+
+  "" End Documentation & Word Processing Plugins }}}
+
+  "" Miscellaneous Plugins {{{
+  Plug 'Shougo/vimproc.vim', {'do' : 'make'}
+  Plug 'xolox/vim-misc'
+  Plug 'mattn/webapi-vim'
+  Plug 'LucHermitte/lh-vim-lib'
+  Plug 'jceb/vim-hier'
+  "" End Miscellaneous Plugins }}}
+
+call plug#end()
+
+" }}}
+
+" Plugin Mappings {{{
+" coc-snippets Settings {{{
+
+" Format the current buffer
+nnoremap <silent> <leader>f :Format<CR>
+
+" Use <C-l> for trigger snippet expand.
+imap <C-l> <Plug>(coc-snippets-expand)
+
+" Use <C-j> for select text for visual placeholder of snippet.
+vmap <C-j> <Plug>(coc-snippets-select)
+
+" Use <C-j> for jump to next placeholder, it's default of coc.nvim
+let g:coc_snippet_next = '<c-j>'
+
+" Use <C-k> for jump to previous placeholder, it's default of coc.nvim
+let g:coc_snippet_prev = '<c-k>'
+
+" Use <C-j> for both expand and jump (make expand higher priority.)
+imap <C-j> <Plug>(coc-snippets-expand-jump)
+" End coc-snippets Settings }}}
+
+" coc-vim Settings {{{
+let g:coc_global_extensions = ["coc-marketplace", "coc-json", "coc-tsserver", "coc-go", "coc-markdownlint", "coc-snippets", "coc-flutter", "coc-rust-analyzer", "coc-solargraph", "coc-yaml", "coc-yank", "coc-sql", "coc-stylelintplus", "coc-pyright",  "coc-python", "coc-java", "coc-git", "coc-html", "coc-cfn-lint", 'coc-diagnostic']
+  " TextEdit might fail if hidden is not set.
+set hidden
+
+" Some servers have issues with backup files, see #649.
+set nobackup
+set nowritebackup
+
+" Give more space for displaying messages.
+set cmdheight=2
+
+" Having longer updatetime (default is 4000 ms = 4 s) leads to noticeable
+" delays and poor user experience.
+set updatetime=300
+
+" Don't pass messages to |ins-completion-menu|.
+set shortmess+=c
+
+" Always show the signcolumn, otherwise it would shift the text each time
+" diagnostics appear/become resolved.
+if has("patch-8.1.1564")
+  " Recently vim can merge signcolumn and number column into one
+  set signcolumn=number
+else
+  set signcolumn=yes
+endif
+
+" Use tab for trigger completion with characters ahead and navigate.
+" NOTE: Use command ':verbose imap <tab>' to make sure tab is not mapped by
+" other plugin before putting this into your config.
+inoremap <silent><expr> <TAB>
+      \ pumvisible() ? "\<C-n>" :
+      \ <SID>check_back_space() ? "\<TAB>" :
+      \ coc#refresh()
+inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
+
+function! s:check_back_space() abort
+  let col = col('.') - 1
+  return !col || getline('.')[col - 1]  =~# '\s'
+endfunction
+
+" Use <c-space> to trigger completion.
+inoremap <silent><expr> <c-space> coc#refresh()
+
+" Use <cr> to confirm completion, `<C-g>u` means break undo chain at current
+" position. Coc only does snippet and additional edit on confirm.
+" <cr> could be remapped by other vim plugin, try `:verbose imap <CR>`.
+if exists('*complete_info')
+  inoremap <expr> <cr> complete_info()["selected"] != "-1" ? "\<C-y>" : "\<C-g>u\<CR>"
+else
+  inoremap <expr> <cr> pumvisible() ? "\<C-y>" : "\<C-g>u\<CR>"
+endif
+
+" Use `[g` and `]g` to navigate diagnostics
+" Use `:CocDiagnostics` to get all diagnostics of current buffer in location list.
+nmap <silent> [g <Plug>(coc-diagnostic-prev)
+nmap <silent> ]g <Plug>(coc-diagnostic-next)
+
+" GoTo code navigation.
+nmap <silent> gd <Plug>(coc-definition)
+nmap <silent> gy <Plug>(coc-type-definition)
+nmap <silent> gi <Plug>(coc-implementation)
+nmap <silent> gr <Plug>(coc-references)
+
+" Use K to show documentation in preview window.
+nnoremap <silent> K :call <SID>show_documentation()<CR>
+
+function! s:show_documentation()
+  if (index(['vim','help'], &filetype) >= 0)
+    execute 'h '.expand('<cword>')
+  else
+    call CocAction('doHover')
+  endif
+endfunction
+
+" Highlight the symbol and its references when holding the cursor.
+autocmd CursorHold * silent call CocActionAsync('highlight')
+
+" Symbol renaming.
+nmap <leader>rn <Plug>(coc-rename)
+
+" Formatting selected code.
+xmap <leader>f  <Plug>(coc-format-selected)
+nmap <leader>f  <Plug>(coc-format-selected)
+
+augroup mygroup
+  autocmd!
+  " Setup formatexpr specified filetype(s).
+  autocmd FileType typescript,json setl formatexpr=CocAction('formatSelected')
+  " Update signature help on jump placeholder.
+  autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
+augroup end
+
+" Applying codeAction to the selected region.
+" Example: `<leader>aap` for current paragraph
+xmap <leader>a  <Plug>(coc-codeaction-selected)
+nmap <leader>a  <Plug>(coc-codeaction-selected)
+
+" Remap keys for applying codeAction to the current buffer.
+nmap <leader>ac  <Plug>(coc-codeaction)
+" Apply AutoFix to problem on the current line.
+nmap <leader>qf  <Plug>(coc-fix-current)
+
+" Map function and class text objects
+" NOTE: Requires 'textDocument.documentSymbol' support from the language server.
+xmap if <Plug>(coc-funcobj-i)
+omap if <Plug>(coc-funcobj-i)
+xmap af <Plug>(coc-funcobj-a)
+omap af <Plug>(coc-funcobj-a)
+xmap ic <Plug>(coc-classobj-i)
+omap ic <Plug>(coc-classobj-i)
+xmap ac <Plug>(coc-classobj-a)
+omap ac <Plug>(coc-classobj-a)
+
+" Use CTRL-S for selections ranges.
+" Requires 'textDocument/selectionRange' support of LS, ex: coc-tsserver
+nmap <silent> <C-s> <Plug>(coc-range-select)
+xmap <silent> <C-s> <Plug>(coc-range-select)
+
+" Add `:Format` command to format current buffer.
+command! -nargs=0 Format :call CocAction('format')
+
+" Add `:Fold` command to fold current buffer.
+command! -nargs=? Fold :call     CocAction('fold', <f-args>)
+
+" Add `:OR` command for organize imports of the current buffer.
+command! -nargs=0 OR   :call     CocAction('runCommand', 'editor.action.organizeImport')
+
+" Add (Neo)Vim's native statusline support.
+" NOTE: Please see `:h coc-status` for integrations with external plugins that
+" provide custom statusline: lightline.vim, vim-airline.
+set statusline^=%{coc#status()}%{get(b:,'coc_current_function','')}
+
+" Mappings for CoCList
+" Show all diagnostics.
+nnoremap <silent><nowait> <space>a  :<C-u>CocList diagnostics<cr>
+" Manage extensions.
+nnoremap <silent><nowait> <space>e  :<C-u>CocList extensions<cr>
+" Show commands.
+nnoremap <silent><nowait> <space>c  :<C-u>CocList commands<cr>
+" Find symbol of current document.
+nnoremap <silent><nowait> <space>o  :<C-u>CocList outline<cr>
+" Search workspace symbols.
+nnoremap <silent><nowait> <space>s  :<C-u>CocList -I symbols<cr>
+" Do default action for next item.
+nnoremap <silent><nowait> <space>j  :<C-u>CocNext<CR>
+" Do default action for previous item.
+nnoremap <silent><nowait> <space>k  :<C-u>CocPrev<CR>
+" Resume latest coc list.
+nnoremap <silent><nowait> <space>p  :<C-u>CocListResume<CR>
+" End coc-vim Settings }}}
+
+
+" vim-zettel Settings {{{
+   let g:zettel_format = "%y-%m-%d-%H%M-%title"
+" End vim-zettel Settings }}}
+
+" vimwiki Settings {{{
+   " Settings for Vimwiki
+   let g:vimwiki_table_mappings = 0
+   let g:vimwiki_list = [ {'path':'~/personal-wiki/markdown/','auto_tags':1, 'auto_toc':1, 'ext':'.md', 'syntax':'markdown'} ]
+" End vimwiki Settings }}}
+
+"echodoc Settings {{{
+let g:echodoc#enable_at_startup = 1
+let g:echodoc#type = 'floating'
+" End ec Settings }}}
+
+"vim-fugitive {{{
+  nnoremap <silent> <leader>g :Gstatus<CR>
+" End vim-fugitive }}}
+
+" ctrlsf.vim {{{
+  nmap     <C-F>f <Plug>CtrlSFPrompt
+  vmap     <C-F>f <Plug>CtrlSFVwordPath
+  vmap     <C-F>F <Plug>CtrlSFVwordExec
+  nmap     <C-F>n <Plug>CtrlSFCwordPath
+  nmap     <C-F>p <Plug>CtrlSFPwordPath
+  nnoremap <C-F>o :CtrlSFOpen<CR>
+  nnoremap <C-F>t :CtrlSFToggle<CR>
+  inoremap <C-F>t <Esc>:CtrlSFToggle<CR>
+  nmap     <C-F>l <Plug>CtrlSFQuickfixPrompt
+  vmap     <C-F>l <Plug>CtrlSFQuickfixVwordPath
+  vmap     <C-F>L <Plug>CtrlSFQuickfixVwordExec
+" End ctrlsf.vim }}}
+
+" vim-choosewin {{{
+  nmap <leader>w <Plug>(choosewin)
+" End vim-choosewin }}}
+
+" Unite {{{
+
+" ultisnips {{{
+  function! UltiSnipsCallUnite()
+    Unite -start-insert -winheight=100 -immediately -no-empty ultisnips
+    return ''
+  endfunction
+
+  inoremap <silent> <F12> <C-R>=(pumvisible()? "\<LT>C-E>":"")<CR><C-R>=UltiSnipsCallUnite()<CR>
+  nnoremap <silent> <F12> a<C-R>=(pumvisible()? "\<LT>C-E>":"")<CR><C-R>=UltiSnipsCallUnite()<CR>
+
+" End ultisnips }}}
+
+" End Unite }}}
+
+" zenroom2 {{{
+nnoremap <silent> <leader>z :Goyo<cr>
+" End zenroom2 }}}
+
+" vimfiler {{{
+nnoremap <C-e> :VimFilerExplorer<cr>
+" End vimfiler }}}
+
+" Radical Vim (Convert Base) {{{
+nmap g<C-A> <Plug>RadicalView
+xmap g<C-A> <Plug>RadicalView
+nmap crd <Plug>RadicalCoerceToDecimal
+nmap crx <Plug>RadicalCoerceToHex
+nmap cro <Plug>RadicalCoerceToOctal
+nmap crb <Plug>RadicalCoerceToBinary
+
+" End Radical Vim (Convert Base) }}}
+
+" Plugin Settings {{{
+
+" grammarous Settings {{{
+let g:grammarous#hooks = {}
+function! g:grammarous#hooks.on_check(errs) abort
+    nmap <buffer>gn <Plug>(grammarous-move-to-next-error)
+    nmap <buffer>gp <Plug>(grammarous-move-to-previous-error)
+    nmap <buffer>gr <Plug>(grammarous-move-to-info-window)r
+    nmap <buffer>gf <Plug>(grammarous-move-to-info-window)f
+    nmap <buffer>gR <Plug>(grammarous-move-to-info-window)R
+endfunction
+function! g:grammarous#hooks.on_reset(errs) abort
+    nunmap <buffer>gn
+    nunmap <buffer>gp
+    nunmap <buffer>gr
+    nunmap <buffer>gf
+    nunmap <buffer>gR
+endfunction
+let g:grammarous#disabled_categories = {
+            \ 'pandoc' : ['TYPOGRAPHY', 'PUNCTUATION'],
+            \ }
+
+" End grammarout Settings }}}
+
+" Dart-Vim Settings {{{
+  let g:dart_style_guide = 'yup'
+" End Dart-Vim Settings }}}
+
+" UltiSnips Settings {{{
+let g:ultisnips_python_style = "google"
+" End UltiSnips Settings }}}
+
+" TableMode {{{
+" make table both pandoc and github lovable
+let g:table_mode_separator = '|'
+let g:table_mode_corner = '|'
+let g:table_mode_corner_corner = '|'
+" End TableMode }}}
+
+" vim-json Settings {{{
+let g:vim_json_syntax_conceal = 0
+" End vim-json Settings }}}
+
+" ctrlp Settings {{{
+if executable("ag")
+  let g:ctrlp_user_command = 'ag -l --hidden --nocolor -g ""'
+endif
+  let g:ctrlp_show_hidden = 1
+" End ctrlp Settings }}}
+"
+"" ctrlspace Settings {{{
+
+if executable("ag")
+  let g:CtrlSpaceGlobCommand = 'ag -l --hidden --nocolor -g ""'
+endif
+
+let g:CtrlSpaceProjectRootMarkers = ['.projectroot', '.git']
+let g:CtrlSpaceLoadLastWorkspaceOnStart = 1
+let g:CtrlSpaceSaveWorkspaceOnSwitch = 1
+let g:CtrlSpaceSaveWorkspaceOnExit = 1
+let g:CtrlSpaceSetDefaultMapping = 1
+nnoremap <silent> <C-Space> :CtrlSpace<CR>
+
+" For ctrlspace
+set hidden
+
+" End ctrlspace Settings }}}
+
+" Vimfiler Settings {{{
+if has_key(g:plugs, 'vimfiler.vim')
+" Enable file operation commands.
+" Edit file by tabedit.
+call vimfiler#custom#profile('default', 'context', {
+      \ 'safe' : 0
+      \ })
+
+" Like Textmate icons.
+let g:vimfiler_tree_leaf_icon = ' '
+let g:vimfiler_tree_opened_icon = '▾'
+let g:vimfiler_tree_closed_icon = '▸'
+let g:vimfiler_file_icon = '-'
+let g:vimfiler_marked_file_icon = '*'
+
+let g:vimfiler_as_default_explorer = 1
+endif
+" End Vimfiler Settings }}}
+
+"Airline Settings {{{
+let g:airline#extensions#virtualenv#enabled = 1
+let g:airline_exclude_preview = 1
+
+if has_key(g:plugs, 'vim-airline')
+  let g:airline_symbols = {}
+endif
+
+let g:airline_left_sep = '▶'
+let g:airline_right_sep = '«'
+
+"Colorscheme
+try
+colorscheme gruvbox
+let g:airline_theme = 'gruvbox'
+catch
+endtry
+set background=dark    " Setting dark mode"
+
+" End Airline Settings }}}
+
+" Pandoc Settings {{{
+let g:pandoc#syntax#codeblocks#embeds#langs = ["ruby", "iteratehaskell=lhaskell", "bash=sh", "python", "shell=sh"]
+let g:pandoc#syntax#conceal#blacklist = ["block", "codeblock_start", "codeblock_delim"]
+let g:pandoc#keyboard#use_default_mappings = 1
+let g:pandoc#formatting#mode = "sA"
+let g:pandoc#folding#level = 2
+let g:pandoc#folding#mode = "relative"
+let g:pandoc#after#modules#enabled = ["tablemode", "unite"]
+let g:pandoc#completion#bib#mode = 'citeproc'
+let g:pandoc#folding#fold_yaml = 0
+let g:pandoc#spell#default_langs = ['en_us']
+"Pandoc Syntax
+let g:pandoc#syntax#colorcolumn = 1
+
+" End Pandoc Settings }}}
+
+" Emmet Settings {{{
+let g:user_emmet_leader_key='<leader>e'
+" End Emmet Settings }}}
+
+"}}}

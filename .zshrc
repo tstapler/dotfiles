@@ -7,7 +7,8 @@
 
 # Check if zplug is installed
 if [[ ! -d ~/.zplug ]]; then
-  git clone https://github.com/zplug/zplug $HOME/.zplug
+  # Ignore the system .gitconfig in case it tries to force SSH
+  GIT_CONFIG_NOSYSTEM=1 git clone https://github.com/zplug/zplug $HOME/.zplug
 fi
 
 
@@ -46,6 +47,7 @@ setopt inc_append_history
 export HISTTIMEFORMAT="[%F %T] "
 export HISTSIZE=1000
 export SAVEHIST=100000
+
 # Add the time of the history command
 setopt inc_append_history_time
 # Reloads the history whenever you use it
@@ -58,6 +60,9 @@ setopt HIST_FIND_NO_DUPS
 setopt HIST_IGNORE_ALL_DUPS
 
 setopt extendedglob
+
+# Allow comments in interactive shells to mimic ksh, sh, bash behavior
+setopt interactivecomments
 
 # Vim Mode
 bindkey -v

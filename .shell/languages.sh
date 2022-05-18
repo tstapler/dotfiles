@@ -16,7 +16,7 @@ export PYTHON_CONFIGURE_OPTS="--enable-shared"
 if hash asdf 2>/dev/null; then
 ASDF_PLUGIN_DIR="$ASDF_DIR/plugins"
 # Add ASDF plugins if they don't exist
-  for plug in nodejs python java golang
+  for plug in nodejs python java golang clojure
   do
     if [ ! -d "$ASDF_PLUGIN_DIR/$plug" ]; then
       asdf plugin add $plug

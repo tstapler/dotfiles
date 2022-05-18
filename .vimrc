@@ -19,15 +19,6 @@ set t_Co=256
 "Enable mouse usage for scrolling and resizing splits
 set mouse+=a
 
-" if &term =~ '256color'
-"   " disable Background Color Erase (BCE) so that color schemes
-"   " render properly when inside 256-color tmux and GNU screen.
-"   " see also http://snk.tuxfamily.org/log/vim-256color-bce.html
-"   set t_ut=
-" endif
-
-
-
 " Vim Only Settings {{{
   if !has("nvim") 
     if term =~ '^screen'
@@ -120,9 +111,15 @@ nnoremap Y y$
 " End Neovim Mappings }}}
 " }}}
 
+" Local vimscript files
+if isdirectory(expand("~/.vim/local"))
+  for path in split(globpath('~/.vim/local/', '*'), '\n')
+    execute 'source ' . path
+  endfor
+endif
+
 " Plugin Manager {{{
-if filereadable(expand("~/.vimrc.dein")) 
-   \ && isdirectory(expand("~/.vim/bundle/repos")) 
+if filereadable(expand("~/.vimrc.dein"))
    \ && (has("nvim") || version > 703)
   source ~/.vimrc.dein
 else
