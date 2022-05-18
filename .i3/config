@@ -285,3 +285,4 @@ mode "$mode_gaps_outer" {
         bindsym Escape mode "default"
 }
 
+for_window [instance="origin.exe"] floating enable
