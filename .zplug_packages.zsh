@@ -33,19 +33,18 @@ zplug "plugins/asdf", from:oh-my-zsh
 
 case $(uname) in
 	Darwin) 
-		BIN_ARCH=darwin
+		BIN_PLATFORM=darwin
 		zplug "plugins/osx", from:oh-my-zsh
 		;;
 	*)
-		BIN_ARCH=linux
+		BIN_PLATFORM=linux
 		;;
 esac
 
-zplug "junegunn/fzf-bin", as:command, from:gh-r, rename-to:fzf, use:"*$BIN_ARCH*_amd64*"
+zplug "junegunn/fzf-bin", as:command, from:gh-r, rename-to:fzf, use:"*$BIN_PLATFORM*_amd64*"
 
 
 # Suggestions
 zplug "tarruda/zsh-autosuggestions"
 zplug "zsh-users/zsh-syntax-highlighting"
 zplug "zsh-users/zsh-history-substring-search"
-
