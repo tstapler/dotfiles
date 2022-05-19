@@ -1,4 +1,4 @@
-nodejs lts-gallium
+nodejs 17.9.0
 clojure 1.10.1.739
 lein 2.9.5
 java openjdk-15
