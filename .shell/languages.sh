@@ -43,3 +43,8 @@ if ! hash poetry 2>/dev/null; then
     curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python3 -
   fi
 fi
+
+if hash ng 2>/dev/null; then
+# Load Angular CLI autocompletion.
+  source <(ng completion script)
+fi
