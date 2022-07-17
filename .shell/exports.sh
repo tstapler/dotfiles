@@ -7,22 +7,8 @@ pathadd "$HOME/bin/bin"
 # Add personal scripts to path
 pathadd "$HOME/bin/scripts"
 
-# Add user python executables to path
-OS="$(uname)"
-case $OS in
-  'Linux') 
-    pathadd "$HOME/.local/bin"
-    ;;
-  'FreeBSD')
-    ;;
-  'WindowsNT')
-    ;;
-  'Darwin') 
-    ;;
-  'SunOS') ;;
-  'AIX') ;;
-  *) ;;
-esac
+LOCAL_BIN="$HOME/.local/bin"
+pathadd "$LOCAL_BIN"
 
 # Add Android Home to Path
 if [[ -d /opt/android-sdk ]]; then
@@ -33,6 +19,7 @@ fi
 
 # Create Go Path
 export GOPATH="$HOME/.local/lib/go"
+export GOBIN="$LOCAL_BIN"
 
 # Create Workiva Gopath
 export WGOPATH="$GOPATH/src/github.com/Workiva"
@@ -41,10 +28,10 @@ export WGOPATH="$GOPATH/src/github.com/Workiva"
 export GO111MODULES=auto
 
 # Add GO executables to PATH
-export PATH=$PATH:"$GOPATH/bin"
+pathadd "$GOPATH/bin"
 
 # Add Cabal to PATH
-export PATH=$PATH:"$HOME/.cabal/bin"
+pathadd "$HOME/.cabal/bin"
 
 # Add LaTex files to PATH
 export TEXMFHOME="$HOME/texmf"
