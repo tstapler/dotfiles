@@ -35,6 +35,7 @@ links:
   - src: .tmux/*
   - src: .home-manager
   - src: .ideavimrc
+  - src: .config/helm/starters
 
 ignore:
   # Globbing patterns to ignore when
