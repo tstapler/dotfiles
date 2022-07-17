@@ -16,6 +16,7 @@ call plug#begin('~/.vim/plugged')
   Plug 'w0rp/ale'
   " Use release branch (recommend)
   Plug 'neoclide/coc.nvim', {'branch': 'release'}
+
   "" End Code Completion }}}
 
   "" Code Completion Sources {{{
@@ -121,7 +122,9 @@ call plug#begin('~/.vim/plugged')
   "" A nice dark colorscheme
   Plug 'morhetz/gruvbox'
 
-  Plug 'Shougo/vimfiler.vim'
+  " A filebrowser plugin for Neovim
+  Plug 'preservim/nerdtree'
+
   "" End Interface Plugins }}}
 
   "" Documentation & Word Processing Plugins {{{
@@ -392,7 +395,7 @@ nnoremap <silent> <leader>z :Goyo<cr>
 " End zenroom2 }}}
 
 " vimfiler {{{
-nnoremap <C-e> :VimFilerExplorer<cr>
+nnoremap <C-e> :NERDTreeToggle<cr>
 " End vimfiler }}}
 
 " Radical Vim (Convert Base) {{{
