@@ -15,9 +15,6 @@ zplug "b4b4r07/enhancd", use:"init.sh"
 # ZSH completion from various sources
 zplug "zsh-users/zaw"
 
-# Command line completion engine
-zplug "clvv/fasd", as:command
-
 zplug "lib/completion", from:oh-my-zsh
 zplug "plugins/httpie", from:oh-my-zsh
 zplug "plugins/kubectl", from:oh-my-zsh
@@ -41,7 +38,26 @@ case $(uname) in
 		;;
 esac
 
-zplug "junegunn/fzf-bin", as:command, from:gh-r, rename-to:fzf, use:"*$BIN_PLATFORM*_amd64*"
+case $(arch) in
+	x86_64)
+		BIN_ARCH=amd64
+		;;
+	*)
+		BIN_ARCH=$(arch)
+		;;
+esac
+
+# Command line completion engine
+zplug "clvv/fasd", as:command
+
+# Fuzzy finder
+BIN_ARCH_GLOB="*$BIN_PLATFORM*_$BIN_ARCH*"
+zplug "junegunn/fzf-bin", as:command, from:gh-r, rename-to:fzf, use:"$BIN_ARCH_GLOB"
+zplug "MichaelMure/git-bug", as:command, from:gh-r,  rename-to:git-bug, use:"$BIN_ARCH_GLOB"
+zplug "stedolan/jq", \
+    from:gh-r, \
+    as:command, \
+    rename-to:jq
 
 
 # Suggestions
