@@ -39,3 +39,5 @@
 
 [http]
 	cookiefile = ~/.gitcookies
+[pull]
+	rebase = true
