@@ -11,6 +11,7 @@ endif
 
 call plug#begin('~/.vim/plugged')
   "" Editing Plugins {{{
+  Plug 'ojroques/vim-oscyank', {'branch': 'main'}
 
   "" Code Completion {{{
   Plug 'w0rp/ale'
@@ -163,6 +164,11 @@ call plug#end()
 " }}}
 
 " Plugin Mappings {{{
+" vim-oscyank
+" Default yank term is required when the tmux option set -s set-clipboard on is
+" open
+let g:oscyank_term = 'default'
+autocmd TextYankPost * if v:event.operator is 'y' && v:event.regname is '+' | execute 'OSCYankReg +' | endif
 " coc-snippets Settings {{{
 
 " Format the current buffer
