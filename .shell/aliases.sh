@@ -64,3 +64,5 @@ fi
 if ! hash helmfile 2>/dev/null; then
   alias helmfile="docker run --rm --net=host -v "${HOME}/.kube:/root/.kube" -v "${HOME}/.config/helm:/root/.config/helm" -v "$(pwd):/wd" --workdir /wd quay.io/roboll/helmfile:helm3-v0.135.0 helmfile"
 fi
+
+alias xargs='xargs '
