@@ -82,3 +82,22 @@ function fix_insecure_compaudit {
 get_pip_private_url() {
   grep "@" $HOME/.pip/pip.conf | awk '{ print $3 }'
 }
+
+check_multi_arch(){
+	ARCH=${ARCH?}
+	local image_url=$1
+	local image_name=$(echo $1 | sed 's%.*/\(.*$\)%\1%g' | tr ':/.' '_')
+	mkdir -p $image_name && \
+	
+	# Download the contents of the image
+	(cd $image_name && \
+	(docker rm $image_name >/dev/null 2>&1 || true) && \
+	docker create --name $image_name --platform linux/$ARCH $image_url >/dev/null && \
+	(docker export $image_name | tar x) && \
+	docker rm $image_name >/dev/null 2>&1) || return
+
+	# Read the magix header for all of the files in the docker image and print the
+	# architecture field.
+	echo "Detected ELF files compiled for the following architectures:"
+  find $image_name | xargs -n 300 file | awk -F',' '/ELF/{ print $2 }' | sort -u
+}
