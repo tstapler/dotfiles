@@ -10,6 +10,11 @@ pathadd "$HOME/bin/scripts"
 LOCAL_BIN="$HOME/.local/bin"
 pathadd "$LOCAL_BIN"
 
+HOMEBREW_PATH="/opt/homebrew/bin/"
+if [[ -d "$HOMEBREW_PATH" ]]; then
+  pathadd "$HOMEBREW_PATH"
+fi
+
 # Add Android Home to Path
 if [[ -d /opt/android-sdk ]]; then
 	export ANDROID_HOME="/opt/android-sdk"
