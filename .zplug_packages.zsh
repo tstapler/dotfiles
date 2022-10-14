@@ -43,9 +43,12 @@ architecture=$(arch 2>/dev/null || echo "x86_64")
 case $architecture in
 	x86_64)
 		BIN_ARCH=amd64
+		zplug "MichaelMure/git-bug", as:command, from:gh-r,  rename-to:git-bug, use:"$BIN_ARCH_GLOB"
+		RG_GLOB="*x86_64*$BIN_PLATFORM*"
 		;;
 	*)
 		BIN_ARCH=$(arch)
+		RG_GLOB="*$BIN_ARCH*$BIN_PLATFORM*"
 		;;
 esac
 
