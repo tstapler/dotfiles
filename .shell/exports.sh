@@ -113,7 +113,12 @@ fi
 
 if hash gr 2>/dev/null; then
   unalias gr 2>/dev/null
-  . <(gr completion)
+  source <(gr completion)
+fi
+
+
+if hash flux 2>/dev/null; then
+  source <(flux completion zsh)
 fi
 
 if hash kubectl 2>/dev/null; then
