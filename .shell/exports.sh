@@ -103,6 +103,14 @@ if hash hunspell 2>/dev/null; then
   export DICTPATH=$HOME/.nix-profile/share/hunspell/$DICTIONARY
 fi
 
+if hash aws_completer 2>/dev/null; then
+	complete -C aws_completer aws
+fi
+
+if hash aws-vault 2>/dev/null; then 
+	eval "$(aws-vault --completion-script-zsh)"
+fi
+
 if hash gr 2>/dev/null; then
   unalias gr 2>/dev/null
   . <(gr completion)
