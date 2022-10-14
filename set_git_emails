@@ -9,6 +9,9 @@ export GIT_COMMITTER_NAME=$GIT_AUTHOR_NAME
 git config --local user.name "$GIT_AUTHOR_NAME"
 
 case $ORIGIN_URL in
+  *github.com/fanatics*|*github.com:fanatics*)
+    export GIT_AUTHOR_EMAIL="tyler.stapler@betfanatics.com"
+  ;;
   *github.com/Workiva*|*github.com:Workiva*|\
   *github.com/workiva*|*github.com:workiva*|\
   *github.com/*-wf*|*github.com:*-wf*|\
