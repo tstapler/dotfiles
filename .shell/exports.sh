@@ -17,6 +17,23 @@ elif [[ -d /opt/android-sdk-linux ]]; then
 	export ANDROID_HOME="/opt/android-sdk-linux"
 fi
 
+if [[ -d "$HOME/Android" ]]; then
+	android_root="$HOME/Android"
+elif [[ -d  "$HOME/Library/Android" ]]; then
+	android_root="$HOME/Library/Android"
+fi
+
+android_sdk_path="$android_root/Sdk"
+if [[ -d "$android_sdk_path" ]]; then
+	export ANDROID_HOME="$android_sdk_path"
+	export ANDROID_SDK_ROOT="$ANDROID_HOME"
+fi
+
+adv_home="$HOME/.android/avd"
+if [[ -d "$adv_home" ]]; then
+	export ANDROID_AVD_HOME="$adv_home"
+fi
+
 # Create Go Path
 export GOPATH="$HOME/.local/lib/go"
 export GOBIN="$LOCAL_BIN"
@@ -100,3 +117,4 @@ fi
 pathadd "$HOME/.yarn/bin"
 pathadd "$HOME/.config/yarn/global/node_modules/.bin"
 pathadd "$HOME/.poetry/bin"
+
