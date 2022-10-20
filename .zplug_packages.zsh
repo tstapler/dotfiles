@@ -38,7 +38,9 @@ case $(uname) in
 		;;
 esac
 
-case $(arch) in
+# some machines do not have the arch command
+architecture=$(arch 2>/dev/null || echo "x86_64")
+case $architecture in
 	x86_64)
 		BIN_ARCH=amd64
 		;;
