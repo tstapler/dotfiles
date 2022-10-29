@@ -38,14 +38,14 @@ zle -N edit-command-line
 # Add Completions
 autoload -U bashcompinit && bashcompinit
 
-# Expand HISTZIZE
-export HISTSIZE=400
 export HISTFILE=$HOME/.zsh_history
 
 # Appends every command to the history file once it is executed
 setopt inc_append_history
 export HISTTIMEFORMAT="[%F %T] "
-export HISTSIZE=1000
+# How many lines to keep in memory
+export HISTSIZE=10000
+# How many lines to keep in the history file
 export SAVEHIST=100000
 
 # Add the time of the history command
