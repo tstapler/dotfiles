@@ -36,7 +36,7 @@ autoload -Uz edit-command-line
 zle -N edit-command-line
 
 # Add Completions
- autoload -U bashcompinit && bashcompinit
+autoload -U bashcompinit && bashcompinit
 
 # Expand HISTZIZE
 export HISTSIZE=400
