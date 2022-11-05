@@ -96,6 +96,10 @@ export -f pathadd() {
     fi
 }
 
+if [[ -x "/home/linuxbrew/.linuxbrew/bin/brew" ]]; then
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+fi
+
 # Language managers (RVM, NVM, PYENV, ...)
 source $HOME/.shell/languages.sh
 
