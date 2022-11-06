@@ -72,7 +72,7 @@ call plug#begin('~/.vim/plugged')
   Plug 'triglav/vim-visual-increment'
 
     " vim-zettel and requirements
-    Plug 'vimwiki/vimwiki'
+    Plug 'tstapler/vimwiki'
     Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
     Plug 'junegunn/fzf.vim'
     Plug 'michal-h21/vim-zettel'
