@@ -191,7 +191,7 @@ imap <C-j> <Plug>(coc-snippets-expand-jump)
 " End coc-snippets Settings }}}
 
 " coc-vim Settings {{{
-let g:coc_global_extensions = ["coc-marketplace", "coc-json", "coc-tsserver", "coc-go", "coc-markdownlint", "coc-snippets", "coc-flutter", "coc-rust-analyzer", "coc-solargraph", "coc-yaml", "coc-yank", "coc-sql", "coc-stylelintplus", "coc-pyright",  "coc-python", "coc-java", "coc-git", "coc-html", "coc-cfn-lint", 'coc-diagnostic']
+let g:coc_global_extensions = ["coc-marketplace", "coc-json", "coc-tsserver", "coc-go", "coc-markdownlint", "coc-snippets", "coc-flutter", "coc-rust-analyzer", "coc-solargraph", "coc-yaml", "coc-yank", "coc-sql", "coc-stylelintplus", "coc-pyright",  "coc-python", "coc-java", "coc-git", "coc-html", "coc-cfn-lint", 'coc-diagnostic', 'coc-vimlsp']
   " TextEdit might fail if hidden is not set.
 set hidden
 
