@@ -1,6 +1,6 @@
-nodejs 17.9.0
+nodejs 18.0.0
 clojure 1.10.1.739
 lein 2.9.5
 java openjdk-15
 golang 1.18.4
-python 3.8.11
+python 3.10.6
