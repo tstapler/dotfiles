@@ -350,8 +350,8 @@ nnoremap <silent><nowait> <space>p  :<C-u>CocListResume<CR>
 
 " vimwiki Settings {{{
    " Settings for Vimwiki
-   let g:vimwiki_table_mappings = 0
-   let g:vimwiki_list = [ {'path':'~/personal-wiki/markdown/','auto_tags':1, 'auto_toc':1, 'ext':'.md', 'syntax':'markdown'} ]
+   let g:vimwiki_table_mappings = 1
+   let g:vimwiki_list = [ {'path':'~/personal-wiki/logseq/pages','diary_path': '~/personal-wiki/logseq/journals' ,'diary_rel_path':'/diary', 'auto_tags':1, 'auto_toc':1, 'ext':'.md'} ]
 " End vimwiki Settings }}}
 
 "echodoc Settings {{{
