@@ -36,6 +36,7 @@ links:
   - src: .home-manager
   - src: .ideavimrc
   - src: .config/helm/starters
+  - src: .cargo/config
 
 ignore:
   # Globbing patterns to ignore when
