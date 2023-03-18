@@ -41,3 +41,6 @@
 	cookiefile = ~/.gitcookies
 [pull]
 	rebase = true
+
+[net]
+git-fetch-with-cli = true
