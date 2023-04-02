@@ -50,3 +50,7 @@ if hash ng 2>/dev/null; then
 # Load Angular CLI autocompletion.
   source <(ng completion script)
 fi
+
+if [ -d /home/linuxbrew/.linuxbrew/bin ]; then
+  eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)
+fi
