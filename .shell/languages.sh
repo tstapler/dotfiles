@@ -15,16 +15,27 @@ export PYTHON_CONFIGURE_OPTS="--enable-shared"
 
 if hash asdf 2>/dev/null; then
 ASDF_PLUGIN_DIR="$ASDF_DIR/plugins"
-asdf plugin-add terraform https://github.com/asdf-community/asdf-hashicorp.git
-asdf plugin-add cdk https://github.com/damianoneill/cdk
+
+# Declare an associative array for plugins with URLs
+declare -A plugin_map
+plugin_map=(
+  ["terraform"]="https://github.com/asdf-community/asdf-hashicorp.git"
+  ["cdk"]="https://github.com/damianoneill/cdk"
+  )
 
 # Add ASDF plugins if they don't exist
-  for plug in nodejs python java golang clojure ;  do
+for plug in nodejs python java golang clojure terraform cdk; do
     if [ ! -d "$ASDF_PLUGIN_DIR/$plug" ]; then
-      asdf plugin add $plug
+      if [[ ${plugin_map[$plug]} ]]; then
+        # Add plugins with URLs
+        asdf plugin-add $plug ${plugin_map[$plug]}
+      else
+        # Add plugins without URLs
+        asdf plugin-add $plug
+      fi
       asdf install $plug
     fi
-  done
+done
 
 fi
 
