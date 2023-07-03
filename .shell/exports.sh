@@ -103,6 +103,10 @@ if hash hunspell 2>/dev/null; then
   export DICTPATH=$HOME/.nix-profile/share/hunspell/$DICTIONARY
 fi
 
+if hash helm 2>/dev/null; then
+	source <(helm completion zsh)
+fi
+
 if hash aws_completer 2>/dev/null; then
 	complete -C aws_completer aws
 fi
@@ -136,3 +140,5 @@ pathadd "$HOME/.yarn/bin"
 pathadd "$HOME/.config/yarn/global/node_modules/.bin"
 pathadd "$HOME/.poetry/bin"
 
+# Export the path that we have updated via pathadd
+export PATH="$PATH"
