@@ -18,9 +18,7 @@ zplug "zsh-users/zaw"
 zplug "lib/completion", from:oh-my-zsh
 zplug "plugins/httpie", from:oh-my-zsh
 zplug "plugins/kubectl", from:oh-my-zsh
-# AWS completion is broken at the moment
-# https://github.com/aws/aws-cli/issues/4950
-# zplug "plugins/aws", from:oh-my-zsh
+zplug "plugins/aws", from:oh-my-zsh
 zplug "aswitalski/oh-my-zsh-sensei-git-plugin"
 zplug "plugins/git", from:oh-my-zsh
 zplug "djui/alias-tips"
@@ -57,8 +55,7 @@ zplug "clvv/fasd", as:command
 
 # Fuzzy finder
 BIN_ARCH_GLOB="*$BIN_PLATFORM*_$BIN_ARCH*"
-zplug "junegunn/fzf-bin", as:command, from:gh-r, rename-to:fzf, use:"$BIN_ARCH_GLOB"
-zplug "MichaelMure/git-bug", as:command, from:gh-r,  rename-to:git-bug, use:"$BIN_ARCH_GLOB"
+zplug "junegunn/fzf", as:command, from:gh-r, rename-to:fzf, use:"$BIN_ARCH_GLOB"
 zplug "stedolan/jq", \
     from:gh-r, \
     as:command, \
