@@ -51,11 +51,11 @@ if [[ ! -d  "$HOME/.tmux/plugins/tpm" ]]; then
   git clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
 fi
 
-if ! hash poetry 2>/dev/null; then
-  if hash python3 2>/dev/null; then
-    curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python3 -
-  fi
-fi
+#if ! hash poetry 2>/dev/null; then
+#  if hash python3 2>/dev/null; then
+#   # curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python3 -
+#  fi
+#fi
 
 if hash ng 2>/dev/null; then
 # Load Angular CLI autocompletion.
