@@ -1,10 +1,12 @@
 [init]
 	templatedir = ~/.gittemplates
+	defaultBranch = main
 
 [core]
 	editor = vim
 	excludesfile = ~/.gitignore
 	symlinks = true
+	autocrlf = input
 
 [web]
 	browser = google-chrome
