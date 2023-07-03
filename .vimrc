@@ -19,14 +19,14 @@ set t_Co=256
 "Enable mouse usage for scrolling and resizing splits
 set mouse+=a
 
-" Vim Only Settings {{{
-  if !has("nvim") 
-    if term =~ '^screen'
-      " tmux knows the extended mouse mode
-      set ttymouse=xterm2
-    endif
-  endif
-" End Vim Only Settings }}}
+" " Vim Only Settings {{{
+"   if !has("nvim") 
+"     if term =~ '^screen'
+"       " tmux knows the extended mouse mode
+"       set ttymouse=xterm2
+"     endif
+"   endif
+" " End Vim Only Settings }}}
 
 " Neovim Settings {{{
   if exists('&inccommand')
