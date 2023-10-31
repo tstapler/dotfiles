@@ -87,11 +87,6 @@ export GIT_EDITOR=$EDITOR
 # Fixes git + gpg error inside of tmux
 export GPG_TTY=$(tty)
 
-# Enable GPG SSH auth
-if hash gpgconf 2>/dev/null; then
-export SSH_AUTH_SOCK=$(gpgconf --list-dirs agent-ssh-socket)
-fi
-
 
 # Completions for NativeScript
 if [ -f "$HOME/.tnsrc" ]; then 
