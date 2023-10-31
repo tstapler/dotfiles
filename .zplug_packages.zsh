@@ -28,11 +28,11 @@ zplug "plugins/asdf", from:oh-my-zsh
 
 case $(uname) in
 	Darwin) 
-		BIN_PLATFORM=darwin
+		PLATFORM_NAME=darwin
 		zplug "plugins/osx", from:oh-my-zsh
 		;;
 	*)
-		BIN_PLATFORM=linux
+		PLATFORM_NAME=linux
 		;;
 esac
 
@@ -40,26 +40,26 @@ esac
 architecture=$(arch 2>/dev/null || echo "x86_64")
 case $architecture in
 	x86_64)
-		BIN_ARCH=amd64
-		zplug "MichaelMure/git-bug", as:command, from:gh-r,  rename-to:git-bug, use:"$BIN_ARCH_GLOB"
-		RG_GLOB="*x86_64*$BIN_PLATFORM*"
+		ARCHITECTURE_NAME=amd64
+		PLATFORM_ARCHITECTURE_GLOB="*$PLATFORM_NAME*$ARCHITECTURE_NAME*"
+		zplug "MichaelMure/git-bug", as:command, from:gh-r,  rename-to:git-bug, use:"$PLATFORM_ARCHITECTURE_GLOB"
+		RG_GLOB="*$architecture*$PLATFORM_NAME*"
 		;;
 	*)
-		BIN_ARCH=$(arch)
-		RG_GLOB="*$BIN_ARCH*$BIN_PLATFORM*"
+		ARCHITECTURE_NAME=$(arch)
+		PLATFORM_ARCHITECTURE_GLOB="*$PLATFORM_NAME*$ARCHITECTURE_NAME*"
+		RG_GLOB="*$ARCHITECTURE_NAME*$PLATFORM_NAME*"
 		;;
 esac
+export ARCHITECTURE_NAME
+export PLATFORM_ARCHITECTURE_GLOB
 
 # Command line completion engine
 zplug "clvv/fasd", as:command
 
 # Fuzzy finder
-BIN_ARCH_GLOB="*$BIN_PLATFORM*_$BIN_ARCH*"
-zplug "junegunn/fzf", as:command, from:gh-r, rename-to:fzf, use:"$BIN_ARCH_GLOB"
-zplug "stedolan/jq", \
-    from:gh-r, \
-    as:command, \
-    rename-to:jq
+zplug "junegunn/fzf", as:command, from:gh-r, rename-to:fzf, use:"$PLATFORM_ARCHITECTURE_GLOB"
+zplug "jqlang/jq", as:command, from:gh-r, rename-to:jq, use:"$PLATFORM_ARCHITECTURE_GLOB"
 
 
 # Suggestions
