@@ -74,3 +74,28 @@ if ! hash helmfile 2>/dev/null; then
 fi
 
 alias xargs='xargs '
+
+# Check if pbcopy and pbpaste are available
+if ! type pbcopy &>/dev/null && ! type pbpaste &>/dev/null; then
+    # Check for xsel and create aliases
+    if type xsel &>/dev/null; then
+        alias pbcopy='xsel --clipboard --input'
+        alias pbpaste='xsel --clipboard --output'
+    # Check for xclip and create aliases
+    elif type xclip &>/dev/null; then
+        alias pbcopy='xclip -selection clipboard'
+        alias pbpaste='xclip -selection clipboard -o'
+    else
+        # Define functions to print error messages
+        pbcopy_unavailable() {
+            echo "pbcopy is not available. Install xsel or xclip."
+        }
+        pbpaste_unavailable() {
+            echo "pbpaste is not available. Install xsel or xclip."
+        }
+        # Alias pbcopy and pbpaste to the respective functions
+        alias pbcopy=pbcopy_unavailable
+        alias pbpaste=pbpaste_unavailable
+    fi
+fi
+

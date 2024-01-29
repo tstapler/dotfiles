@@ -8,7 +8,7 @@
 # Check if zplug is installed
 if [[ ! -d ~/.zplug ]]; then
   # Ignore the system .gitconfig in case it tries to force SSH
-  GIT_CONFIG_NOSYSTEM=1 git clone https://github.com/zplug/zplug $HOME/.zplug
+  GIT_CONFIG_NOSYSTEM=1 git clone https://github.com/tstapler/zplug $HOME/.zplug
 fi
 
 
