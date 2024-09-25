@@ -27,42 +27,42 @@ EOF
 
 lua << EOF
 require('lazy').setup({
-  "" Editing Plugins {{{
+  -- Editing Plugins
   { 'ojroques/vim-oscyank', branch = 'main' },
 
-  "" Code Completion {{{
+  -- Code Completion
   'w0rp/ale',
   " Use release branch (recommend)
   { 'neoclide/coc.nvim', branch = 'release' },
 
-  "" End Code Completion }}}
+  -- End Code Completion
 
-  "" Code Completion Sources {{{
+  -- Code Completion Sources
   'Shougo/neoinclude.vim',
   'Shougo/neco-syntax',
   'Shougo/neco-vim',
   " Elixir editing plugin
   'slashmili/alchemist.vim',
   'ujihisa/neco-look',
-  "" End Code Completion Sources }}},
+  -- End Code Completion Sources
 
   " A multi language syntax highlighting plugin
   'sheerun/vim-polyglot',
 
   'cappyzawa/starlark.vim',
 
-  "" Snippet Plugins {{{
+  -- Snippet Plugins
   'honza/vim-snippets',
   'reconquest/snippets',
   'chrisgillis/vim-bootstrap3-snippets',
   'andrewstuart/vim-kubernetes',
-  "" End Snippet Plugins }}}
+  -- End Snippet Plugins
 
-  "" Navigation Plugins {{{
-  "" Select windows using leader w
+  -- Navigation Plugins
+  -- Select windows using leader w
   't9md/vim-choosewin',
 
-  "" End Navigation Plugins }}}
+  -- End Navigation Plugins
 
   " Narrow region plugin
   'chrisbra/NrrwRgn',
@@ -97,18 +97,18 @@ require('lazy').setup({
     "Plug 'alok/notational-fzf-vim'
     'christianrondeau/vim-base64',
 
-  "" End Editing Plugins }}}
+  -- End Editing Plugins
 
-  "" Management Plugins {{{
+  -- Management Plugins
 
-  "" Git Plugins {{{
+  -- Git Plugins
     " Critical vim plugin adds interfaces for managing a git repo from vim
     'tpope/vim-fugitive',
     " An extension of fugitive to provide better support for merges
     'vim-scripts/Merginal',
     " A clone of the emacs Magit plugin which makes it easy to stage commits
     'jreybert/vimagit',
-  "" End Git Plugins }}}
+  -- End Git Plugins
 
   'tpope/vim-repeat',
   " View your undo history tree
@@ -123,18 +123,18 @@ require('lazy').setup({
 
   " Search for file contents much like Sublime Text's <c>+<shift>+f
   'dyng/ctrlsf.vim',
-  "" End Management Plugins }}}
+  -- End Management Plugins
 
-  "" Utility Plugins {{{
+  -- Utility Plugins
   'Konfekt/FastFold',
 
   " A plugin for measuring vimrc startup time
   " use the --startuptime argument then the command :StartupTime
   'dstein64/vim-startuptime',
 
-  "" End Utility Plugins }}}
+  -- End Utility Plugins
 
-  "" UI Plugins {{{
+  -- UI Plugins
    'vim-airline/vim-airline',
    'vim-airline/vim-airline-themes',
   "" A nice dark colorscheme
@@ -143,21 +143,21 @@ require('lazy').setup({
   " A filebrowser plugin for Neovim
   'preservim/nerdtree',
 
-  "" End Interface Plugins }}}
+  -- End Interface Plugins
 
-  "" Documentation & Word Processing Plugins {{{
+  -- Documentation & Word Processing Plugins
 
-  "" Pandoc {{{
+  -- Pandoc
   'vim-pandoc/vim-pandoc',
   'vim-pandoc/vim-pandoc-syntax',
   'vim-pandoc/vim-pandoc-after',
-  "" End Pandoc }}}
+  -- End Pandoc
 
-  "" Distraction Free Writing {{{
+  -- Distraction Free Writing
   'amix/vim-zenroom2',
   'junegunn/goyo.vim',
   'junegunn/limelight.vim',
-  "" End Distraction Free Writing }}}
+  -- End Distraction Free Writing
 
   " zettel Settings {{{
   " End zettel Settings }}}
@@ -166,15 +166,15 @@ require('lazy').setup({
   'tpope/vim-abolish',
   'jamessan/vim-gnupg',
 
-  "" End Documentation & Word Processing Plugins }}}
+  -- End Documentation & Word Processing Plugins
 
-  "" Miscellaneous Plugins {{{
+  -- Miscellaneous Plugins
   { 'Shougo/vimproc.vim', build = 'make' },
   'xolox/vim-misc',
   'mattn/webapi-vim',
   'LucHermitte/lh-vim-lib',
   'jceb/vim-hier',
-  "" End Miscellaneous Plugins }}}
+  -- End Miscellaneous Plugins
 
 })
 
