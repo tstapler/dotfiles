@@ -41,7 +41,7 @@ require('lazy').setup({
   "" Select windows using leader w
   't9md/vim-choosewin',
 
-  "" End Naviation Plugins }}}"
+  "" End Navigation Plugins }}}
 
   " Narrow region plugin
   'chrisbra/NrrwRgn',
@@ -482,7 +482,7 @@ set hidden
 " End ctrlspace Settings }}}
 
 " Vimfiler Settings {{{
-if has_key(g:plugs, 'vimfiler.vim')
+if exists('g:plugs') && has_key(g:plugs, 'vimfiler.vim')
 " Enable file operation commands.
 " Edit file by tabedit.
 call vimfiler#custom#profile('default', 'context', {
@@ -500,11 +500,11 @@ let g:vimfiler_as_default_explorer = 1
 endif
 " End Vimfiler Settings }}}
 
-"Airline Settings {{{
+" Plugin Mappings {{{
 let g:airline#extensions#virtualenv#enabled = 1
 let g:airline_exclude_preview = 1
 
-if has_key(g:plugs, 'vim-airline')
+if exists('g:plugs') && has_key(g:plugs, 'vim-airline')
   let g:airline_symbols = {}
 endif
 
