@@ -1,93 +1,80 @@
 " vim:fdm=marker
 
-if &compatible
-  set nocompatible               " Be iMproved
+if empty(glob('~/.local/share/nvim/site/pack/packer/start/lazy.nvim'))
+  silent !git clone --filter=blob:none https://github.com/folke/lazy.nvim.git --branch=stable ~/.local/share/nvim/site/pack/packer/start/lazy.nvim
 endif
 
-if has('nvim')
-  if empty(glob('~/.local/share/nvim/site/autoload/plug.vim'))
-    silent !curl -fLo ~/.local/share/nvim/site/autoload/plug.vim --create-dirs
-      \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-  endif
-
-else
-  if empty(glob('~/.vim/autoload/plug.vim'))
-    silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs
-      \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-  endif
-endif
-
-
-call plug#begin()
+lua << EOF
+require('lazy').setup({
   "" Editing Plugins {{{
-  Plug 'ojroques/vim-oscyank', {'branch': 'main'}
+  { 'ojroques/vim-oscyank', branch = 'main' },
 
   "" Code Completion {{{
-  Plug 'w0rp/ale'
+  'w0rp/ale',
   " Use release branch (recommend)
-  Plug 'neoclide/coc.nvim', {'branch': 'release'}
+  { 'neoclide/coc.nvim', branch = 'release' },
 
   "" End Code Completion }}}
 
   "" Code Completion Sources {{{
-  Plug 'Shougo/neoinclude.vim'
-  Plug 'Shougo/neco-syntax'
-  Plug 'Shougo/neco-vim'
+  'Shougo/neoinclude.vim',
+  'Shougo/neco-syntax',
+  'Shougo/neco-vim',
   " Elixir editing plugin
-  Plug 'slashmili/alchemist.vim'
-  Plug 'ujihisa/neco-look'
+  'slashmili/alchemist.vim',
+  'ujihisa/neco-look',
   "" End Code Completion Sources }}}
 
   " A multi language syntax highlighting plugin
-  Plug 'sheerun/vim-polyglot'
+  'sheerun/vim-polyglot',
 
-  Plug 'cappyzawa/starlark.vim'
+  'cappyzawa/starlark.vim',
 
   "" Snippet Plugins {{{
-  Plug 'honza/vim-snippets'
-  Plug 'reconquest/snippets'
-  Plug 'chrisgillis/vim-bootstrap3-snippets'
-  Plug 'andrewstuart/vim-kubernetes'
+  'honza/vim-snippets',
+  'reconquest/snippets',
+  'chrisgillis/vim-bootstrap3-snippets',
+  'andrewstuart/vim-kubernetes',
   "" End Snippet Plugins }}}
 
   "" Navigation Plugins {{{
   "" Select windows using leader w
-  Plug 't9md/vim-choosewin'
+  't9md/vim-choosewin',
 
   "" End Naviation Plugins }}}"
 
   " Narrow region plugin
-  Plug 'chrisbra/NrrwRgn'
+  'chrisbra/NrrwRgn',
 
-  Plug 'dhruvasagar/vim-table-mode'
-  Plug 'Chiel92/vim-autoformat'
-  Plug 'Shougo/context_filetype.vim'
+  'dhruvasagar/vim-table-mode',
+  'Chiel92/vim-autoformat',
+  'Shougo/context_filetype.vim',
 
-  Plug 'godlygeek/tabular'
+  'godlygeek/tabular',
 
   " Requires godlygeek/tabular
-  Plug 'tpope/vim-surround'
+  'tpope/vim-surround',
   " Comment out blocks of code easily
-  Plug 'tpope/vim-commentary'
-  Plug 'tpope/vim-speeddating'
+  'tpope/vim-commentary',
+  'tpope/vim-speeddating',
   " Quickly write html using shorthand
-  Plug 'mattn/emmet-vim'
-  Plug 'christoomey/vim-sort-motion'
-  Plug 'jiangmiao/auto-pairs'
-  Plug 'christoomey/vim-titlecase'
-  Plug 'fidian/hexmode'
-  Plug 'google/vim-maktaba'
-  Plug 'glts/vim-magnum'
-  Plug 'triglav/vim-visual-increment'
+  'mattn/emmet-vim',
+  'christoomey/vim-sort-motion',
+  'jiangmiao/auto-pairs',
+  'christoomey/vim-titlecase',
+  'fidian/hexmode',
+  'google/vim-maktaba',
+  'glts/vim-magnum',
+  'triglav/vim-visual-increment',
 
     " vim-zettel and requirements
-    Plug 'tstapler/vimwiki'
-    Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
-    Plug 'junegunn/fzf.vim'
-    Plug 'michal-h21/vim-zettel'
+    'tstapler/vimwiki',
+    { 'junegunn/fzf', build = function() vim.fn['fzf#install']() end },
+    'junegunn/fzf.vim',
+    'michal-h21/vim-zettel',
     " todo decide on a way to make this work better
     "Plug 'alok/notational-fzf-vim'
-    Plug 'christianrondeau/vim-base64'
+    'christianrondeau/vim-base64',
 
   "" End Editing Plugins }}}
 
@@ -95,80 +82,81 @@ call plug#begin()
 
   "" Git Plugins {{{
     " Critical vim plugin adds interfaces for managing a git repo from vim
-    Plug 'tpope/vim-fugitive'
+    'tpope/vim-fugitive',
     " An extension of fugitive to provide better support for merges
-    Plug 'vim-scripts/Merginal'
+    'vim-scripts/Merginal',
     " A clone of the emacs Magit plugin which makes it easy to stage commits
-    Plug 'jreybert/vimagit'
+    'jreybert/vimagit',
   "" End Git Plugins }}}
 
-  Plug 'tpope/vim-repeat'
+  'tpope/vim-repeat',
   " View your undo history tree
-  Plug 'mbbill/undotree'
+  'mbbill/undotree',
 
   " A project management plugin which adds the ability to
   " save workspaces and resume sessions
-  Plug 'vim-ctrlspace/vim-ctrlspace'
+  'vim-ctrlspace/vim-ctrlspace',
 
   " Easy fuzzy searching for files
-  Plug 'ctrlpvim/ctrlp.vim'
+  'ctrlpvim/ctrlp.vim',
 
   " Search for file contents much like Sublime Text's <c>+<shift>+f
-  Plug 'dyng/ctrlsf.vim'
+  'dyng/ctrlsf.vim',
   "" End Management Plugins }}}
 
   "" Utility Plugins {{{
-  Plug 'Konfekt/FastFold'
+  'Konfekt/FastFold',
 
   " A plugin for measuring vimrc startup time
   " use the --startuptime argument then the command :StartupTime
-  Plug 'dstein64/vim-startuptime'
+  'dstein64/vim-startuptime',
 
   "" End Utility Plugins }}}
 
   "" UI Plugins {{{
-   Plug 'vim-airline/vim-airline'
-   Plug 'vim-airline/vim-airline-themes'
+   'vim-airline/vim-airline',
+   'vim-airline/vim-airline-themes',
   "" A nice dark colorscheme
-  Plug 'morhetz/gruvbox'
+  'morhetz/gruvbox',
 
   " A filebrowser plugin for Neovim
-  Plug 'preservim/nerdtree'
+  'preservim/nerdtree',
 
   "" End Interface Plugins }}}
 
   "" Documentation & Word Processing Plugins {{{
 
   "" Pandoc {{{
-  Plug 'vim-pandoc/vim-pandoc'
-  Plug 'vim-pandoc/vim-pandoc-syntax'
-  Plug 'vim-pandoc/vim-pandoc-after'
+  'vim-pandoc/vim-pandoc',
+  'vim-pandoc/vim-pandoc-syntax',
+  'vim-pandoc/vim-pandoc-after',
   "" End Pandoc }}}
 
   "" Distraction Free Writing {{{
-  Plug 'amix/vim-zenroom2'
-  Plug 'junegunn/goyo.vim'
-  Plug 'junegunn/limelight.vim'
+  'amix/vim-zenroom2',
+  'junegunn/goyo.vim',
+  'junegunn/limelight.vim',
   "" End Distraction Free Writing }}}
 
   " zettel Settings {{{
   " End zettel Settings }}}
 
-  Plug 'rhysd/vim-grammarous'
-  Plug 'tpope/vim-abolish'
-  Plug 'jamessan/vim-gnupg'
+  'rhysd/vim-grammarous',
+  'tpope/vim-abolish',
+  'jamessan/vim-gnupg',
 
   "" End Documentation & Word Processing Plugins }}}
 
   "" Miscellaneous Plugins {{{
-  Plug 'Shougo/vimproc.vim', {'do' : 'make'}
-  Plug 'xolox/vim-misc'
-  Plug 'mattn/webapi-vim'
-  Plug 'LucHermitte/lh-vim-lib'
-  Plug 'jceb/vim-hier'
+  { 'Shougo/vimproc.vim', build = 'make' },
+  'xolox/vim-misc',
+  'mattn/webapi-vim',
+  'LucHermitte/lh-vim-lib',
+  'jceb/vim-hier',
   "" End Miscellaneous Plugins }}}
 
-call plug#end()
+})
+EOF
 
 " }}}
 
