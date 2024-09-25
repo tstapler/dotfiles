@@ -101,4 +101,4 @@ fi
 
 
 # Alias for running mermaid diagrams using mmdc
-alias mmdc="npx mmdc"
+alias mmdc="npx -p @mermaid-js/mermaid-cli mmdc"
