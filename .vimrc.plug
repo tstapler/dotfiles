@@ -23,7 +23,7 @@ require('lazy').setup({
   " Elixir editing plugin
   'slashmili/alchemist.vim',
   'ujihisa/neco-look',
-  "" End Code Completion Sources }}}
+  "" End Code Completion Sources }}},
 
   " A multi language syntax highlighting plugin
   'sheerun/vim-polyglot',
