@@ -177,7 +177,6 @@ require('lazy').setup({
   "" End Miscellaneous Plugins }}}
 
 })
-EOF
 
 " }}}
 
