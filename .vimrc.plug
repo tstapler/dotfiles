@@ -90,7 +90,7 @@ require('lazy').setup({
 
     -- vim-zettel and requirements
     'tstapler/vimwiki',
-    { 'junegunn/fzf', build = function() vim.fn['fzf#install']() end },
+    { 'junegunn/fzf', build = './install --all' },
     'junegunn/fzf.vim',
     'michal-h21/vim-zettel',
     -- todo decide on a way to make this work better
