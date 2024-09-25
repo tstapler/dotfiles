@@ -99,3 +99,6 @@ if ! type pbcopy &>/dev/null && ! type pbpaste &>/dev/null; then
     fi
 fi
 
+
+# Alias for running mermaid diagrams using mmdc
+alias mmdc="npx mmdc"
