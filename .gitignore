@@ -64,4 +64,5 @@ local.sh
 nerd-fonts/
 
 **/*.orig
+
 .aider*
