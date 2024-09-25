@@ -32,7 +32,7 @@ require('lazy').setup({
 
   -- Code Completion
   'w0rp/ale',
-  " Use release branch (recommend)
+  -- Use release branch (recommend)
   { 'neoclide/coc.nvim', branch = 'release' },
 
   -- End Code Completion
@@ -41,12 +41,12 @@ require('lazy').setup({
   'Shougo/neoinclude.vim',
   'Shougo/neco-syntax',
   'Shougo/neco-vim',
-  " Elixir editing plugin
+  -- Elixir editing plugin
   'slashmili/alchemist.vim',
   'ujihisa/neco-look',
   -- End Code Completion Sources
 
-  " A multi language syntax highlighting plugin
+  -- A multi language syntax highlighting plugin
   'sheerun/vim-polyglot',
 
   'cappyzawa/starlark.vim',
@@ -73,7 +73,7 @@ require('lazy').setup({
 
   'godlygeek/tabular',
 
-  " Requires godlygeek/tabular
+  -- Requires godlygeek/tabular
   'tpope/vim-surround',
   " Comment out blocks of code easily
   'tpope/vim-commentary',
@@ -88,13 +88,13 @@ require('lazy').setup({
   'glts/vim-magnum',
   'triglav/vim-visual-increment',
 
-    " vim-zettel and requirements
+    -- vim-zettel and requirements
     'tstapler/vimwiki',
     { 'junegunn/fzf', build = function() vim.fn['fzf#install']() end },
     'junegunn/fzf.vim',
     'michal-h21/vim-zettel',
-    " todo decide on a way to make this work better
-    "Plug 'alok/notational-fzf-vim'
+    -- todo decide on a way to make this work better
+    -- Plug 'alok/notational-fzf-vim'
     'christianrondeau/vim-base64',
 
   -- End Editing Plugins
@@ -102,34 +102,34 @@ require('lazy').setup({
   -- Management Plugins
 
   -- Git Plugins
-    " Critical vim plugin adds interfaces for managing a git repo from vim
+    -- Critical vim plugin adds interfaces for managing a git repo from vim
     'tpope/vim-fugitive',
-    " An extension of fugitive to provide better support for merges
+    -- An extension of fugitive to provide better support for merges
     'vim-scripts/Merginal',
-    " A clone of the emacs Magit plugin which makes it easy to stage commits
+    -- A clone of the emacs Magit plugin which makes it easy to stage commits
     'jreybert/vimagit',
   -- End Git Plugins
 
   'tpope/vim-repeat',
-  " View your undo history tree
+  -- View your undo history tree
   'mbbill/undotree',
 
-  " A project management plugin which adds the ability to
-  " save workspaces and resume sessions
+  -- A project management plugin which adds the ability to
+  -- save workspaces and resume sessions
   'vim-ctrlspace/vim-ctrlspace',
 
-  " Easy fuzzy searching for files
+  -- Easy fuzzy searching for files
   'ctrlpvim/ctrlp.vim',
 
-  " Search for file contents much like Sublime Text's <c>+<shift>+f
+  -- Search for file contents much like Sublime Text's <c>+<shift>+f
   'dyng/ctrlsf.vim',
   -- End Management Plugins
 
   -- Utility Plugins
   'Konfekt/FastFold',
 
-  " A plugin for measuring vimrc startup time
-  " use the --startuptime argument then the command :StartupTime
+  -- A plugin for measuring vimrc startup time
+  -- use the --startuptime argument then the command :StartupTime
   'dstein64/vim-startuptime',
 
   -- End Utility Plugins
@@ -137,10 +137,10 @@ require('lazy').setup({
   -- UI Plugins
    'vim-airline/vim-airline',
    'vim-airline/vim-airline-themes',
-  "" A nice dark colorscheme
+  -- A nice dark colorscheme
   'morhetz/gruvbox',
 
-  " A filebrowser plugin for Neovim
+  -- A filebrowser plugin for Neovim
   'preservim/nerdtree',
 
   -- End Interface Plugins
@@ -159,8 +159,8 @@ require('lazy').setup({
   'junegunn/limelight.vim',
   -- End Distraction Free Writing
 
-  " zettel Settings {{{
-  " End zettel Settings }}}
+  -- zettel Settings {{{
+  -- End zettel Settings }}}
 
   'rhysd/vim-grammarous',
   'tpope/vim-abolish',
