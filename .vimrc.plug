@@ -64,7 +64,7 @@ require('lazy').setup({
 
   -- End Navigation Plugins
 
-  - Narrow region plugin
+  -- Narrow region plugin
   'chrisbra/NrrwRgn',
 
   'dhruvasagar/vim-table-mode',
@@ -75,10 +75,10 @@ require('lazy').setup({
 
   -- Requires godlygeek/tabular
   'tpope/vim-surround',
-  - Comment out blocks of code easily
+  -- Comment out blocks of code easily
   'tpope/vim-commentary',
   'tpope/vim-speeddating',
-  - Quickly write html using shorthand
+  -- Quickly write html using shorthand
   'mattn/emmet-vim',
   'christoomey/vim-sort-motion',
   'jiangmiao/auto-pairs',
