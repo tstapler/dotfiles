@@ -1,0 +1,9 @@
+---
+ read: CONVENTIONS.md                                                                                                         
+ file: TODO.md                                                                                                                            
+ # The one true path
+ vim: true                                                                                                                           
+ # Show diffs when making commits to I can double check the LLM didn't do anything crazy
+ show-diffs: true                                                                                                                         
+ # Disable URL detection because I very rarely use it and it's easier to copy it when I care.
+ detect-urls: false 
