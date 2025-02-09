@@ -9,7 +9,7 @@
 	autocrlf = input
 
 [web]
-	browser = google-chrome
+	browser = google-chrome-stable
 
 [push]
 	default = matching
