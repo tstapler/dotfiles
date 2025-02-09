@@ -43,6 +43,8 @@ ignore:
   # Globbing patterns to ignore when
   # linking config files to home dir
   - "README.md"
+  - "TODO.md"
+  - "CONVENTIONS.md"
   - "*stapler*"
   - "cfgcaddy"
   - "*.git"
