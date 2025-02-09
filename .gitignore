@@ -65,4 +65,5 @@ nerd-fonts/
 
 **/*.orig
 
+!.aider.conf.yml
 .aider*
