@@ -11,6 +11,8 @@ links:
   - src: bin/scripts/*
     dest: bin/scripts
     os: "Linux Darwin"
+  - src: .aider.conf.yml
+    os: "Linux Darwin"
   - src: .vimrc
     dest: .config/nvim/init.vim
     os: "Linux Darwin"
