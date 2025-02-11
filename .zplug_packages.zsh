@@ -59,7 +59,6 @@ zplug "clvv/fasd", as:command
 
 # Fuzzy finder
 zplug "junegunn/fzf", as:command, from:gh-r, rename-to:fzf, use:"$PLATFORM_ARCHITECTURE_GLOB"
-zplug "jqlang/jq", as:command, from:gh-r, rename-to:jq, use:"$PLATFORM_ARCHITECTURE_GLOB"
 
 
 # Suggestions
