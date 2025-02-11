@@ -2,7 +2,3 @@
 	path = cfgcaddy
 	url = https://github.com/tstapler/cfgcaddy
 	branch = master
-[submodule "stapler-scripts"]
-	path = stapler-scripts
-	url = https://github.com/tstapler/stapler-scripts
-	branch = master
