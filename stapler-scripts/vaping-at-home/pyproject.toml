@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Containerized setup for running Vaping network monitoring tool"
 requires-python = ">=3.13"
 dependencies = [
-    "vaping @ git+https://github.com/tstapler/vaping.git",
+    "vaping @ git+https://github.com/tstapler/vaping.git@icmputil",
     "vodka",
     "graphsrv",
     "setuptools",
