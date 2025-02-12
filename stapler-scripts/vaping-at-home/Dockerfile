@@ -30,7 +30,6 @@ ENV VIRTUAL_ENV="/app/.venv"
 
 COPY --chown=appuser:appuser pyproject.toml requirements.lock ./
 RUN uv pip install --no-cache -r requirements.lock
-RUN uv pip install --no-cache setuptools pkg-resources
 
 # Copy config file
 COPY --chown=appuser:appuser config.yaml /etc/vaping/config.yaml
