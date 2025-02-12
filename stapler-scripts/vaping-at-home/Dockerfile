@@ -23,6 +23,9 @@ RUN adduser \
 RUN mkdir -p /etc/vaping /var/run && \
     chown -R appuser:appuser /etc/vaping /var/run
 
+# Copy config file
+COPY --chown=appuser:appuser config.yaml /etc/vaping/config.yaml
+
 USER appuser
 
 # Create and activate virtual environment
