@@ -18,7 +18,8 @@ ENV PATH="/root/.rye/shims:${PATH}"
 # Set up project
 WORKDIR /app
 COPY pyproject.toml requirements.lock .
-RUN rye sync --no-lock --no-dev
+RUN rye sync --no-lock --no-dev && \
+    test -f /app/.venv/bin/vaping || { echo "vaping executable not found"; exit 1; }
 
 # Runtime stage
 FROM python:3.13-slim
