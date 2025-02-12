@@ -1,4 +1,4 @@
-.PHONY: all clean build run stop logs
+.PHONY: all clean build run stop logs debug
 
 GATEWAY_IP := $(shell python3 get_gateway.py)
 CONTAINER_NAME := vaping-at-home-vaping-1
@@ -20,6 +20,9 @@ stop:
 
 logs:
 	docker logs -f $(CONTAINER_NAME)
+
+debug: build
+	docker compose up
 
 clean:
 	rm -f config.yaml
