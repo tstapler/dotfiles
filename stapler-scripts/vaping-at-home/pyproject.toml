@@ -7,6 +7,7 @@ dependencies = [
     "vaping",
     "vodka",
     "graphsrv",
+    "setuptools",
 ]
 
 [build-system]
