@@ -4,7 +4,8 @@ services:
     build: .
     image: vaping:local
     restart: unless-stopped
-    network_mode: host
+    ports:
+      - "7021:7021"
     volumes:
       - ./config.yaml:/etc/vaping/config.yaml
     environment:
