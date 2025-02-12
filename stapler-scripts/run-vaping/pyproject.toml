@@ -1,0 +1,16 @@
+[project]
+name = "run-vaping"
+version = "0.1.0"
+description = "Containerized setup for running Vaping network monitoring tool"
+requires-python = ">=3.11"
+dependencies = [
+    "vaping",
+    "vodka",
+    "graphsrv",
+    "pyzmq<20",
+    "zmq",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
