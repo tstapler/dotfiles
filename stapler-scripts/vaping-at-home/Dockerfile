@@ -4,6 +4,15 @@ WORKDIR /work
 
 FROM base as build
 
+# Create non-root user
+RUN adduser \
+    --disabled-password \
+    --gecos "" \
+    --home "/work" \
+    --shell "/sbin/nologin" \
+    --uid "10001" \
+    appuser
+
 # Install build dependencies
 RUN \
     --mount=type=cache,target=/var/lib/apt/lists \
@@ -14,6 +23,8 @@ RUN \
         ca-certificates \
         build-essential
 
+# Switch to non-root user
+USER appuser
 ENV RYE_HOME="/work/rye"
 ENV PATH="$RYE_HOME/shims:$PATH"
 ENV RYE_TOOLCHAIN="/usr/local"
@@ -30,18 +41,27 @@ RUN --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
 
 FROM base as run
 
+# Create non-root user
+RUN adduser \
+    --disabled-password \
+    --gecos "" \
+    --home "/work" \
+    --shell "/sbin/nologin" \
+    --uid "10001" \
+    appuser
+
 ENV PATH=/work/.local/bin:$PATH
 
-# Install dependencies and project
-RUN --mount=type=cache,target=/work/.cache/pip\
-    --mount=type=bind,from=build,source=/work/dist,target=/work/dist \
-    python -m pip install -r /work/dist/requirements.lock /work/dist/*.whl
-
-# Install runtime dependencies
-USER root
+# Install runtime dependencies first as root
 RUN apt-get update && apt-get install -y \
     fping \
     && rm -rf /var/lib/apt/lists/*
+
+# Switch to non-root user for pip install
+USER appuser
+RUN --mount=type=cache,target=/work/.cache/pip \
+    --mount=type=bind,from=build,source=/work/dist,target=/work/dist \
+    python -m pip install -r /work/dist/requirements.lock /work/dist/*.whl
 
 VOLUME ["/etc/vaping", "/var/run"]
 
