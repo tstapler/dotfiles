@@ -54,9 +54,6 @@ python-daemon==3.1.2
     # via vaping
 pyyaml==6.0.2
     # via munge
-pyzmq==19.0.2
-    # via run-vaping
-    # via zmq
 requests==2.32.3
     # via munge
 tmpl==1.1.0
@@ -75,5 +72,3 @@ werkzeug==2.0.3
     # via vaping
 zipp==3.21.0
     # via importlib-metadata
-zmq==0.0.0
-    # via run-vaping
