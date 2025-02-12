@@ -8,8 +8,6 @@
 #   with-sources: false
 #   generate-hashes: false
 #   universal: false
-
--e file:.
 certifi==2025.1.31
     # via requests
 charset-normalizer==3.4.1
