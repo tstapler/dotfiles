@@ -4,10 +4,26 @@ RUN pip install uv
 
 WORKDIR /app
 
-# Install system dependencies
+# Install build dependencies
 RUN apt-get update \
-    && apt-get install -y "fping<5" \
+    && apt-get install -y \
+        build-essential \
+        git \
+        autoconf \
+        automake \
     && rm -rf /var/lib/apt/lists/*
+
+# Build and install fping from source
+RUN git clone https://github.com/schweikert/fping.git \
+    && cd fping \
+    && git checkout v4.4 \
+    && ./autogen.sh \
+    && ./configure \
+    && make \
+    && make install \
+    && setcap cap_net_raw+ep /usr/local/sbin/fping \
+    && cd .. \
+    && rm -rf fping
 
 # Create non-root user
 RUN adduser \
