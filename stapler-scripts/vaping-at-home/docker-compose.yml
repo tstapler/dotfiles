@@ -6,7 +6,6 @@ services:
     restart: unless-stopped
     network_mode: host
     volumes:
-      - ${HOME}/.config/vaping:/etc/vaping
       - /var/run:/var/run
     cap_add:
       - NET_RAW
