@@ -10,8 +10,12 @@ case $ORIGIN_URL in
   *github.com/tstapler*|*github.com:tstapler*)
     # Only use personal key if it exists
     if [ -f "$SSH_KEY" ]; then
-      export GIT_SSH_COMMAND="ssh -i $SSH_KEY"
+      git config core.sshCommand "ssh -i $SSH_KEY"
     fi
+    ;;
+  *)
+    # For non-personal repos, remove any custom SSH command
+    git config --unset core.sshCommand
     ;;
 esac
 
