@@ -21,8 +21,13 @@ RUN adduser \
 
 USER appuser
 
-COPY pyproject.toml requirements.lock ./
-RUN uv pip install --no-cache --system -r requirements.lock
+# Create and activate virtual environment
+RUN python -m venv /app/.venv
+ENV PATH="/app/.venv/bin:$PATH"
+ENV VIRTUAL_ENV="/app/.venv"
+
+COPY --chown=appuser:appuser pyproject.toml requirements.lock ./
+RUN uv pip install --no-cache -r requirements.lock
 
 VOLUME ["/etc/vaping", "/var/run"]
 
