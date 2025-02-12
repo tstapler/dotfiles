@@ -183,7 +183,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "rate(lost_packets_total[5m]) / rate(sent_packets_total[5m]) * 100",
+          "expr": "packet_loss",
           "legendFormat": "{{host}}",
           "refId": "A"
         }
