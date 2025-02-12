@@ -14,8 +14,6 @@ case $ORIGIN_URL in
     fi
     ;;
   *)
-    # For non-personal repos, remove any custom SSH command
-    git config --unset core.sshCommand
     ;;
 esac
 
