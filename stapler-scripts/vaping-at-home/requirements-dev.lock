@@ -54,6 +54,7 @@ pyyaml==6.0.2
     # via munge
 requests==2.32.3
     # via munge
+setuptools==75.8.0
 tmpl==1.1.0
     # via vodka
 tomlkit==0.13.2

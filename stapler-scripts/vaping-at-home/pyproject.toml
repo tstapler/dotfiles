@@ -8,7 +8,6 @@ dependencies = [
     "vodka",
     "graphsrv",
     "setuptools",
-    "pkg-resources",
 ]
 
 [build-system]

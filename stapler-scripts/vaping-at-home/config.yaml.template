@@ -21,6 +21,7 @@ logging:
 probes:
   - name: latency
     type: std_fping
+    interval: 5s
     output:
       - vodka
     groups:
