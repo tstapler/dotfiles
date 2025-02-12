@@ -19,9 +19,32 @@ logging:
       handlers: [console]
 
 probes:
-  - name: latency
+  - name: latency_fping
     type: std_fping
     interval: 5s
+    output:
+      - vodka
+    groups:
+      - name: dns_servers
+        hosts:
+          - host: ${GATEWAY_IP}
+            name: Gateway
+            color: green
+          - host: 8.8.8.8
+            name: Google
+            color: red
+          - host: 1.1.1.1
+            name: Cloudflare
+            color: purple
+          - host: 208.67.222.222
+            name: OpenDNS
+            color: orange
+
+  - name: latency_icmp
+    type: icmp
+    interval: 5s
+    count: 10
+    ping_interval: 0.2
     output:
       - vodka
     groups:

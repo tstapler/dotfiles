@@ -8,6 +8,7 @@ dependencies = [
     "vodka",
     "graphsrv",
     "setuptools",
+    "icmplib>=3.0.0",
 ]
 
 [build-system]
