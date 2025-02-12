@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install rye
-RUN curl -sSf https://rye-up.com/get | RYE_INSTALL_OPTION="--yes" bash
+RUN curl -sSf https://raw.githubusercontent.com/mitsuhiko/rye/main/scripts/install.sh | RYE_INSTALL_OPTION="--yes" bash
 ENV PATH="/root/.rye/shims:${PATH}"
 
 # Set up project
