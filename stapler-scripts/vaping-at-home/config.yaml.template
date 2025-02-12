@@ -26,7 +26,15 @@ probes:
       - prometheus
     groups:
       - name: dns_servers
-        hosts: ${HOSTS_DNS_SERVERS}
+        hosts:
+          - host: ${GATEWAY_IP}
+            name: Gateway
+          - host: 8.8.8.8
+            name: Google
+          - host: 1.1.1.1
+            name: Cloudflare
+          - host: 208.67.222.222
+            name: OpenDNS
       - name: custom_servers
         hosts: ${HOSTS_CUSTOM_SERVERS}
 
@@ -39,7 +47,15 @@ probes:
       - prometheus
     groups:
       - name: icmp_servers
-        hosts: ${HOSTS_ICMP_SERVERS}
+        hosts:
+          - host: ${GATEWAY_IP}
+            name: Gateway
+          - host: 8.8.8.8
+            name: Google
+          - host: 1.1.1.1
+            name: Cloudflare
+          - host: 208.67.222.222
+            name: OpenDNS
       - name: custom_icmp_servers
         hosts: ${HOSTS_CUSTOM_ICMP_SERVERS}
 
