@@ -24,6 +24,9 @@ logs:
 debug: build
 	docker compose up
 
+shell: build
+	docker compose exec vaping /bin/bash
+
 clean:
 	rm -f config.yaml
 	docker compose down --rmi all --volumes
