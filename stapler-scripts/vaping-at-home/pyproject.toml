@@ -5,8 +5,7 @@ description = "Containerized setup for running Vaping network monitoring tool"
 requires-python = ">=3.13"
 dependencies = [
     "vaping @ git+https://github.com/tstapler/vaping.git@icmputil",
-    "vodka",
-    "graphsrv",
+    "prometheus-client>=0.17.1",
     "setuptools",
     "icmplib>=3.0.0",
 ]

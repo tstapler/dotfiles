@@ -97,20 +97,6 @@ plugins:
             plot_y: avg
 
     plugins:
-      - name: http
-        type: flask
-        bind: 0.0.0.0:7021
-        debug: true
-        static_url_path: /static
-        server: self
-        async: thread
-        routes:
-          /targets: graphsrv->targets
-          /graph_data:
-            methods:
-              - POST
-              - GET
-            target: graphsrv->graph_data
-          /graph: graphsrv->graph_view
-          /overview_read_file: graphsrv->overview_read_file
-          /: graphsrv->overview_view
+      - name: prometheus
+        type: prometheus
+        bind: 0.0.0.0:9090
