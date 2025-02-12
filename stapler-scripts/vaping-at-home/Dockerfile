@@ -23,6 +23,9 @@ RUN \
         ca-certificates \
         build-essential
 
+# Create rye directory with proper permissions
+RUN mkdir -p /work/rye && chown -R appuser:appuser /work/rye
+
 # Switch to non-root user
 USER appuser
 ENV RYE_HOME="/work/rye"
