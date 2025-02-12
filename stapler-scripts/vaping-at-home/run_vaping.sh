@@ -69,7 +69,10 @@ fi
 # Build the Docker image if it doesn't exist
 SCRIPT_DIR=$(dirname "$0")
 if ! docker image inspect vaping:local >/dev/null 2>&1; then
-    docker build -t vaping:local "$SCRIPT_DIR"
+    if ! docker build -t vaping:local "$SCRIPT_DIR"; then
+        echo "Error: Docker build failed"
+        exit 1
+    fi
 fi
 
 # Run vaping in Docker
