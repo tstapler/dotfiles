@@ -1,6 +1,6 @@
 .PHONY: all clean build run stop logs
 
-GATEWAY_IP := $(shell ip route | grep default | awk '{print $$3}' 2>/dev/null || echo "192.168.1.1")
+GATEWAY_IP := $(shell python3 get_gateway.py)
 CONTAINER_NAME := vaping-at-home-vaping-1
 PYTHON_FILES := pyproject.toml requirements.lock
 
