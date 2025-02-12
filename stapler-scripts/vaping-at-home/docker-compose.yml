@@ -5,6 +5,8 @@ services:
     image: vaping:local
     restart: unless-stopped
     network_mode: host
+    volumes:
+      - ./config.yaml:/etc/vaping/config.yaml
     environment:
       - VAPING_HOME=/etc/vaping
       - VAPING_CONFIG=/etc/vaping/config.yaml
