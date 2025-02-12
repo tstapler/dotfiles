@@ -5,6 +5,9 @@
 #|____/ \__\__,_| .__/|_|\___|_|    |___\__, |_| |_|\___/|_|  \___|
 #               |_|                     |___/
 
+# Generated vaping config
+stapler-scripts/vaping-at-home/config.yaml
+
 #Python Files
 ###################
 env

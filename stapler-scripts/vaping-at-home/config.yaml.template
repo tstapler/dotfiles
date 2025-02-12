@@ -1,0 +1,42 @@
+pidfile: /app/vaping.pid
+logging:
+  version: 1
+  formatters:
+    simple:
+      format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+  handlers:
+    console:
+      class: logging.StreamHandler
+      level: DEBUG
+      formatter: simple
+      stream: ext://sys.stdout
+  loggers:
+    vaping:
+      level: DEBUG
+      handlers: [console]
+      propagate: no
+  root:
+    level: DEBUG
+    handlers: [console]
+
+probes:
+  - name: ping_probe
+    type: fping
+    interval: "5s"
+    count: 5
+    hosts:
+      - ${GATEWAY_IP}  # Local gateway
+      - 8.8.8.8  # Google DNS
+      - 1.1.1.1  # Cloudflare DNS
+
+  - name: http_probe
+    type: http
+    interval: "30s"
+    hosts:
+      - https://google.com
+      - https://cloudflare.com
+
+plugins:
+  - name: vodka
+    type: vodka
+    output: stdout
