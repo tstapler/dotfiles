@@ -20,7 +20,7 @@ logging:
 
 probes:
   - name: latency_fping
-    type: std_fping
+    type: fping
     interval: 5s
     output:
       - prometheus
