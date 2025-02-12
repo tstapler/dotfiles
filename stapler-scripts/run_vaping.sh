@@ -6,6 +6,15 @@
 CONFIG_DIR="$HOME/.config/vaping"
 CONFIG_FILE="$CONFIG_DIR/config.yaml"
 
+# Get default gateway
+if [ "$(uname)" = "Darwin" ]; then
+    # macOS
+    GATEWAY=$(netstat -nr | grep default | grep -v 'vtnet0' | awk '{print $2}' | head -n 1)
+else
+    # Linux
+    GATEWAY=$(ip route | grep default | awk '{print $3}' | head -n 1)
+fi
+
 # Create config directory if it doesn't exist
 mkdir -p "$CONFIG_DIR"
 
@@ -41,6 +50,7 @@ probes:
     hosts:
       - 8.8.8.8  # Google DNS
       - 1.1.1.1  # Cloudflare DNS
+      - $GATEWAY # Local network gateway
 
   - name: http_probe
     type: http
