@@ -1,4 +1,4 @@
-pidfile: /var/run/vaping.pid
+pidfile: /app/vaping.pid
 logging:
   version: 1
   formatters:

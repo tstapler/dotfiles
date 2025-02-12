@@ -20,8 +20,8 @@ RUN adduser \
     && chown -R appuser:appuser /app
 
 # Create required directories first as root
-RUN mkdir -p /etc/vaping /var/run && \
-    chown -R appuser:appuser /etc/vaping /var/run
+RUN mkdir -p /etc/vaping /var/run /app && \
+    chown -R appuser:appuser /etc/vaping /var/run /app
 
 # Copy config file
 COPY --chown=appuser:appuser config.yaml /etc/vaping/config.yaml
