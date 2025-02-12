@@ -23,22 +23,18 @@ probes:
     type: std_fping
     interval: 5s
     output:
-      - vodka
+      - prometheus
     groups:
       - name: dns_servers
         hosts:
           - host: ${GATEWAY_IP}
             name: Gateway
-            color: green
           - host: 8.8.8.8
             name: Google
-            color: red
           - host: 1.1.1.1
             name: Cloudflare
-            color: purple
           - host: 208.67.222.222
             name: OpenDNS
-            color: orange
 
   - name: latency_icmp
     type: icmp
@@ -46,57 +42,20 @@ probes:
     count: 10
     ping_interval: 0.2
     output:
-      - vodka
+      - prometheus
     groups:
       - name: dns_servers
         hosts:
           - host: ${GATEWAY_IP}
             name: Gateway
-            color: green
           - host: 8.8.8.8
             name: Google
-            color: red
           - host: 1.1.1.1
             name: Cloudflare
-            color: purple
           - host: 208.67.222.222
             name: OpenDNS
-            color: orange
 
 plugins:
-  - name: std_fping
-    type: fping
-    count: 10
-    interval: "3s"
-    output:
-      - vodka
-
-  - name: vodka
-    type: vodka
-    data:
-      - type: fping
-        handlers:
-          - type: index
-            index: host
-          - type: store
-            container: list
-            limit: 500
-
-    apps:
-      graphsrv:
-        enabled: true
-        graphs:
-          multitarget:
-            id_field: host
-            type: multitarget
-            plot_y: avg
-            format_y: ms
-          smokestack:
-            id_field: host
-            type: smokestack
-            plot_y: avg
-
-    plugins:
-      - name: prometheus
-        type: prometheus
-        bind: 0.0.0.0:9090
+  - name: prometheus
+    type: prometheus
+    port: 9090
