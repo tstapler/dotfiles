@@ -21,7 +21,7 @@ RUN adduser \
 
 USER appuser
 
-COPY requirements.lock ./
+COPY pyproject.toml requirements.lock ./
 RUN uv pip install --no-cache --system -r requirements.lock
 
 VOLUME ["/etc/vaping", "/var/run"]
