@@ -1,0 +1,34 @@
+#!/usr/bin/env sh
+
+# vim: ai ts=2 sw=2 et sts=2 ft=sh
+
+# Get the commit message from the temporary file
+COMMIT_MSG_FILE=$1
+if [ -z "$COMMIT_MSG_FILE" ]; then
+    echo "Error: No commit message file provided"
+    exit 1
+fi
+
+# Get the email that will be used for the commit
+COMMIT_EMAIL=$(git config user.email)
+ORIGIN_URL=$(git ls-remote --get-url 'origin')
+
+# Check if we're in a personal repository
+case $ORIGIN_URL in
+    *github.com/tstapler*|*github.com:tstapler*)
+        if ! echo "$COMMIT_EMAIL" | grep -q "tystapler@gmail.com"; then
+            echo "Error: Personal repository requires personal email (tystapler@gmail.com)"
+            echo "Current email is set to: $COMMIT_EMAIL"
+            exit 1
+        fi
+        ;;
+    *)
+        if echo "$COMMIT_EMAIL" | grep -q "tystapler@gmail.com"; then
+            echo "Error: Non-personal repository should not use personal email"
+            echo "Current email is set to: $COMMIT_EMAIL"
+            exit 1
+        fi
+        ;;
+esac
+
+exit 0

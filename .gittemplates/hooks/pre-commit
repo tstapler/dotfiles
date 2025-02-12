@@ -1,2 +1,7 @@
 #!/usr/bin/env sh
+
+# Set the appropriate email based on repository
 $HOME/dotfiles/stapler-scripts/set_git_emails
+
+# Check that the commit will use the correct email
+$HOME/dotfiles/stapler-scripts/check_commit_email "$1"
