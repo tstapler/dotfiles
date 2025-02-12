@@ -31,6 +31,10 @@ RUN apt-get update && apt-get install -y \
 
 # Copy Python environment from builder
 COPY --from=builder /app/.venv /app/.venv
+RUN ls -la /app/.venv/bin && \
+    ls -la /app/.venv/lib/python3.13/site-packages && \
+    which vaping && \
+    vaping --version
 ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONPATH="/app/.venv/lib/python3.13/site-packages:$PYTHONPATH"
 
