@@ -32,6 +32,7 @@ RUN apt-get update && apt-get install -y \
 # Copy Python environment from builder
 COPY --from=builder /app/.venv /app/.venv
 ENV PATH="/app/.venv/bin:$PATH"
+ENV PYTHONPATH="/app/.venv/lib/python3.13/site-packages:$PYTHONPATH"
 
 WORKDIR /app
 VOLUME ["/etc/vaping", "/var/run"]
