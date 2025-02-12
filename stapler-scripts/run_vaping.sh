@@ -66,6 +66,12 @@ plugins:
 EOF
 fi
 
+# Build the Docker image if it doesn't exist
+SCRIPT_DIR=$(dirname "$0")
+if ! docker image inspect vaping:local >/dev/null 2>&1; then
+    docker build -t vaping:local "$SCRIPT_DIR"
+fi
+
 # Run vaping in Docker
 docker run -d \
     --name vaping \
@@ -74,4 +80,4 @@ docker run -d \
     -v "$CONFIG_DIR:/etc/vaping" \
     -v /var/run:/var/run \
     --cap-add NET_RAW \
-    20c/vaping
+    vaping:local
