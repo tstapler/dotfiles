@@ -22,7 +22,7 @@ logging:
 probes:
   - name: ping_probe
     type: fping
-    interval: 5
+    interval: "5s"
     count: 5
     hosts:
       - 8.8.8.8  # Google DNS
@@ -30,7 +30,7 @@ probes:
 
   - name: http_probe
     type: http
-    interval: 30
+    interval: "30s"
     hosts:
       - https://google.com
       - https://cloudflare.com
