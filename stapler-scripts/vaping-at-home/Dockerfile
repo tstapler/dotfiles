@@ -36,7 +36,6 @@ RUN ls -la /app/.venv/bin && \
     which vaping && \
     vaping --version
 ENV PATH="/app/.venv/bin:$PATH"
-ENV PYTHONPATH="/app/.venv/lib/python3.13/site-packages:$PYTHONPATH"
 
 WORKDIR /app
 VOLUME ["/etc/vaping", "/var/run"]
