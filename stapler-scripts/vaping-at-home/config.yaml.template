@@ -43,7 +43,7 @@ plugins:
   - name: std_fping
     type: fping
     count: 10
-    interval: 3s
+    interval: "3s"
     output:
       - vodka
 
