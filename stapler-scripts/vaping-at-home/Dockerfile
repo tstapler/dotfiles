@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     git \
     curl \
+    python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Install rye
