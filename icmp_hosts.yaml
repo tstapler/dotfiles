@@ -1,0 +1,14 @@
+icmp_servers:
+  - host: ${GATEWAY_IP}
+    name: Gateway
+  - host: 8.8.8.8
+    name: Google
+  - host: 1.1.1.1
+    name: Cloudflare
+  - host: 208.67.222.222
+    name: OpenDNS
+
+# Add your custom ICMP hosts below
+custom_icmp_servers:
+  - host: 9.9.9.9
+    name: Quad9

@@ -9,6 +9,7 @@ services:
     volumes:
       - ./config.yaml:/etc/vaping/config.yaml
       - ./hosts.yaml:/etc/vaping/hosts.yaml
+      - ./icmp_hosts.yaml:/etc/vaping/icmp_hosts.yaml
     environment:
       - VAPING_HOME=/etc/vaping
       - VAPING_CONFIG=/etc/vaping/config.yaml
