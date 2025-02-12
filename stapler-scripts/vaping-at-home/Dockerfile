@@ -14,8 +14,8 @@ ENV PATH="/root/.rye/shims:${PATH}"
 
 # Set up project
 WORKDIR /app
-COPY pyproject.toml .
-RUN rye sync --no-dev
+COPY pyproject.toml requirements.lock .
+RUN rye sync --no-lock --no-dev
 
 # Runtime stage
 FROM python:3.11-slim
