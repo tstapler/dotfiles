@@ -19,6 +19,10 @@ RUN adduser \
     appuser \
     && chown -R appuser:appuser /app
 
+# Create required directories first as root
+RUN mkdir -p /etc/vaping /var/run && \
+    chown -R appuser:appuser /etc/vaping /var/run
+
 USER appuser
 
 # Create and activate virtual environment
@@ -29,11 +33,7 @@ ENV VIRTUAL_ENV="/app/.venv"
 COPY --chown=appuser:appuser pyproject.toml requirements.lock ./
 RUN uv pip install --no-cache -r requirements.lock
 
-# Create required directories
-RUN mkdir -p /etc/vaping /var/run && \
-    chown -R appuser:appuser /etc/vaping /var/run
-
-# Declare volumes after creating directories
+# Declare volumes after directory creation
 VOLUME ["/etc/vaping", "/var/run"]
 
 CMD ["vaping", "start", "--debug"]
