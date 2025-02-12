@@ -2,6 +2,9 @@
 
 # vim: ai ts=2 sw=2 et sts=2 ft=sh
 
+# Source shared functions
+. "$HOME/dotfiles/stapler-scripts/git_shared.sh"
+
 # Get the commit message from the temporary file
 COMMIT_MSG_FILE=$1
 if [ -z "$COMMIT_MSG_FILE" ]; then
@@ -12,23 +15,12 @@ fi
 # Get the email that will be used for the commit
 COMMIT_EMAIL=$(git config user.email)
 ORIGIN_URL=$(git ls-remote --get-url 'origin')
+EXPECTED_EMAIL=$(get_git_email "$ORIGIN_URL")
 
-# Check if we're in a personal repository
-case $ORIGIN_URL in
-    *github.com/tstapler*|*github.com:tstapler*)
-        if ! echo "$COMMIT_EMAIL" | grep -q "tystapler@gmail.com"; then
-            echo "Error: Personal repository requires personal email (tystapler@gmail.com)"
-            echo "Current email is set to: $COMMIT_EMAIL"
-            exit 1
-        fi
-        ;;
-    *)
-        if echo "$COMMIT_EMAIL" | grep -q "tystapler@gmail.com"; then
-            echo "Error: Non-personal repository should not use personal email"
-            echo "Current email is set to: $COMMIT_EMAIL"
-            exit 1
-        fi
-        ;;
-esac
+if [ "$COMMIT_EMAIL" != "$EXPECTED_EMAIL" ]; then
+    echo "Error: Repository requires email ($EXPECTED_EMAIL)"
+    echo "Current email is set to: $COMMIT_EMAIL"
+    exit 1
+fi
 
 exit 0
