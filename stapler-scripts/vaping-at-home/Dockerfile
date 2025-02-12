@@ -6,7 +6,7 @@ WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends fping \
+    && apt-get install -y --no-install-recommends fping=4.2-1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user
