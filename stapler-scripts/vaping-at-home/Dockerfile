@@ -5,12 +5,17 @@ FROM python:3.11-slim as builder
 RUN apt-get update && apt-get install -y \
     build-essential \
     git \
+    curl \
     && rm -rf /var/lib/apt/lists/*
+
+# Install rye
+RUN curl -sSf https://rye-up.com/get | RYE_INSTALL_OPTION="--yes" bash
+ENV PATH="/root/.rye/shims:${PATH}"
 
 # Set up project
 WORKDIR /app
 COPY pyproject.toml .
-RUN pip install --no-cache-dir .
+RUN rye sync --no-dev
 
 # Runtime stage
 FROM python:3.11-slim
