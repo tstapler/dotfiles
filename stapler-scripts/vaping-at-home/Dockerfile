@@ -11,6 +11,7 @@ RUN apt-get update \
         git \
         autoconf \
         automake \
+        libcap2-bin \
     && rm -rf /var/lib/apt/lists/*
 
 # Build and install fping from source
