@@ -31,11 +31,13 @@ RUN apt-get update && apt-get install -y \
 
 # Copy Python environment from builder
 COPY --from=builder /app/.venv /app/.venv
-RUN ls -la /app/.venv/bin && \
-    ls -la /app/.venv/lib/python3.13/site-packages && \
-    which vaping && \
-    vaping --version
 ENV PATH="/app/.venv/bin:$PATH"
+RUN ls -la /app/.venv/bin && \
+    echo "PATH=$PATH" && \
+    which vaping && \
+    cat /app/.venv/bin/vaping && \
+    ls -la /app/.venv/lib/python3.13/site-packages/vaping && \
+    python -c "import vaping; print(vaping.__file__)"
 
 WORKDIR /app
 VOLUME ["/etc/vaping", "/var/run"]
