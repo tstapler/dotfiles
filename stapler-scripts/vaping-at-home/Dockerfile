@@ -39,4 +39,4 @@ COPY --chown=appuser:appuser config.yaml /etc/vaping/config.yaml
 # Declare volumes after directory creation
 VOLUME ["/etc/vaping", "/var/run"]
 
-CMD ["vaping", "start", "--debug"]
+CMD ["sh", "-c", "cat /etc/vaping/config.yaml && echo '\n--- Starting Vaping ---\n' && vaping start --debug"]
