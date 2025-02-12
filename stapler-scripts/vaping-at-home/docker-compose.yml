@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  vaping:
+    build: .
+    image: vaping:local
+    container_name: vaping
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ${HOME}/.config/vaping:/etc/vaping
+      - /var/run:/var/run
+    cap_add:
+      - NET_RAW

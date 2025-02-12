@@ -66,21 +66,6 @@ plugins:
 EOF
 fi
 
-# Build the Docker image if it doesn't exist
+# Start vaping using docker-compose
 SCRIPT_DIR=$(dirname "$0")
-if ! docker image inspect vaping:local >/dev/null 2>&1; then
-    if ! docker build -t vaping:local "$SCRIPT_DIR"; then
-        echo "Error: Docker build failed"
-        exit 1
-    fi
-fi
-
-# Run vaping in Docker
-docker run -d \
-    --name vaping \
-    --restart unless-stopped \
-    --network host \
-    -v "$CONFIG_DIR:/etc/vaping" \
-    -v /var/run:/var/run \
-    --cap-add NET_RAW \
-    vaping:local
+cd "$SCRIPT_DIR" && docker-compose up -d
