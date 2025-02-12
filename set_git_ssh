@@ -1,0 +1,18 @@
+#!/usr/bin/env sh
+
+# vim: ai ts=2 sw=2 et sts=2 ft=sh
+
+ORIGIN_URL=$(git ls-remote --get-url 'origin')
+SSH_KEY="$HOME/.ssh/personal"
+
+# Check if we're pushing to a personal repository
+case $ORIGIN_URL in
+  *github.com/tstapler*|*github.com:tstapler*)
+    # Only use personal key if it exists
+    if [ -f "$SSH_KEY" ]; then
+      export GIT_SSH_COMMAND="ssh -i $SSH_KEY"
+    fi
+    ;;
+esac
+
+exit 0
