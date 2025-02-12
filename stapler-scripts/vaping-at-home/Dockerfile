@@ -23,8 +23,6 @@ RUN adduser \
 RUN mkdir -p /etc/vaping /var/run /app && \
     chown -R appuser:appuser /etc/vaping /var/run /app
 
-USER appuser
-
 # Create and activate virtual environment
 RUN python -m venv /app/.venv
 ENV PATH="/app/.venv/bin:$PATH"
@@ -32,6 +30,7 @@ ENV VIRTUAL_ENV="/app/.venv"
 
 COPY --chown=appuser:appuser pyproject.toml requirements.lock ./
 RUN uv pip install --no-cache -r requirements.lock
+RUN uv pip install --no-cache setuptools pkg-resources
 
 # Copy config file
 COPY --chown=appuser:appuser config.yaml /etc/vaping/config.yaml
