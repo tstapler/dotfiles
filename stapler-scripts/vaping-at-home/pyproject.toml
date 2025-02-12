@@ -2,7 +2,7 @@
 name = "run-vaping"
 version = "0.1.0"
 description = "Containerized setup for running Vaping network monitoring tool"
-requires-python = ">=3.11"
+requires-python = ">=3.13"
 dependencies = [
     "vaping",
     "vodka",
