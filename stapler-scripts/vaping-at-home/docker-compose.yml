@@ -3,7 +3,6 @@ services:
   vaping:
     build: .
     image: vaping:local
-    container_name: vaping
     restart: unless-stopped
     network_mode: host
     volumes:
@@ -11,3 +10,6 @@ services:
       - /var/run:/var/run
     cap_add:
       - NET_RAW
+      - NET_ADMIN
+    security_opt:
+      - no-new-privileges:true
