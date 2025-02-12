@@ -1,0 +1,2 @@
+#!/usr/bin/env sh
+$HOME/dotfiles/stapler-scripts/set_git_ssh
