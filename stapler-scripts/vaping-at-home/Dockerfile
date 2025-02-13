@@ -52,6 +52,6 @@ RUN uv pip install --no-cache -r requirements.lock
 COPY --chown=appuser:appuser config.yaml /etc/vaping/config.yaml
 
 # Declare volumes after directory creation
-VOLUME ["/etc/vaping", "/var/run"]
+VOLUME ["/etc/vaping"]
 
 CMD ["sh", "-c", "cat /etc/vaping/config.yaml && echo '\n--- Starting Vaping ---\n' && vaping start --debug"]

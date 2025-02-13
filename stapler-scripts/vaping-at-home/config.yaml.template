@@ -35,8 +35,8 @@ probes:
             name: Cloudflare
           - host: 208.67.222.222
             name: OpenDNS
-      - name: custom_servers
-        hosts: ${HOSTS_CUSTOM_SERVERS}
+          - host: 136.27.58.1
+            name: WebPass ISP
 
   - name: latency_icmp
     type: icmp
@@ -56,8 +56,8 @@ probes:
             name: Cloudflare
           - host: 208.67.222.222
             name: OpenDNS
-      - name: custom_icmp_servers
-        hosts: ${HOSTS_CUSTOM_ICMP_SERVERS}
+          - host: 136.27.58.1
+            name: WebPass ISP
 
 plugins:
   - name: prometheus

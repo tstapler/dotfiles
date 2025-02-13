@@ -16,15 +16,13 @@ charset-normalizer==3.4.1
 click==8.1.8
     # via flask
     # via munge
-    # via vodka
 confu==1.9.0
     # via vaping
 docutils==0.21
     # via vaping
 flask==2.1.3
-    # via graphsrv
     # via vaping
-graphsrv==2.1.1
+icmplib==3.0.4
 idna==3.10
     # via requests
 importlib-metadata==8.6.1
@@ -33,7 +31,6 @@ itsdangerous==2.2.0
     # via flask
 jinja2==3.1.5
     # via flask
-    # via graphsrv
 lockfile==0.12.2
     # via python-daemon
 markupsafe==3.0.2
@@ -42,12 +39,11 @@ munge==1.3.0
     # via confu
     # via pluginmgr
     # via vaping
-    # via vodka
 pid==3.0.4
     # via vaping
 pluginmgr==1.2.1
     # via vaping
-    # via vodka
+prometheus-client==0.21.1
 python-daemon==3.1.2
     # via vaping
 pyyaml==6.0.2
@@ -55,15 +51,11 @@ pyyaml==6.0.2
 requests==2.32.3
     # via munge
 setuptools==75.8.0
-tmpl==1.1.0
-    # via vodka
 tomlkit==0.13.2
     # via munge
 urllib3==2.3.0
     # via requests
-vaping==1.5.4
-vodka==3.2.0
-    # via graphsrv
+vaping @ git+https://github.com/tstapler/vaping.git@bbcf2cdfc7a02b380b79ad2254c28c4ebecabdf8
 werkzeug==2.0.3
     # via flask
     # via vaping
