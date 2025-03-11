@@ -1,4 +1,4 @@
-nodejs lts
+nodejs 22.14.0
 clojure 1.10.1.739
 lein 2.9.5
 java openjdk-21

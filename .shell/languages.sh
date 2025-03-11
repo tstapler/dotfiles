@@ -1,4 +1,4 @@
-ASDF_DIR="$HOME/.asdf"
+export ASDF_DIR="$HOME/.asdf"
 
 if [ ! -d "$ASDF_DIR" ]; then
   git clone "https://github.com/asdf-vm/asdf.git" "$ASDF_DIR"
@@ -14,7 +14,10 @@ fi
 export PYTHON_CONFIGURE_OPTS="--enable-shared"
 
 if hash asdf 2>/dev/null; then
-ASDF_PLUGIN_DIR="$ASDF_DIR/plugins"
+export ASDF_PLUGIN_DIR="$ASDF_DIR/plugins"
+export ASDF_DATA_DIR="$ASDF_DIR"
+export PATH="$ASDF_DATA_DIR/shims:$PATH"
+
 
 # Declare an associative array for plugins with URLs
 declare -A plugin_map
