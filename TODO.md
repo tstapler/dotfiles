@@ -1,0 +1,1 @@
+- [ ] Add cron job to automatically run stapler-scripts/update_node_version.py weekly
