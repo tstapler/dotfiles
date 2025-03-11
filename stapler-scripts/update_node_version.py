@@ -8,24 +8,23 @@ def get_latest_lts_version():
     with urllib.request.urlopen(url) as response:
         data = json.load(response)
     
-    # Filter LTS releases and parse dates
+    # Filter LTS releases and parse semantic versions
     lts_versions = []
     for release in data:
-        if release['lts']:  # Check if it's an LTS release (could be boolean or string)
-            lts_versions.append({
-                'version': release['version'],
-                'date': datetime.strptime(release['date'], '%Y-%m-%d')
-            })
+        if release['lts']:
+            version_str = release['version'].lstrip('v')
+            # Parse semver components as integers for correct numeric comparison
+            major, minor, patch = map(int, version_str.split('.')[0:3])
+            lts_versions.append((major, minor, patch, version_str))
     
     if not lts_versions:
         raise ValueError("No LTS versions found in Node.js releases")
     
-    # Sort by date ascending and get latest
-    lts_versions.sort(key=lambda x: x['date'])
-    latest = lts_versions[-1]['version']
+    # Sort by semantic version descending and get latest
+    lts_versions.sort(reverse=True)
+    latest = lts_versions[0][3]
     
-    # Remove leading 'v' if present and return clean semver
-    return re.sub(r'^v', '', latest)
+    return latest
 
 def update_tool_versions(new_version):
     file_path = '.tool-versions'
