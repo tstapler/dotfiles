@@ -10,16 +10,16 @@ all: run
 config.yaml: config.yaml.template
 	sed 's/$${GATEWAY_IP}/$(GATEWAY_IP)/g' $< > $@
 
-build:  Dockerfile $(PYTHON_FILES)
-	docker compose build
+build: config.yaml Dockerfile $(PYTHON_FILES)
+	$(COMPOSE) build
 
-run: build config.yaml
-	docker compose up -d
+run: build
+	$(COMPOSE) up -d
 
 up: build run
 
 stop:
-	docker compose down
+	$(COMPOSE) down
 
 logs:
 	$(COMPOSE) logs -f vaping
@@ -28,7 +28,7 @@ debug: build
 	$(COMPOSE) up
 
 shell: build
-	docker compose exec vaping /bin/bash
+	$(COMPOSE) exec vaping /bin/bash
 
 clean:
 	rm -f config.yaml
