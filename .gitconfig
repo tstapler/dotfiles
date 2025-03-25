@@ -54,4 +54,3 @@ git-fetch-with-cli = true
 	required = true
 [rerere]
 	enabled = true
-.claude/settings.local.json
