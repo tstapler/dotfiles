@@ -22,7 +22,7 @@ stop:
 	docker compose down
 
 logs:
-	docker logs -f $(CONTAINER_NAME)
+	$(COMPOSE) logs -f vaping
 
 debug: build
 	$(COMPOSE) up
@@ -32,4 +32,4 @@ shell: build
 
 clean:
 	rm -f config.yaml
-	docker compose down --rmi all --volumes
+	$(COMPOSE) down --rmi all --volumes
