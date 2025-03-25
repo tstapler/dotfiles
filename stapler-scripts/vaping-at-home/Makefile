@@ -24,7 +24,7 @@ logs:
 	docker logs -f $(CONTAINER_NAME)
 
 debug: build
-	docker compose up
+	$(COMPOSE) up
 
 shell: build
 	docker compose exec vaping /bin/bash
