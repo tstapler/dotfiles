@@ -18,7 +18,7 @@ services:
       - no-new-privileges:true
 
   prometheus:
-    image: prom/prometheus:latest
+    image: mirror.gcr.io/prom/prometheus:v3.2.1
     ports:
       - "9091:9090"
     volumes:
@@ -30,7 +30,7 @@ services:
     restart: unless-stopped
 
   grafana:
-    image: grafana/grafana:latest
+    image: mirror.gcr.io/grafana/grafana:11.5.2
     ports:
       - "3000:3000"
     volumes:
