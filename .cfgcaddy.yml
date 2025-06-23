@@ -38,6 +38,9 @@ links:
   - src: .ideavimrc
   - src: .config/helm/starters
   - src: .cargo/config
+  - src: .config/goose/config.yaml
+    dest: .config/goose/config.yaml
+    os: "Linux Darwin"
 
 ignore:
   # Globbing patterns to ignore when

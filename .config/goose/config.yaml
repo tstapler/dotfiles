@@ -1,0 +1,214 @@
+GOOSE_MODE: smart_approve
+GOOSE_CONTEXT_STRATEGY: summarize
+GOOSE_MODEL: us.anthropic.claude-3-5-sonnet-20241022-v2:0
+AWS_PROFILE: Sandbox.AdministratorAccess
+GOOSE_PROVIDER: aws_bedrock
+extensions:
+  aider:
+    args:
+    - -c
+    - aws-sso-util login && uvx --from git+https://github.com/TylerStaplerAtFanatics/aider-mcp-server.git aider-mcp-server --editor-model 'bedrock/us.anthropic.claude-3-7-sonnet-20250219-v1:0' --current-working-dir .
+    bundled: null
+    cmd: bash
+    description: null
+    enabled: false
+    env_keys: []
+    envs: {}
+    name: aider
+    timeout: 300
+    type: stdio
+  atlassian:
+    args:
+    - -y
+    - mcp-remote
+    - https://mcp.atlassian.com/v1/sse
+    bundled: null
+    cmd: npx
+    description: null
+    enabled: false
+    env_keys: []
+    envs: {}
+    name: atlassian
+    timeout: 300
+    type: stdio
+  computer_controller:
+    bundled: true
+    display_name: Computer Controller
+    enabled: false
+    name: computercontroller
+    timeout: 300
+    type: builtin
+  context7:
+    args:
+    - -y
+    - '@upstash/context7-mcp'
+    bundled: null
+    cmd: npx
+    description: null
+    enabled: true
+    env_keys: []
+    envs: {}
+    name: context7
+    timeout: 300
+    type: stdio
+  developer:
+    bundled: true
+    display_name: Developer
+    enabled: true
+    name: developer
+    timeout: 300
+    type: builtin
+  fetch:
+    args:
+    - mcp-server-fetch
+    bundled: null
+    cmd: uvx
+    description: Retrieve and process content from the web
+    enabled: false
+    env_keys: []
+    envs: {}
+    name: fetch
+    timeout: 300
+    type: stdio
+  filesystem:
+    args:
+    - -y
+    - '@modelcontextprotocol/server-filesystem'
+    - .
+    bundled: null
+    cmd: npx
+    description: null
+    enabled: false
+    env_keys: []
+    envs: {}
+    name: filesystem
+    timeout: 300
+    type: stdio
+  forevervm-mcp:
+    args:
+    - forevervm-mcp
+    - install
+    - --claude
+    bundled: null
+    cmd: npx
+    description: null
+    enabled: false
+    env_keys: []
+    envs: {}
+    name: forevervm-mcp
+    timeout: 300
+    type: stdio
+  github:
+    args:
+    - -y
+    - mcp-remote
+    - https://api.githubcopilot.com/mcp/
+    bundled: null
+    cmd: npx
+    description: null
+    enabled: false
+    env_keys: []
+    envs: {}
+    name: github
+    timeout: 300
+    type: stdio
+  jetbrains:
+    bundled: true
+    display_name: JetBrains
+    enabled: false
+    name: jetbrains
+    timeout: 300
+    type: builtin
+  memory:
+    bundled: true
+    display_name: Memory
+    enabled: true
+    name: memory
+    timeout: 300
+    type: builtin
+  playwright:
+    args:
+    - -y
+    - '@playwright/mcp@latest'
+    bundled: null
+    cmd: npx
+    description: null
+    enabled: false
+    env_keys: []
+    envs: {}
+    name: playwright
+    timeout: 300
+    type: stdio
+  repomix:
+    args:
+    - -y
+    - repomix
+    - --mcp
+    bundled: null
+    cmd: npx
+    description: null
+    enabled: false
+    env_keys: []
+    envs: {}
+    name: repomix
+    timeout: 300
+    type: stdio
+  sequential-thinking:
+    args:
+    - -y
+    - '@modelcontextprotocol/server-sequential-thinking'
+    bundled: null
+    cmd: npx
+    description: null
+    enabled: true
+    env_keys: []
+    envs: {}
+    name: sequential-thinking
+    timeout: 300
+    type: stdio
+  serena:
+    args:
+    - --from
+    - git+https://github.com/oraios/serena
+    - serena-mcp-server
+    bundled: null
+    cmd: uvx
+    description: null
+    enabled: false
+    env_keys: []
+    envs: {}
+    name: serena
+    timeout: 300
+    type: stdio
+  terraform:
+    args:
+    - run
+    - -i
+    - --rm
+    - hashicorp/terraform-mcp-server
+    bundled: null
+    cmd: docker
+    description: null
+    enabled: false
+    env_keys: []
+    envs: {}
+    name: terraform
+    timeout: 300
+    type: stdio
+  slack:
+    args:
+    - -y
+    - slack-mcp-server@latest
+    - --transport
+    - stdio
+    bundled: null
+    cmd: npx
+    description: null
+    enabled: false
+    env_keys:
+    - SLACK_MCP_XOXC_TOKEN
+    - SLACK_MCP_XOXD_TOKEN
+    envs: {}
+    name: slack
+    timeout: 300
+    type: stdio
