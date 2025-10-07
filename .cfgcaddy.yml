@@ -41,6 +41,16 @@ links:
   - src: .config/goose/config.yaml
     dest: .config/goose/config.yaml
     os: "Linux Darwin"
+  - src: .claude/CLAUDE.md
+    os: "Linux Darwin"
+  - src: .claude/agents
+    os: "Linux Darwin"
+  - src: .claude/agents.md
+    os: "Linux Darwin"
+  - src: .claude/commands
+    os: "Linux Darwin"
+  - src: .claude/docs
+    os: "Linux Darwin"
 
 ignore:
   # Globbing patterns to ignore when
