@@ -94,12 +94,18 @@ Requirements:
 6. Update journal entry in /Users/tylerstapler/Documents/personal-wiki/logseq/journals/$(date +%Y_%m_%d).md
 7. Ensure all links are bidirectional and meaningful
 8. Apply appropriate semantic tags
+9. **CRITICAL**: Include proper attribution with clickable links to ALL external sources consulted
+   - Add "## References" or "## Sources" section at bottom of every page
+   - Format: `- [Full Title](https://actual-url.com) - Brief description or context`
+   - Include original source URL, blog posts, documentation, papers, books (with publisher links)
+   - Attribution is MANDATORY for intellectual honesty and future reference
 
 Expected deliverables:
 - Primary knowledge page(s) with comprehensive coverage
 - Supporting concept pages as needed
 - Book zettels for referenced works
 - Journal integration with synthesis summary
+- **Complete attribution section with clickable URLs to all sources**
 ```
 
 **Option B: Direct Execution** (For simple, straightforward synthesis)
@@ -180,6 +186,11 @@ This process will produce:
 - **Author Network**: Links between book zettels and author expertise areas
 - **Semantic Organization**: Appropriate tags for discoverability including `#[[Books]]`, `#[[Authors]]`, and domain-specific categories
 - **Quality Documentation**: Clear integration with your existing conceptual framework and research standards
+- **📚 MANDATORY ATTRIBUTION**: Every page MUST include a "## References" or "## Sources" section with:
+  - Clickable links to all external sources consulted
+  - Format: `- [Full Title](https://url.com) - Context/description`
+  - Blog posts, documentation, papers, books, videos - ALL sources must be linked
+  - This ensures intellectual honesty and enables future reference
 
 ## File Handling Strategy
 

@@ -11,8 +11,8 @@ I'll help you create a new purpose-built agent for specialized tasks, following 
 ## Agent Configuration
 
 **Agent Name**: `${1:-example-agent}` (kebab-case format)
-**Specialization Domain**: `${2:-general-purpose}` 
-**Model Preference**: `${3:-opus}` (Options: opus, sonnet, haiku)
+**Specialization Domain**: `${2:-general-purpose}`
+**Model Preference**: `${3:-sonnet}` (Options: sonnet, opus, haiku - prefer sonnet for speed)
 
 ## Agent Creation Process
 
@@ -60,7 +60,7 @@ Examples:
   </example>
 
 tools: [list of required tools or * for all tools]
-model: ${3:-opus}
+model: ${3:-sonnet}
 ---
 ```
 
@@ -93,7 +93,7 @@ Examples:
   </example>
 
 tools: *
-model: ${3:-opus}
+model: ${3:-sonnet}
 ---
 
 You are a ${2:-general-purpose} specialist with deep expertise in [specific domain areas]. Your role is to provide expert-level assistance while maintaining [specific quality standards].
@@ -156,7 +156,7 @@ Remember: [Key reminder about the agent's core purpose and value]
 - **High Specialization**: Focus on narrow, deep expertise vs. broad knowledge
 - **Consistent Methodology**: Establish repeatable processes and quality standards  
 - **Tool Optimization**: Include only tools essential for the domain
-- **Model Selection**: Choose model based on complexity (opus for complex reasoning, sonnet for balanced, haiku for simple)
+- **Model Selection**: Prefer sonnet for speed and efficiency; use opus only for extremely complex reasoning tasks; use haiku for simple tasks
 - **Clear Boundaries**: Define exactly when to use this agent vs. general Claude
 
 **Usage Pattern Design:**
@@ -177,6 +177,6 @@ Remember: [Key reminder about the agent's core purpose and value]
 Would you like me to create this `${1:-example-agent}` agent now based on your specifications? Please confirm:
 - **Agent Name**: `${1:-example-agent}`
 - **Specialization Domain**: `${2:-general-purpose}`
-- **Model**: `${3:-opus}`
+- **Model**: `${3:-sonnet}` (prefer sonnet for better performance)
 - **Specific Expertise Areas**: [Please specify the key domains]
 - **Essential Tools**: [Please specify required tools]
