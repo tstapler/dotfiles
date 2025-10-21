@@ -5,7 +5,7 @@ services:
     image: vaping:local
     restart: unless-stopped
     ports:
-      - "9090:9090"  # Prometheus metrics endpoint
+      - "9790:9090"  # Prometheus metrics endpoint
     volumes:
       - ./config.yaml:/etc/vaping/config.yaml
     environment:
@@ -20,7 +20,7 @@ services:
   prometheus:
     image: mirror.gcr.io/prom/prometheus:v3.2.1
     ports:
-      - "9091:9090"
+      - "9791:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
@@ -32,7 +32,7 @@ services:
   grafana:
     image: mirror.gcr.io/grafana/grafana:11.5.2
     ports:
-      - "3000:3000"
+      - "3719:3000"
     volumes:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
@@ -45,7 +45,46 @@ services:
     restart: unless-stopped
     depends_on:
       - prometheus
+      - loki
+
+  loki:
+    image: mirror.gcr.io/grafana/loki:3.3.2
+    ports:
+      - "3792:3100"  # Non-standard port in 3700 range
+    volumes:
+      - ./loki-config.yaml:/etc/loki/local-config.yaml
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    restart: unless-stopped
+
+  promtail:
+    image: mirror.gcr.io/grafana/promtail:3.3.2
+    ports:
+      - "9793:9080"  # Non-standard port in 9700 range
+    volumes:
+      - ./promtail-config.yaml:/etc/promtail/config.yml
+      - /var/log:/var/log:ro
+      - /private/var/log:/private/var/log:ro
+    command: -config.file=/etc/promtail/config.yml
+    restart: unless-stopped
+    depends_on:
+      - loki
+
+  node-exporter:
+    image: mirror.gcr.io/prom/node-exporter:v1.8.2
+    ports:
+      - "9794:9100"  # Non-standard port in 9700 range
+    command:
+      - '--path.rootfs=/host'
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    volumes:
+      - /:/host:ro,rslave
+    restart: unless-stopped
+    pid: host
 
 volumes:
   prometheus_data:
   grafana_data:
+  loki_data:

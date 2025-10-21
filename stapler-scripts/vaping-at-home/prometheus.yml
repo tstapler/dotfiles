@@ -6,3 +6,9 @@ scrape_configs:
   - job_name: 'vaping'
     static_configs:
       - targets: ['vaping:9090']
+
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+        labels:
+          instance: 'macos-host'

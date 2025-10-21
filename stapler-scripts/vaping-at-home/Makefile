@@ -2,18 +2,20 @@
 
 GATEWAY_IP := $(shell python3 get_gateway.py)
 CONTAINER_NAME := vaping-at-home-vaping-1
-PYTHON_FILES := pyproject.toml requirements.lock
+PYTHON_FILES := pyproject.toml requirements.lock prometheus_plugin.py
 
 all: run
 
 config.yaml: config.yaml.template
 	sed 's/$${GATEWAY_IP}/$(GATEWAY_IP)/g' $< > $@
 
-build: config.yaml Dockerfile $(PYTHON_FILES)
+build:  Dockerfile $(PYTHON_FILES)
 	docker compose build
 
-run: build
+run: build config.yaml
 	docker compose up -d
+
+up: build run
 
 stop:
 	docker compose down

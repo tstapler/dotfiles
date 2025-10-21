@@ -1,0 +1,88 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://localhost:3100/loki/api/v1/push
+
+scrape_configs:
+  # System logs (main system.log)
+  - job_name: system
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: system_logs
+          __path__: /private/var/log/system.log*
+
+  # DHCP logs from system.log (macOS DHCP messages)
+  - job_name: dhcp
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: dhcp_logs
+          __path__: /private/var/log/system.log*
+    pipeline_stages:
+      - match:
+          selector: '{job="dhcp_logs"}'
+          stages:
+            - regex:
+                expression: '.*(?:DHCP|dhcp|bootpd).*'
+            - labels:
+                dhcp:
+
+  # Network configuration logs
+  - job_name: network_config
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: network_config
+          __path__: /private/var/log/system.log*
+    pipeline_stages:
+      - match:
+          selector: '{job="network_config"}'
+          stages:
+            - regex:
+                expression: '.*(?:configd|networkd|Network|Interface|SCNetworkReachability).*'
+            - labels:
+                network:
+
+  # WiFi logs
+  - job_name: wifi
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: wifi_logs
+          __path__: /private/var/log/wifi.log*
+
+  # Power Management logs (for sleep/wake events)
+  - job_name: power_management
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: power_logs
+          __path__: /private/var/log/system.log*
+    pipeline_stages:
+      - match:
+          selector: '{job="power_logs"}'
+          stages:
+            - regex:
+                expression: '.*(?:powerd|Sleep|Wake|hibernation|power).*'
+            - labels:
+                power:
+
+  # Install logs (may contain network/system configuration changes)
+  - job_name: install
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: install_logs
+          __path__: /private/var/log/install.log*
