@@ -1,0 +1,107 @@
+# MCP Hub Configuration
+version: 1
+tools:
+  # Built-in tools
+  developer:
+    type: builtin
+    enabled: true
+  memory:
+    type: builtin
+    enabled: true
+  computercontroller:
+    type: builtin
+    enabled: false
+
+  # External tools
+  context7:
+    type: stdio
+    cmd: npx
+    args: ["-y", "@upstash/context7-mcp"]
+    enabled: true
+    timeout: 300
+  datadog:
+    type: stdio
+    cmd: /Users/tylerstapler/.local/bin/datadog_mcp_cli
+    args: []
+    enabled: true
+    timeout: 300
+  sequential-thinking:
+    type: stdio
+    cmd: npx
+    args: ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+    enabled: true
+    timeout: 300
+  aider:
+    type: stdio
+    cmd: bash
+    args: ["-c", "aws-sso-util login && uvx --from git+https://github.com/TylerStaplerAtFanatics/aider-mcp-server.git aider-mcp-server --editor-model 'bedrock/us.anthropic.claude-3-7-sonnet-20250219-v1:0' --current-working-dir ."]
+    enabled: false
+    timeout: 300
+  fetch:
+    type: stdio
+    cmd: uvx
+    args: ["mcp-server-fetch"]
+    description: "Retrieve and process content from the web"
+    enabled: false
+    timeout: 300
+  filesystem:
+    type: stdio
+    cmd: npx
+    args: ["-y", "@modelcontextprotocol/server-filesystem", "."]
+    enabled: false
+    timeout: 300
+  forevervm-mcp:
+    type: stdio
+    cmd: npx
+    args: ["forevervm-mcp", "install", "--claude"]
+    enabled: false
+    timeout: 300
+  github:
+    type: stdio
+    cmd: npx
+    args: ["-y", "mcp-remote", "https://api.githubcopilot.com/mcp/"]
+    enabled: false
+    timeout: 300
+  jetbrains:
+    type: builtin
+    enabled: false
+    timeout: 300
+  playwright:
+    type: stdio
+    cmd: npx
+    args: ["-y", "@playwright/mcp@latest"]
+    enabled: false
+    timeout: 300
+  repomix:
+    type: stdio
+    cmd: npx
+    args: ["-y", "repomix", "--mcp"]
+    enabled: false
+    timeout: 300
+  serena:
+    type: stdio
+    cmd: uvx
+    args: ["--from", "git+https://github.com/oraios/serena", "serena-mcp-server"]
+    enabled: false
+    timeout: 300
+  slack:
+    type: stdio
+    cmd: npx
+    args: ["-y", "slack-mcp-server@latest", "--transport", "stdio"]
+    env_keys:
+      - SLACK_MCP_XOXC_TOKEN
+      - SLACK_MCP_XOXD_TOKEN
+    enabled: false
+    timeout: 300
+  terraform:
+    type: stdio
+    cmd: docker
+    args: ["run", "-i", "--rm", "hashicorp/terraform-mcp-server"]
+    enabled: false
+    timeout: 300
+  atlassian:
+    type: stdio
+    cmd: npx
+    args: ["-y", "mcp-remote", "https://mcp.atlassian.com/v1/sse"]
+    enabled: false
+    timeout: 300
