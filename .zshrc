@@ -107,11 +107,6 @@ if hash keychain 2>/dev/null; then
 	eval `keychain --agents gpg,ssh --quick --quiet --noask --inherit any`
 fi
 
-# Setup Fasd
-if hash fasd 2>/dev/null; then
-	eval "$(fasd --init auto)"
-fi
-
 # Prompt Config
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh

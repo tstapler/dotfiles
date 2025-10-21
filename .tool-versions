@@ -1,7 +1,8 @@
-nodejs 22.14.0
+nodejs lts
 clojure 1.10.1.739
 lein 2.9.5
 java openjdk-21
 golang 1.22.3
-terraform 1.5.4
+terraform 1.5.0
 python 3.11.4
+nim 2.0.8

@@ -27,7 +27,7 @@ plugin_map=(
   )
 
 # Add ASDF plugins if they don't exist
-for plug in nodejs python java golang clojure terraform cdk; do
+for plug in nodejs python java golang clojure terraform cdk nim; do
     if [ ! -d "$ASDF_PLUGIN_DIR/$plug" ]; then
       if [[ ${plugin_map[$plug]} ]]; then
         # Add plugins with URLs
@@ -71,4 +71,23 @@ fi
 
 if [ -d /home/linuxbrew/.linuxbrew/bin ]; then
   eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)
+fi
+
+export TF_PLUGIN_CACHE_MAY_BREAK_DEPENDENCY_LOCK_FILE=true
+
+# Nim configuration
+if hash nim 2>/dev/null; then
+  # Add Nim binaries to PATH
+  export PATH="$HOME/.nimble/bin:$PATH"
+
+  # Nim compiler options for development
+  export NIM_OPTS="--hints:off --warnings:off"
+fi
+
+# Set global Nim version via asdf
+if [ -d "$ASDF_DIR" ] && hash asdf 2>/dev/null; then
+  # Global Nim version
+  if [ ! -f "$HOME/.tool-versions" ] || ! grep -q "^nim" "$HOME/.tool-versions"; then
+    asdf global nim 2.0.8
+  fi
 fi

@@ -108,6 +108,7 @@ fi
 
 if hash aws-vault 2>/dev/null; then 
 	eval "$(aws-vault --completion-script-zsh)"
+	export AWS_VAULT_BIOMETRICS=true
 fi
 
 if hash gr 2>/dev/null; then

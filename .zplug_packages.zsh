@@ -10,7 +10,6 @@ zplug "romkatv/powerlevel10k", as:theme, depth:1
 # Plugins
 zplug "zsh-users/zsh-completions"
 zplug "Tarrasch/zsh-autoenv"
-zplug "b4b4r07/enhancd", use:"init.sh"
 
 # ZSH completion from various sources
 zplug "zsh-users/zaw"
