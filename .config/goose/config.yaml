@@ -1,8 +1,5 @@
-GOOSE_MODE: smart_approve
-GOOSE_CONTEXT_STRATEGY: summarize
 GOOSE_MODEL: us.anthropic.claude-3-5-sonnet-20241022-v2:0
-AWS_PROFILE: Sandbox.AdministratorAccess
-GOOSE_PROVIDER: aws_bedrock
+GOOSE_MODE: smart_approve
 extensions:
   aider:
     args:
@@ -49,6 +46,17 @@ extensions:
     env_keys: []
     envs: {}
     name: context7
+    timeout: 300
+    type: stdio
+  datadog:
+    args: []
+    bundled: null
+    cmd: /Users/tylerstapler/.local/bin/datadog_mcp_cli
+    description: null
+    enabled: true
+    env_keys: []
+    envs: {}
+    name: datadog
     timeout: 300
     type: stdio
   developer:
@@ -180,21 +188,6 @@ extensions:
     name: serena
     timeout: 300
     type: stdio
-  terraform:
-    args:
-    - run
-    - -i
-    - --rm
-    - hashicorp/terraform-mcp-server
-    bundled: null
-    cmd: docker
-    description: null
-    enabled: false
-    env_keys: []
-    envs: {}
-    name: terraform
-    timeout: 300
-    type: stdio
   slack:
     args:
     - -y
@@ -212,3 +205,21 @@ extensions:
     name: slack
     timeout: 300
     type: stdio
+  terraform:
+    args:
+    - run
+    - -i
+    - --rm
+    - hashicorp/terraform-mcp-server
+    bundled: null
+    cmd: docker
+    description: null
+    enabled: false
+    env_keys: []
+    envs: {}
+    name: terraform
+    timeout: 300
+    type: stdio
+GOOSE_CONTEXT_STRATEGY: summarize
+GOOSE_PROVIDER: aws_bedrock
+AWS_PROFILE: Sandbox.AdministratorAccess
