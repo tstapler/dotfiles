@@ -40,8 +40,17 @@ Execute the structured analysis defined in the XML prompt below, with optional f
             <item>Read and comprehensively assess current TODO.md status and priorities</item>
             <item>Compare documented state with actual project implementation state</item>
             <item>Identify completed tasks requiring status updates and documentation cleanup</item>
+            <item>Scan for open bugs and assess severity levels</item>
             <item>Detect scope creep, context boundary violations, and non-atomic tasks</item>
-            <item>Update main TODO.md with links to detailed atomic breakdowns</item>
+            <item>Update main TODO.md with links to detailed atomic breakdowns and bug tracking</item>
+        </category>
+
+        <category name="Bug Discovery & Assessment">
+            <item>Scan docs/bugs/ directory for all open bug documentation</item>
+            <item>Identify critical and high-severity bugs requiring immediate attention</item>
+            <item>Assess bug impact on planned work and dependencies</item>
+            <item>Determine if bugs block any pending tasks</item>
+            <item>Evaluate bug fix effort using task sizing framework (1-4 hours)</item>
         </category>
 
         <category name="Context Analysis & Boundary Setting">
@@ -82,13 +91,16 @@ Execute the structured analysis defined in the XML prompt below, with optional f
 
     <approach>
         <step number="1" name="todo_analysis">
-            <title>TODO.md & Project State Analysis</title>
+            <title>TODO.md, Project State & Bug Analysis</title>
             <tasks>
                 <task>Read TODO.md and assess current documented state vs actual implementation</task>
+                <task>Scan docs/bugs/ directory for all open bug documentation</task>
+                <task>Identify critical and high-severity bugs requiring immediate attention</task>
                 <task>Identify completed tasks that need status updates</task>
                 <task>Detect scope creep and context boundary violations (>5 files or >4 hours)</task>
                 <task>Map existing `docs/tasks/` files and validate AIC compliance</task>
                 <task>Note outdated entries requiring cleanup</task>
+                <task>Assess if any bugs block pending tasks</task>
             </tasks>
         </step>
 
@@ -123,12 +135,15 @@ Execute the structured analysis defined in the XML prompt below, with optional f
         </step>
 
         <step number="5" name="strategic_recommendation">
-            <title>Strategic Next Step Recommendation</title>
+            <title>Bug-Aware Strategic Next Step Recommendation</title>
             <tasks>
+                <task>Check for critical bugs first - recommend immediate fix if found</task>
+                <task>Evaluate high-severity bugs against planned work priorities</task>
                 <task>Analyze dependencies to identify unblocked atomic tasks</task>
-                <task>Evaluate impact: which tasks unlock most value or remove bottlenecks</task>
-                <task>Consider context preparation: tasks with readily available complete context</task>
-                <task>Recommend specific atomic task with rationale and implementation approach</task>
+                <task>Evaluate impact: which tasks/bugs unlock most value or remove bottlenecks</task>
+                <task>Consider context preparation: work with readily available complete context</task>
+                <task>Recommend specific atomic task or bug fix with severity-aware rationale</task>
+                <task>Provide 3-5 options including both planned tasks and bug fixes</task>
             </tasks>
         </step>
 
@@ -162,13 +177,18 @@ Execute the structured analysis defined in the XML prompt below, with optional f
 
     <output_structure>
         <current_status_assessment>What's actually implemented vs documented in TODO.md</current_status_assessment>
+        <bug_summary>
+            <critical_bugs>Count and list of critical bugs requiring immediate attention</critical_bugs>
+            <high_severity_bugs>Count and list of high-severity bugs</high_severity_bugs>
+            <blocking_bugs>Bugs preventing planned work from proceeding</blocking_bugs>
+        </bug_summary>
         <completed_tasks_requiring_updates>Tasks finished but not marked complete</completed_tasks_requiring_updates>
         <context_boundary_analysis>Tasks violating 3-5 file or 4-hour limits</context_boundary_analysis>
         <atomic_task_breakdown>Decomposed tasks meeting AIC framework requirements</atomic_task_breakdown>
         <detailed_task_files>Generated/updated docs/tasks/ files with complete specifications</detailed_task_files>
-        <dependency_visualization>Sequential vs parallel task relationships</dependency_visualization>
-        <strategic_recommendation>Specific next atomic task with implementation approach</strategic_recommendation>
-        <context_preparation_guide>Files to load and understand for recommended task</context_preparation_guide>
+        <dependency_visualization>Sequential vs parallel task relationships, including bug blockers</dependency_visualization>
+        <strategic_recommendation>Specific next atomic task or bug fix with severity-aware rationale</strategic_recommendation>
+        <context_preparation_guide>Files to load and understand for recommended work</context_preparation_guide>
         <git_commit_summary>Documentation updates committed to version control</git_commit_summary>
     </output_structure>
 
@@ -188,21 +208,28 @@ Execute the structured analysis defined in the XML prompt below, with optional f
     </usage_patterns>
 
     <success_criteria>
-        <criterion>TODO.md accurately reflects current project state</criterion>
+        <criterion>TODO.md accurately reflects current project state including bugs</criterion>
+        <criterion>All open bugs identified and severity assessed</criterion>
+        <criterion>Critical and high-severity bugs surfaced prominently</criterion>
         <criterion>All tasks decomposed into context-bounded atomic units</criterion>
         <criterion>Complete documentation architecture with detailed task files</criterion>
-        <criterion>Clear next step recommendation with implementation approach</criterion>
+        <criterion>Clear next step recommendation (task or bug) with rationale</criterion>
+        <criterion>Bug-aware prioritization balancing planned work with issues</criterion>
         <criterion>Version control integration with descriptive commit messages</criterion>
         <criterion>Enhanced INVEST validation passed for all atomic tasks</criterion>
     </success_criteria>
 
     <additional_considerations>
         <consideration>Maintain focus on user-facing value delivery in all task recommendations</consideration>
+        <consideration>Critical bugs always override planned work - recommend immediate fix</consideration>
+        <consideration>High-severity bugs should be prioritized over non-critical planned tasks</consideration>
+        <consideration>Medium/Low bugs should be balanced with planned work based on context</consideration>
+        <consideration>Bug fixes must respect same context boundaries as tasks (3-5 files, 1-4 hours)</consideration>
         <consideration>Ensure each atomic task can be fully completed or not started (no partial states)</consideration>
-        <consideration>Validate that recommended tasks have complete context available</consideration>
-        <consideration>Consider LLM session optimization: tasks should fit comfortably in context windows</consideration>
+        <consideration>Validate that recommended work (task or bug) has complete context available</consideration>
+        <consideration>Consider LLM session optimization: work should fit comfortably in context windows</consideration>
         <consideration>Preserve architectural quality while maximizing development velocity</consideration>
-        <consideration>Keep TODO.md as single source of truth with links to detailed breakdowns</consideration>
+        <consideration>Keep TODO.md as single source of truth with links to detailed breakdowns and bug tracking</consideration>
     </additional_considerations>
 </prompt>
 ```

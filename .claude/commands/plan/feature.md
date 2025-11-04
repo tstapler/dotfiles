@@ -297,6 +297,26 @@ Execute the structured feature planning process defined in the XML prompt below 
                     </tasks>
                 </story>
             </story_breakdown>
+            <known_issues>
+                <section_description>Potential bugs identified during planning phase with mitigation strategies</section_description>
+                <bug number="001">
+                    <title>🐛 {Bug Category}: {Short Description} [SEVERITY: {Level}]</title>
+                    <description>Detailed description of potential issue</description>
+                    <mitigation>
+                        <strategy>Mitigation approach 1</strategy>
+                        <strategy>Mitigation approach 2</strategy>
+                    </mitigation>
+                    <files_likely_affected>
+                        <file>path/to/file1.java - Role in issue</file>
+                        <file>path/to/file2.java - Role in issue</file>
+                    </files_likely_affected>
+                    <prevention_strategy>
+                        <approach>Prevention approach 1</approach>
+                        <approach>Prevention approach 2</approach>
+                    </prevention_strategy>
+                    <related_tasks>Tasks that should address this issue</related_tasks>
+                </bug>
+            </known_issues>
             <dependency_visualization>ASCII diagram showing sequential and parallel task relationships</dependency_visualization>
             <integration_checkpoints>
                 <checkpoint after_story="1">What should be verifiable after Story 1?</checkpoint>
@@ -333,6 +353,8 @@ Execute the structured feature planning process defined in the XML prompt below 
         <standard>Provide complete mental model within each task scope</standard>
         <standard>Include concrete validation strategies and success criteria</standard>
         <standard>Map dependencies and integration points clearly</standard>
+        <standard>Proactively identify potential bugs during planning phase</standard>
+        <standard>Document bug mitigation and prevention strategies</standard>
         <standard>Optimize for LLM-assisted development workflow</standard>
         <standard>Commit documentation to version control with descriptive messages</standard>
     </quality_standards>
@@ -351,6 +373,8 @@ Execute the structured feature planning process defined in the XML prompt below 
         <check>Dependency relationships clearly mapped with visualization</check>
         <check>Implementation approach specified for each atomic task</check>
         <check>Validation strategies defined with concrete success criteria</check>
+        <check>Known Issues section included with proactive bug identification</check>
+        <check>Bug mitigation and prevention strategies documented</check>
         <check>Documentation committed to docs/tasks/{feature-name}.md</check>
         <check>Integration with project TODO.md established for discoverability</check>
     </success_validation>
