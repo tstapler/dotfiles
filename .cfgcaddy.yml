@@ -51,6 +51,8 @@ links:
     os: "Linux Darwin"
   - src: .claude/docs
     os: "Linux Darwin"
+  - src: .claude/skills
+    os: "Linux Darwin"
 
 ignore:
   # Globbing patterns to ignore when
@@ -58,6 +60,7 @@ ignore:
   - "README.md"
   - "TODO.md"
   - "CONVENTIONS.md"
+  - ".idea"
   - "*stapler*"
   - "cfgcaddy"
   - "*.git"
