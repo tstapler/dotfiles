@@ -1,0 +1,33 @@
+# Caddy reverse proxy for LiteLLM
+# Strips the ?beta=true query parameter that Bedrock doesn't support
+# and forwards requests to LiteLLM
+
+:47001 {
+    # Handle Anthropic native API with OAuth pass-through
+    # Strip beta query param and forward to Anthropic directly
+    handle /v1/messages* {
+        reverse_proxy https://api.anthropic.com {
+            header_up Host api.anthropic.com
+            # Forward all headers including Authorization
+            header_up -X-Forwarded-*
+        }
+    }
+
+    # Handle token counting endpoint
+    handle /v1/messages/count_tokens* {
+        reverse_proxy https://api.anthropic.com {
+            header_up Host api.anthropic.com
+            header_up -X-Forwarded-*
+        }
+    }
+
+    # All other requests go to LiteLLM (including /v1/chat/completions for Bedrock)
+    handle {
+        reverse_proxy localhost:47000
+    }
+
+    # Health check endpoint
+    handle /health {
+        reverse_proxy localhost:47000
+    }
+}

@@ -1,0 +1,12 @@
+# Environment file with secrets
+.env
+
+# Docker volumes
+prometheus_data/
+grafana_data/
+
+# Logs
+*.log
+
+# PID file
+.litellm.pid

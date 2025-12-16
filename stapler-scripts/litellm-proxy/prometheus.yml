@@ -1,0 +1,10 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'litellm'
+    static_configs:
+      # LiteLLM runs natively on host, use host.docker.internal to reach it from container
+      - targets: ['host.docker.internal:47000']
+    metrics_path: /metrics

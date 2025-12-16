@@ -1,0 +1,65 @@
+version: '3.8'
+
+# Supporting services for LiteLLM (which runs natively on host)
+# Ports: 47xxx range to avoid conflicts
+# LiteLLM (native): 47000, PostgreSQL: 47432, Prometheus: 47090, Grafana: 47300
+
+services:
+  # PostgreSQL database for LiteLLM
+  postgres:
+    image: mirror.gcr.io/postgres:16-alpine
+    container_name: litellm-postgres
+    restart: unless-stopped
+    ports:
+      - "47432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=litellm
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-litellm}
+      - POSTGRES_DB=litellm
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U litellm"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Optional: Prometheus for metrics
+  prometheus:
+    image: mirror.gcr.io/prom/prometheus:v3.2.1
+    container_name: litellm-prometheus
+    restart: unless-stopped
+    ports:
+      - "47090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=7d'
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # Optional: Grafana for dashboards
+  grafana:
+    image: mirror.gcr.io/grafana/grafana:11.5.2
+    container_name: litellm-grafana
+    restart: unless-stopped
+    ports:
+      - "47300:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    depends_on:
+      - prometheus
+
+volumes:
+  postgres_data:
+  prometheus_data:
+  grafana_data:
