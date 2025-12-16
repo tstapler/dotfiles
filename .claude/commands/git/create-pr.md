@@ -123,7 +123,7 @@ I'll verify all commits follow Conventional Commits format:
 
 ### Breaking Changes
 - Use `BREAKING CHANGE:` in footer OR
-- Append `!` after type/scope: `feat!:` or `feat(api)!:`
+- Append exclamation mark after type/scope: `feat!:` or `feat(api)!:`
 
 ## PR Description Generation
 

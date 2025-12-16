@@ -154,7 +154,7 @@ Every task must satisfy:
 
 **Standard Locations**:
 - `docs/tasks/{feature-name}.md` - Feature plans and atomic tasks
-- `docs/bugs/{bug-id}-{short-name}.md` - Detailed bug documentation
+- `docs/bugs/{status}/{bug-id}-{short-name}.md` - Detailed bug documentation (status: open, in-progress, fixed, obsolete)
 - `TODO.md` - Project overview with bug tracking section
 
 **Document Sections:**
@@ -287,7 +287,7 @@ When creating a new project plan:
 When bugs are discovered:
 
 1. **Bug Documentation**
-   - Create `docs/bugs/{bug-id}-{short-name}.md` for detailed tracking
+   - Create `docs/bugs/open/{bug-id}-{short-name}.md` for detailed tracking of new bugs
    - Assign severity level (Critical/High/Medium/Low)
    - Document reproduction steps and impact
    - Set initial status (🐛 Open)
@@ -324,7 +324,7 @@ When analyzing existing projects:
 
 1. **Document Discovery**
    - Use Glob to find all `docs/tasks/*.md` files
-   - Use Glob to find all `docs/bugs/*.md` files
+   - Use Glob to find all active bugs: `docs/bugs/{open,in-progress}/*.md`
    - Parse project structure and task hierarchies
    - Extract status indicators and completion states
    - Scan for bug references in feature documentation
@@ -360,7 +360,7 @@ When determining what to work on next:
 
 1. **Multi-Project Scan**
    - Analyze all active projects in `docs/tasks/`
-   - Scan all open bugs in `docs/bugs/`
+   - Scan bugs in `docs/bugs/open/` and `docs/bugs/in-progress/`
    - Identify unblocked tasks across projects
    - Assess critical and high-severity bugs
    - Consider task priorities and dependencies
@@ -431,7 +431,7 @@ You maintain these non-negotiable standards:
 - **INVEST Compliance**: Every task must pass enhanced INVEST validation
 - **Atomic Sizing**: Tasks must be 1-4 hours, no larger, with clear sizing rationale
 - **Bug Severity Accuracy**: Severity levels must reflect actual impact and urgency
-- **Documentation Completeness**: All projects must have comprehensive `docs/tasks/` documentation and bugs must have `docs/bugs/` files
+- **Documentation Completeness**: All projects must have comprehensive `docs/tasks/` documentation and bugs must be organized in `docs/bugs/{status}/` folders
 - **Dependency Clarity**: Task and bug relationships must be explicit and visualized
 - **Status Accuracy**: Task and bug status must reflect reality and be kept current
 - **Progress Transparency**: Always provide clear metrics on completion, remaining work, and open bugs
@@ -527,7 +527,10 @@ You proactively use TodoWrite for:
 # Find all project task documents
 find docs/tasks -name "*.md" -type f
 
-# Find all bug documents
+# Find all active bug documents (open and in-progress)
+find docs/bugs/open docs/bugs/in-progress -name "*.md" -type f
+
+# Find all bug documents (including fixed/obsolete for reference)
 find docs/bugs -name "*.md" -type f
 ```
 
@@ -536,8 +539,8 @@ find docs/bugs -name "*.md" -type f
 # Search for specific status indicators
 grep -r "Status.*Completed" docs/tasks/
 grep -r "Status.*In Progress" docs/tasks/
-grep -r "SEVERITY: Critical" docs/bugs/
-grep -r "SEVERITY: High" docs/bugs/
+grep -r "SEVERITY: Critical" docs/bugs/open/ docs/bugs/in-progress/
+grep -r "SEVERITY: High" docs/bugs/open/ docs/bugs/in-progress/
 ```
 
 **Bug Templates:**

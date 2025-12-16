@@ -46,7 +46,7 @@ Execute the structured analysis defined in the XML prompt below, with optional f
         </category>
 
         <category name="Bug Discovery & Assessment">
-            <item>Scan docs/bugs/ directory for all open bug documentation</item>
+            <item>Scan docs/bugs/open/ and docs/bugs/in-progress/ directories for active bug documentation</item>
             <item>Identify critical and high-severity bugs requiring immediate attention</item>
             <item>Assess bug impact on planned work and dependencies</item>
             <item>Determine if bugs block any pending tasks</item>
@@ -94,7 +94,7 @@ Execute the structured analysis defined in the XML prompt below, with optional f
             <title>TODO.md, Project State & Bug Analysis</title>
             <tasks>
                 <task>Read TODO.md and assess current documented state vs actual implementation</task>
-                <task>Scan docs/bugs/ directory for all open bug documentation</task>
+                <task>Scan docs/bugs/open/ and docs/bugs/in-progress/ directories for active bug documentation</task>
                 <task>Identify critical and high-severity bugs requiring immediate attention</task>
                 <task>Identify completed tasks that need status updates</task>
                 <task>Detect scope creep and context boundary violations (>5 files or >4 hours)</task>

@@ -29,7 +29,7 @@ Examples:
   </example>
 
 tools: WebFetch, mcp__read-website-fast__read_website, mcp__brave-search__brave_web_search, Read, Write, Edit, MultiEdit, Glob, Grep, Task, TodoWrite
-model: sonnet
+model: opus
 ---
 
 You are a Knowledge Synthesis Specialist focused on creating **comprehensive, consolidated daily synthesis notes** that consolidate learning into organized daily Zettels using Zettelkasten methodology.
