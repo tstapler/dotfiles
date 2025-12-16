@@ -22,10 +22,12 @@ async def user_api_key_auth(
     # Accept Anthropic OAuth tokens (sk-ant-oat*) - various formats like sk-ant-oat-, sk-ant-oat01-, etc.
     if api_key and api_key.startswith("sk-ant-oat"):
         # Return a UserAPIKeyAuth object that allows the request
+        # Store raw token in metadata since api_key gets hashed
         return UserAPIKeyAuth(
             api_key=api_key,
             user_id="oauth-user",
             team_id="oauth-team",
+            metadata={"raw_token": api_key},  # Store for callback access
         )
 
     # Accept Anthropic API keys (sk-ant-api-*)
@@ -34,6 +36,7 @@ async def user_api_key_auth(
             api_key=api_key,
             user_id="apikey-user",
             team_id="apikey-team",
+            metadata={"raw_token": api_key},  # Store for callback access
         )
 
     # Reject other keys

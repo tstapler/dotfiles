@@ -1,12 +1,22 @@
 # LiteLLM Proxy Configuration
-# Currently: AWS Bedrock only (Anthropic header forwarding not working with LiteLLM's auth)
-# The passthrough endpoint at /anthropic/v1/messages can be used for direct Anthropic access
+# Strategy: Anthropic API first, Bedrock fallback on quota/rate errors
+# OAuth passthrough via oauth_passthrough.py callback
 
 model_list:
   # ============================================
-  # CLAUDE OPUS 4.5 (Latest)
+  # CLAUDE OPUS 4.5 - PRIMARY (Anthropic Direct)
   # ============================================
   - model_name: claude-opus-4-5-20251101
+    litellm_params:
+      model: anthropic/claude-opus-4-5-20251101
+      configurable_clientside_auth_params: ["api_key"]
+    model_info:
+      id: anthropic-opus-4-5
+
+  # ============================================
+  # CLAUDE OPUS 4.5 - FALLBACK (Bedrock)
+  # ============================================
+  - model_name: claude-opus-4-5-20251101-bedrock
     litellm_params:
       model: bedrock/us.anthropic.claude-opus-4-5-20251101-v1:0
       aws_region_name: os.environ/AWS_REGION
@@ -14,9 +24,19 @@ model_list:
       id: bedrock-opus-4-5
 
   # ============================================
-  # CLAUDE SONNET 4.5 (Latest)
+  # CLAUDE SONNET 4.5 - PRIMARY (Anthropic Direct)
   # ============================================
   - model_name: claude-sonnet-4-5-20250929
+    litellm_params:
+      model: anthropic/claude-sonnet-4-5-20250929
+      configurable_clientside_auth_params: ["api_key"]
+    model_info:
+      id: anthropic-sonnet-4-5
+
+  # ============================================
+  # CLAUDE SONNET 4.5 - FALLBACK (Bedrock)
+  # ============================================
+  - model_name: claude-sonnet-4-5-20250929-bedrock
     litellm_params:
       model: bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0
       aws_region_name: os.environ/AWS_REGION
@@ -24,9 +44,19 @@ model_list:
       id: bedrock-sonnet-4-5
 
   # ============================================
-  # CLAUDE OPUS 4
+  # CLAUDE OPUS 4 - PRIMARY (Anthropic Direct)
   # ============================================
   - model_name: claude-opus-4-20250514
+    litellm_params:
+      model: anthropic/claude-opus-4-20250514
+      configurable_clientside_auth_params: ["api_key"]
+    model_info:
+      id: anthropic-opus-4
+
+  # ============================================
+  # CLAUDE OPUS 4 - FALLBACK (Bedrock)
+  # ============================================
+  - model_name: claude-opus-4-20250514-bedrock
     litellm_params:
       model: bedrock/us.anthropic.claude-opus-4-20250514-v1:0
       aws_region_name: os.environ/AWS_REGION
@@ -34,9 +64,19 @@ model_list:
       id: bedrock-opus-4
 
   # ============================================
-  # CLAUDE SONNET 4
+  # CLAUDE SONNET 4 - PRIMARY (Anthropic Direct)
   # ============================================
   - model_name: claude-sonnet-4-20250514
+    litellm_params:
+      model: anthropic/claude-sonnet-4-20250514
+      configurable_clientside_auth_params: ["api_key"]
+    model_info:
+      id: anthropic-sonnet-4
+
+  # ============================================
+  # CLAUDE SONNET 4 - FALLBACK (Bedrock)
+  # ============================================
+  - model_name: claude-sonnet-4-20250514-bedrock
     litellm_params:
       model: bedrock/us.anthropic.claude-sonnet-4-20250514-v1:0
       aws_region_name: os.environ/AWS_REGION
@@ -44,9 +84,19 @@ model_list:
       id: bedrock-sonnet-4
 
   # ============================================
-  # CLAUDE 3.7 SONNET (Extended Thinking)
+  # CLAUDE 3.7 SONNET - PRIMARY (Anthropic Direct)
   # ============================================
   - model_name: claude-3-7-sonnet-20250219
+    litellm_params:
+      model: anthropic/claude-3-7-sonnet-20250219
+      configurable_clientside_auth_params: ["api_key"]
+    model_info:
+      id: anthropic-3-7-sonnet
+
+  # ============================================
+  # CLAUDE 3.7 SONNET - FALLBACK (Bedrock)
+  # ============================================
+  - model_name: claude-3-7-sonnet-20250219-bedrock
     litellm_params:
       model: bedrock/us.anthropic.claude-3-7-sonnet-20250219-v1:0
       aws_region_name: os.environ/AWS_REGION
@@ -54,9 +104,19 @@ model_list:
       id: bedrock-3-7-sonnet
 
   # ============================================
-  # CLAUDE 3.5 SONNET
+  # CLAUDE 3.5 SONNET - PRIMARY (Anthropic Direct)
   # ============================================
   - model_name: claude-3-5-sonnet-20241022
+    litellm_params:
+      model: anthropic/claude-3-5-sonnet-20241022
+      configurable_clientside_auth_params: ["api_key"]
+    model_info:
+      id: anthropic-3-5-sonnet
+
+  # ============================================
+  # CLAUDE 3.5 SONNET - FALLBACK (Bedrock)
+  # ============================================
+  - model_name: claude-3-5-sonnet-20241022-bedrock
     litellm_params:
       model: bedrock/us.anthropic.claude-3-5-sonnet-20241022-v2:0
       aws_region_name: os.environ/AWS_REGION
@@ -64,9 +124,19 @@ model_list:
       id: bedrock-3-5-sonnet
 
   # ============================================
-  # CLAUDE 3.5 HAIKU
+  # CLAUDE 3.5 HAIKU - PRIMARY (Anthropic Direct)
   # ============================================
   - model_name: claude-3-5-haiku-20241022
+    litellm_params:
+      model: anthropic/claude-3-5-haiku-20241022
+      configurable_clientside_auth_params: ["api_key"]
+    model_info:
+      id: anthropic-3-5-haiku
+
+  # ============================================
+  # CLAUDE 3.5 HAIKU - FALLBACK (Bedrock)
+  # ============================================
+  - model_name: claude-3-5-haiku-20241022-bedrock
     litellm_params:
       model: bedrock/us.anthropic.claude-3-5-haiku-20241022-v1:0
       aws_region_name: os.environ/AWS_REGION
@@ -74,9 +144,39 @@ model_list:
       id: bedrock-3-5-haiku
 
   # ============================================
-  # CLAUDE 3 OPUS
+  # CLAUDE HAIKU 4.5 - PRIMARY (Anthropic Direct)
+  # ============================================
+  - model_name: claude-haiku-4-5-20251001
+    litellm_params:
+      model: anthropic/claude-haiku-4-5-20251001
+      configurable_clientside_auth_params: ["api_key"]
+    model_info:
+      id: anthropic-haiku-4-5
+
+  # ============================================
+  # CLAUDE HAIKU 4.5 - FALLBACK (Bedrock)
+  # ============================================
+  - model_name: claude-haiku-4-5-20251001-bedrock
+    litellm_params:
+      model: bedrock/us.anthropic.claude-haiku-4-5-20251001-v1:0
+      aws_region_name: os.environ/AWS_REGION
+    model_info:
+      id: bedrock-haiku-4-5
+
+  # ============================================
+  # CLAUDE 3 OPUS - PRIMARY (Anthropic Direct)
   # ============================================
   - model_name: claude-3-opus-20240229
+    litellm_params:
+      model: anthropic/claude-3-opus-20240229
+      configurable_clientside_auth_params: ["api_key"]
+    model_info:
+      id: anthropic-3-opus
+
+  # ============================================
+  # CLAUDE 3 OPUS - FALLBACK (Bedrock)
+  # ============================================
+  - model_name: claude-3-opus-20240229-bedrock
     litellm_params:
       model: bedrock/us.anthropic.claude-3-opus-20240229-v1:0
       aws_region_name: os.environ/AWS_REGION
@@ -84,9 +184,19 @@ model_list:
       id: bedrock-3-opus
 
   # ============================================
-  # CLAUDE 3 HAIKU
+  # CLAUDE 3 HAIKU - PRIMARY (Anthropic Direct)
   # ============================================
   - model_name: claude-3-haiku-20240307
+    litellm_params:
+      model: anthropic/claude-3-haiku-20240307
+      configurable_clientside_auth_params: ["api_key"]
+    model_info:
+      id: anthropic-3-haiku
+
+  # ============================================
+  # CLAUDE 3 HAIKU - FALLBACK (Bedrock)
+  # ============================================
+  - model_name: claude-3-haiku-20240307-bedrock
     litellm_params:
       model: bedrock/us.anthropic.claude-3-haiku-20240307-v1:0
       aws_region_name: os.environ/AWS_REGION
@@ -94,42 +204,83 @@ model_list:
       id: bedrock-3-haiku
 
   # ============================================
-  # MODEL ALIASES (Convenience names)
+  # MODEL ALIASES - Primary (Anthropic with fallback)
   # ============================================
   - model_name: claude-opus
+    litellm_params:
+      model: anthropic/claude-opus-4-5-20251101
+      configurable_clientside_auth_params: ["api_key"]
+    model_info:
+      id: alias-anthropic-opus
+
+  - model_name: claude-sonnet
+    litellm_params:
+      model: anthropic/claude-sonnet-4-5-20250929
+      configurable_clientside_auth_params: ["api_key"]
+    model_info:
+      id: alias-anthropic-sonnet
+
+  - model_name: claude-haiku
+    litellm_params:
+      model: anthropic/claude-haiku-4-5-20251001
+      configurable_clientside_auth_params: ["api_key"]
+    model_info:
+      id: alias-anthropic-haiku
+
+  # ============================================
+  # MODEL ALIASES - Bedrock only (explicit bypass)
+  # ============================================
+  - model_name: claude-opus-bedrock
     litellm_params:
       model: bedrock/us.anthropic.claude-opus-4-5-20251101-v1:0
       aws_region_name: os.environ/AWS_REGION
     model_info:
       id: alias-bedrock-opus
 
-  - model_name: claude-sonnet
+  - model_name: claude-sonnet-bedrock
     litellm_params:
       model: bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0
       aws_region_name: os.environ/AWS_REGION
     model_info:
       id: alias-bedrock-sonnet
 
-  - model_name: claude-haiku
+  - model_name: claude-haiku-bedrock
     litellm_params:
-      model: bedrock/us.anthropic.claude-3-5-haiku-20241022-v1:0
+      model: bedrock/us.anthropic.claude-haiku-4-5-20251001-v1:0
       aws_region_name: os.environ/AWS_REGION
     model_info:
       id: alias-bedrock-haiku
 
-# Router settings
+# Router settings with fallback configuration
 router_settings:
   num_retries: 3
   timeout: 120
   allowed_fails: 1
   cooldown_time: 60
   retry_after: 5
+  fallbacks:
+    # Versioned models - Anthropic to Bedrock fallback
+    - {"claude-opus-4-5-20251101": ["claude-opus-4-5-20251101-bedrock"]}
+    - {"claude-sonnet-4-5-20250929": ["claude-sonnet-4-5-20250929-bedrock"]}
+    - {"claude-opus-4-20250514": ["claude-opus-4-20250514-bedrock"]}
+    - {"claude-sonnet-4-20250514": ["claude-sonnet-4-20250514-bedrock"]}
+    - {"claude-3-7-sonnet-20250219": ["claude-3-7-sonnet-20250219-bedrock"]}
+    - {"claude-3-5-sonnet-20241022": ["claude-3-5-sonnet-20241022-bedrock"]}
+    - {"claude-3-5-haiku-20241022": ["claude-3-5-haiku-20241022-bedrock"]}
+    - {"claude-haiku-4-5-20251001": ["claude-haiku-4-5-20251001-bedrock"]}
+    - {"claude-3-opus-20240229": ["claude-3-opus-20240229-bedrock"]}
+    - {"claude-3-haiku-20240307": ["claude-3-haiku-20240307-bedrock"]}
+    # Aliases - Anthropic to Bedrock fallback
+    - {"claude-opus": ["claude-opus-bedrock"]}
+    - {"claude-sonnet": ["claude-sonnet-bedrock"]}
+    - {"claude-haiku": ["claude-haiku-bedrock"]}
 
 # LiteLLM settings
 litellm_settings:
   num_retries: 3
   request_timeout: 300
   drop_params: true
+  callbacks: [oauth_passthrough.proxy_handler_instance]
 
 # General proxy settings
 general_settings:
@@ -138,7 +289,10 @@ general_settings:
   custom_auth: custom_auth.user_api_key_auth
   # Disable background health checks
   enable_health_check: false
+  # Forward client headers (including Authorization) to LLM API
+  forward_client_headers_to_llm_api: true
   # Passthrough endpoint for direct Anthropic access (OAuth tokens work here)
+  # NOTE: /v1/messages goes through normal routing for fallback support
   pass_through_endpoints:
     - path: "/anthropic/v1/messages"
       target: "https://api.anthropic.com/v1/messages"
@@ -147,3 +301,4 @@ general_settings:
 # Environment variables reference:
 # - AWS_PROFILE: AWS SSO profile with Bedrock access
 # - AWS_REGION: AWS region (e.g., us-west-2)
+# - DATABASE_URL: Database connection string (optional)

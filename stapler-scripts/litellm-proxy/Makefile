@@ -69,6 +69,7 @@ up: postgres-up
 		AWS_SHARED_CREDENTIALS_FILE=$$HOME/.aws/credentials \
 		AWS_PROFILE=$$AWS_PROFILE_CLEAN \
 		AWS_REGION=$$AWS_REGION_CLEAN \
+		PYTHONPATH="$(SCRIPT_DIR):$$PYTHONPATH" \
 		nohup uv tool run litellm --config "$(SCRIPT_DIR)/config.yaml" --port $(LITELLM_PORT) --num_workers 4 > "$(SCRIPT_DIR)/litellm.log" 2>&1 & \
 		echo $$! > "$(LITELLM_PID_FILE)"; \
 		sleep 2; \
