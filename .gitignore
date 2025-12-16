@@ -272,3 +272,15 @@ cython_debug/
 
 .aider*
 !.aider.conf.yml
+
+# Logs (may contain sensitive info)
+logs/
+*.log
+
+# LiteILM proxy sensitive files
+stapler-scripts/litellm-proxy/.env
+stapler-scripts/litellm-proxy/*.log
+stapler-scripts/litellm-proxy/.litellm.pid
+
+# IDE migration files (not needed in repo)
+.idea/copilot.data.migration.*.xml
