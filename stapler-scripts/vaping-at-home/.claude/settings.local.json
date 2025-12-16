@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/tylerstapler/dotfiles/.claude/agents/**)",
+      "Read(//Users/tylerstapler/dotfiles/.config/mcp/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
