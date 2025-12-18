@@ -284,3 +284,6 @@ stapler-scripts/litellm-proxy/.litellm.pid
 
 # IDE migration files (not needed in repo)
 .idea/copilot.data.migration.*.xml
+
+# Claude Code local settings
+.claude/settings.local.json
