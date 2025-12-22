@@ -1,6 +1,8 @@
 # LiteLLM Proxy
 
-OpenAI-compatible proxy with Anthropic primary and AWS Bedrock fallback.
+OpenAI-compatible proxy with **automatic Claude API → Bedrock fallback** on rate limits.
+
+**Key Feature**: Uses Claude's direct API first (faster, uses your Claude subscription), automatically falls back to AWS Bedrock when rate limited. No user interaction required.
 
 **Runs natively** (not in Docker) to support AWS SSO browser authentication prompts.
 
@@ -126,13 +128,52 @@ export ANTHROPIC_API_KEY="<your-litellm-master-key>"
 
 ## Fallback Behavior
 
-1. Primary: Anthropic Direct API
-2. Fallback: AWS Bedrock (triggered on rate limits or errors)
+### Routing Priority
 
-The proxy automatically:
-- Retries failed requests (2 retries per provider)
-- Cools down failing providers for 60s
-- Falls back to Bedrock when Anthropic limits are hit
+1. **Primary**: Claude API (Anthropic Direct) - uses your OAuth token
+2. **Fallback**: AWS Bedrock - triggered automatically on rate limits (429)
+
+### How It Works
+
+```
+Request → Claude API (OAuth token)
+              ↓
+         Rate limited? (429)
+              ↓
+         Yes → Bedrock (AWS credentials)
+              ↓
+         Response
+```
+
+### Configuration
+
+The proxy automatically handles rate limits without user intervention:
+
+| Setting | Value | Description |
+|---------|-------|-------------|
+| `allowed_fails` | 1 | Fallback after first rate limit |
+| `cooldown_time` | 300s | Primary model cooldown (5 min) |
+| `retry_policy.RateLimitError` | 0 retries | Immediate fallback on 429 |
+
+### Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `CLAUDE_CODE_OAUTH_TOKEN` | No* | OAuth token for Claude API (primary) |
+| `AWS_PROFILE` | Yes | AWS SSO profile for Bedrock (fallback) |
+| `AWS_REGION` | Yes | AWS region (e.g., us-west-2) |
+
+*Claude Code passes its OAuth token in requests automatically. Set `CLAUDE_CODE_OAUTH_TOKEN` only if you want to use a specific token for all requests.
+
+### Testing Fallback
+
+```bash
+# Test the complete fallback flow
+./test-proxy.sh fallback
+
+# Test with specific OAuth token
+CLAUDE_CODE_OAUTH_TOKEN="sk-ant-oat-..." ./test-proxy.sh fallback
+```
 
 ## Model Management
 

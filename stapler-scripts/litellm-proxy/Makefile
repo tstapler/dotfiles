@@ -56,6 +56,11 @@ postgres-up:
 	done
 
 # Start LiteLLM proxy (native, not Docker)
+# Priority: Claude API (OAuth) first, Bedrock fallback on rate limits
+#
+# IMPORTANT: CLAUDE_CODE_OAUTH_TOKEN is passed as ANTHROPIC_API_KEY to LiteLLM.
+# This enables the built-in Anthropic authentication for primary path.
+# Bedrock fallback uses AWS credentials (AWS_PROFILE/AWS_REGION).
 up: postgres-up
 	@if [ -f "$(LITELLM_PID_FILE)" ] && kill -0 $$(cat "$(LITELLM_PID_FILE)") 2>/dev/null; then \
 		echo "LiteLLM already running (PID $$(cat $(LITELLM_PID_FILE)))"; \
@@ -63,18 +68,28 @@ up: postgres-up
 		echo "Starting LiteLLM proxy on port $(LITELLM_PORT)..."; \
 		AWS_PROFILE_CLEAN=$$(echo "$${AWS_PROFILE:-Sandbox.AdministratorAccess}" | tr -d '"'); \
 		AWS_REGION_CLEAN=$$(echo "$${AWS_REGION:-us-west-2}" | tr -d '"'); \
+		OAUTH_TOKEN="$${CLAUDE_CODE_OAUTH_TOKEN:-}"; \
+		if [ -n "$$OAUTH_TOKEN" ]; then \
+			echo "Using OAuth token from CLAUDE_CODE_OAUTH_TOKEN as ANTHROPIC_API_KEY"; \
+		else \
+			echo "No CLAUDE_CODE_OAUTH_TOKEN set - will rely on request tokens"; \
+		fi; \
 		DATABASE_URL=$(DATABASE_URL) \
 		HOME=$$HOME \
 		AWS_CONFIG_FILE=$$HOME/.aws/config \
 		AWS_SHARED_CREDENTIALS_FILE=$$HOME/.aws/credentials \
 		AWS_PROFILE=$$AWS_PROFILE_CLEAN \
 		AWS_REGION=$$AWS_REGION_CLEAN \
+		ANTHROPIC_API_KEY="$$OAUTH_TOKEN" \
+		CLAUDE_CODE_OAUTH_TOKEN="$$OAUTH_TOKEN" \
 		PYTHONPATH="$(SCRIPT_DIR):$$PYTHONPATH" \
-		nohup uv tool run litellm --config "$(SCRIPT_DIR)/config.yaml" --port $(LITELLM_PORT) --num_workers 4 > "$(SCRIPT_DIR)/litellm.log" 2>&1 & \
+		nohup uv tool run litellm --config "$(SCRIPT_DIR)/config.yaml" --host 127.0.0.1 --port $(LITELLM_PORT) --num_workers 1 --debug > "$(SCRIPT_DIR)/litellm.log" 2>&1 & \
 		echo $$! > "$(LITELLM_PID_FILE)"; \
 		sleep 2; \
 		if kill -0 $$(cat "$(LITELLM_PID_FILE)") 2>/dev/null; then \
 			echo "LiteLLM started (PID $$(cat $(LITELLM_PID_FILE)))"; \
+			echo ""; \
+			echo "Routing: Claude API (primary) -> Bedrock (fallback on 429)"; \
 		else \
 			echo "Failed to start LiteLLM. Check $(SCRIPT_DIR)/litellm.log"; \
 			rm -f "$(LITELLM_PID_FILE)"; \
