@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.claude-proxy</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/opt/homebrew/bin/uv</string>
+        <string>run</string>
+        <string>python</string>
+        <string>main.py</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/tylerstapler/dotfiles/stapler-scripts/claude-proxy</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>CLAUDE_CODE_OAUTH_TOKEN</key>
+        <string>INSERT_OAUTH_TOKEN_HERE</string>
+        <key>AWS_PROFILE</key>
+        <string>Sandbox.AdministratorAccess</string>
+        <key>AWS_REGION</key>
+        <string>us-west-2</string>
+        <key>PROXY_PORT</key>
+        <string>47000</string>
+    </dict>
+    <key>StandardOutPath</key>
+    <string>/tmp/claude-proxy.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/claude-proxy.error.log</string>
+    <key>KeepAlive</key>
+    <true/>
+    <key>RunAtLoad</key>
+    <true/>
+</dict>
+</plist>
