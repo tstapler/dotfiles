@@ -2,6 +2,8 @@
 title: Synthesize Knowledge from External Sources
 description: Analyze external content and create comprehensive daily synthesis notes that consolidate all learning into a single reviewable daily Zettel
 arguments: [source_url, topic_focus]
+tools: Read, Write, Edit, MultiEdit, Glob, Grep, WebFetch, mcp__read-website-fast__read_website, mcp__brave-search__brave_web_search, Task, TodoWrite, SlashCommand
+model: opus
 ---
 
 # Knowledge Synthesis and Integration Process
@@ -147,6 +149,28 @@ I'll verify:
 - Source attribution is present and clickable
 - Cross-references to existing pages are appropriate
 - Semantic tags are applied (3-5 per section)
+
+## Fallback Strategy for Permission Failures
+
+If Write permissions are not available:
+
+1. **Analysis Mode**: Provide comprehensive analysis without file modifications
+   - Generate synthesis content in markdown code blocks
+   - Provide intended file paths for manual saving
+   - List all topics that need Zettel creation
+   - Identify existing pages that should be updated
+
+2. **Read-Only Operations**: Focus on what can be done
+   - Search existing knowledge base for related content
+   - Identify gaps and missing pages
+   - Provide structured recommendations
+   - Generate content ready for copy-paste
+
+3. **User Guidance**: Clear instructions for manual actions
+   - Exact file paths where content should be saved
+   - Commands to run for validation
+   - Integration steps for journal entries
+   - Verification checklist
 
 ## Example Daily Zettel Structure
 
