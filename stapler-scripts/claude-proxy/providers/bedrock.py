@@ -119,7 +119,8 @@ class BedrockProvider(Provider):
         bedrock_body = body.copy()
         bedrock_body["anthropic_version"] = "bedrock-2023-05-31"
 
-        # Remove model field (model is specified via modelId parameter)
+        # Remove unsupported parameters and model (model is specified via modelId parameter)
+        bedrock_body.pop("stream", None)
         bedrock_body.pop("model", None)
 
         try:
