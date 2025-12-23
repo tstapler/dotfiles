@@ -10,7 +10,13 @@ class AnthropicProvider(Provider):
 
     def __init__(self):
         self.base_url = "https://api.anthropic.com"
-        self.client = httpx.AsyncClient(timeout=60.0)
+        # Timeout settings for long-running requests
+        # connect: 10s to establish connection
+        # read: 600s (10min) to read response chunks (for long streaming responses)
+        # write: 30s to write request
+        # pool: 30s to acquire connection from pool
+        timeout = httpx.Timeout(10.0, read=600.0, write=30.0, pool=30.0)
+        self.client = httpx.AsyncClient(timeout=timeout)
 
     @property
     def name(self) -> str:
