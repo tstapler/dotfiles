@@ -1,11 +1,12 @@
 # Claude Proxy Makefile
 
-.PHONY: help install uninstall start stop restart status logs error-logs clean deps update-token
+.PHONY: help install uninstall update start stop restart status logs error-logs clean deps update-token
 
 help:
 	@echo "Claude Proxy Management Commands:"
 	@echo "  make install       - Install and start proxy as LaunchAgent"
 	@echo "  make uninstall     - Stop and remove proxy LaunchAgent"
+	@echo "  make update        - Update code, plist, and restart proxy"
 	@echo "  make start         - Start the proxy"
 	@echo "  make stop          - Stop the proxy"
 	@echo "  make restart       - Restart the proxy"
@@ -29,6 +30,25 @@ install: deps
 	@launchctl load ~/Library/LaunchAgents/com.claude-proxy.plist
 	@echo "Claude Proxy installed and started"
 	@echo "Proxy running at: http://localhost:47000"
+
+# Update proxy (refresh plist and restart)
+update: deps
+	@echo "Updating Claude Proxy..."
+	@if [ -f ~/Library/LaunchAgents/com.claude-proxy.plist ]; then \
+		echo "Stopping proxy..."; \
+		launchctl unload ~/Library/LaunchAgents/com.claude-proxy.plist 2>/dev/null || true; \
+	fi
+	@echo "Updating plist..."
+	@/bin/cp -f com.claude-proxy.plist ~/Library/LaunchAgents/com.claude-proxy.plist
+	@echo "Starting proxy with updated code..."
+	@launchctl load ~/Library/LaunchAgents/com.claude-proxy.plist
+	@sleep 4
+	@echo ""
+	@if curl -s http://localhost:47000/health | grep -q "healthy"; then \
+		echo "✅ Claude Proxy updated and running"; \
+	else \
+		echo "⚠️  Proxy may not be running properly - check logs"; \
+	fi
 
 # Uninstall proxy LaunchAgent
 uninstall:

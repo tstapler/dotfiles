@@ -79,10 +79,11 @@ class BedrockProvider(Provider):
 
         # Prepare Bedrock request
         bedrock_body = body.copy()
-        bedrock_body["model"] = bedrock_model
+        bedrock_body["anthropic_version"] = "bedrock-2023-05-31"
 
-        # Remove unsupported parameters
+        # Remove unsupported parameters and model (model is specified via modelId parameter)
         bedrock_body.pop("stream", None)
+        bedrock_body.pop("model", None)
 
         try:
             # Synchronous call wrapped in async
@@ -116,7 +117,10 @@ class BedrockProvider(Provider):
 
         # Prepare Bedrock request
         bedrock_body = body.copy()
-        bedrock_body["model"] = bedrock_model
+        bedrock_body["anthropic_version"] = "bedrock-2023-05-31"
+
+        # Remove model field (model is specified via modelId parameter)
+        bedrock_body.pop("model", None)
 
         try:
             # Invoke with streaming
