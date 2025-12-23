@@ -1,7 +1,7 @@
 """Fallback handler for provider orchestration."""
 import time
 from typing import Dict, Any, List, AsyncIterator, Optional
-from providers import Provider, RateLimitError
+from providers import Provider, RateLimitError, ValidationError
 import config
 
 
@@ -53,6 +53,11 @@ class FallbackHandler:
                 last_error = e
                 continue
 
+            except ValidationError as e:
+                # Validation errors are client errors - don't retry with other providers
+                print(f"Validation error from {provider.name}: {e}")
+                raise
+
             except Exception as e:
                 print(f"Error with {provider.name}: {e}")
                 last_error = e
@@ -91,6 +96,11 @@ class FallbackHandler:
                 self._set_cooldown(provider.name)
                 last_error = e
                 continue
+
+            except ValidationError as e:
+                # Validation errors are client errors - don't retry with other providers
+                print(f"Validation error from {provider.name}: {e}")
+                raise
 
             except Exception as e:
                 print(f"Error with {provider.name}: {e}")

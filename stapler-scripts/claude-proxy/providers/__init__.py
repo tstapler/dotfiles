@@ -8,6 +8,11 @@ class RateLimitError(Exception):
     pass
 
 
+class ValidationError(Exception):
+    """Raised when request parameters are invalid (4xx errors)."""
+    pass
+
+
 class Provider(ABC):
     """Abstract base class for API providers."""
 

@@ -2,7 +2,7 @@
 import httpx
 import json
 from typing import Dict, Any, AsyncIterator, Optional
-from . import Provider, RateLimitError
+from . import Provider, RateLimitError, ValidationError
 
 
 class AnthropicProvider(Provider):
@@ -67,6 +67,10 @@ class AnthropicProvider(Provider):
         if response.status_code == 429:
             raise RateLimitError("Rate limit exceeded")
 
+        if 400 <= response.status_code < 500:
+            error_text = response.text
+            raise ValidationError(f"Anthropic API error ({response.status_code}): {error_text}")
+
         if response.status_code != 200:
             error_text = response.text
             raise Exception(f"Anthropic API error ({response.status_code}): {error_text}")
@@ -99,6 +103,10 @@ class AnthropicProvider(Provider):
         ) as response:
             if response.status_code == 429:
                 raise RateLimitError("Rate limit exceeded")
+
+            if 400 <= response.status_code < 500:
+                error_text = await response.aread()
+                raise ValidationError(f"Anthropic API error ({response.status_code}): {error_text}")
 
             if response.status_code != 200:
                 error_text = await response.aread()

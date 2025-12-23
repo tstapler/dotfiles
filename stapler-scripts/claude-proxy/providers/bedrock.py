@@ -2,7 +2,7 @@
 import json
 import boto3
 from typing import Dict, Any, AsyncIterator, Optional
-from . import Provider, RateLimitError
+from . import Provider, RateLimitError, ValidationError
 import config
 
 
@@ -100,6 +100,8 @@ class BedrockProvider(Provider):
 
         except self.client.exceptions.ThrottlingException:
             raise RateLimitError("Bedrock rate limit exceeded")
+        except self.client.exceptions.ValidationException as e:
+            raise ValidationError(f"Bedrock validation error: {str(e)}")
         except Exception as e:
             raise Exception(f"Bedrock error: {str(e)}")
 
@@ -149,5 +151,7 @@ class BedrockProvider(Provider):
 
         except self.client.exceptions.ThrottlingException:
             raise RateLimitError("Bedrock rate limit exceeded")
+        except self.client.exceptions.ValidationException as e:
+            raise ValidationError(f"Bedrock validation error: {str(e)}")
         except Exception as e:
             raise Exception(f"Bedrock streaming error: {str(e)}")

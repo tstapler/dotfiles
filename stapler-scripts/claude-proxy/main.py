@@ -57,7 +57,7 @@ async def messages_endpoint(request: Request):
                         "type": "error",
                         "error": {"type": "api_error", "message": str(e)}
                     }
-                    yield f"data: {json.dumps(error_event)}\n"
+                    yield f"data: {json.dumps(error_event)}\n\n"
 
             return StreamingResponse(
                 generate(),
@@ -118,7 +118,7 @@ async def openai_compatibility_endpoint(request: Request):
                         "type": "error",
                         "error": {"type": "api_error", "message": str(e)}
                     }
-                    yield f"data: {json.dumps(error_event)}\n"
+                    yield f"data: {json.dumps(error_event)}\n\n"
 
             return StreamingResponse(
                 generate(),
