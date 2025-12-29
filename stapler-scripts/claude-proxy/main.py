@@ -4,6 +4,7 @@ from fastapi.responses import StreamingResponse, JSONResponse
 from typing import Dict, Any
 import json
 import logging
+import time
 
 from auth import get_auth_from_request
 from providers.anthropic import AnthropicProvider
@@ -19,6 +20,10 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Request duration thresholds for monitoring
+SLOW_REQUEST_THRESHOLD = 30  # seconds
+BLOCKING_REQUEST_THRESHOLD = 60  # seconds
+
 # Initialize FastAPI app
 app = FastAPI(title="Claude Proxy", version="1.0.0")
 
@@ -28,6 +33,24 @@ bedrock = BedrockProvider()
 
 # Create fallback handler with provider priority
 fallback = FallbackHandler([anthropic, bedrock])
+
+
+@app.middleware("http")
+async def monitor_request_duration(request: Request, call_next):
+    """Monitor request duration to detect blocking operations."""
+    start_time = time.time()
+    response = await call_next(request)
+    duration = time.time() - start_time
+
+    # Log slow requests
+    if duration > BLOCKING_REQUEST_THRESHOLD:
+        logger.error(f"⚠️  BLOCKING REQUEST: {request.url.path} took {duration:.1f}s (threshold: {BLOCKING_REQUEST_THRESHOLD}s)")
+    elif duration > SLOW_REQUEST_THRESHOLD:
+        logger.warning(f"🐌 Slow request: {request.url.path} took {duration:.1f}s")
+
+    # Add duration header for monitoring
+    response.headers["X-Request-Duration"] = f"{duration:.2f}"
+    return response
 
 
 @app.get("/health")
@@ -178,4 +201,16 @@ async def root():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=config.PROXY_PORT)
+
+    # Note: workers > 1 requires passing app as import string
+    # Each worker gets its own process and event loop
+    uvicorn.run(
+        "main:app",  # Import string required for multi-worker mode
+        host="127.0.0.1",
+        port=config.PROXY_PORT,
+        workers=config.WORKERS,
+        log_level="info",
+        # Enable asyncio debug mode in each worker
+        loop="asyncio",
+        access_log=True
+    )

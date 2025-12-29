@@ -2,7 +2,7 @@
 import time
 import logging
 from typing import Dict, Any, List, AsyncIterator, Optional
-from providers import Provider, RateLimitError, ValidationError
+from providers import Provider, RateLimitError, ValidationError, TimeoutError
 import config
 
 logger = logging.getLogger(__name__)
@@ -44,27 +44,45 @@ class FallbackHandler:
                 logger.debug(f"Skipping {provider.name} (cooldown)")
                 continue
 
-            try:
-                logger.info(f"→ {provider.name}")
-                result = await provider.send_message(body, token, auth_type, headers)
-                logger.info(f"✓ {provider.name}")
-                return result
+            # Retry logic for the current provider
+            max_retries = config.BEDROCK_MAX_RETRIES if provider.name == "bedrock" else 1
+            for attempt in range(max_retries):
+                try:
+                    if attempt > 0:
+                        logger.info(f"↻ {provider.name} (retry {attempt}/{max_retries})")
+                    else:
+                        logger.info(f"→ {provider.name}")
 
-            except RateLimitError as e:
-                logger.warning(f"✗ {provider.name}: rate limit")
-                self._set_cooldown(provider.name)
-                last_error = e
-                continue
+                    result = await provider.send_message(body, token, auth_type, headers)
+                    logger.info(f"✓ {provider.name}")
+                    return result
 
-            except ValidationError as e:
-                # Validation errors are client errors - don't retry with other providers
-                logger.error(f"✗ {provider.name}: validation error - {e}")
-                raise
+                except TimeoutError as e:
+                    logger.warning(f"⏱ {provider.name}: timeout (attempt {attempt + 1}/{max_retries})")
+                    last_error = e
+                    if attempt + 1 >= max_retries:
+                        # Exhausted retries, move to next provider
+                        break
+                    # Retry the same provider
+                    continue
 
-            except Exception as e:
-                logger.error(f"✗ {provider.name}: {e}")
-                last_error = e
-                continue
+                except RateLimitError as e:
+                    logger.warning(f"✗ {provider.name}: rate limit")
+                    # Only put Anthropic in cooldown, never Bedrock
+                    if provider.name != "bedrock":
+                        self._set_cooldown(provider.name)
+                    last_error = e
+                    break
+
+                except ValidationError as e:
+                    # Validation errors are client errors - don't retry with other providers
+                    logger.error(f"✗ {provider.name}: validation error - {e}")
+                    raise
+
+                except Exception as e:
+                    logger.error(f"✗ {provider.name}: {e}")
+                    last_error = e
+                    break
 
         # All providers failed
         if last_error:
@@ -87,28 +105,46 @@ class FallbackHandler:
                 logger.debug(f"Skipping {provider.name} (cooldown)")
                 continue
 
-            try:
-                logger.info(f"⟳ {provider.name}")
-                async for chunk in provider.stream_message(body, token, auth_type, headers):
-                    yield chunk
-                logger.info(f"✓ {provider.name} stream")
-                return
+            # Retry logic for the current provider
+            max_retries = config.BEDROCK_MAX_RETRIES if provider.name == "bedrock" else 1
+            for attempt in range(max_retries):
+                try:
+                    if attempt > 0:
+                        logger.info(f"↻ {provider.name} stream (retry {attempt}/{max_retries})")
+                    else:
+                        logger.info(f"⟳ {provider.name}")
 
-            except RateLimitError as e:
-                logger.warning(f"✗ {provider.name}: rate limit")
-                self._set_cooldown(provider.name)
-                last_error = e
-                continue
+                    async for chunk in provider.stream_message(body, token, auth_type, headers):
+                        yield chunk
+                    logger.info(f"✓ {provider.name} stream")
+                    return
 
-            except ValidationError as e:
-                # Validation errors are client errors - don't retry with other providers
-                logger.error(f"✗ {provider.name}: validation error - {e}")
-                raise
+                except TimeoutError as e:
+                    logger.warning(f"⏱ {provider.name}: stream timeout (attempt {attempt + 1}/{max_retries})")
+                    last_error = e
+                    if attempt + 1 >= max_retries:
+                        # Exhausted retries, move to next provider
+                        break
+                    # Retry the same provider
+                    continue
 
-            except Exception as e:
-                logger.error(f"✗ {provider.name}: {e}")
-                last_error = e
-                continue
+                except RateLimitError as e:
+                    logger.warning(f"✗ {provider.name}: rate limit")
+                    # Only put Anthropic in cooldown, never Bedrock
+                    if provider.name != "bedrock":
+                        self._set_cooldown(provider.name)
+                    last_error = e
+                    break
+
+                except ValidationError as e:
+                    # Validation errors are client errors - don't retry with other providers
+                    logger.error(f"✗ {provider.name}: validation error - {e}")
+                    raise
+
+                except Exception as e:
+                    logger.error(f"✗ {provider.name}: {e}")
+                    last_error = e
+                    break
 
         # All providers failed
         if last_error:

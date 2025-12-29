@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(launchctl:*)",
+      "Bash(lsof:*)",
+      "Bash(kill:*)",
+      "Bash(curl:*)",
+      "Bash(/bin/cp:*)",
+      "Bash(timeout:*)",
+      "Bash(if [ -n \"$CLAUDE_CODE_OAUTH_TOKEN\" ])",
+      "Bash(then echo \"Token is set\")",
+      "Bash(else echo \"Token not set - please set CLAUDE_CODE_OAUTH_TOKEN\")",
+      "Bash(fi)",
+      "Bash(xargs kill:*)",
+      "Bash(./scripts/jar-inspector.py:*)",
+      "Bash(./scripts/safe-clone.sh:*)",
+      "Bash(./scripts/binary-analyzer.sh:*)",
+      "Bash(ps:*)",
+      "Bash(AWS_PROFILE=Sandbox.AdministratorAccess aws sts get-caller-identity:*)",
+      "Bash(pgrep:*)",
+      "Bash(xargs ps:*)",
+      "Bash(pkill:*)",
+      "WebFetch(domain:pypi.org)",
+      "WebFetch(domain:github.com)",
+      "Bash(git clone:*)"
+    ]
+  }
+}

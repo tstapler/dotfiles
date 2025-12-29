@@ -13,6 +13,11 @@ class ValidationError(Exception):
     pass
 
 
+class TimeoutError(Exception):
+    """Raised when a request times out (retryable)."""
+    pass
+
+
 class Provider(ABC):
     """Abstract base class for API providers."""
 
