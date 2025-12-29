@@ -3,12 +3,21 @@ from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import StreamingResponse, JSONResponse
 from typing import Dict, Any
 import json
+import logging
 
 from auth import get_auth_from_request
 from providers.anthropic import AnthropicProvider
 from providers.bedrock import BedrockProvider
 from fallback import FallbackHandler
 import config
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger(__name__)
 
 # Initialize FastAPI app
 app = FastAPI(title="Claude Proxy", version="1.0.0")
@@ -76,7 +85,7 @@ async def messages_endpoint(request: Request):
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Error in messages endpoint: {e}")
+        logger.error(f"Error in messages endpoint: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 

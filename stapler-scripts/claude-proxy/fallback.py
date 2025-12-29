@@ -1,8 +1,11 @@
 """Fallback handler for provider orchestration."""
 import time
+import logging
 from typing import Dict, Any, List, AsyncIterator, Optional
 from providers import Provider, RateLimitError, ValidationError
 import config
+
+logger = logging.getLogger(__name__)
 
 
 class FallbackHandler:
@@ -23,7 +26,7 @@ class FallbackHandler:
         if seconds is None:
             seconds = config.COOLDOWN_SECONDS
         self.cooldowns[provider_name] = time.time() + seconds
-        print(f"Provider {provider_name} in cooldown for {seconds} seconds")
+        logger.warning(f"Provider {provider_name} in cooldown for {seconds}s")
 
     async def send_message(
         self,
@@ -38,28 +41,28 @@ class FallbackHandler:
         for provider in self.providers:
             # Skip providers in cooldown
             if self._is_in_cooldown(provider.name):
-                print(f"Skipping {provider.name} (in cooldown)")
+                logger.debug(f"Skipping {provider.name} (cooldown)")
                 continue
 
             try:
-                print(f"Trying provider: {provider.name}")
+                logger.info(f"→ {provider.name}")
                 result = await provider.send_message(body, token, auth_type, headers)
-                print(f"Success with provider: {provider.name}")
+                logger.info(f"✓ {provider.name}")
                 return result
 
             except RateLimitError as e:
-                print(f"Rate limit on {provider.name}: {e}")
+                logger.warning(f"✗ {provider.name}: rate limit")
                 self._set_cooldown(provider.name)
                 last_error = e
                 continue
 
             except ValidationError as e:
                 # Validation errors are client errors - don't retry with other providers
-                print(f"Validation error from {provider.name}: {e}")
+                logger.error(f"✗ {provider.name}: validation error - {e}")
                 raise
 
             except Exception as e:
-                print(f"Error with {provider.name}: {e}")
+                logger.error(f"✗ {provider.name}: {e}")
                 last_error = e
                 continue
 
@@ -81,29 +84,29 @@ class FallbackHandler:
         for provider in self.providers:
             # Skip providers in cooldown
             if self._is_in_cooldown(provider.name):
-                print(f"Skipping {provider.name} (in cooldown)")
+                logger.debug(f"Skipping {provider.name} (cooldown)")
                 continue
 
             try:
-                print(f"Trying streaming with provider: {provider.name}")
+                logger.info(f"⟳ {provider.name}")
                 async for chunk in provider.stream_message(body, token, auth_type, headers):
                     yield chunk
-                print(f"Stream completed with provider: {provider.name}")
+                logger.info(f"✓ {provider.name} stream")
                 return
 
             except RateLimitError as e:
-                print(f"Rate limit on {provider.name}: {e}")
+                logger.warning(f"✗ {provider.name}: rate limit")
                 self._set_cooldown(provider.name)
                 last_error = e
                 continue
 
             except ValidationError as e:
                 # Validation errors are client errors - don't retry with other providers
-                print(f"Validation error from {provider.name}: {e}")
+                logger.error(f"✗ {provider.name}: validation error - {e}")
                 raise
 
             except Exception as e:
-                print(f"Error with {provider.name}: {e}")
+                logger.error(f"✗ {provider.name}: {e}")
                 last_error = e
                 continue
 
