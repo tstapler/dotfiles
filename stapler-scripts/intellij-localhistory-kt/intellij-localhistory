@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# IntelliJ LocalHistory CLI wrapper
+# Runs the Kotlin tool via JVM
+
+# Resolve symlinks to get real script directory
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do
+    DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+    SOURCE="$(readlink "$SOURCE")"
+    [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+SCRIPT_DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+
+JAR_PATH="$SCRIPT_DIR/build/libs/intellij-localhistory-kt-1.0-SNAPSHOT.jar"
+
+if [[ ! -f "$JAR_PATH" ]]; then
+    echo "JAR not found. Building..."
+    (cd "$SCRIPT_DIR" && ./gradlew jar --no-daemon -q)
+fi
+
+java -jar "$JAR_PATH" "$@"

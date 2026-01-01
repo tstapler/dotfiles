@@ -2,6 +2,8 @@
 title: Process Journal Entry and Generate Missing Zettels
 description: Takes a journal entry, analyzes linked pages, and generates any missing or empty zettels using synthesize_knowledge process
 arguments: [journal_date, focus_topic]
+tools: Read, Write, Edit, Glob, Grep, WebFetch, mcp__read-website-fast__read_website, mcp__brave-search__brave_web_search, Task, TodoWrite, SlashCommand
+model: opus
 ---
 
 # Journal Entry Zettel Processing

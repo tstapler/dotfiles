@@ -1,29 +1,41 @@
 ---
 title: Validate Links
 description: Validates all [[wiki links]] and #[[tag links]] in the Logseq repository to ensure they point to existing pages
+tools: Read, Glob, Grep, Bash
 ---
 
 # Validate Links Command
 
 Validates all [[wiki links]] and #[[tag links]] in the Logseq repository to ensure they point to existing pages.
 
+## Installation
+
+The `logseq-validate-links` tool is part of the stapler-logseq-tools package. Ensure it's installed:
+
+```bash
+cd ~/Documents/personal-wiki
+uv install -e .
+```
+
+This will make the `logseq-validate-links` command available in your environment.
+
 ## Usage
 
 ```bash
 # Basic validation - shows broken links only
-python validate_links.py validate
+logseq-validate-links validate
 
 # Validation with detailed output
-python validate_links.py validate --show-valid
+logseq-validate-links validate --show-valid
 
 # Create stub pages for missing links
-python validate_links.py validate --create-missing
+logseq-validate-links validate --create-missing
 
 # Quick check for missing links only
-python validate_links.py missing
+logseq-validate-links missing
 
 # Show wiki statistics and analysis
-python validate_links.py stats
+logseq-validate-links stats
 ```
 
 ## Features
@@ -86,10 +98,10 @@ python validate_links.py stats
 Add to `.git/hooks/pre-commit`:
 ```bash
 #!/bin/bash
-python validate_links.py validate
+logseq-validate-links validate
 if [ $? -eq 1 ]; then
     echo "❌ Commit blocked: Broken links found"
-    echo "Run 'python validate_links.py validate --create-missing' to fix"
+    echo "Run 'logseq-validate-links validate --create-missing' to fix"
     exit 1
 fi
 ```
@@ -99,14 +111,14 @@ fi
 # GitHub Actions example
 - name: Validate Wiki Links
   run: |
-    cd wiki
-    python validate_links.py validate
+    cd ~/Documents/personal-wiki
+    uv run logseq-validate-links validate
 ```
 
 ### Daily Health Check
 ```bash
 # Add to cron or scheduled task
-python validate_links.py stats > wiki_health_report.txt
+logseq-validate-links stats > wiki_health_report.txt
 ```
 
 ## Stub Page Creation
@@ -140,3 +152,35 @@ This ensures all links resolve while providing a structured template for future 
 3. **Content Planning**: Identify which concepts need dedicated pages
 4. **Quality Assurance**: Regular health checks of knowledge base integrity
 5. **Automated Validation**: Integration with CI/CD for continuous validation
+
+## Fallback Strategy for Tool Availability Issues
+
+If `logseq-validate-links` is not installed or not accessible:
+
+### Manual Installation
+```bash
+cd ~/Documents/personal-wiki
+uv install -e .
+```
+
+### Manual Link Validation
+If the tool still doesn't work, perform manual validation using grep:
+
+```bash
+# Find all wiki links
+cd ~/Documents/personal-wiki
+grep -rho '\[\[.*\]\]' logseq/pages/ logseq/journals/ | sort -u > all_links.txt
+
+# Find all existing pages
+find logseq/pages -name "*.md" -exec basename {} .md \; | sort > all_pages.txt
+
+# Compare to find broken links (requires manual review)
+comm -23 all_links.txt all_pages.txt
+```
+
+### Read-Only Analysis Mode
+If file modifications aren't possible:
+1. Generate a report of broken links in markdown format
+2. Provide stub page templates in code blocks
+3. List exact file paths for manual creation
+4. Prioritize links by frequency of reference

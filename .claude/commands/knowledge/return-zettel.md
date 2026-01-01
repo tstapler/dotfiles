@@ -2,6 +2,8 @@
 title: Create Zettelkasten Note
 description: Creates a comprehensive Zettelkasten note optimized for Logseq with proper interconnections and semantic structure
 arguments: [topic, type]
+tools: Read, Write, Glob, Grep, WebFetch, mcp__read-website-fast__read_website, mcp__brave-search__brave_web_search
+model: sonnet
 ---
 
 # Create Zettelkasten Note for: $1

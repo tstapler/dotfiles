@@ -102,3 +102,10 @@ fi
 
 # Alias for running mermaid diagrams using mmdc
 alias mmdc="npx -p @mermaid-js/mermaid-cli mmdc"
+
+# Alias for running Claude with LiteLLM proxy
+# Unsets CLAUDE_CODE_USE_BEDROCK to prevent direct Bedrock usage
+# Sets ANTHROPIC_BASE_URL to point to local LiteLLM proxy on port 47000
+alias proxy-claude='env -u CLAUDE_CODE_USE_BEDROCK ANTHROPIC_BASE_URL=http://localhost:47000 claude'
+alias proxy-claude-passthrough='env -u CLAUDE_CODE_USE_BEDROCK ANTHROPIC_BASE_URL=http://localhost:47000/anthropic claude'
+alias bedrock-claude='env CLAUDE_CODE_USE_BEDROCK=true claude'

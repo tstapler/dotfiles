@@ -1,12 +1,224 @@
 ---
 title: Architecture Review with Best Practices
 description: Comprehensive architecture review analyzing SOLID, Clean Architecture, Clean Code, DDD, and Design Patterns adherence with actionable recommendations
-arguments: [scope]
+arguments: [path]
+options:
+  - name: target
+    type: string
+    description: "Specific component to analyze (class:Name, package:path, module:name, layer:domain)"
+  - name: depth
+    type: string
+    choices: [quick, standard, deep]
+    default: auto
+    description: "Analysis depth - quick (5min), standard (15min), deep (30min+)"
+  - name: context
+    type: string
+    choices: [current, changes, recent, all]
+    default: auto
+    description: "Context to use - current file, git changes, recent commits, or all code"
+  - name: principles
+    type: array
+    choices: [srp, ocp, lsp, isp, dip, clean-arch, clean-code, ddd, patterns, coupling, all]
+    default: auto
+    description: "Specific principles to analyze (comma-separated)"
+  - name: format
+    type: string
+    choices: [summary, detailed, actionable, pr-review, report]
+    default: auto
+    description: "Output format based on use case"
+  - name: focus
+    type: string
+    description: "Legacy option - maintained for backward compatibility, maps to principles"
 ---
 
-# Architecture Review: $@
+# Architecture Review: Context-Aware Analysis
 
-Perform a comprehensive architecture review of the codebase analyzing adherence to established software engineering principles and patterns. This review evaluates code against SOLID Principles, Clean Architecture, Clean Code, Domain-Driven Design, and Design Patterns to identify architectural issues, coupling problems, and opportunities for improvement.
+Perform targeted or comprehensive architecture reviews with automatic context detection and configurable depth. The review adapts to your current workflow - whether you're doing a quick PR review, analyzing a specific component, or conducting a full architectural assessment.
+
+## Smart Context Detection
+
+The command automatically detects and uses context when no explicit parameters are provided:
+
+### Auto-Detection Logic
+
+When invoked without explicit parameters, the review intelligently determines:
+1. **Scope**: What code to analyze (current file, changes, or full codebase)
+2. **Depth**: How thorough the analysis should be (quick, standard, or deep)
+3. **Principles**: Which architectural principles are most relevant
+4. **Format**: The most appropriate output format for the situation
+
+### Context Detection Rules
+
+#### Current File Context (`--context=current`)
+- Triggered when a file is open in the editor
+- Analyzes the current class/module and its immediate dependencies
+- Automatically sets `--depth=quick` for single files
+- Focuses on principles relevant to the file type
+
+#### Git Changes Context (`--context=changes`)
+- Triggered when uncommitted changes exist
+- Reviews modified files and their architectural impact
+- Sets `--depth=standard` for change sets
+- Emphasizes regression prevention and maintaining standards
+
+#### Recent Activity Context (`--context=recent`)
+- Reviews commits from current branch
+- Useful for pre-PR comprehensive review
+- Sets `--depth=standard` or `deep` based on change volume
+- Focus on architectural consistency
+
+#### Full Context (`--context=all`)
+- Complete codebase analysis
+- Sets `--depth=deep` for thorough review
+- Comprehensive principle evaluation
+
+## Targeted Component Analysis
+
+### Component Targeting Syntax
+
+```bash
+# Class-level analysis
+--target=class:ServiceCorrelationService
+
+# Package/namespace analysis
+--target=package:bet.fanatics.scorecards.service
+
+# Module analysis
+--target=module:scorecards-core
+
+# Layer analysis
+--target=layer:domain
+--target=layer:infrastructure
+--target=layer:application
+
+# Pattern-based targeting
+--target=pattern:*Repository  # All repositories
+--target=pattern:*Controller  # All controllers
+--target=pattern:*Service     # All services
+```
+
+### Target Resolution Strategy
+
+**Class Target**: Analyzes the class, its dependencies, interfaces, coupling, and single responsibility
+**Package Target**: Reviews all classes, package cohesion, inter-package dependencies, bounded contexts
+**Module Target**: Reviews module boundaries, public APIs, dependencies, separation of concerns
+**Layer Target**: Reviews layer compliance, dependency directions, clean architecture rules
+
+## Analysis Depth Configuration
+
+### Quick Assessment (`--depth=quick`)
+**Duration**: 5-10 minutes | **Use Cases**: PR reviews, spot checks, pre-commit validation
+
+- Targets component only with direct dependencies
+- Identifies obvious violations and critical issues (P0-P1)
+- Provides violation counts and top 3-5 issues
+- Quick fixes and pass/fail recommendation
+
+### Standard Review (`--depth=standard`)
+**Duration**: 15-30 minutes | **Use Cases**: Feature completion, sprint reviews, module refactoring
+
+- Targets and related components with transitive dependencies
+- Identifies common violations and P0-P2 issues
+- Provides scored assessment (1-10) with categorized issues
+- Refactoring suggestions and priority recommendations
+
+### Deep Analysis (`--depth=deep`)
+**Duration**: 30-60+ minutes | **Use Cases**: Architecture reviews, technical debt assessment
+
+- Complete dependency graph analysis
+- All architectural layers and comprehensive metrics
+- All priority issues with detailed scoring
+- Complete refactoring roadmap and documentation
+
+## Principle-Focused Reviews
+
+### Selective Principle Analysis
+
+```bash
+# Single principle focus
+--principles=srp                    # Single Responsibility only
+--principles=dip,isp               # Dependency Inversion + Interface Segregation
+--principles=clean-arch,clean-code  # Architecture and code quality
+--principles=all                    # Comprehensive analysis
+```
+
+### Principle Shortcuts
+
+- `srp`: Single Responsibility Principle
+- `ocp`: Open/Closed Principle
+- `lsp`: Liskov Substitution Principle
+- `isp`: Interface Segregation Principle
+- `dip`: Dependency Inversion Principle
+- `clean-arch`: Clean Architecture layers and boundaries
+- `clean-code`: Naming, functions, organization, error handling
+- `ddd`: Domain-Driven Design patterns and boundaries
+- `patterns`: Design pattern usage and opportunities
+- `coupling`: Coupling and cohesion analysis
+
+## Output Format Options
+
+### Summary Format (`--format=summary`)
+Concise overview with score, critical issues, and quick wins. Ideal for quick assessments.
+
+### PR Review Format (`--format=pr-review`)
+Structured feedback for pull requests with approval status, good practices, and suggestions.
+
+### Actionable Format (`--format=actionable`)
+Step-by-step refactoring plans with specific commands and agent usage instructions.
+
+### Detailed Format (`--format=detailed`)
+Comprehensive analysis with examples, metrics, and in-depth recommendations (default for deep analysis).
+
+### Report Format (`--format=report`)
+Executive-friendly format with visualizations, trends, and strategic recommendations.
+
+## Enhanced Usage Examples
+
+### Context-Aware Quick Reviews
+```bash
+# Auto-detect context and scope
+/quality:architecture-review
+
+# Quick review of current file
+/quality:architecture-review --context=current
+
+# PR review of changes
+/quality:architecture-review --context=changes --format=pr-review
+```
+
+### Targeted Analysis
+```bash
+# Review specific class for SOLID violations
+/quality:architecture-review --target=class:UserService --principles=srp,ocp,lsp,isp,dip
+
+# Deep coupling analysis of a module
+/quality:architecture-review --target=module:core --principles=coupling --depth=deep
+
+# DDD review of domain layer
+/quality:architecture-review --target=layer:domain --principles=ddd
+```
+
+### Workflow Integration
+```bash
+# Pre-commit check
+/quality:architecture-review --context=changes --depth=quick --format=summary
+
+# Sprint review
+/quality:architecture-review --context=recent --depth=standard --format=actionable
+
+# Technical debt assessment
+/quality:architecture-review --depth=deep --format=report
+```
+
+## Backward Compatibility
+
+The command maintains full backward compatibility:
+- Basic invocation (`/quality:architecture-review`) works identically
+- Path arguments are still supported
+- `--focus` flag is mapped to `--principles` for legacy support
+- Default behavior preserved when no options specified
+
+---
 
 ## Review Framework
 
