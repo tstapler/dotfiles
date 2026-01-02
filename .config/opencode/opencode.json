@@ -1,4 +1,27 @@
 {
   "permission": {},
+  "lsp": {
+    "kotlin-lsp": {
+      "command": ["kotlin-lsp", "--stdio"],
+      "extensions": [".kt", ".kts"],
+      "env": {
+        "JAVA_HOME": "/usr/lib/jvm/java-21-openjdk"
+      },
+      "initialization": {
+        "settings": {
+          "kotlin": {
+            "compiler": {
+              "jvm": {
+                "target": "17"
+              }
+            },
+            "lsp": {
+              "debounceTime": 250
+            }
+          }
+        }
+      }
+    }
+  },
   "$schema": "https://opencode.ai/config.json"
 }
