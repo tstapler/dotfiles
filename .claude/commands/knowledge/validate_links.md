@@ -59,6 +59,27 @@ logseq-validate-links stats
 - Most connected files (files with most outbound links)
 - Missing link count
 
+### Enhanced Connection Analysis (NEW)
+**Integrate with `logseq-analyze connections` for deeper insights**:
+
+```bash
+# Run connection analysis for comprehensive link health
+cd ~/Documents/personal-wiki
+uv run logseq-analyze connections logseq/
+
+# Provides:
+# - Orphaned pages (no incoming links)
+# - Poorly connected pages (< 3 total connections)
+# - Hub pages (highly connected, > 10 links)
+# - Average connections per page
+# - Link distribution statistics
+```
+
+This goes beyond simple broken link detection to identify:
+- **Isolated content** that needs integration
+- **Important hubs** that may need expansion
+- **Connection patterns** in your knowledge graph
+
 ## Command Line Options
 
 ### `validate` command:
@@ -145,6 +166,40 @@ When using `--create-missing`, the tool creates basic stub pages with this templ
 
 This ensures all links resolve while providing a structured template for future content development.
 
+## Enhanced Workflow: Comprehensive Link Health Check
+
+### Step 1: Traditional Link Validation
+```bash
+# Check for broken links
+logseq-validate-links validate
+```
+
+### Step 2: Connection Analysis
+```bash
+# Analyze connection patterns
+cd ~/Documents/personal-wiki
+uv run logseq-analyze connections logseq/
+```
+
+### Step 3: Combined Insights
+Merge results to identify:
+- **Broken links** → Create stub pages or remove references
+- **Orphaned pages** → Add incoming links from related content
+- **Poorly connected** → Enhance with bidirectional links
+- **Hub pages** → Consider splitting or expanding
+
+### Step 4: Prioritized Actions
+```bash
+# Fix broken links first (critical)
+logseq-validate-links validate --create-missing
+
+# Then address orphaned pages (high priority)
+# Review list from connection analysis and add links
+
+# Finally, improve poorly connected pages (medium priority)
+# Use synthesis to enhance content and connections
+```
+
 ## Use Cases
 
 1. **Before Publishing**: Ensure all references are valid
@@ -152,6 +207,8 @@ This ensures all links resolve while providing a structured template for future 
 3. **Content Planning**: Identify which concepts need dedicated pages
 4. **Quality Assurance**: Regular health checks of knowledge base integrity
 5. **Automated Validation**: Integration with CI/CD for continuous validation
+6. **Knowledge Graph Health**: Use connection analysis to maintain a well-connected wiki
+7. **Content Discovery**: Find isolated content that needs integration
 
 ## Fallback Strategy for Tool Availability Issues
 
