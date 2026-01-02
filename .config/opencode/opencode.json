@@ -2,11 +2,8 @@
   "permission": {},
   "lsp": {
     "kotlin-lsp": {
-      "command": ["kotlin-lsp", "--stdio"],
+      "command": ["/home/tstapler/dotfiles/stapler-scripts/kotlin-lsp-wrapper.sh", "--stdio"],
       "extensions": [".kt", ".kts"],
-      "env": {
-        "JAVA_HOME": "/usr/lib/jvm/java-21-openjdk"
-      },
       "initialization": {
         "settings": {
           "kotlin": {
