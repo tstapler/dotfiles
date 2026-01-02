@@ -18,6 +18,46 @@
           }
         }
       }
+    },
+    "clojure-lsp": {
+      "command": ["/home/tstapler/dotfiles/stapler-scripts/clojure-lsp-wrapper.sh"],
+      "extensions": [".clj", ".cljs", ".cljc", ".edn", ".bb"],
+      "initialization": {
+        "settings": {
+          "clojure-lsp": {
+            "project-specs": [
+              {
+                "project-path": "project.clj",
+                "classpath-cmd": ["lein", "classpath"]
+              },
+              {
+                "project-path": "deps.edn",
+                "classpath-cmd": ["clojure", "-Spath"]
+              },
+              {
+                "project-path": "bb.edn",
+                "classpath-cmd": ["bb", "print-deps"]
+              },
+              {
+                "project-path": "build.boot",
+                "classpath-cmd": ["boot", "classpath"]
+              },
+              {
+                "project-path": "shadow-cljs.edn",
+                "classpath-cmd": ["clojure", "-Spath"]
+              }
+            ],
+            "use-metadata-for-privacy?": false,
+            "keep-parens-when-threading?": false,
+            "clean": {
+              "ns-inner-blocks-indentation": "next-line",
+              "sort": {
+                "ns-references?": true
+              }
+            }
+          }
+        }
+      }
     }
   },
   "$schema": "https://opencode.ai/config.json"
