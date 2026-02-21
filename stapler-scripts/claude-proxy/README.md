@@ -7,6 +7,8 @@ A simple, lightweight proxy for Claude Code that supports OAuth authentication w
 - ✅ OAuth token support (`sk-ant-oat-*`) with proper Bearer authentication
 - ✅ Automatic fallback to AWS Bedrock on rate limits (429)
 - ✅ Claude Code compatible (`/v1/messages` endpoint)
+- ✅ LiteLLM compatible (`/v1/chat/completions` endpoint)
+- ✅ Beta features support with automatic Bedrock filtering (`context-1m-2025-08-07`, etc.)
 - ✅ Streaming support for both providers
 - ✅ Model name normalization (handles Bedrock format from Claude Code)
 - ✅ Simple and maintainable (~460 lines total)
@@ -68,8 +70,9 @@ make start          # Start the proxy
 make stop           # Stop the proxy
 make restart        # Restart the proxy
 make status         # Check proxy status
-make logs           # View proxy logs
-make error-logs     # View error logs
+make logs           # View access logs (uvicorn)
+make app-logs       # View application logs (fallback, providers)
+make http-logs      # View HTTP request logs (httpx)
 make uninstall      # Remove LaunchAgent
 make update-token   # Update OAuth token
 make test           # Run basic tests
@@ -100,6 +103,32 @@ proxy-claude -p "Hello!"        # Non-interactive mode
 proxy-claude                     # Interactive mode
 ```
 
+## Usage with LiteLLM
+
+Configure LiteLLM to use the proxy:
+
+```python
+import litellm
+
+# Configure proxy as base URL
+litellm.api_base = "http://localhost:47000/v1"
+litellm.api_key = "sk-ant-oat-..."  # Your OAuth token
+
+# Make requests
+response = litellm.completion(
+    model="claude-sonnet-4-20250514",
+    messages=[{"role": "user", "content": "Hello"}],
+    extra_headers={"anthropic-beta": "context-1m-2025-08-07"}  # Optional beta features
+)
+```
+
+Or via environment variables:
+```bash
+export LITELLM_BASE_URL=http://localhost:47000/v1
+export ANTHROPIC_API_KEY=sk-ant-oat-...
+litellm --model claude-sonnet-4-20250514
+```
+
 ## How It Works
 
 1. **Primary Path**: OAuth token is sent to Anthropic API with proper headers
@@ -112,8 +141,9 @@ proxy-claude                     # Interactive mode
 
 - `GET /` - Basic info about the proxy
 - `GET /health` - Health check endpoint
-- `POST /v1/messages` - Claude Code compatible endpoint
-- `POST /chat/completions` - OpenAI compatible endpoint (for testing)
+- `POST /v1/messages` - Claude Code compatible endpoint (Anthropic Messages API format)
+- `POST /chat/completions` - OpenAI compatible endpoint
+- `POST /v1/chat/completions` - OpenAI compatible endpoint (LiteLLM)
 
 ## Configuration
 

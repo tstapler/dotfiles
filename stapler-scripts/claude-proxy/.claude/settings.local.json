@@ -22,7 +22,15 @@
       "Bash(pkill:*)",
       "WebFetch(domain:pypi.org)",
       "WebFetch(domain:github.com)",
-      "Bash(git clone:*)"
+      "Bash(git clone:*)",
+      "Bash(if [ -f ~/.claude/settings.json ])",
+      "Bash(then cat ~/.claude/settings.json)",
+      "Bash(else echo \"{}\")",
+      "Bash(for rid in 7a4315fe 2cec1267)",
+      "Bash(do echo \"=== Request $rid ===\")",
+      "Bash(done)",
+      "Bash(aws-vault exec:*)",
+      "Bash(.venv/bin/python3:*)"
     ]
   }
 }

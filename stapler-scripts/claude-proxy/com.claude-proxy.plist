@@ -29,6 +29,8 @@
         <string>us-west-2</string>
         <key>PROXY_PORT</key>
         <string>47000</string>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
     </dict>
     <key>StandardOutPath</key>
     <string>/tmp/claude-proxy.log</string>

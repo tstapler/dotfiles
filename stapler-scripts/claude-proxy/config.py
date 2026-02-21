@@ -14,5 +14,5 @@ AWS_REGION: str = os.environ.get("AWS_REGION", "us-west-2")
 PROXY_PORT: int = int(os.environ.get("PROXY_PORT", "47000"))
 COOLDOWN_SECONDS: int = int(os.environ.get("COOLDOWN_SECONDS", "300"))  # 5 minutes
 REQUEST_TIMEOUT: int = int(os.environ.get("REQUEST_TIMEOUT", "300"))  # 5 minutes
-BEDROCK_MAX_RETRIES: int = int(os.environ.get("BEDROCK_MAX_RETRIES", "3"))  # Retry timeouts
+BEDROCK_MAX_RETRIES: int = int(os.environ.get("BEDROCK_MAX_RETRIES", "20"))  # Retry rate limits/timeouts
 WORKERS: int = int(os.environ.get("WORKERS", str(multiprocessing.cpu_count())))  # Default: one worker per CPU core
