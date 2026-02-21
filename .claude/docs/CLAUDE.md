@@ -1,3 +1,8 @@
+---
+name: CLAUDE
+description: Agent development guidelines and prompt engineering documentation (not an active agent)
+---
+
 # Agent Development Guidelines
 
 This file provides prompt engineering guidance specifically for developing and refining Claude Code agents in this directory.

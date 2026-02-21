@@ -1,3 +1,8 @@
+---
+name: java-test-debugger-refinement-summary
+description: Historical documentation of java-test-debugger agent improvements (not an active agent)
+---
+
 # Java Test Debugger Agent Refinement Summary
 
 **Date**: 2025-10-28

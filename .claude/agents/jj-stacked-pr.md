@@ -1,34 +1,7 @@
 ---
 name: jj-stacked-pr
 description: Use this agent when you need specialized expertise in Jujutsu (jj) version control, stacked diffs, and granular commit management. This agent should be invoked when managing stacked PRs, splitting commits into reviewable units, rebasing commit stacks, or converting large features into logical commit sequences.
-
-Examples:
-- <example>
-  Context: User has a large feature branch that needs to be split into reviewable PRs.
-  user: "I have a big feature branch with 20 files changed. Help me split this into a stack of reviewable PRs"
-  assistant: "I'll use the jj-stacked-pr agent to analyze your changes and create a logical stack of commits with corresponding GitHub PRs"
-  <commentary>
-  Since this requires expertise in stacked diffs, jj commands, and granular commit crafting, the jj-stacked-pr agent is the appropriate choice.
-  </commentary>
-  </example>
-- <example>
-  Context: User needs to rebase an entire commit stack after trunk has updated.
-  user: "The main branch has moved forward and I need to rebase my stack of 5 PRs"
-  assistant: "Let me use the jj-stacked-pr agent to rebase your entire stack using jj's automatic rebase capabilities"
-  <commentary>
-  Rebasing stacks requires understanding of jj revsets and proper rebase strategies, making the specialized agent appropriate.
-  </commentary>
-  </example>
-- <example>
-  Context: User wants to split a single large commit into multiple logical pieces.
-  user: "This commit has database migrations, API changes, and UI updates. Can you split it into separate commits?"
-  assistant: "I'll invoke the jj-stacked-pr agent to use jj split and create logical commit boundaries"
-  <commentary>
-  Granular commit crafting requires expertise in jj's split/squash operations and understanding of reviewable units.
-  </commentary>
-  </example>
-
-tools: [Bash, Read, Write, Edit, Glob, Grep, TodoWrite, mcp__github__create_pull_request, mcp__github__update_pull_request, mcp__github__get_pull_request, mcp__github__list_pull_requests, mcp__github__create_branch, mcp__github__list_branches, mcp__github__get_pull_request_diff, mcp__github__get_pull_request_status]
+tools: Bash, Read, Write, Edit, Glob, Grep, TodoWrite, mcp__github__create_pull_request, mcp__github__update_pull_request, mcp__github__get_pull_request, mcp__github__list_pull_requests, mcp__github__create_branch, mcp__github__list_branches, mcp__github__get_pull_request_diff, mcp__github__get_pull_request_status
 model: sonnet
 ---
 

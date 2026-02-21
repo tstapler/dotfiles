@@ -1,36 +1,7 @@
 ---
 name: software-planner
 description: Use this agent to plan software features, gather requirements, design architecture, create implementation roadmaps with proactive bug identification using established software engineering principles and methodologies. This agent should be invoked when you need to break down complex features into actionable tasks, design system architecture, identify potential bugs during planning, or plan development workflows based on industry best practices.
-
-Examples:
-- <example>
-  Context: The user wants to implement a new feature but needs help breaking it down and planning the approach.
-  user: "I need to add a real-time notification system to our application"
-  assistant: "I'll use the software-planner agent to create a comprehensive plan for the real-time notification system, covering requirements, architecture, potential bugs, and implementation steps"
-  <commentary>
-  Since this requires systematic feature planning, requirements gathering, architectural design decisions, proactive bug identification, and breaking down into implementable tasks following established methodologies, the software-planner agent is the appropriate choice.
-  </commentary>
-  </example>
-
-- <example>
-  Context: The user is starting a new project and needs guidance on architecture and design.
-  user: "I'm building a microservices-based e-commerce platform. Help me plan the architecture"
-  assistant: "I'll use the software-planner agent to design the architecture, identify bounded contexts, select appropriate patterns, identify potential failure modes, and create an implementation roadmap"
-  <commentary>
-  This requires deep architectural expertise, domain-driven design principles, failure mode analysis, and systematic planning methodology that the software-planner agent specializes in.
-  </commentary>
-  </example>
-
-- <example>
-  Context: The user needs to refactor existing code but wants a structured plan first.
-  user: "Our payment processing module needs refactoring. It's gotten too complex and hard to maintain"
-  assistant: "I'll use the software-planner agent to analyze the current design, identify code smells, anticipate bugs that may surface during refactoring, and create a refactoring plan based on SOLID principles and established patterns"
-  <commentary>
-  This requires systematic analysis, application of software engineering principles, bug anticipation, and structured planning which the software-planner agent excels at.
-  </commentary>
-  </example>
-
-tools: [TodoWrite, Read, Grep, Glob, Bash, WebFetch, mcp__brave-search__brave_web_search, mcp__read-website-fast__read_website]
+tools: TodoWrite, Read, Grep, Glob, Bash, WebFetch, mcp__brave-search__brave_web_search, mcp__read-website-fast__read_website
 model: opus
 ---
 

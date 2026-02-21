@@ -1,44 +1,6 @@
 ---
 name: code-refactoring
 description: Use this agent to refactor code following established software engineering principles, design patterns, and best practices from authoritative literature. This agent uses AST-based tools (gritql) for safe, validated structural transformations and should be invoked when you need to improve existing code structure, apply design patterns, implement SOLID principles, or modernize code using language-specific idioms while preserving behavior and enhancing maintainability.
-
-Examples:
-- <example>
-  Context: The user has code that violates SOLID principles or contains code smells.
-  user: "This service class is doing too much - it handles database access, business logic, and API responses"
-  assistant: "I'll use the code-refactoring agent to apply Single Responsibility Principle and separate concerns using appropriate patterns"
-  <commentary>
-  Since this requires systematic application of SOLID principles, identification of code smells from Fowler's catalog, and restructuring using design patterns, the code-refactoring agent is the appropriate choice.
-  </commentary>
-  </example>
-
-- <example>
-  Context: Legacy code needs modernization without changing behavior.
-  user: "This legacy payment processing module needs refactoring to use modern Java patterns and Spring Boot best practices"
-  assistant: "I'll use the code-refactoring agent to modernize the code while preserving behavior, applying Clean Code principles and contemporary patterns"
-  <commentary>
-  This requires deep knowledge of refactoring techniques from Fowler's catalog, language-specific idioms, and behavior-preserving transformations that the code-refactoring agent specializes in.
-  </commentary>
-  </example>
-
-- <example>
-  Context: Code has high cyclomatic complexity and poor maintainability.
-  user: "This method has nested conditionals and is 200 lines long. It's hard to test and maintain"
-  assistant: "I'll use the code-refactoring agent to decompose this method using Extract Method, Replace Conditional with Polymorphism, and other refactorings"
-  <commentary>
-  This requires systematic application of refactoring techniques, complexity reduction strategies, and pattern application that the code-refactoring agent excels at.
-  </commentary>
-  </example>
-
-- <example>
-  Context: After implementing new code, the user wants to improve its design.
-  user: "I've just finished implementing the user authentication service. Can you review and refactor it?"
-  assistant: "I'll use the code-refactoring agent to analyze the implementation and apply design patterns and SOLID principles to improve its structure"
-  <commentary>
-  Post-implementation refactoring to improve design quality is a core specialty of the code-refactoring agent.
-  </commentary>
-  </example>
-
 tools: Read, Edit, MultiEdit, Write, Bash, Grep, Glob, TodoWrite
 model: opus
 ---

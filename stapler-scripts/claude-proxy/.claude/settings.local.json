@@ -30,7 +30,12 @@
       "Bash(do echo \"=== Request $rid ===\")",
       "Bash(done)",
       "Bash(aws-vault exec:*)",
-      "Bash(.venv/bin/python3:*)"
+      "Bash(.venv/bin/python3:*)",
+      "Bash('tool_reference' found using 'type' does not match any of the)",
+      "Bash(expected tags: 'document', 'image', 'search_result', 'text'\":*)",
+      "Bash(with on-demand throughput isn 't supported. Retry your request with the ID or ARN of an)",
+      "Bash(throughput isn 't supported. Retry your request with the ID or ARN of)",
+      "Bash(an inference profile that contains this model.\":*)"
     ]
   }
 }
