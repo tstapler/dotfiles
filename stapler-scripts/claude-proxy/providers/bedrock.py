@@ -418,26 +418,27 @@ class BedrockProvider(Provider):
             model = model[:-8]
 
         # Map to Bedrock model ID
-        # Note: Claude 4.6 and 4.5 models use global inference profiles for best availability
-        # Reference: https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html
+        # Note: Claude 4.5+ models require inference profiles (us./global./eu./jp./apac.)
+        # Base model IDs without prefixes are NOT supported for on-demand throughput
+        # Reference: https://platform.claude.com/docs/en/build-with-claude/claude-on-amazon-bedrock
         model_mapping = {
-            # Claude 4.6 models (global inference profiles)
+            # Claude 4.6 models (use base ID for global inference profile)
             "claude-opus-4-6": "anthropic.claude-opus-4-6-v1",
             "claude-sonnet-4-6": "anthropic.claude-sonnet-4-6",
-            # Claude 4.5 models (regional profiles with version suffix)
-            "claude-opus-4-5-20251101": "anthropic.claude-opus-4-5-20251101-v1:0",
-            "claude-sonnet-4-5-20250929": "anthropic.claude-sonnet-4-5-20250929-v1:0",
-            "claude-haiku-4-5-20251001": "anthropic.claude-haiku-4-5-20251001-v1:0",
-            # Claude 4 models (regional profiles)
-            "claude-opus-4-1-20250805": "anthropic.claude-opus-4-1-20250805-v1:0",
-            "claude-opus-4-20250514": "anthropic.claude-opus-4-20250514-v1:0",
-            "claude-sonnet-4-20250514": "anthropic.claude-sonnet-4-20250514-v1:0",
-            # Claude 3.x models
-            "claude-3-7-sonnet-20250219": "anthropic.claude-3-7-sonnet-20250219-v1:0",
-            "claude-3-5-sonnet-20241022": "anthropic.claude-3-5-sonnet-20241022-v2:0",
-            "claude-3-5-haiku-20241022": "anthropic.claude-3-5-haiku-20241022-v1:0",
-            "claude-3-opus-20240229": "anthropic.claude-3-opus-20240229-v1:0",
-            "claude-3-haiku-20240307": "anthropic.claude-3-haiku-20240307-v1:0",
+            # Claude 4.5 models (require US inference profile prefix)
+            "claude-opus-4-5-20251101": "us.anthropic.claude-opus-4-5-20251101-v1:0",
+            "claude-sonnet-4-5-20250929": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "claude-haiku-4-5-20251001": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+            # Claude 4 models (require US inference profile prefix)
+            "claude-opus-4-1-20250805": "us.anthropic.claude-opus-4-1-20250805-v1:0",
+            "claude-opus-4-20250514": "us.anthropic.claude-opus-4-20250514-v1:0",
+            "claude-sonnet-4-20250514": "us.anthropic.claude-sonnet-4-20250514-v1:0",
+            # Claude 3.x models (older format, use base ID)
+            "claude-3-7-sonnet-20250219": "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+            "claude-3-5-sonnet-20241022": "us.anthropic.claude-3-5-sonnet-20241022-v2:0",
+            "claude-3-5-haiku-20241022": "us.anthropic.claude-3-5-haiku-20241022-v1:0",
+            "claude-3-opus-20240229": "us.anthropic.claude-3-opus-20240229-v1:0",
+            "claude-3-haiku-20240307": "us.anthropic.claude-3-haiku-20240307-v1:0",
         }
 
         return model_mapping.get(model, f"us.anthropic.{model}-v1:0")
