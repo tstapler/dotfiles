@@ -418,13 +418,13 @@ class BedrockProvider(Provider):
             model = model[:-8]
 
         # Map to Bedrock model ID
-        # Note: Claude 4.5+ models require inference profiles (us./global./eu./jp./apac.)
+        # Note: ALL Claude models require inference profiles (us./global./eu./jp./apac.)
         # Base model IDs without prefixes are NOT supported for on-demand throughput
         # Reference: https://platform.claude.com/docs/en/build-with-claude/claude-on-amazon-bedrock
         model_mapping = {
-            # Claude 4.6 models (use base ID for global inference profile)
-            "claude-opus-4-6": "anthropic.claude-opus-4-6-v1",
-            "claude-sonnet-4-6": "anthropic.claude-sonnet-4-6",
+            # Claude 4.6 models (require US inference profile prefix)
+            "claude-opus-4-6": "us.anthropic.claude-opus-4-6-v1",
+            "claude-sonnet-4-6": "us.anthropic.claude-sonnet-4-6",
             # Claude 4.5 models (require US inference profile prefix)
             "claude-opus-4-5-20251101": "us.anthropic.claude-opus-4-5-20251101-v1:0",
             "claude-sonnet-4-5-20250929": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
