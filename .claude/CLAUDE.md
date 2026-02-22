@@ -72,11 +72,19 @@ Skills auto-activate based on task context. All skills located in `~/.claude/ski
 | `knowledge-synthesis` | Synthesizing knowledge from multiple sources into Zettelkasten notes; creating wiki pages with [[links]] and #[[tags]]; integrating academic research | "Synthesize this article into Zettel", "Create wiki page for concept", "Integrate research notes" |
 | `markdown-confluence-sync` | Publishing markdown to Confluence; crawling/downloading Confluence pages; syncing bidirectionally; checking sync status; resolving conflicts; managing comments; validating links; troubleshooting page issues | "Publish docs to Confluence", "Crawl Confluence page", "Download this Confluence page", "Check sync status", "Resolve Confluence conflicts", "Validate Confluence links" |
 
+### Browser Automation
+
+| Skill | Invoke When | Examples |
+|-------|------------|----------|
+| `playwright-skill` | Browser automation, web testing, screenshotting pages, testing login flows, checking responsive design, validating links, or automating any browser interaction; auto-detects local dev servers | "Test this page", "Screenshot this URL", "Check for broken links", "Test the login flow", "Automate this form" |
+
 ### Debugging & Investigation
 
 | Skill | Invoke When | Examples |
 |-------|------------|----------|
 | `root-cause-analysis` | Investigating errors with stack traces; debugging incidents or outages; finding historical context for similar issues; searching for past solutions in wiki | "Why is this failing?", "Find similar errors in wiki", "Debug this stack trace", "What caused this incident before?" |
+| `debugging` | Systematic debugging with proven frameworks; encountering bugs, test failures, or unexpected behavior; needs root-cause tracing, defense-in-depth validation, or verification before claiming a fix is complete | "Debug this failure", "Find root cause", "Verify this fix works", "Test is failing" |
+| `code-review` | Receiving or requesting code review; before claiming a task is complete; before committing or creating PRs; when feedback seems technically questionable; after fixing complex bugs | "Review this code", "Is this ready to commit?", "I got this review comment", "Check my fix before I push" |
 
 ### Tooling & Meta-Development
 
@@ -85,6 +93,8 @@ Skills auto-activate based on task context. All skills located in `~/.claude/ski
 | `prompt-engineering` | Creating or improving prompts, agents, commands, system instructions, SKILL.md files; applying XML tags, multishot examples, chain-of-thought, response prefilling | "Create a new agent", "Improve this prompt", "Add examples to SKILL.md", "Optimize context usage" |
 | `model-selection` | Choosing appropriate Claude model (Opus 4.5, Sonnet, Haiku) for agents, commands, or Task tool invocations based on complexity, reasoning depth, cost/speed | "Which model should I use for this agent?", "Optimize agent model selection", "Choose model for complex reasoning task" |
 | `research-workflow` | Performing multi-step research, fact-finding, web searches, verification tasks; using Brave Search, Puppeteer, or synthesizing information from sources | "Research best practices for X", "Find documentation for Y", "Verify claims about Z", "Search and synthesize findings" |
+| `claude-technique-evaluator` | Evaluating new Claude/Claude Code techniques, tools, features, or workflow changes for adoption value; assessing blog posts, release notes, community tips against Anthropic best practices and current workflow fit | "Evaluate this Claude technique", "Is this prompting pattern worth adopting?", "Assess this new Claude Code feature", "Should I use extended thinking?" |
+| `context-engineering` | Designing agent architectures; debugging context failures; optimizing token usage; implementing memory systems; building multi-agent coordination; evaluating agent performance | "Optimize context for this agent", "Why is my agent losing context?", "Design memory system", "Reduce token usage" |
 
 ### Skill Usage Patterns
 

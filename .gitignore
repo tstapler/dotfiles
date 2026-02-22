@@ -113,7 +113,6 @@ __pycache__/
 *.retry
 # Distribution / packaging
 .Python
-build/
 develop-eggs/
 dist/
 downloads/
@@ -285,3 +284,6 @@ stapler-scripts/litellm-proxy/.litellm.pid
 # IDE migration files (not needed in repo)
 .idea/copilot.data.migration.*.xml
 stapler-scripts/litellm-proxy/.claude/settings.local.json
+
+# Node.js dependencies (skills with bundled executors)
+node_modules/
