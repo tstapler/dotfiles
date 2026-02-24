@@ -322,7 +322,7 @@ class ClaudeToOpenCodeConverter:
         frontmatter = {}
 
         # Copy relevant fields
-        for key in ['description', 'mode', 'model', 'temperature', 'tools']:
+        for key in ['description', 'mode', 'model', 'temperature', 'tools', 'arguments']:
             if key in agent_data:
                 frontmatter[key] = agent_data[key]
 
