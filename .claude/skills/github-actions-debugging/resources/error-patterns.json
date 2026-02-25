@@ -1,0 +1,215 @@
+[
+  {
+    "pattern": "npm ERR! code ERESOLVE",
+    "category": "dependency",
+    "severity": "error",
+    "causes": [
+      "Conflicting peer dependencies",
+      "npm 7+ strict peer dependency resolution",
+      "Outdated lock file"
+    ],
+    "fixes": [
+      "Run npm install --legacy-peer-deps",
+      "Update conflicting packages to compatible versions",
+      "Delete package-lock.json and regenerate with npm install"
+    ],
+    "prevention": "Pin dependency versions and test with npm 7+ locally"
+  },
+  {
+    "pattern": "npm ERR!.*EUSAGE.*package.json and package-lock.json.*in sync",
+    "category": "dependency",
+    "severity": "error",
+    "causes": [
+      "package.json modified without updating lock file",
+      "Lock file generated with different npm version",
+      "Merge conflict resolution errors"
+    ],
+    "fixes": [
+      "Delete package-lock.json and run npm install",
+      "Run npm install after changing package.json",
+      "Commit lock file changes with dependency changes"
+    ],
+    "prevention": "Always run npm install after changing package.json"
+  },
+  {
+    "pattern": "pip.*error.*ResolutionImpossible",
+    "category": "dependency",
+    "severity": "error",
+    "causes": [
+      "Conflicting version requirements",
+      "Package not available for Python version",
+      "Platform-specific dependency issues"
+    ],
+    "fixes": [
+      "Pin conflicting packages explicitly in requirements.txt",
+      "Use constraint files with pip install -c constraints.txt",
+      "Upgrade pip resolver: python -m pip install --upgrade pip"
+    ],
+    "prevention": "Use requirements.txt with pinned versions"
+  },
+  {
+    "pattern": "Resource not accessible by integration",
+    "category": "permission",
+    "severity": "error",
+    "causes": [
+      "GITHUB_TOKEN lacks required permissions",
+      "Default token permissions too restrictive",
+      "Organization security policy restrictions"
+    ],
+    "fixes": [
+      "Add permissions block to workflow with required scopes",
+      "Use PAT instead of GITHUB_TOKEN",
+      "Check organization security settings"
+    ],
+    "prevention": "Always specify permissions explicitly in workflows"
+  },
+  {
+    "pattern": "Permission denied \\(publickey\\)",
+    "category": "permission",
+    "severity": "error",
+    "causes": [
+      "SSH key not configured",
+      "Wrong SSH key used",
+      "Host key verification failure"
+    ],
+    "fixes": [
+      "Use HTTPS with token instead of SSH",
+      "Configure SSH key using webfactory/ssh-agent action",
+      "Add deploy key to repository settings"
+    ],
+    "prevention": "Prefer HTTPS over SSH in CI/CD workflows"
+  },
+  {
+    "pattern": "##\\[error\\].*exceeded the maximum execution time",
+    "category": "timeout",
+    "severity": "error",
+    "causes": [
+      "Job exceeds default 360 minute timeout",
+      "Long-running tests or builds",
+      "Infinite loops or hangs"
+    ],
+    "fixes": [
+      "Add timeout-minutes to job or step",
+      "Optimize slow operations using caching",
+      "Use matrix strategy for parallelization",
+      "Split into multiple smaller jobs"
+    ],
+    "prevention": "Set appropriate timeouts and monitor job duration"
+  },
+  {
+    "pattern": "exit code 137",
+    "category": "timeout",
+    "severity": "error",
+    "causes": [
+      "Process killed by OOM (out of memory)",
+      "Exceeded 7GB memory limit on standard runners",
+      "Memory leak in tests or build"
+    ],
+    "fixes": [
+      "Increase Node.js memory: NODE_OPTIONS=--max-old-space-size=6144",
+      "Reduce parallelism in tests: --maxWorkers=2",
+      "Use larger runner (requires GitHub Team/Enterprise)",
+      "Split job into smaller pieces using matrix"
+    ],
+    "prevention": "Monitor memory usage and fix memory leaks"
+  },
+  {
+    "pattern": "Unable to locate executable file",
+    "category": "environment",
+    "severity": "error",
+    "causes": [
+      "Tool not pre-installed on runner",
+      "Wrong runner image",
+      "PATH not configured"
+    ],
+    "fixes": [
+      "Use setup action (setup-node, setup-python, etc.)",
+      "Install tool manually with apt-get or package manager",
+      "Use container with tool pre-installed"
+    ],
+    "prevention": "Check runner software inventory and use setup actions"
+  },
+  {
+    "pattern": "ENOENT: no such file or directory",
+    "category": "environment",
+    "severity": "error",
+    "causes": [
+      "File not checked out from repository",
+      "Wrong working directory",
+      "Previous step failed silently"
+    ],
+    "fixes": [
+      "Add actions/checkout step before using files",
+      "Set correct working-directory in step",
+      "Add file existence checks before operations"
+    ],
+    "prevention": "Always use actions/checkout first"
+  },
+  {
+    "pattern": "YAML syntax error|Invalid workflow file",
+    "category": "syntax",
+    "severity": "error",
+    "causes": [
+      "Incorrect indentation",
+      "Missing quotes around special characters",
+      "Invalid YAML structure"
+    ],
+    "fixes": [
+      "Run yamllint .github/workflows/",
+      "Use 2-space indentation consistently (no tabs)",
+      "Quote strings with special characters",
+      "Validate YAML syntax online"
+    ],
+    "prevention": "Use editor with YAML validation and yamllint pre-commit hook"
+  },
+  {
+    "pattern": "Could not resolve host",
+    "category": "network",
+    "severity": "warning",
+    "causes": [
+      "Temporary DNS issue",
+      "Service outage",
+      "Network connectivity problem"
+    ],
+    "fixes": [
+      "Add retry logic with nick-fields/retry action",
+      "Use alternative DNS (8.8.8.8)",
+      "Check service status before proceeding"
+    ],
+    "prevention": "Implement retry mechanisms for network operations"
+  },
+  {
+    "pattern": "API rate limit exceeded",
+    "category": "network",
+    "severity": "warning",
+    "causes": [
+      "Too many API requests in short time",
+      "Missing authentication",
+      "Shared runner IP rate limited"
+    ],
+    "fixes": [
+      "Add authentication with GITHUB_TOKEN",
+      "Add delays between API requests",
+      "Use GraphQL instead of REST API",
+      "Cache API responses"
+    ],
+    "prevention": "Authenticate all API requests and implement rate limiting"
+  },
+  {
+    "pattern": "buildx failed|ERROR: failed to solve",
+    "category": "docker",
+    "severity": "error",
+    "causes": [
+      "Invalid base image or tag",
+      "Incorrect COPY/ADD paths",
+      "Build context doesn't include files"
+    ],
+    "fixes": [
+      "Use specific image tags (not :latest)",
+      "Fix COPY paths in Dockerfile",
+      "Set correct build context",
+      "Debug with --progress=plain --no-cache"
+    ],
+    "prevention": "Test Dockerfile locally and use specific image tags"
+  }
+]
