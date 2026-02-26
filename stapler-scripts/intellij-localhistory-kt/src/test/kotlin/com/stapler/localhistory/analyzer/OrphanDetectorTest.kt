@@ -2,15 +2,37 @@ package com.stapler.localhistory.analyzer
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
+import java.nio.file.Path
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
+/**
+ * Tests for OrphanDetector using the composition-based LocalHistoryReader pattern.
+ */
 class OrphanDetectorTest {
+
+    /**
+     * Mock LocalHistoryReader for testing without actual files.
+     */
+    private class MockLocalHistoryReader(
+        private val referenceMap: Map<Int, List<ContentReference>> = emptyMap()
+    ) : LocalHistoryReader {
+        override fun buildReferenceMap() = referenceMap
+        override fun getImplementationName() = "Mock Reader"
+    }
+
+    private fun createDetector(referenceMap: Map<Int, List<ContentReference>> = emptyMap()): OrphanDetector {
+        return OrphanDetector(
+            Path.of("/mock/localhistory"),
+            Path.of("/mock/caches"),
+            MockLocalHistoryReader(referenceMap)
+        )
+    }
 
     @Test
     fun `test orphan status for content with no references`() {
-        val referenceMap = emptyMap<Int, List<ContentReference>>()
-        val status = testCheckOrphanStatus(1, referenceMap)
+        val detector = createDetector()
+        val status = detector.checkOrphanStatus(1, emptyMap())
 
         assertTrue(status is OrphanStatus.Uncertain)
         val uncertain = status as OrphanStatus.Uncertain
@@ -24,7 +46,8 @@ class OrphanDetectorTest {
             ContentReference(1, "/test/file.txt", System.currentTimeMillis(), "Delete")
         )
         val referenceMap = mapOf(1 to references)
-        val status = testCheckOrphanStatus(1, referenceMap)
+        val detector = createDetector(referenceMap)
+        val status = detector.checkOrphanStatus(1, referenceMap)
 
         assertTrue(status is OrphanStatus.Orphaned)
     }
@@ -36,7 +59,8 @@ class OrphanDetectorTest {
             ContentReference(1, "/test/file.txt", now - 1000, "ContentChange")
         )
         val referenceMap = mapOf(1 to references)
-        val status = testCheckOrphanStatus(1, referenceMap)
+        val detector = createDetector(referenceMap)
+        val status = detector.checkOrphanStatus(1, referenceMap)
 
         assertTrue(status is OrphanStatus.Active)
     }
@@ -48,7 +72,8 @@ class OrphanDetectorTest {
             ContentReference(1, "/test/file.txt", oldTimestamp, "ContentChange")
         )
         val referenceMap = mapOf(1 to references)
-        val status = testCheckOrphanStatus(1, referenceMap)
+        val detector = createDetector(referenceMap)
+        val status = detector.checkOrphanStatus(1, referenceMap)
 
         assertTrue(status is OrphanStatus.Uncertain)
         val uncertain = status as OrphanStatus.Uncertain
@@ -64,7 +89,8 @@ class OrphanDetectorTest {
             ContentReference(1, "/test/file.txt", now - 5000, "Delete")
         )
         val referenceMap = mapOf(1 to references)
-        val status = testCheckOrphanStatus(1, referenceMap)
+        val detector = createDetector(referenceMap)
+        val status = detector.checkOrphanStatus(1, referenceMap)
 
         assertTrue(status is OrphanStatus.Orphaned)
     }
@@ -77,15 +103,14 @@ class OrphanDetectorTest {
             ContentReference(1, "/test/file.txt", now - 5000, "ContentChange")
         )
         val referenceMap = mapOf(1 to references)
-        val status = testCheckOrphanStatus(1, referenceMap)
+        val detector = createDetector(referenceMap)
+        val status = detector.checkOrphanStatus(1, referenceMap)
 
         assertTrue(status is OrphanStatus.Active)
     }
 
     @Test
     fun `test findOrphanedContent filters by confidence`() {
-        val detector = MockOrphanDetector()
-
         // Create mock reference map with various statuses
         val mockReferenceMap = mapOf(
             1 to listOf(ContentReference(1, "/active.txt", System.currentTimeMillis(), "ContentChange")),
@@ -93,11 +118,10 @@ class OrphanDetectorTest {
             3 to emptyList<ContentReference>()
         )
 
-        detector.setMockReferenceMap(mockReferenceMap)
-
+        val detector = createDetector(mockReferenceMap)
         val contentIds = listOf(1, 2, 3)
 
-        // Build the reference map first, then use findOrphanedContent
+        // Build the reference map first, then find orphans
         val builtMap = detector.buildReferenceMap()
         val orphans = contentIds.mapNotNull { id ->
             val status = detector.checkOrphanStatus(id, builtMap)
@@ -117,29 +141,35 @@ class OrphanDetectorTest {
         assertFalse(orphans.any { it.first == 1 })
     }
 
-    // Helper function to test checkOrphanStatus without needing file paths
-    private fun testCheckOrphanStatus(
-        contentId: Int,
-        referenceMap: Map<Int, List<ContentReference>>
-    ): OrphanStatus {
-        // Use the static method approach - just call the method directly
-        val detector = MockOrphanDetector()
-        return detector.checkOrphanStatus(contentId, referenceMap)
+    @Test
+    fun `test getReaderName returns implementation name`() {
+        val detector = createDetector()
+        assertEquals("Mock Reader", detector.getReaderName())
     }
 
-    // Mock implementation for testing
-    private class MockOrphanDetector : OrphanDetector(
-        java.nio.file.Paths.get("/mock/localhistory"),
-        java.nio.file.Paths.get("/mock/caches")
-    ) {
-        private var mockReferenceMap = emptyMap<Int, List<ContentReference>>()
+    @Test
+    fun `test buildReferenceMap delegates to reader`() {
+        val expectedMap = mapOf(
+            1 to listOf(ContentReference(1, "/test.txt", System.currentTimeMillis(), "ContentChange"))
+        )
+        val detector = createDetector(expectedMap)
 
-        fun setMockReferenceMap(map: Map<Int, List<ContentReference>>) {
-            mockReferenceMap = map
-        }
+        val actualMap = detector.buildReferenceMap()
+        assertEquals(expectedMap, actualMap)
+    }
 
-        override fun buildReferenceMap(): Map<Int, List<ContentReference>> {
-            return mockReferenceMap
-        }
+    @Test
+    fun `test very old content should be uncertain with high confidence`() {
+        val veryOldTimestamp = Instant.now().minus(120, ChronoUnit.DAYS).toEpochMilli()
+        val references = listOf(
+            ContentReference(1, "/test/file.txt", veryOldTimestamp, "ContentChange")
+        )
+        val referenceMap = mapOf(1 to references)
+        val detector = createDetector(referenceMap)
+        val status = detector.checkOrphanStatus(1, referenceMap)
+
+        assertTrue(status is OrphanStatus.Uncertain)
+        val uncertain = status as OrphanStatus.Uncertain
+        assertEquals(OrphanDetector.HIGH_CONFIDENCE, uncertain.confidence)
     }
 }
