@@ -91,6 +91,26 @@ class AnthropicProvider(Provider):
         # Use shared method to clean message content (removes tool_reference, etc.)
         body = self._clean_message_content(body)
 
+        # Clean system messages - remove scope from cache_control.ephemeral
+        # Claude Code sends cache_control.ephemeral.scope which Anthropic API doesn't support
+        # Error: "system.X.cache_control.ephemeral.scope: Extra inputs are not permitted"
+        if "system" in body and isinstance(body["system"], list):
+            cleaned_system = []
+            for idx, item in enumerate(body["system"]):
+                if isinstance(item, dict):
+                    item = item.copy()
+                    if "cache_control" in item and isinstance(item["cache_control"], dict):
+                        cache_control = item["cache_control"].copy()
+                        if "ephemeral" in cache_control and isinstance(cache_control["ephemeral"], dict):
+                            ephemeral = cache_control["ephemeral"].copy()
+                            if "scope" in ephemeral:
+                                del ephemeral["scope"]
+                                logger.debug(f"Removed 'scope' from system[{idx}].cache_control.ephemeral")
+                            cache_control["ephemeral"] = ephemeral
+                        item["cache_control"] = cache_control
+                cleaned_system.append(item)
+            body["system"] = cleaned_system
+
         # Clean top-level Bedrock-specific request fields
         # Claude Code sends requests formatted for AWS Bedrock which includes fields
         # that Anthropic API doesn't support, causing validation errors.
