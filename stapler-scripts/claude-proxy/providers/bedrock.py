@@ -129,24 +129,33 @@ class BedrockProvider(Provider):
         bedrock_body.pop("stream", None)
         bedrock_body.pop("model", None)
 
-        try:
-            # Invoke with streaming wrapped in async using thread pool
-            response = await anyio.to_thread.run_sync(
-                lambda: self.client.invoke_model_with_response_stream(
-                    modelId=bedrock_model,
-                    contentType="application/json",
-                    accept="application/json",
-                    body=json.dumps(bedrock_body)
-                )
+        send_stream, receive_stream = anyio.create_memory_object_stream(max_buffer_size=10)
+
+        async with anyio.create_task_group() as tg:
+            tg.start_soon(
+                anyio.to_thread.run_sync,
+                self._stream_bedrock_sync,
+                send_stream,
+                bedrock_model,
+                bedrock_body
             )
 
-            # Stream events - the EventStream is a synchronous iterator, so we wrap next() in a thread
-            iterator = iter(response["body"])
-            while True:
-                event = await anyio.to_thread.run_sync(next, iterator, None)
-                if event is None:
-                    break
+            async with receive_stream:
+                async for item in receive_stream:
+                    yield item
 
+    def _stream_bedrock_sync(self, send_stream, bedrock_model: str, bedrock_body: Dict[str, Any]):
+        """Synchronous worker to stream from Bedrock in a thread."""
+        try:
+            # Invoke with streaming
+            response = self.client.invoke_model_with_response_stream(
+                modelId=bedrock_model,
+                contentType="application/json",
+                accept="application/json",
+                body=json.dumps(bedrock_body)
+            )
+
+            for event in response["body"]:
                 chunk = json.loads(event["chunk"]["bytes"])
 
                 # Convert to SSE format matching Anthropic
@@ -156,9 +165,9 @@ class BedrockProvider(Provider):
                         "index": 0,
                         "delta": chunk.get("delta", {})
                     }
-                    yield f"data: {json.dumps(sse_data)}\n"
+                    anyio.from_thread.run(send_stream.send, f"data: {json.dumps(sse_data)}\n")
                 elif chunk.get("type") == "message_stop":
-                    yield "data: [DONE]\n"
+                    anyio.from_thread.run(send_stream.send, "data: [DONE]\n")
 
         except self.client.exceptions.ThrottlingException:
             raise RateLimitError("Bedrock rate limit exceeded")
@@ -166,3 +175,5 @@ class BedrockProvider(Provider):
             raise ValidationError(f"Bedrock validation error: {str(e)}")
         except Exception as e:
             raise Exception(f"Bedrock streaming error: {str(e)}")
+        finally:
+            anyio.from_thread.run(send_stream.aclose)
