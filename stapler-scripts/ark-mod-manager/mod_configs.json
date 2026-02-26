@@ -1,0 +1,32 @@
+{
+    "928793": {
+        "Cryopods": {
+            "ForceUseINISettings": "True",
+            "DisableCryoSickness": "True",
+            "DisableCryopodChargeNeed": "True",
+            "CryoTime": "0.1",
+            "CryoTimeInCombat": "5.0",
+            "AllowDeployInBossArenas": "True",
+            "PassImprintToDeployer": "True"
+        }
+    },
+    "928597": {
+        "AutomatedArk": {
+            "CraftingSpeedMultiplier": "2",
+            "ConsolePullRange": "10000",
+            "ConsolePullTimer": "300",
+            "UnlockAllEngrams": "True",
+            "DisableGrinderElement": "True"
+        }
+    },
+    "1220415": {
+        "HypersDinoWipe": {
+            "BoolUseAutomatedDinoWipes": "True",
+            "FloatWipeIntervalInSeconds": "3600.0",
+            "BoolWipeDinosOnServerStart": "True",
+            "BoolNoWipeTamedDino": "True",
+            "BoolNoWipeSleepingDino": "True",
+            "BoolShowWipeProgress": "True"
+        }
+    }
+}
