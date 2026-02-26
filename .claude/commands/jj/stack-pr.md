@@ -1,10 +1,12 @@
 ---
 title: JJ Stack PR
-description: Create granular commits and stacked PRs using Jujutsu (jj) version control
+description: Create granular commits and stacked PRs using Jujutsu (jj) version control. ONLY use this skill when the user explicitly mentions jj or Jujutsu. For standard git commits, branches, or PRs use the git:commit or git:create-pr skills instead.
 arguments: [action]
 ---
 
 # Jujutsu Stacked PR Workflow
+
+> **IMPORTANT**: This skill is for **Jujutsu (jj)** workflows only. If the user asked for a commit, branch, or PR without mentioning `jj`, stop and use the `git:commit` or `git:create-pr` skill instead.
 
 You are being invoked to help with Jujutsu (jj) stacked PR workflows. Use the **jj-stacked-pr** agent to provide specialized expertise in:
 - Creating granular, reviewable commits from large changes
