@@ -40,9 +40,13 @@ log_error() {
 # Check if kotlin-lsp is installed
 check_kotlin_lsp() {
     if command -v kotlin-lsp &> /dev/null; then
-        local version=$(kotlin-lsp --version 2>/dev/null || echo "unknown version")
-        log_success "Kotlin LSP is installed: $version"
-        return 0
+        if kotlin-lsp --help &> /dev/null; then
+            log_success "Kotlin LSP is installed and running."
+            return 0
+        else
+            log_warning "Kotlin LSP command exists but failed to run."
+            return 1
+        fi
     else
         log_warning "Kotlin LSP is not installed"
         return 1
@@ -117,11 +121,10 @@ install_kotlin_lsp() {
         log_success "Kotlin LSP installed successfully via $install_method"
 
         # Verify installation
-        if kotlin-lsp --version &> /dev/null; then
-            local version=$(kotlin-lsp --version)
-            log_success "Installation verified: $version"
+        if kotlin-lsp --help &> /dev/null; then
+            log_success "Installation verified."
         else
-            log_error "Installation completed but kotlin-lsp command not found"
+            log_error "Installation completed but kotlin-lsp command failed to run"
             log_info "You may need to restart your terminal or run: source ~/.zshrc"
             return 1
         fi
@@ -136,34 +139,145 @@ install_kotlin_lsp() {
     fi
 }
 
+# Verify checksum
+verify_checksum() {
+    local file="$1"
+    local expected="$2"
+    local actual
+
+    if command -v sha256sum &> /dev/null; then
+        actual=$(sha256sum "$file" | awk '{print $1}')
+    elif command -v shasum &> /dev/null; then
+        actual=$(shasum -a 256 "$file" | awk '{print $1}')
+    else
+        log_error "No SHA256 checksum tool found (sha256sum or shasum)"
+        return 1
+    fi
+
+    if [ "$actual" == "$expected" ]; then
+        return 0
+    else
+        log_error "Checksum verification failed!"
+        log_error "Expected: $expected"
+        log_error "Actual:   $actual"
+        return 1
+    fi
+}
+
 # Install standalone binary
 install_standalone_binary() {
     local temp_dir=$(mktemp -d)
-    local zip_url="https://github.com/Kotlin/kotlin-lsp/releases/latest/download/kotlin-lsp-0.1.0.zip"
+    local version="261.13587.0"
+    local base_url="https://download-cdn.jetbrains.com/kotlin-lsp/$version"
+    local platform=""
+    local arch=""
+    local checksum=""
+    local filename=""
 
-    log_info "Downloading standalone Kotlin LSP..."
-
-    # Try to download and extract
-    if command -v curl &> /dev/null && curl -L -o "$temp_dir/kotlin-lsp.zip" "$zip_url" 2>/dev/null; then
-        if command -v unzip &> /dev/null && unzip -q "$temp_dir/kotlin-lsp.zip" -d "$temp_dir"; then
-            # Find the binary
-            local binary_path=$(find "$temp_dir" -name "kotlin-lsp" -type f -executable 2>/dev/null | head -1)
-            if [ -n "$binary_path" ]; then
-                # Copy to local bin directory
-                mkdir -p ~/.local/bin
-                cp "$binary_path" ~/.local/bin/
-                chmod +x ~/.local/bin/kotlin-lsp
-
-                # Clean up
-                rm -rf "$temp_dir"
-                return 0
-            fi
-        fi
+    # Detect OS
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        platform="linux"
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+        platform="mac"
+    else
+        log_error "Unsupported OS: $OSTYPE"
+        rm -rf "$temp_dir"
+        return 1
     fi
 
-    # Clean up and return failure
+    # Detect Architecture
+    local machine_arch=$(uname -m)
+    if [[ "$machine_arch" == "x86_64" ]]; then
+        arch="x64"
+    elif [[ "$machine_arch" == "aarch64" || "$machine_arch" == "arm64" ]]; then
+        arch="aarch64"
+    else
+        log_error "Unsupported architecture: $machine_arch"
+        rm -rf "$temp_dir"
+        return 1
+    fi
+
+    # Determine filename and checksum
+    if [[ "$platform" == "linux" && "$arch" == "x64" ]]; then
+        filename="kotlin-lsp-$version-linux-x64.zip"
+        checksum="dc0ed2e70cb0d61fdabb26aefce8299b7a75c0dcfffb9413715e92caec6e83ec"
+    elif [[ "$platform" == "linux" && "$arch" == "aarch64" ]]; then
+        filename="kotlin-lsp-$version-linux-aarch64.zip"
+        checksum="d1dceb000fe06c5e2c30b95e7f4ab01d05101bd03ed448167feeb544a9f1d651"
+    elif [[ "$platform" == "mac" && "$arch" == "x64" ]]; then
+        filename="kotlin-lsp-$version-mac-x64.zip"
+        checksum="a3972f27229eba2c226060e54baea1c958c82c326dfc971bf53f72a74d0564a3"
+    elif [[ "$platform" == "mac" && "$arch" == "aarch64" ]]; then
+        filename="kotlin-lsp-$version-mac-aarch64.zip"
+        checksum="d4ea28b22b29cf906fe16d23698a8468f11646a6a66dcb15584f306aaefbee6c"
+    fi
+
+    local download_url="$base_url/$filename"
+
+    log_info "Downloading standalone Kotlin LSP $version ($platform-$arch)..."
+    log_info "URL: $download_url"
+
+    if ! command -v curl &> /dev/null; then
+        log_error "curl not found"
+        rm -rf "$temp_dir"
+        return 1
+    fi
+
+    if ! command -v unzip &> /dev/null; then
+        log_error "unzip not found"
+        rm -rf "$temp_dir"
+        return 1
+    fi
+
+    # Download
+    if ! curl -L -f -o "$temp_dir/$filename" "$download_url"; then
+        log_error "Download failed"
+        rm -rf "$temp_dir"
+        return 1
+    fi
+
+    # Verify Checksum
+    log_info "Verifying checksum..."
+    if ! verify_checksum "$temp_dir/$filename" "$checksum"; then
+        rm -rf "$temp_dir"
+        return 1
+    fi
+
+    log_success "Checksum verified"
+
+    # Extract
+    log_info "Extracting..."
+    if ! unzip -q "$temp_dir/$filename" -d "$temp_dir/extracted"; then
+        log_error "Extraction failed"
+        rm -rf "$temp_dir"
+        return 1
+    fi
+
+    # Install
+    local install_dir="$HOME/.local/share/kotlin-lsp"
+    local bin_dir="$HOME/.local/bin"
+
+    log_info "Installing to $install_dir..."
+
+    # Create directories
+    mkdir -p "$install_dir"
+    mkdir -p "$bin_dir"
+
+    # Remove old installation
+    rm -rf "$install_dir"/*
+
+    # Move files
+    # The zip contains kotlin-lsp.sh at root
+    cp -r "$temp_dir/extracted/"* "$install_dir/"
+
+    # Create Symlink
+    log_info "Creating symlink..."
+    ln -sf "$install_dir/kotlin-lsp.sh" "$bin_dir/kotlin-lsp"
+    chmod +x "$install_dir/kotlin-lsp.sh"
+
+    # Clean up
     rm -rf "$temp_dir"
-    return 1
+    return 0
 }
 
 # Show usage information
@@ -270,4 +384,6 @@ main() {
 }
 
 # Run main function
-main "$@"
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    main "$@"
+fi
