@@ -143,7 +143,12 @@ dev:
 	@echo "Press Ctrl+C to stop"
 	@uv run python main.py
 
-# Test the proxy
+# Run unit tests
+unit-test:
+	@echo "Running unit tests..."
+	@uv run python -m pytest test_providers.py -v
+
+# Test the proxy (live integration test)
 test:
 	@echo "Testing Claude Proxy..."
 	@echo ""
