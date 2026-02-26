@@ -6,7 +6,17 @@ DOTFILES_REPO="tstapler/$REPO_NAME"
 
 # Install python
 if ! [ -d "$HOME/.pyenv/" ]; then
-  curl https://pyenv.run | bash
+  echo "Downloading pyenv installer..."
+  installer_script=$(mktemp)
+  if curl -fsSL https://raw.githubusercontent.com/pyenv/pyenv-installer/master/bin/pyenv-installer -o "$installer_script"; then
+    echo "Running pyenv installer..."
+    bash "$installer_script"
+    rm "$installer_script"
+  else
+    echo "Failed to download pyenv installer"
+    rm "$installer_script"
+    exit 1
+  fi
 fi
 
 PYTHON_VERSION=3.9.12

@@ -1,0 +1,23 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+
+# Ark Config Backups (Sensitive)
+.backups/
+*.bak
+
+# Temporary Files
+.pytest_cache/
+.gemini/tmp/
+inventory_scanner.py
+current_inventory.json
+
+# Local Environment / Secrets
+.env
+*.local

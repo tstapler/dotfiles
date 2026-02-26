@@ -5,3 +5,4 @@ case $OS in
     unsetopt BG_NICE
     ;;
 esac
+. "$HOME/.cargo/env"

@@ -1,5 +1,6 @@
 """AWS Bedrock provider implementation."""
 import json
+import anyio
 import boto3
 import asyncio
 import logging
@@ -635,9 +636,8 @@ class BedrockProvider(Provider):
         bedrock_body = self._prepare_bedrock_body(body, normalized_model, headers)
 
         try:
-            # Run blocking boto3 call in thread pool to avoid blocking event loop
-            response = await loop.run_in_executor(
-                self.executor,
+            # Synchronous call wrapped in async using thread pool
+            response = await anyio.to_thread.run_sync(
                 lambda: self.client.invoke_model(
                     modelId=bedrock_model,
                     contentType="application/json",
@@ -646,8 +646,9 @@ class BedrockProvider(Provider):
                 )
             )
 
-            # Parse response
-            result = json.loads(response["body"].read())
+            # Parse response - reading from the body is also blocking I/O
+            body_content = await anyio.to_thread.run_sync(response["body"].read)
+            result = json.loads(body_content)
             return self._convert_response(result, original_model)
 
         except Exception as e:
@@ -674,26 +675,46 @@ class BedrockProvider(Provider):
         # Prepare Bedrock request body (pass normalized model for beta compatibility checking)
         bedrock_body = self._prepare_bedrock_body(body, normalized_model, headers)
 
-        try:
-            # Run blocking boto3 streaming call in thread pool to avoid blocking event loop
-            response = await loop.run_in_executor(
-                self.executor,
-                lambda: self.client.invoke_model_with_response_stream(
-                    modelId=bedrock_model,
-                    contentType="application/json",
-                    accept="application/json",
-                    body=json.dumps(bedrock_body)
-                )
+        send_stream, receive_stream = anyio.create_memory_object_stream(max_buffer_size=10)
+
+        async with anyio.create_task_group() as tg:
+            tg.start_soon(
+                anyio.to_thread.run_sync,
+                self._stream_bedrock_sync,
+                send_stream,
+                bedrock_model,
+                bedrock_body
             )
 
-            # Stream events (iteration is fast, no need to run in executor)
+            async with receive_stream:
+                async for item in receive_stream:
+                    yield item
+
+    def _stream_bedrock_sync(self, send_stream, bedrock_model: str, bedrock_body: Dict[str, Any]):
+        """Synchronous worker to stream from Bedrock in a thread."""
+        try:
+            response = self.client.invoke_model_with_response_stream(
+                modelId=bedrock_model,
+                contentType="application/json",
+                accept="application/json",
+                body=json.dumps(bedrock_body)
+            )
+
             for event in response["body"]:
                 chunk = json.loads(event["chunk"]["bytes"])
 
-                # Forward all events in SSE format matching Anthropic API
-                # Bedrock returns: message_start, content_block_start, content_block_delta,
-                # content_block_stop, message_delta, message_stop, ping
-                yield f"data: {json.dumps(chunk)}\n\n"
+                # Convert to SSE format matching Anthropic
+                if chunk.get("type") == "content_block_delta":
+                    sse_data = {
+                        "type": "content_block_delta",
+                        "index": 0,
+                        "delta": chunk.get("delta", {})
+                    }
+                    anyio.from_thread.run(send_stream.send, f"data: {json.dumps(sse_data)}\n")
+                elif chunk.get("type") == "message_stop":
+                    anyio.from_thread.run(send_stream.send, "data: [DONE]\n")
 
         except Exception as e:
             self._handle_bedrock_error(e)
+        finally:
+            anyio.from_thread.run(send_stream.aclose)

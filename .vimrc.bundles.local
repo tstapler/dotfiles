@@ -15,7 +15,7 @@ NeoBundle 'tpope/vim-fugitive'
 NeoBundle 'tpope/vim-surround'
 NeoBundle 'flazz/vim-colorschemes'
 "TODO: Add vimproc
-"TODO: Add Vimshell
+NeoBundle 'Shougo/vimshell'
 "TODO: Add eclim
 "Vundle NeoBundles!
 NeoBundle 'Chiel92/vim-autoformat'
