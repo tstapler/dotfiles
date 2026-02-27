@@ -42,6 +42,9 @@ fi
 echo "Checking out and updating submodules"
 cd "$CLONE_DIR" && git submodule update --init --recursive
 
+echo "Configuring SSH for tstapler GitHub repos..."
+sh "$CLONE_DIR/stapler-scripts/setup-github-ssh.sh" || echo "SSH setup skipped (run manually after adding your personal key to GitHub)"
+
 
 echo "Installing cfgcaddy dependencies."
 
