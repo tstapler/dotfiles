@@ -103,6 +103,10 @@ fi
 # Alias for running mermaid diagrams using mmdc
 alias mmdc="npx -p @mermaid-js/mermaid-cli mmdc"
 
+# Alias pamac to run with a clean system PATH to avoid conflicts with
+# custom Python environments (like Homebrew or Rye) when building AUR packages.
+alias pamac='env PATH=/usr/bin:/bin:/usr/local/bin pamac'
+
 # Alias for running Claude with LiteLLM proxy
 # Unsets CLAUDE_CODE_USE_BEDROCK to prevent direct Bedrock usage
 # Sets ANTHROPIC_BASE_URL to point to local LiteLLM proxy on port 47000
