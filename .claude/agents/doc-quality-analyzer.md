@@ -118,7 +118,8 @@ Auditing sentence quality to identify systematic clarity problems.
 ## Methodology
 
 ### **Phase 1: Discovery and Inventory**
-1. **Scan all documentation files** using Glob to identify all `.md`, `.txt`, and documentation files
+1. **Handle [[Needs Processing]] tags**: When encountering this tag in documentation, recursively process all child bullet points and nested content to ensure full context is captured for analysis.
+2. **Scan all documentation files** using Glob to identify all `.md`, `.txt`, and documentation files
 2. **Create an inventory** of documentation assets with:
    - File paths and names
    - Apparent purpose and content type
