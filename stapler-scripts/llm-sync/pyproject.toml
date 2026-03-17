@@ -1,10 +1,13 @@
 [project]
 name = "llm-sync"
 version = "0.1.0"
-description = "Add your description here"
+description = "Sync LLM agents from Claude to Gemini and OpenCode"
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.12"
 dependencies = [
     "pyyaml>=6.0.3",
     "rich>=14.3.2",
 ]
+
+[project.scripts]
+llm-sync = "llm_sync.cli:main"

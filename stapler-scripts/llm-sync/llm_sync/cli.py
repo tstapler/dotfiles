@@ -3,17 +3,9 @@ import sys
 from pathlib import Path
 from rich.console import Console
 
-# Allow running from src directly or as module
-try:
-    from .sources.claude import ClaudeSource
-    from .targets.gemini import GeminiTarget
-    from .targets.opencode import OpenCodeTarget
-except ImportError:
-    # Fallback if run as script (hacky but useful during dev)
-    sys.path.append(str(Path(__file__).parent))
-    from sources.claude import ClaudeSource
-    from targets.gemini import GeminiTarget
-    from targets.opencode import OpenCodeTarget
+from .sources.claude import ClaudeSource
+from .targets.gemini import GeminiTarget
+from .targets.opencode import OpenCodeTarget
 
 console = Console()
 

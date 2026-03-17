@@ -1,11 +1,10 @@
 import sys
 from pathlib import Path
 
-# Add src to python path
-src_path = Path(__file__).parent / "src"
-sys.path.append(str(src_path))
+# Add project root to python path so we can import llm_sync as a package
+sys.path.append(str(Path(__file__).parent))
 
-from cli import main
+from llm_sync.cli import main
 
 if __name__ == "__main__":
     main()

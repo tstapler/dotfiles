@@ -1,8 +1,8 @@
 import yaml
 from pathlib import Path
 from typing import List, Optional
-from core import Agent, Skill, Command, SyncTarget
-from mappings import GEMINI_TOOLS
+from ..core import Agent, Skill, Command, SyncTarget
+from ..mappings import GEMINI_TOOLS
 from rich.console import Console
 
 console = Console()
