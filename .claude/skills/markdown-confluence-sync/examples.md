@@ -1,8 +1,23 @@
 # Markdown Confluence Examples
 
-## Example 1: New Project Publishing
+## Tool Binary (used in all examples)
 
-### Step 1: Create Project Structure
+```
+/Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence/.venv/bin/markdown-confluence
+```
+
+All examples assume environment variables are set:
+
+```bash
+export CONFLUENCE_BASE_URL="https://betfanatics.atlassian.net"
+export ATLASSIAN_USER_NAME="tyler.stapler@betfanatics.com"
+```
+
+---
+
+## Example 1: New Project Setup and Publish
+
+### Project Structure
 
 ```
 my-project/
@@ -16,7 +31,7 @@ my-project/
     └── troubleshooting.md
 ```
 
-### Step 2: Create Config File
+### Config File
 
 `.markdown-confluence.json`:
 ```json
@@ -35,9 +50,8 @@ my-project/
 }
 ```
 
-### Step 3: Add Frontmatter to Files
+### Frontmatter
 
-`README.md`:
 ```markdown
 ---
 connie-title: "My Project Documentation"
@@ -45,30 +59,20 @@ connie-title: "My Project Documentation"
 
 # My Project
 
-Welcome to my project documentation.
-
 See [Introduction](./overview/introduction.md) for details.
 ```
 
-### Step 4: Dry Run
+### Dry Run, Then Publish
 
 ```bash
-CONFLUENCE_BASE_URL="https://betfanatics.atlassian.net" \
-ATLASSIAN_USER_NAME="tyler.stapler@betfanatics.com" \
 /Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence/.venv/bin/markdown-confluence \
 publish . --config .markdown-confluence.json --dry-run --verbose
-```
 
-### Step 5: Publish
-
-```bash
-CONFLUENCE_BASE_URL="https://betfanatics.atlassian.net" \
-ATLASSIAN_USER_NAME="tyler.stapler@betfanatics.com" \
 /Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence/.venv/bin/markdown-confluence \
 publish . --config .markdown-confluence.json --verbose
 ```
 
-After publishing, frontmatter is updated with page IDs:
+After publishing, frontmatter is auto-updated with IDs:
 ```markdown
 ---
 connie-title: "My Project Documentation"
@@ -81,30 +85,24 @@ connie-parent-id: '1394901392'
 
 ## Example 2: Crawl Existing Confluence Content
 
-### Download Single Page
+### Single Page by ID
 
 ```bash
-CONFLUENCE_BASE_URL="https://betfanatics.atlassian.net" \
-ATLASSIAN_USER_NAME="tyler.stapler@betfanatics.com" \
 /Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence/.venv/bin/markdown-confluence \
 crawl page 1070956670 --output /tmp/crawled_page --verbose
 ```
 
-### Download by URL
+### Single Page by URL
 
 ```bash
-CONFLUENCE_BASE_URL="https://betfanatics.atlassian.net" \
-ATLASSIAN_USER_NAME="tyler.stapler@betfanatics.com" \
 /Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence/.venv/bin/markdown-confluence \
 crawl page "https://betfanatics.atlassian.net/wiki/spaces/ENG/pages/1070956670/My+Page" \
 --output /tmp/crawled_page --verbose
 ```
 
-### Download Page Tree
+### Page Tree with Depth Limit
 
 ```bash
-CONFLUENCE_BASE_URL="https://betfanatics.atlassian.net" \
-ATLASSIAN_USER_NAME="tyler.stapler@betfanatics.com" \
 /Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence/.venv/bin/markdown-confluence \
 crawl page-tree 1070956670 --output /tmp/crawled_tree --max-depth 2 --verbose
 ```
@@ -131,58 +129,43 @@ publish . --config .markdown-confluence.json \
 
 ---
 
-## Example 4: Force Update and Troubleshooting
+## Example 4: One-Off Single File Publish
 
-### Force Update Unchanged Pages
+No config file needed; use CLI flags directly:
 
 ```bash
+# Create under a parent page
+/Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence/.venv/bin/markdown-confluence \
+publish ONE_PAGER.md --parent-id "1394901392" --verbose
+
+# Update an existing page by ID
+/Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence/.venv/bin/markdown-confluence \
+publish updated_doc.md --page-id "2307522893" --verbose
+```
+
+---
+
+## Example 5: Force Update and Troubleshooting
+
+```bash
+# Force update unchanged pages
 /Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence/.venv/bin/markdown-confluence \
 publish . --config .markdown-confluence.json --force --verbose
-```
 
-### Stop on First Error
-
-```bash
+# Stop on first error for debugging
 /Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence/.venv/bin/markdown-confluence \
 publish . --config .markdown-confluence.json --fail-fast --verbose
-```
 
-### Handle Archived Pages
-
-```bash
+# Enable diagnostic mode for detailed error info
 /Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence/.venv/bin/markdown-confluence \
-publish . --config .markdown-confluence.json --delete-archived --verbose
+publish . --config .markdown-confluence.json --diagnostic --fail-fast --verbose
 ```
 
 ---
 
-## Example 5: Moving Pages Between Parents
+## Example 6: Directory Hierarchy as Page Hierarchy
 
-### Change Parent via Frontmatter
-
-Before:
-```markdown
----
-connie-page-id: '123456'
-connie-parent-id: '111111'
----
-```
-
-After (change parent ID):
-```markdown
----
-connie-page-id: '123456'
-connie-parent-id: '222222'
----
-```
-
-Then publish - the tool automatically detects parent change and moves the page.
-
----
-
-## Example 6: Force Hierarchy from Directory Structure
-
-### Ignore Frontmatter Parents, Use Directories
+Force the directory structure to drive Confluence page hierarchy:
 
 ```bash
 /Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence/.venv/bin/markdown-confluence \
@@ -190,97 +173,112 @@ publish . --config .markdown-confluence.json \
 --force-hierarchy --update-frontmatter --verbose
 ```
 
-This:
-1. Ignores `connie-parent-id` in frontmatter
-2. Uses directory structure to determine hierarchy
-3. Updates frontmatter with corrected parent IDs
+This ignores `connie-parent-id` in frontmatter, uses directory nesting instead, and updates frontmatter with the corrected parent IDs.
 
 ---
 
-## Example 7: Compare Page Versions
+## Example 7: Move Page to New Parent
 
-### Fetch and Compare Versions
+Change `connie-parent-id` in frontmatter:
 
-```bash
-CONFLUENCE_BASE_URL="https://betfanatics.atlassian.net" \
-ATLASSIAN_USER_NAME="tyler.stapler@betfanatics.com" \
-/Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence/.venv/bin/markdown-confluence \
-crawl page-versions 2322038952 --compare 11,12 --output ./version_comparison --verbose
-```
-
----
-
-## Example 8: Real Project Configuration
-
-From `project_plans/shared-dictionary-compression/.markdown-confluence.json`:
-
-```json
-{
-  "confluence": {
-    "base_url": "https://betfanatics.atlassian.net",
-    "parent_id": "1394901392",
-    "username": "tyler.stapler@betfanatics.com"
-  },
-  "publish": {
-    "folder_to_publish": ".",
-    "frontmatter_from_document_start": true,
-    "skip_metadata": false,
-    "use_file_path_as_title": false,
-    "prepend_file_path_to_title": false,
-    "resolve_relative_links": true,
-    "respect_link_dependencies": true
-  }
-}
-```
-
-Published markdown example:
 ```markdown
 ---
-connie-page-id: '2307522893'
-connie-parent-id: '1394901392'
+connie-page-id: '123456'
+connie-parent-id: '222222'    # Changed from '111111'
 ---
-
-# Project Proposal: Pages API Optimization
-
-Content with wikilinks like [[Related Page]] and
-relative links like [Architecture](./docs/architecture.md)
-are automatically resolved to Confluence page links.
 ```
 
+Then publish; the tool detects the parent change and moves the page.
+
 ---
 
-## Example 9: Publish Single File
+## Example 8: Sync Workflow
 
 ```bash
-CONFLUENCE_BASE_URL="https://betfanatics.atlassian.net" \
-ATLASSIAN_USER_NAME="tyler.stapler@betfanatics.com" \
+# Check what's changed
 /Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence/.venv/bin/markdown-confluence \
-publish ONE_PAGER.md --verbose
+sync status . --recursive
+
+# Pull remote changes
+/Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence/.venv/bin/markdown-confluence \
+sync pull . --recursive
+
+# Auto-resolve conflicts preferring remote
+/Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence/.venv/bin/markdown-confluence \
+sync pull . --recursive --auto-resolve --prefer-remote
+
+# Resolve a specific conflict interactively
+/Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence/.venv/bin/markdown-confluence \
+sync resolve docs/page.md
 ```
 
 ---
 
-## Example 10: Debugging Failed Publish
-
-### Step 1: Run with Diagnostic Mode
+## Example 9: Compare Page Versions
 
 ```bash
 /Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence/.venv/bin/markdown-confluence \
-publish . --config .markdown-confluence.json --diagnostic --fail-fast --verbose
+crawl page-versions 2322038952 --compare 11,12 --output /tmp/version_comparison --verbose
 ```
 
-### Step 2: Fix Corrupted Parent (if needed)
+---
+
+## Example 10: Fix Corrupted Parent Page
 
 ```bash
 cd /Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence
 uv run python debug_tools/fix_page_format.py \
-  --config /path/to/.markdown-confluence.json \
-  --page-id PARENT_PAGE_ID
-```
+  --config=/path/to/.markdown-confluence.json \
+  --page-id=PARENT_PAGE_ID
 
-### Step 3: Retry Publish
-
-```bash
+# Then retry publish with force
 /Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence/.venv/bin/markdown-confluence \
 publish . --config .markdown-confluence.json --force --verbose
+```
+
+---
+
+## Example 11: Comments
+
+```bash
+# Fetch all comments
+/Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence/.venv/bin/markdown-confluence \
+comments fetch 1070956670
+
+# Add a footer comment
+/Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence/.venv/bin/markdown-confluence \
+comments add 1070956670 --message "Updated documentation per review feedback"
+
+# Export comments to markdown
+/Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence/.venv/bin/markdown-confluence \
+comments export 1070956670 --output /tmp/comments.md --format markdown
+```
+
+---
+
+## Example 12: Migrate Legacy Editor Pages
+
+```bash
+# Check editor type (dry run)
+/Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence/.venv/bin/markdown-confluence \
+migrate-editor 2132017153 --dry-run
+
+# Migrate multiple pages
+/Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence/.venv/bin/markdown-confluence \
+migrate-editor 2132017153 1848115341
+```
+
+---
+
+## Example 13: Restrict Page Access
+
+```bash
+# Make page private (only visible to you)
+/Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence/.venv/bin/markdown-confluence \
+publish private_doc.md --config .markdown-confluence.json --private --verbose
+
+# Restrict to specific group
+/Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence/.venv/bin/markdown-confluence \
+publish internal_doc.md --config .markdown-confluence.json \
+--restrict-read "group:platform-team" --restrict-update "group:platform-team" --verbose
 ```

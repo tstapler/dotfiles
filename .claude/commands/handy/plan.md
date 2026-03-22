@@ -294,8 +294,69 @@ Before generating the plan, use @research agent to:
 
 ## Output Location
 
-Save to: `logseq/pages/[Project Name].md`
+Save the zettel to the personal wiki directory in:
+`/Users/tylerstapler/Documents/personal-wiki/logseq/pages/[Project Name].md`
+
+Use a clear, descriptive page name that follows Logseq conventions.
+
+## Journal Entry Creation
+
+After successfully creating the project plan, create or update today's journal entry:
+
+### 1. Determine Journal File
+- Get today's date and format as `YYYY_MM_DD.md` (e.g., `2025_12_22.md`)
+- Full path: `/Users/tylerstapler/Documents/personal-wiki/logseq/journals/YYYY_MM_DD.md`
+
+### 2. Journal Entry Format
+Create a journal entry with the following structure:
+
+```markdown
+- **Project Planning**: Created comprehensive plan for [[Project Name]] #[[Home Improvement]] #[[Planning]]
+  - Generated detailed guide covering safety, tools, materials, and step-by-step instructions
+  - Estimated cost: $[DIY Cost Range] DIY vs $[Professional Cost Range] professional
+  - Difficulty level: [Beginner/Intermediate/Advanced]
+  - Estimated time: [Time Estimate]
+  - Key considerations: [1-2 major decision points or challenges]
+  - Next steps: [What should be done next - review plan, purchase materials, schedule work, etc.]
+```
+
+### 3. Journal Entry Implementation
+- **Check if file exists**: Read the journal file for today if it exists
+- **Append to existing file**: If the file exists, append the new entry at the END (not beginning)
+- **Create new file**: If the file doesn't exist, create it with the entry
+- **Preserve existing content**: Never overwrite existing journal entries
+- **Add blank line separator**: Add a blank line before the new entry if appending
+
+### 4. Error Handling
+- If journal file cannot be created/updated, notify user but don't fail the command
+- Log the journal entry content so user can manually add if needed
+- Handle file permissions gracefully
+
+### 5. Success Confirmation
+After both the project plan and journal entry are created:
+1. Confirm project plan saved to: `logseq/pages/[Project Name].md`
+2. Confirm journal entry added to: `logseq/journals/YYYY_MM_DD.md`
+3. Provide summary of what was created and key takeaways
+
+## Example Workflow
+
+1. User runs: `handy:plan "Repointing brick stairs on front of house"`
+2. Command researches best practices for repointing brick/mortar
+3. Creates comprehensive plan at: `logseq/pages/Repointing 711 N 60th Front Stairs.md`
+4. Appends entry to: `logseq/journals/2025_12_22.md`:
+   ```markdown
+   - **Project Planning**: Created comprehensive plan for [[Repointing 711 N 60th Front Stairs]] #[[Home Improvement]] #[[Planning]]
+     - Generated detailed guide covering safety, tools, materials, and step-by-step instructions
+     - Estimated cost: $300-$600 DIY vs $2,000-$4,000 professional
+     - Difficulty level: Intermediate
+     - Estimated time: 2-3 days
+     - Key considerations: Weather timing critical, requires mortar color matching
+     - Next steps: Review plan, source matching mortar, schedule for spring when temperatures stable above 40°F
+   ```
+5. Confirms both files created successfully
 
 ---
 
 Generate the expert project plan for: **$@**
+
+Then create the corresponding journal entry documenting the planning work completed.

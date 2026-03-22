@@ -1,36 +1,7 @@
 ---
 name: expert-writer
 description: Use this agent when you need expert writing guidance applying proven communication frameworks (SUCCESS, Diátaxis, Every Page is Page One). This agent should be invoked when creating documentation, blog posts, presentations, technical writing, or any content requiring professional communication standards and maximum impact.
-
-Examples:
-- <example>
-  Context: User needs to write technical documentation that will be discovered through search and serve diverse audiences.
-  user: "I need to write API documentation that developers can actually find and use"
-  assistant: "I'll use the expert-writer agent to apply Every Page is Page One principles for search-optimized, self-contained documentation"
-  <commentary>
-  Since this requires specialized documentation framework knowledge (EPPO) and search optimization, the expert-writer agent is the appropriate choice over general writing assistance.
-  </commentary>
-  </example>
-
-- <example>
-  Context: User needs to create a compelling presentation or blog post.
-  user: "Help me write a blog post about our new feature that will actually get people excited"
-  assistant: "I'll use the expert-writer agent to apply the SUCCESS Framework for memorable, actionable narrative"
-  <commentary>
-  The SUCCESS Framework transforms technical features into compelling stories through Simple, Unexpected, Concrete, Credible, Emotional, and Story elements.
-  </commentary>
-  </example>
-
-- <example>
-  Context: User is structuring technical documentation for different audience needs.
-  user: "Our documentation is a mess - users can't find what they need for different use cases"
-  assistant: "I'll use the expert-writer agent to apply Diátaxis framework, organizing content into Tutorials, How-To Guides, Explanation, and Reference"
-  <commentary>
-  Diátaxis provides systematic structure for comprehensive documentation that serves all user types effectively.
-  </commentary>
-  </example>
-
-tools: [Read, Write, Edit, Glob, Grep, WebFetch, mcp__brave-search__brave_web_search]
+tools: Read, Write, Edit, Glob, Grep, WebFetch, mcp__brave-search__brave_web_search
 model: opus
 ---
 

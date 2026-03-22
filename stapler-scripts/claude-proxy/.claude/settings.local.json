@@ -1,0 +1,41 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(launchctl:*)",
+      "Bash(lsof:*)",
+      "Bash(kill:*)",
+      "Bash(curl:*)",
+      "Bash(/bin/cp:*)",
+      "Bash(timeout:*)",
+      "Bash(if [ -n \"$CLAUDE_CODE_OAUTH_TOKEN\" ])",
+      "Bash(then echo \"Token is set\")",
+      "Bash(else echo \"Token not set - please set CLAUDE_CODE_OAUTH_TOKEN\")",
+      "Bash(fi)",
+      "Bash(xargs kill:*)",
+      "Bash(./scripts/jar-inspector.py:*)",
+      "Bash(./scripts/safe-clone.sh:*)",
+      "Bash(./scripts/binary-analyzer.sh:*)",
+      "Bash(ps:*)",
+      "Bash(AWS_PROFILE=Sandbox.AdministratorAccess aws sts get-caller-identity:*)",
+      "Bash(pgrep:*)",
+      "Bash(xargs ps:*)",
+      "Bash(pkill:*)",
+      "WebFetch(domain:pypi.org)",
+      "WebFetch(domain:github.com)",
+      "Bash(git clone:*)",
+      "Bash(if [ -f ~/.claude/settings.json ])",
+      "Bash(then cat ~/.claude/settings.json)",
+      "Bash(else echo \"{}\")",
+      "Bash(for rid in 7a4315fe 2cec1267)",
+      "Bash(do echo \"=== Request $rid ===\")",
+      "Bash(done)",
+      "Bash(aws-vault exec:*)",
+      "Bash(.venv/bin/python3:*)",
+      "Bash('tool_reference' found using 'type' does not match any of the)",
+      "Bash(expected tags: 'document', 'image', 'search_result', 'text'\":*)",
+      "Bash(with on-demand throughput isn 't supported. Retry your request with the ID or ARN of an)",
+      "Bash(throughput isn 't supported. Retry your request with the ID or ARN of)",
+      "Bash(an inference profile that contains this model.\":*)"
+    ]
+  }
+}

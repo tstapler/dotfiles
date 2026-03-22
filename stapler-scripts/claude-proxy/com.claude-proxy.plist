@@ -8,8 +8,14 @@
     <array>
         <string>/opt/homebrew/bin/uv</string>
         <string>run</string>
-        <string>python</string>
-        <string>main.py</string>
+        <string>uvicorn</string>
+        <string>main:app</string>
+        <string>--host</string>
+        <string>127.0.0.1</string>
+        <string>--port</string>
+        <string>47000</string>
+        <string>--workers</string>
+        <string>10</string>
     </array>
     <key>WorkingDirectory</key>
     <string>/Users/tylerstapler/dotfiles/stapler-scripts/claude-proxy</string>
@@ -23,6 +29,8 @@
         <string>us-west-2</string>
         <key>PROXY_PORT</key>
         <string>47000</string>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
     </dict>
     <key>StandardOutPath</key>
     <string>/tmp/claude-proxy.log</string>

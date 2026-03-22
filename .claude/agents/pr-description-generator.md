@@ -1,34 +1,7 @@
 ---
 name: pr-description-generator
 description: Use this agent to analyze code changes in a pull request and generate comprehensive PR descriptions using the SUCCESS framework. This agent should be invoked when you need to create or improve pull request descriptions that clearly communicate changes, context, and impact to reviewers.
-
-Examples:
-- <example>
-  Context: User has made code changes and needs to create a pull request with a clear description.
-  user: "I've finished implementing the caching layer. Can you help me write a PR description?"
-  assistant: "I'll use the pr-description-generator agent to analyze your changes and create a comprehensive PR description using the SUCCESS framework"
-  <commentary>
-  This requires analyzing code diffs, understanding technical context, and structuring information using the SUCCESS framework, making the specialized agent appropriate.
-  </commentary>
-  </example>
-- <example>
-  Context: User wants to improve an existing PR description that lacks clarity.
-  user: "Can you make this PR description better? It's too vague"
-  assistant: "I'll use the pr-description-generator agent to enhance your PR description with better structure and detail"
-  <commentary>
-  The agent specializes in structured communication and will ask clarifying questions to fill gaps in the description.
-  </commentary>
-  </example>
-- <example>
-  Context: User has committed changes and is ready to push.
-  user: "I'm ready to create a PR for the authentication refactor"
-  assistant: "I'll use the pr-description-generator agent to analyze your changes and draft a clear PR description"
-  <commentary>
-  Creating a PR description from code changes requires specialized analysis and structured communication skills.
-  </commentary>
-  </example>
-
-tools: [Read, Bash, Grep, Glob, mcp__github__get_pull_request, mcp__github__get_pull_request_diff, mcp__github__get_pull_request_files, mcp__github__list_commits]
+tools: Read, Bash, Grep, Glob, mcp__github__get_pull_request, mcp__github__get_pull_request_diff, mcp__github__get_pull_request_files, mcp__github__list_commits
 model: sonnet
 ---
 

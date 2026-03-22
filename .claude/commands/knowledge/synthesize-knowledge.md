@@ -60,6 +60,28 @@ Let me break down the information synthesis process:
 
 ## Process Execution
 
+### Pre-Synthesis Quality Check
+
+**Before creating new content, check if topic already exists and its quality**:
+
+```bash
+cd /Users/tylerstapler/Documents/personal-wiki
+
+# Check if page exists and get quality metrics
+uv run logseq-analyze quality "logseq/pages/${1}.md" 2>/dev/null
+
+# If page exists, check its quality score
+# If quality_score > 0.7 and word_count > 500:
+#   - Page already comprehensive
+#   - Consider updating instead of recreating
+#   - Or add new insights to existing page
+```
+
+This prevents:
+- Duplicating existing comprehensive content
+- Overwriting quality pages
+- Missing opportunities to enhance existing content
+
 ### Execution Strategy: Agent-Assisted Daily Zettel Synthesis
 
 I'll delegate to the **knowledge-synthesis agent** with specific instructions for the **daily Zettel workflow**:
@@ -140,7 +162,30 @@ Expected deliverables:
 
 ### Phase 2: Quality Assurance
 
-I'll verify:
+I'll verify synthesis quality using analysis tools:
+
+**Run Post-Synthesis Quality Check**:
+```bash
+cd /Users/tylerstapler/Documents/personal-wiki
+
+# Check quality of newly created/updated pages
+uv run logseq-analyze quality "logseq/pages/Knowledge Synthesis - $(date +%Y-%m-%d).md"
+
+# For any new topic Zettels created
+uv run logseq-analyze quality "logseq/pages/${topic_name}.md"
+
+# Check connection health
+uv run logseq-analyze connections "logseq/pages/${topic_name}.md"
+```
+
+**Quality Metrics to Verify**:
+- Word count ≥ 500 for topic Zettels
+- Quality score ≥ 0.7 for comprehensive content
+- Connection count ≥ 3 for good integration
+- All required sections present
+- Source citations included
+
+**Traditional Verification**:
 - Daily Zettel exists and is properly formatted
 - Individual synthesis sections are comprehensive and thorough
 - Topic Zettels created or updated for all major concepts

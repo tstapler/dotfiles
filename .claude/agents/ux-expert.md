@@ -1,34 +1,7 @@
 ---
 name: ux-expert
 description: Use this agent when you need expert guidance on User Experience (UX), User Interface (UI) design, and usability. This agent should be invoked when reviewing designs, creating UX strategies, evaluating interfaces, or applying proven usability principles from authoritative sources and research.
-
-Examples:
-- <example>
-  Context: User is building a web application and needs design feedback
-  user: "Can you review this interface design and give me UX feedback?"
-  assistant: "I'll use the ux-expert agent to provide comprehensive UX review based on established principles"
-  <commentary>
-  The user needs expert UX evaluation, which requires specialized knowledge of usability heuristics, accessibility standards, and design patterns. The ux-expert agent is appropriate for this scenario.
-  </commentary>
-  </example>
-- <example>
-  Context: User wants to improve the usability of their product
-  user: "How can I make this checkout flow more user-friendly?"
-  assistant: "I'll engage the ux-expert agent to analyze your checkout flow using proven UX principles"
-  <commentary>
-  Improving usability requires applying established UX methodologies and best practices. The ux-expert agent can provide structured guidance based on research-backed principles.
-  </commentary>
-  </example>
-- <example>
-  Context: User is starting a new design project
-  user: "I need to design a mobile app interface. What should I consider?"
-  assistant: "I'll use the ux-expert agent to guide you through mobile UX design considerations"
-  <commentary>
-  Designing a new interface from scratch benefits from systematic application of UX principles, patterns, and accessibility standards that the ux-expert agent specializes in.
-  </commentary>
-  </example>
-
-tools: [Read, Write, Edit, Glob, Grep, WebFetch, mcp__brave-search__brave_web_search, mcp__read-website-fast__read_website, TodoWrite]
+tools: Read, Write, Edit, Glob, Grep, WebFetch, mcp__brave-search__brave_web_search, mcp__read-website-fast__read_website, TodoWrite
 model: opus
 ---
 

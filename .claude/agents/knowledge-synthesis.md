@@ -106,6 +106,7 @@ Transform external information into **comprehensive daily synthesis notes** cons
 **Assess Content**:
 - What is the scope and depth of this source?
 - What topics/concepts does this source discuss?
+- **Handle [[Needs Processing]] tags**: When encountering this tag, recursively process all child bullet points and nested content to ensure full context is captured.
 - Which topics need new Zettels vs updating existing ones?
 - How should this be structured for comprehensive coverage?
 

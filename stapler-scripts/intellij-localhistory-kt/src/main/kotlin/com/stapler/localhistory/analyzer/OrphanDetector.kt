@@ -1,6 +1,9 @@
 package com.stapler.localhistory.analyzer
 
-import com.stapler.localhistory.*
+import com.stapler.localhistory.ContentStorageReader
+import com.stapler.localhistory.parser.ChangeSetInfo
+import com.stapler.localhistory.parser.parseDataFile
+import com.stapler.localhistory.parser.parseIndexFile
 import java.nio.file.Path
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -46,11 +49,20 @@ data class ContentReference(
 }
 
 /**
- * Detects orphaned content by analyzing references in LocalHistory
+ * Detects orphaned content by analyzing references in LocalHistory.
+ *
+ * This class uses composition to support multiple LocalHistory reading strategies:
+ * - DirectLocalHistoryReader: Direct file parsing (default for backward compatibility)
+ * - FacadeLocalHistoryReader: Uses the facade API for better format support
+ *
+ * @param localHistoryDir Path to LocalHistory directory
+ * @param cachesDir Path to caches directory
+ * @param reader Optional custom LocalHistoryReader implementation
  */
 open class OrphanDetector(
     private val localHistoryDir: Path,
-    private val cachesDir: Path
+    private val cachesDir: Path,
+    private val reader: LocalHistoryReader = DirectLocalHistoryReader(localHistoryDir)
 ) {
 
     companion object {
@@ -63,54 +75,29 @@ open class OrphanDetector(
         const val RECENT_DAYS = 7L
         const val OLD_DAYS = 30L
         const val VERY_OLD_DAYS = 90L
+
+        /**
+         * Create an OrphanDetector using the facade API for better format support.
+         */
+        fun withFacade(localHistoryDir: Path, cachesDir: Path): OrphanDetector {
+            return OrphanDetector(
+                localHistoryDir,
+                cachesDir,
+                FacadeLocalHistoryReader(localHistoryDir, cachesDir)
+            )
+        }
     }
 
     /**
-     * Build a map of content ID -> references from LocalHistory
-     *
-     * This method parses the LocalHistory storage and extracts all content references,
-     * creating a comprehensive map of which content IDs are referenced and how.
+     * Build a map of content ID -> references from LocalHistory.
+     * Delegates to the configured LocalHistoryReader.
      */
-    open fun buildReferenceMap(): Map<Int, List<ContentReference>> {
-        val referenceMap = mutableMapOf<Int, MutableList<ContentReference>>()
+    open fun buildReferenceMap(): Map<Int, List<ContentReference>> = reader.buildReferenceMap()
 
-        val indexPath = localHistoryDir.resolve("changes.storageRecordIndex")
-        val dataPath = localHistoryDir.resolve("changes.storageData")
-
-        if (!indexPath.exists() || !dataPath.exists()) {
-            println("Warning: LocalHistory files not found in $localHistoryDir")
-            return emptyMap()
-        }
-
-        try {
-            val (_, records) = parseIndexFile(indexPath)
-            val changeSets = parseDataFile(dataPath, records)
-
-            // Process each change set to extract content references
-            for (record in records) {
-                val changeSet = changeSets[record.id] ?: continue
-
-                for (change in changeSet.changes) {
-                    change.contentId?.let { contentId ->
-                        val reference = ContentReference(
-                            contentId = contentId,
-                            path = change.path,
-                            timestamp = changeSet.timestamp,
-                            changeType = change.changeType
-                        )
-
-                        referenceMap.computeIfAbsent(contentId) { mutableListOf() }
-                            .add(reference)
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            println("Error building reference map: ${e.message}")
-            e.printStackTrace()
-        }
-
-        return referenceMap
-    }
+    /**
+     * Get the implementation name for debugging.
+     */
+    fun getReaderName(): String = reader.getImplementationName()
 
     /**
      * Check if a specific content ID is orphaned

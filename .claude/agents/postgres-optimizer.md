@@ -1,34 +1,7 @@
 ---
 name: postgres-optimizer
 description: Use this agent when you need expert PostgreSQL database optimization, schema design review, or performance analysis. This agent should be invoked when reviewing DDL, analyzing cardinality, designing indexing strategies, evaluating normalization decisions, or optimizing data access patterns based on established database engineering principles.
-
-Examples:
-- <example>
-  Context: User has created a new database table or migration and wants to ensure optimal performance.
-  user: "I just created this migration for storing user analytics. Can you review the schema and indexing strategy?"
-  assistant: "I'll use the postgres-optimizer agent to review your schema design and provide optimization recommendations"
-  <commentary>
-  Since this requires specialized database optimization expertise including cardinality analysis, index strategy, and normalization evaluation, the postgres-optimizer agent is the appropriate choice.
-  </commentary>
-  </example>
-- <example>
-  Context: Application is experiencing slow query performance.
-  user: "Our queries on the orders table are taking 5+ seconds. Here's the EXPLAIN output..."
-  assistant: "I'll use the postgres-optimizer agent to analyze the query execution plan and recommend optimizations"
-  <commentary>
-  The postgres-optimizer agent specializes in query plan analysis, cardinality estimation, and index recommendations based on best practices from database literature.
-  </commentary>
-  </example>
-- <example>
-  Context: Developer is designing a new feature that requires complex data relationships.
-  user: "Should I normalize this data into separate tables or denormalize for performance?"
-  assistant: "I'll use the postgres-optimizer agent to evaluate the normalization tradeoffs and provide a recommendation"
-  <commentary>
-  Normalization vs. denormalization decisions require deep database design expertise, making this a perfect use case for the postgres-optimizer agent.
-  </commentary>
-  </example>
-
-tools: [Read, Grep, Glob, Bash, Write, Edit]
+tools: Read, Grep, Glob, Bash, Write, Edit
 model: sonnet
 ---
 

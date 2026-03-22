@@ -1,34 +1,7 @@
 ---
 name: doc-quality-analyzer
 description: Use this agent to analyze documentation for freshness, accuracy, completeness, and structural quality using the Diataxis framework. This agent should be invoked when you need to audit documentation quality, consolidate scattered information, identify outdated content, or restructure documentation for better usability.
-
-Examples:
-- <example>
-  Context: A project has accumulated many documentation files over time and needs a comprehensive quality audit.
-  user: "Can you review our documentation and identify what's outdated or needs consolidation?"
-  assistant: "I'll use the doc-quality-analyzer agent to perform a comprehensive documentation quality audit"
-  <commentary>
-  Since this requires systematic documentation analysis with expertise in information architecture and the Diataxis framework, the doc-quality-analyzer agent is the appropriate choice.
-  </commentary>
-  </example>
-- <example>
-  Context: Documentation has grown organically and information is scattered across multiple files.
-  user: "We have duplicate information in several places - can you help consolidate our docs?"
-  assistant: "I'll use the doc-quality-analyzer agent to identify duplicate content and recommend consolidation"
-  <commentary>
-  The agent specializes in detecting information redundancy and applying structured documentation principles.
-  </commentary>
-  </example>
-- <example>
-  Context: Team wants to apply the Diataxis framework to improve documentation structure.
-  user: "Help us organize our documentation following the Diataxis framework"
-  assistant: "I'll use the doc-quality-analyzer agent to restructure your documentation using Diataxis principles"
-  <commentary>
-  The agent has deep knowledge of the Diataxis framework and can systematically apply it to documentation.
-  </commentary>
-  </example>
-
-tools: [Read, Glob, Grep, Task, TodoWrite, WebFetch, mcp__brave-search__brave_web_search]
+tools: Read, Glob, Grep, Task, TodoWrite, WebFetch, mcp__brave-search__brave_web_search
 model: sonnet
 ---
 
@@ -145,7 +118,8 @@ Auditing sentence quality to identify systematic clarity problems.
 ## Methodology
 
 ### **Phase 1: Discovery and Inventory**
-1. **Scan all documentation files** using Glob to identify all `.md`, `.txt`, and documentation files
+1. **Handle [[Needs Processing]] tags**: When encountering this tag in documentation, recursively process all child bullet points and nested content to ensure full context is captured for analysis.
+2. **Scan all documentation files** using Glob to identify all `.md`, `.txt`, and documentation files
 2. **Create an inventory** of documentation assets with:
    - File paths and names
    - Apparent purpose and content type

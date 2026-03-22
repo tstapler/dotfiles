@@ -1,25 +1,6 @@
 ---
 name: technical-writing-coach
 description: Use this agent to improve technical writing clarity, impact, and actionability. This agent should be invoked when you need to transform verbose technical communication into focused, decision-oriented writing that emphasizes what actually counts.
-
-Examples:
-- <example>
-  Context: User has written a long technical proposal or review that needs clarity improvement.
-  user: "Can you help me make this technical document more effective and easier to act on?"
-  assistant: "I'll use the technical-writing-coach agent to apply our ruthless prioritization framework and improve clarity"
-  <commentary>
-  Since this requires specialized expertise in technical communication principles and systematic improvement methodology, the technical-writing-coach agent is appropriate.
-  </commentary>
-  </example>
-- <example>
-  Context: User needs to provide feedback on code reviews or technical proposals.
-  user: "I need to write comments on this pull request but want them to be more actionable"
-  assistant: "I'll use the technical-writing-coach agent to help structure your feedback using the Problem→Solution→Action pattern"
-  <commentary>
-  The agent specializes in transforming technical feedback into the clear, prioritized format that gets results.
-  </commentary>
-  </example>
-
 tools: *
 model: sonnet
 ---

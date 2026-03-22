@@ -14,14 +14,31 @@ import com.github.ajalt.clikt.parameters.types.int
 import com.github.ajalt.clikt.parameters.types.path
 import com.stapler.localhistory.analyzer.ContentClassifier
 import com.stapler.localhistory.analyzer.ContentType
+import com.stapler.localhistory.analyzer.FacadeOrphanDetector
 import com.stapler.localhistory.analyzer.OrphanDetector
 import com.stapler.localhistory.analyzer.OrphanStatus
+import com.stapler.localhistory.analyzer.SimilarityAnalyzer
+import com.stapler.localhistory.analyzer.SimilarityConfig
+import com.stapler.localhistory.cache.ContentIndexCache
+import com.stapler.localhistory.export.ExportFormat
+import com.stapler.localhistory.export.ExportOptions
+import com.stapler.localhistory.export.LLMExporter
+import com.stapler.localhistory.facade.ChangeFilter
+import com.stapler.localhistory.facade.ChangeType
+import com.stapler.localhistory.facade.LocalHistoryFacadeFactory
+import com.stapler.localhistory.model.IndexRecord
+import com.stapler.localhistory.parser.CHANGE_TYPES
+import com.stapler.localhistory.parser.ChangeInfo
+import com.stapler.localhistory.parser.ChangeSetInfo
+import com.stapler.localhistory.parser.StorageConstants
+import com.stapler.localhistory.parser.VarIntReader
+import com.stapler.localhistory.parser.formatSize
+import com.stapler.localhistory.parser.getDefaultLocalHistoryDir
+import com.stapler.localhistory.parser.parseChangeSet
+import com.stapler.localhistory.parser.parseDataFile
+import com.stapler.localhistory.parser.parseIndexFile
 import com.stapler.localhistory.scanner.ContentScanner
 import com.stapler.localhistory.scanner.ScanConfig
-import java.io.DataInputStream
-import java.io.RandomAccessFile
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
 import java.nio.file.Path
 import java.time.Instant
 import java.time.ZoneId
@@ -35,254 +52,18 @@ import kotlin.math.roundToInt
  *
  * Parses IntelliJ's LocalHistory storage to extract file change information.
  * Based on reverse engineering the IntelliJ Community Edition source code.
+ *
+ * NOTE: Core parsing logic has been moved to com.stapler.localhistory.parser package.
+ * This file contains CLI commands and delegates to the parser package.
  */
 
-// Storage format constants from LocalHistoryRecordsTable.java
-private const val DEFAULT_HEADER_SIZE = 8  // magic(4) + version(4)
-private const val LAST_ID_OFFSET = DEFAULT_HEADER_SIZE  // 8
-private const val FIRST_RECORD_OFFSET = LAST_ID_OFFSET + 8  // 16
-private const val LAST_RECORD_OFFSET = FIRST_RECORD_OFFSET + 4  // 20
-private const val FS_TIMESTAMP_OFFSET = LAST_RECORD_OFFSET + 4  // 24
-private const val HEADER_SIZE = FS_TIMESTAMP_OFFSET + 8  // 32
+// Type aliases for backward compatibility - types now live in parser/model packages
+typealias Record = IndexRecord
 
-// Record format from AbstractRecordsTable + LocalHistoryRecordsTable
-private const val DEFAULT_RECORD_SIZE = 16  // address(8) + size(4) + capacity(4)
-private const val PREV_RECORD_OFFSET = DEFAULT_RECORD_SIZE  // 16
-private const val NEXT_RECORD_OFFSET = PREV_RECORD_OFFSET + 4  // 20
-private const val TIMESTAMP_OFFSET = NEXT_RECORD_OFFSET + 4  // 24
-private const val RECORD_SIZE = TIMESTAMP_OFFSET + 8  // 32
+// NOTE: parseChangeSet, parseIndexFile, parseDataFile, getDefaultLocalHistoryDir
+// are now imported from com.stapler.localhistory.parser package
 
-// Change types from DataStreamUtil.java
-private val CHANGE_TYPES = mapOf(
-    1 to "CreateFile",
-    2 to "CreateDirectory",
-    3 to "ContentChange",
-    4 to "Rename",
-    5 to "ROStatusChange",
-    6 to "Move",
-    7 to "Delete",
-    8 to "PutLabel",
-    9 to "PutSystemLabel"
-)
-
-data class Record(
-    val id: Int,
-    val address: Long,
-    val size: Int,
-    val capacity: Int,
-    val prevRecord: Int,
-    val nextRecord: Int,
-    val timestamp: Long
-) {
-    val timestampStr: String
-        get() = if (timestamp > 0) {
-            Instant.ofEpochMilli(timestamp)
-                .atZone(ZoneId.systemDefault())
-                .format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-        } else "N/A"
-}
-
-data class ChangeInfo(
-    val changeType: String,
-    val path: String?,
-    val contentId: Int?
-)
-
-data class ChangeSetInfo(
-    val id: Long,
-    val name: String?,
-    val timestamp: Long,
-    val changes: List<ChangeInfo>
-) {
-    val timestampStr: String
-        get() = if (timestamp > 0) {
-            Instant.ofEpochMilli(timestamp)
-                .atZone(ZoneId.systemDefault())
-                .format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-        } else "N/A"
-}
-
-class VarIntReader(private val data: ByteArray, private var offset: Int = 0) {
-    fun readVarInt(): Int {
-        val b = data[offset].toInt() and 0xFF
-        return when {
-            b >= 192 -> {
-                offset += 2
-                ((b - 192) shl 8) or (data[offset - 1].toInt() and 0xFF)
-            }
-            b >= 128 -> {
-                offset++
-                b - 128
-            }
-            b >= 64 -> {
-                offset += 4
-                ((b - 64) shl 24) or
-                    ((data[offset - 3].toInt() and 0xFF) shl 16) or
-                    ((data[offset - 2].toInt() and 0xFF) shl 8) or
-                    (data[offset - 1].toInt() and 0xFF)
-            }
-            b >= 32 -> {
-                offset += 3
-                ((b - 32) shl 16) or
-                    ((data[offset - 2].toInt() and 0xFF) shl 8) or
-                    (data[offset - 1].toInt() and 0xFF)
-            }
-            b == 31 -> {
-                offset += 5
-                ByteBuffer.wrap(data, offset - 4, 4).order(ByteOrder.BIG_ENDIAN).int
-            }
-            else -> {
-                offset++
-                b
-            }
-        }
-    }
-
-    fun readVarLong(): Long {
-        // Simplified - reads as varint for now
-        return readVarInt().toLong()
-    }
-
-    fun readString(): String {
-        val length = readVarInt()
-        if (length == 0) return ""
-        val str = String(data, offset, length, Charsets.UTF_8)
-        offset += length
-        return str
-    }
-
-    fun readStringOrNull(): String? {
-        val hasValue = data[offset++].toInt() != 0
-        return if (hasValue) readString() else null
-    }
-
-    fun readBoolean(): Boolean = data[offset++].toInt() != 0
-
-    fun currentOffset() = offset
-    fun hasMore() = offset < data.size
-}
-
-fun parseChangeSet(data: ByteArray): ChangeSetInfo? {
-    return try {
-        val reader = VarIntReader(data)
-        val version = reader.readVarInt()
-        val id = reader.readVarLong()
-        val name = reader.readStringOrNull()
-        val timestamp = reader.readVarLong()
-
-        // Activity ID (version >= 1)
-        if (version >= 1) {
-            reader.readStringOrNull()  // kind
-            reader.readStringOrNull()  // provider
-        }
-
-        val changeCount = reader.readVarInt()
-        val changes = mutableListOf<ChangeInfo>()
-
-        repeat(changeCount) {
-            try {
-                val changeTypeId = reader.readVarInt()
-                val changeType = CHANGE_TYPES[changeTypeId] ?: "Unknown($changeTypeId)"
-
-                var path: String? = null
-                var contentId: Int? = null
-
-                // Structural changes have id + path
-                if (changeTypeId in 1..7) {
-                    reader.readVarLong()  // change id
-                    path = reader.readString()
-
-                    // ContentChange has content + timestamp
-                    if (changeTypeId == 3) {
-                        contentId = reader.readVarInt()
-                        reader.readVarLong()  // old timestamp
-                    }
-
-                    // CreateFile/CreateDirectory have additional entry data
-                    if (changeTypeId in 1..2) {
-                        // Skip entry data - format varies
-                    }
-                }
-
-                changes.add(ChangeInfo(changeType, path, contentId))
-            } catch (e: Exception) {
-                // Stop parsing on error
-            }
-        }
-
-        ChangeSetInfo(id, name, timestamp, changes)
-    } catch (e: Exception) {
-        null
-    }
-}
-
-fun parseIndexFile(indexPath: Path): Pair<Map<String, Any>, List<Record>> {
-    val data = indexPath.readBytes()
-    val buf = ByteBuffer.wrap(data).order(ByteOrder.BIG_ENDIAN)
-
-    val magic = buf.getInt(0)
-    val version = buf.getInt(4)
-    val lastId = buf.getLong(LAST_ID_OFFSET)
-    val firstRecord = buf.getInt(FIRST_RECORD_OFFSET)
-    val lastRecord = buf.getInt(LAST_RECORD_OFFSET)
-    val fsTimestamp = buf.getLong(FS_TIMESTAMP_OFFSET)
-
-    val header = mapOf(
-        "magic" to "0x${magic.toString(16)}",
-        "version" to version,
-        "lastId" to lastId,
-        "firstRecord" to firstRecord,
-        "lastRecord" to lastRecord,
-        "fsTimestamp" to fsTimestamp
-    )
-
-    val records = mutableListOf<Record>()
-    val numRecords = (data.size - HEADER_SIZE) / RECORD_SIZE
-
-    for (i in 1..numRecords) {
-        val recordOffset = HEADER_SIZE + (i - 1) * RECORD_SIZE
-
-        val address = buf.getLong(recordOffset)
-        val size = buf.getInt(recordOffset + 8)
-        val capacity = buf.getInt(recordOffset + 12)
-        val prevRecord = buf.getInt(recordOffset + 16)
-        val nextRecord = buf.getInt(recordOffset + 20)
-        val timestamp = buf.getLong(recordOffset + 24)
-
-        if (size > 0) {
-            records.add(Record(i, address, size, capacity, prevRecord, nextRecord, timestamp))
-        }
-    }
-
-    return header to records
-}
-
-fun parseDataFile(dataPath: Path, records: List<Record>): Map<Int, ChangeSetInfo?> {
-    val data = dataPath.readBytes()
-    return records.associate { record ->
-        val changeSet = if (record.address > 0 && record.size > 0 &&
-                           record.address + record.size <= data.size) {
-            val recordData = data.sliceArray(record.address.toInt() until (record.address + record.size).toInt())
-            parseChangeSet(recordData)
-        } else null
-        record.id to changeSet
-    }
-}
-
-fun getDefaultLocalHistoryDir(): Path {
-    val home = System.getProperty("user.home")
-    val cacheDir = Path.of(home, "Library/Caches/JetBrains")
-
-    // Find the most recent IntelliJ version
-    val ideaDirs = cacheDir.toFile().listFiles { file ->
-        file.isDirectory && file.name.startsWith("IntelliJIdea")
-    }?.sortedByDescending { it.lastModified() }
-
-    return ideaDirs?.firstOrNull()?.let {
-        Path.of(it.absolutePath, "LocalHistory")
-    } ?: Path.of(home, "Library/Caches/JetBrains/IntelliJIdea2025.2/LocalHistory")
-}
-
+// LocalHistoryTool is the main CLI entry point
 class LocalHistoryTool : CliktCommand(name = "intellij-localhistory") {
     override fun run() = Unit
 }
@@ -1489,6 +1270,780 @@ class FindDeletedCommand : CliktCommand(
     }
 }
 
+class AnalyzePatternsCommand : CliktCommand(
+    name = "analyze-patterns",
+    help = "Analyze content patterns including similarity and duplicates"
+) {
+    private val cachesDir by option("-c", "--caches", help = "IntelliJ caches directory")
+        .path()
+        .default(getDefaultCachesDir())
+
+    private val similarityThreshold by option("-s", "--similarity", help = "Similarity threshold (0.0-1.0)")
+        .float()
+        .default(0.7f)
+
+    private val showDuplicates by option("--duplicates", help = "Show duplicate content")
+        .flag()
+
+    private val showGroups by option("--groups", help = "Show similar content groups")
+        .flag(default = true)
+
+    private val limit by option("-n", "--limit", help = "Maximum results to show")
+        .int()
+        .default(50)
+
+    private val useCache by option("--cache", help = "Use content index cache")
+        .flag(default = true)
+
+    private val format by option("-f", "--format", help = "Output format")
+        .choice("human", "markdown", "json")
+        .default("human")
+
+    override fun run() {
+        echo("Analyzing content patterns...")
+        echo()
+
+        // Try to use cache first
+        val scanResults = if (useCache) {
+            loadFromCache() ?: scanFresh()
+        } else {
+            scanFresh()
+        }
+
+        if (scanResults.isEmpty()) {
+            echo("No content found to analyze.")
+            return
+        }
+
+        echo("Analyzing ${scanResults.size} content items for similarity...")
+        echo()
+
+        val analyzer = SimilarityAnalyzer()
+        val config = SimilarityConfig(
+            similarityThreshold = similarityThreshold,
+            duplicateThreshold = 0.95f
+        )
+
+        val result = analyzer.analyze(scanResults, config)
+
+        when (format) {
+            "json" -> outputJson(result)
+            "markdown" -> outputMarkdown(result)
+            else -> outputHuman(result)
+        }
+    }
+
+    private fun loadFromCache(): List<com.stapler.localhistory.scanner.ContentScanResult>? {
+        return try {
+            val cache = ContentIndexCache.forStorage(cachesDir)
+            if (cache.load() && cache.isValid()) {
+                echo("Using cached content index (${cache.size()} entries)")
+                cache.getAllAsScanResults()
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private fun scanFresh(): List<com.stapler.localhistory.scanner.ContentScanResult> {
+        return try {
+            ContentStorageReader.open(cachesDir).use { reader ->
+                val scanner = ContentScanner(reader)
+                val config = ScanConfig(
+                    maxRecords = 1000,  // Limit for performance
+                    textOnly = true,
+                    skipCorrupted = true
+                )
+                scanner.scan(config).toList()
+            }
+        } catch (e: Exception) {
+            echo("Error scanning content: ${e.message}")
+            emptyList()
+        }
+    }
+
+    private fun outputHuman(result: com.stapler.localhistory.analyzer.SimilarityAnalysisResult) {
+        echo("=== Pattern Analysis Results ===")
+        echo("Total analyzed: ${result.totalAnalyzed}")
+        echo("Grouped: ${result.groupedCount}")
+        echo("Ungrouped: ${result.ungroupedCount}")
+        echo("Duplicate pairs: ${result.duplicateCount}")
+        echo("Groups found: ${result.groupCount}")
+        echo()
+
+        if (showDuplicates && result.duplicates.isNotEmpty()) {
+            echo("Duplicate Content Pairs:")
+            echo("-".repeat(40))
+            result.duplicates.take(limit).forEach { (id1, id2) ->
+                echo("  Content $id1 <-> Content $id2")
+            }
+            if (result.duplicates.size > limit) {
+                echo("  ... and ${result.duplicates.size - limit} more")
+            }
+            echo()
+        }
+
+        if (showGroups && result.groups.isNotEmpty()) {
+            echo("Similar Content Groups:")
+            echo("-".repeat(40))
+            result.groups.take(limit).forEach { group ->
+                echo("Group #${group.id} (${group.size} items, avg similarity: ${(group.averageSimilarity * 100).toInt()}%)")
+                echo("  Type: ${group.fileType ?: "mixed"}")
+                echo("  Total size: ${formatSize(group.totalSize)}")
+                echo("  Members: ${group.members.take(5).map { it.metadata.contentId }.joinToString(", ")}")
+                if (group.size > 5) {
+                    echo("  ... and ${group.size - 5} more")
+                }
+                echo()
+            }
+            if (result.groups.size > limit) {
+                echo("... and ${result.groups.size - limit} more groups")
+            }
+        }
+    }
+
+    private fun outputMarkdown(result: com.stapler.localhistory.analyzer.SimilarityAnalysisResult) {
+        echo("# Pattern Analysis Results")
+        echo()
+        echo("| Metric | Value |")
+        echo("|--------|-------|")
+        echo("| Total analyzed | ${result.totalAnalyzed} |")
+        echo("| Grouped | ${result.groupedCount} |")
+        echo("| Ungrouped | ${result.ungroupedCount} |")
+        echo("| Duplicate pairs | ${result.duplicateCount} |")
+        echo("| Groups found | ${result.groupCount} |")
+        echo()
+
+        if (showDuplicates && result.duplicates.isNotEmpty()) {
+            echo("## Duplicate Content Pairs")
+            echo()
+            echo("| Content ID 1 | Content ID 2 |")
+            echo("|--------------|--------------|")
+            result.duplicates.take(limit).forEach { (id1, id2) ->
+                echo("| $id1 | $id2 |")
+            }
+            echo()
+        }
+
+        if (showGroups && result.groups.isNotEmpty()) {
+            echo("## Similar Content Groups")
+            echo()
+            result.groups.take(limit).forEach { group ->
+                echo("### Group #${group.id}")
+                echo("- **Size**: ${group.size} items")
+                echo("- **Avg Similarity**: ${(group.averageSimilarity * 100).toInt()}%")
+                echo("- **Type**: ${group.fileType ?: "mixed"}")
+                echo("- **Total Size**: ${formatSize(group.totalSize)}")
+                echo()
+            }
+        }
+    }
+
+    private fun outputJson(result: com.stapler.localhistory.analyzer.SimilarityAnalysisResult) {
+        echo("{")
+        echo("  \"totalAnalyzed\": ${result.totalAnalyzed},")
+        echo("  \"groupedCount\": ${result.groupedCount},")
+        echo("  \"ungroupedCount\": ${result.ungroupedCount},")
+        echo("  \"duplicateCount\": ${result.duplicateCount},")
+        echo("  \"groupCount\": ${result.groupCount},")
+
+        echo("  \"duplicates\": [")
+        result.duplicates.take(limit).forEachIndexed { index, (id1, id2) ->
+            val comma = if (index < result.duplicates.take(limit).size - 1) "," else ""
+            echo("    {\"id1\": $id1, \"id2\": $id2}$comma")
+        }
+        echo("  ],")
+
+        echo("  \"groups\": [")
+        result.groups.take(limit).forEachIndexed { index, group ->
+            echo("    {")
+            echo("      \"id\": ${group.id},")
+            echo("      \"size\": ${group.size},")
+            echo("      \"avgSimilarity\": ${group.averageSimilarity},")
+            echo("      \"fileType\": ${group.fileType?.let { "\"$it\"" } ?: "null"},")
+            echo("      \"totalSize\": ${group.totalSize},")
+            echo("      \"memberIds\": [${group.members.map { it.metadata.contentId }.joinToString(", ")}]")
+            val comma = if (index < result.groups.take(limit).size - 1) "," else ""
+            echo("    }$comma")
+        }
+        echo("  ]")
+        echo("}")
+    }
+
+    private fun formatSize(bytes: Long): String {
+        return when {
+            bytes < 1024 -> "$bytes B"
+            bytes < 1024 * 1024 -> "${bytes / 1024} KB"
+            bytes < 1024 * 1024 * 1024 -> "${bytes / (1024 * 1024)} MB"
+            else -> "${bytes / (1024 * 1024 * 1024)} GB"
+        }
+    }
+}
+
+class ExportLLMCommand : CliktCommand(
+    name = "export-llm",
+    help = "Export content analysis in LLM-friendly formats"
+) {
+    private val cachesDir by option("-c", "--caches", help = "IntelliJ caches directory")
+        .path()
+        .default(getDefaultCachesDir())
+
+    private val localHistoryDir by option("-d", "--dir", help = "LocalHistory directory")
+        .path()
+        .default(getDefaultLocalHistoryDir())
+
+    private val format by option("-f", "--format", help = "Output format")
+        .choice("markdown", "json", "csv")
+        .default("markdown")
+
+    private val includeContent by option("--content", help = "Include content previews")
+        .flag()
+
+    private val includePrompt by option("--prompt", help = "Include analysis prompt")
+        .flag(default = true)
+
+    private val groupByType by option("--group", help = "Group results by file type")
+        .flag(default = true)
+
+    private val maxContentLength by option("--max-length", help = "Maximum content preview length")
+        .int()
+        .default(1000)
+
+    private val limit by option("-n", "--limit", help = "Maximum results to include")
+        .int()
+        .default(100)
+
+    private val outputFile by option("-o", "--output", help = "Output file path")
+        .path()
+
+    private val textOnly by option("--text-only", help = "Only include text content")
+        .flag()
+
+    override fun run() {
+        echo("Preparing LLM export...")
+        echo()
+
+        // Scan content
+        val scanResults = try {
+            ContentStorageReader.open(cachesDir).use { reader ->
+                val scanner = ContentScanner(reader)
+                val config = ScanConfig(
+                    maxRecords = limit,
+                    textOnly = textOnly,
+                    skipCorrupted = true
+                )
+                scanner.scan(config).toList()
+            }
+        } catch (e: Exception) {
+            echo("Error scanning content: ${e.message}")
+            return
+        }
+
+        if (scanResults.isEmpty()) {
+            echo("No content found to export.")
+            return
+        }
+
+        echo("Found ${scanResults.size} content items")
+
+        // Create exporter
+        val exporter = LLMExporter()
+        val exportFormat = when (format) {
+            "json" -> ExportFormat.JSON
+            "csv" -> ExportFormat.CSV
+            else -> ExportFormat.Markdown
+        }
+
+        val options = ExportOptions(
+            format = exportFormat,
+            includeContent = includeContent,
+            maxContentLength = maxContentLength,
+            includePrompt = includePrompt,
+            groupByType = groupByType
+        )
+
+        // Try to get deletion events for pattern analysis
+        val deletionEvents = try {
+            getDeletionEvents()
+        } catch (e: Exception) {
+            null
+        }
+
+        // Generate export
+        val output = if (deletionEvents != null && deletionEvents.isNotEmpty()) {
+            echo("Including deletion pattern analysis (${deletionEvents.size} events)")
+            exporter.exportWithPatternAnalysis(scanResults, deletionEvents, options)
+        } else {
+            exporter.export(scanResults, options)
+        }
+
+        // Output result
+        if (outputFile != null) {
+            outputFile!!.toFile().writeText(output)
+            echo("Export written to: $outputFile")
+        } else {
+            echo()
+            echo(output)
+        }
+    }
+
+    private fun getDeletionEvents(): List<com.stapler.localhistory.export.DeletionEvent>? {
+        val indexPath = localHistoryDir.resolve("changes.storageRecordIndex")
+        val dataPath = localHistoryDir.resolve("changes.storageData")
+
+        if (!indexPath.exists() || !dataPath.exists()) {
+            return null
+        }
+
+        val (_, records) = parseIndexFile(indexPath)
+        val changeSets = parseDataFile(dataPath, records)
+
+        val deletionEvents = mutableListOf<com.stapler.localhistory.export.DeletionEvent>()
+
+        for (record in records) {
+            val changeSet = changeSets[record.id] ?: continue
+            for (change in changeSet.changes) {
+                if (change.changeType == "Delete" && change.path != null) {
+                    deletionEvents.add(
+                        com.stapler.localhistory.export.DeletionEvent(
+                            timestamp = changeSet.timestamp,
+                            path = change.path,
+                            contentId = change.contentId
+                        )
+                    )
+                }
+            }
+        }
+
+        return deletionEvents
+    }
+}
+
+class CacheCommand : CliktCommand(
+    name = "cache",
+    help = "Manage content index cache for faster operations"
+) {
+    private val cachesDir by option("-c", "--caches", help = "IntelliJ caches directory")
+        .path()
+        .default(getDefaultCachesDir())
+
+    private val action by argument(help = "Action: build, clear, stats, update")
+        .choice("build", "clear", "stats", "update")
+        .default("stats")
+
+    override fun run() {
+        val cache = ContentIndexCache.forStorage(cachesDir)
+
+        when (action) {
+            "build" -> buildCache(cache)
+            "clear" -> clearCache(cache)
+            "update" -> updateCache(cache)
+            "stats" -> showStats(cache)
+        }
+    }
+
+    private fun buildCache(cache: ContentIndexCache) {
+        echo("Building content index cache...")
+
+        try {
+            ContentStorageReader.open(cachesDir).use { reader ->
+                val classifier = ContentClassifier()
+                var lastProgress = 0
+
+                val count = cache.buildFromStorage(reader, classifier) { current, total ->
+                    val progress = (current * 100) / total
+                    if (progress != lastProgress && progress % 10 == 0) {
+                        echo("Progress: $progress%")
+                        lastProgress = progress
+                    }
+                }
+
+                if (cache.save()) {
+                    echo("Cache built successfully: $count entries")
+                } else {
+                    echo("Cache built but failed to save to disk")
+                }
+            }
+        } catch (e: Exception) {
+            echo("Error building cache: ${e.message}")
+        }
+    }
+
+    private fun clearCache(cache: ContentIndexCache) {
+        cache.clear()
+        echo("Cache cleared")
+    }
+
+    private fun updateCache(cache: ContentIndexCache) {
+        echo("Updating content index cache...")
+
+        // Load existing cache
+        val loaded = cache.load()
+        if (loaded) {
+            echo("Loaded existing cache with ${cache.size()} entries")
+        }
+
+        try {
+            ContentStorageReader.open(cachesDir).use { reader ->
+                val classifier = ContentClassifier()
+                val added = cache.updateIncremental(reader, classifier)
+
+                if (cache.save()) {
+                    echo("Cache updated: $added new entries (total: ${cache.size()})")
+                } else {
+                    echo("Cache updated but failed to save to disk")
+                }
+            }
+        } catch (e: Exception) {
+            echo("Error updating cache: ${e.message}")
+        }
+    }
+
+    private fun showStats(cache: ContentIndexCache) {
+        val loaded = cache.load()
+        if (!loaded) {
+            echo("No cache found or cache is invalid")
+            echo("Run 'cache build' to create a new cache")
+            return
+        }
+
+        cache.getStats().print()
+    }
+}
+
+class FacadeSearchCommand : CliktCommand(
+    name = "facade-search",
+    help = "Search LocalHistory using the facade API (improved format support)"
+) {
+    private val localHistoryDir by option("-d", "--dir", help = "LocalHistory directory")
+        .path()
+        .default(getDefaultLocalHistoryDir())
+
+    private val cachesDir by option("-c", "--caches", help = "IntelliJ caches directory")
+        .path()
+        .default(getDefaultCachesDir())
+
+    private val searchTerm by argument(help = "Search term (file name or path fragment)")
+
+    private val limit by option("-n", "--limit", help = "Maximum results to show")
+        .int()
+        .default(50)
+
+    private val projectPath by option("-p", "--project", help = "Filter by project path")
+
+    override fun run() {
+        echo("Searching LocalHistory using facade API...")
+        echo()
+
+        try {
+            val facade = LocalHistoryFacadeFactory.create(localHistoryDir, cachesDir)
+            echo("Using implementation: ${facade.getImplementationType()}")
+            echo()
+
+            facade.use { f ->
+                val results = f.searchByPath(searchTerm, limit)
+
+                if (results.isEmpty()) {
+                    echo("No matches found for '$searchTerm'")
+                    return
+                }
+
+                echo("Found ${results.size} matches:")
+                echo("-".repeat(80))
+
+                for ((changeSet, change) in results) {
+                    // Apply project filter if specified
+                    if (projectPath != null && change.path?.contains(projectPath!!) != true) {
+                        continue
+                    }
+
+                    val timestampStr = java.time.Instant.ofEpochMilli(changeSet.timestamp)
+                        .atZone(java.time.ZoneId.systemDefault())
+                        .format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+
+                    echo("$timestampStr")
+                    echo("  Type: ${change.type}")
+                    echo("  Path: ${change.path}")
+                    change.contentId?.let { echo("  Content ID: $it") }
+                    changeSet.name?.let { echo("  Activity: $it") }
+                    echo()
+                }
+            }
+        } catch (e: Exception) {
+            echo("Error: ${e.message}")
+        }
+    }
+}
+
+class FacadeListCommand : CliktCommand(
+    name = "facade-list",
+    help = "List recent changes using the facade API (improved format support)"
+) {
+    private val localHistoryDir by option("-d", "--dir", help = "LocalHistory directory")
+        .path()
+        .default(getDefaultLocalHistoryDir())
+
+    private val cachesDir by option("-c", "--caches", help = "IntelliJ caches directory")
+        .path()
+        .default(getDefaultCachesDir())
+
+    private val limit by option("-n", "--limit", help = "Number of change sets to show")
+        .int()
+        .default(20)
+
+    private val changeType by option("-t", "--type", help = "Filter by change type")
+        .choice("create", "delete", "content", "rename", "move", "all")
+        .default("all")
+
+    private val projectPath by option("-p", "--project", help = "Filter by project path")
+
+    override fun run() {
+        echo("Listing recent changes using facade API...")
+        echo()
+
+        try {
+            val facade = LocalHistoryFacadeFactory.create(localHistoryDir, cachesDir)
+            echo("Using implementation: ${facade.getImplementationType()}")
+            echo()
+
+            facade.use { f ->
+                val typeFilter = when (changeType) {
+                    "create" -> setOf(ChangeType.CREATE_FILE, ChangeType.CREATE_DIRECTORY)
+                    "delete" -> setOf(ChangeType.DELETE)
+                    "content" -> setOf(ChangeType.CONTENT_CHANGE)
+                    "rename" -> setOf(ChangeType.RENAME)
+                    "move" -> setOf(ChangeType.MOVE)
+                    else -> null
+                }
+
+                val filter = ChangeFilter(
+                    limit = limit,
+                    changeTypes = typeFilter,
+                    projectPath = projectPath
+                )
+
+                val changeSets = f.getChangeSets(filter)
+
+                if (changeSets.isEmpty()) {
+                    echo("No change sets found")
+                    return
+                }
+
+                echo("Recent changes (showing ${changeSets.size}):")
+                echo("-".repeat(80))
+
+                for (cs in changeSets) {
+                    val timestampStr = java.time.Instant.ofEpochMilli(cs.timestamp)
+                        .atZone(java.time.ZoneId.systemDefault())
+                        .format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+
+                    echo("ChangeSet #${cs.id} @ $timestampStr")
+                    cs.name?.let { echo("  Name: $it") }
+                    echo("  Changes: ${cs.changes.size}")
+
+                    for (change in cs.changes.take(5)) {
+                        echo("    [${change.type}] ${change.path ?: "N/A"}")
+                        change.contentId?.let { echo("      Content ID: $it") }
+                    }
+
+                    if (cs.changes.size > 5) {
+                        echo("    ... and ${cs.changes.size - 5} more changes")
+                    }
+                    echo()
+                }
+            }
+        } catch (e: Exception) {
+            echo("Error: ${e.message}")
+        }
+    }
+}
+
+class FacadeStatsCommand : CliktCommand(
+    name = "facade-stats",
+    help = "Show LocalHistory statistics using the facade API"
+) {
+    private val localHistoryDir by option("-d", "--dir", help = "LocalHistory directory")
+        .path()
+        .default(getDefaultLocalHistoryDir())
+
+    private val cachesDir by option("-c", "--caches", help = "IntelliJ caches directory")
+        .path()
+        .default(getDefaultCachesDir())
+
+    override fun run() {
+        echo("LocalHistory Statistics (via Facade API)")
+        echo("=".repeat(50))
+        echo()
+
+        try {
+            val facade = LocalHistoryFacadeFactory.create(localHistoryDir, cachesDir)
+
+            facade.use { f ->
+                echo("Implementation: ${f.getImplementationType()}")
+                echo()
+
+                val stats = f.getStats()
+
+                echo("Change History:")
+                echo("  Total change sets: ${stats.totalChangeSets}")
+                echo("  Total changes: ${stats.totalChanges}")
+                echo()
+
+                echo("Content Storage:")
+                echo("  Format: ${stats.storageFormat}")
+                echo("  Content records: ${stats.totalContentRecords}")
+                if (stats.totalContentSizeBytes > 0) {
+                    echo("  Total size: ${formatSize(stats.totalContentSizeBytes)}")
+                }
+                echo()
+
+                stats.oldestTimestamp?.let {
+                    val oldest = java.time.Instant.ofEpochMilli(it)
+                        .atZone(java.time.ZoneId.systemDefault())
+                        .format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE)
+                    echo("  Oldest record: $oldest")
+                }
+
+                stats.newestTimestamp?.let {
+                    val newest = java.time.Instant.ofEpochMilli(it)
+                        .atZone(java.time.ZoneId.systemDefault())
+                        .format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE)
+                    echo("  Newest record: $newest")
+                }
+                echo()
+
+                // Show reference map stats
+                echo("Reference Analysis:")
+                val refMap = f.buildContentReferenceMap()
+                echo("  Content IDs with references: ${refMap.size}")
+                val totalRefs = refMap.values.sumOf { it.size }
+                echo("  Total references: $totalRefs")
+            }
+        } catch (e: Exception) {
+            echo("Error: ${e.message}")
+            e.printStackTrace()
+        }
+    }
+
+    private fun formatSize(bytes: Long): String {
+        return when {
+            bytes < 1024 -> "$bytes B"
+            bytes < 1024 * 1024 -> "${bytes / 1024} KB"
+            bytes < 1024 * 1024 * 1024 -> "${bytes / (1024 * 1024)} MB"
+            else -> "${bytes / (1024 * 1024 * 1024)} GB"
+        }
+    }
+}
+
+class FacadeOrphanScanCommand : CliktCommand(
+    name = "facade-orphans",
+    help = "Scan for orphaned content using the facade API (improved reference detection)"
+) {
+    private val localHistoryDir by option("-d", "--dir", help = "LocalHistory directory")
+        .path()
+        .default(getDefaultLocalHistoryDir())
+
+    private val cachesDir by option("-c", "--caches", help = "IntelliJ caches directory")
+        .path()
+        .default(getDefaultCachesDir())
+
+    private val minConfidence by option("--confidence", help = "Minimum orphan confidence (0.0-1.0)")
+        .float()
+        .default(0.7f)
+
+    private val limit by option("-n", "--limit", help = "Maximum results to show")
+        .int()
+        .default(50)
+
+    private val showStats by option("--stats", help = "Show detailed statistics")
+        .flag(default = true)
+
+    override fun run() {
+        echo("Scanning for orphaned content using facade API...")
+        echo()
+
+        try {
+            val detector = FacadeOrphanDetector(localHistoryDir, cachesDir)
+            echo("Facade info: ${detector.getFacadeInfo()}")
+            echo()
+
+            // Build reference map
+            echo("Building reference map from LocalHistory...")
+            val refMap = detector.buildReferenceMap()
+            echo("Found ${refMap.size} content items with references")
+            echo()
+
+            // Get all content IDs
+            val contentIds = try {
+                ContentStorageReader.open(cachesDir).use { reader ->
+                    reader.listContentIds()
+                }
+            } catch (e: Exception) {
+                echo("Error reading content storage: ${e.message}")
+                return
+            }
+
+            echo("Scanning ${contentIds.size} content records...")
+
+            // Find orphans
+            val orphans = detector.findOrphanedContent(contentIds, minConfidence)
+
+            if (showStats) {
+                val report = detector.analyzeOrphanPatterns(contentIds)
+                echo()
+                echo("=== Orphan Analysis Report ===")
+                echo("Total content items: ${report.totalContent}")
+                echo("Reference map entries: ${report.referenceMapSize}")
+                echo()
+                echo("Status breakdown:")
+                echo("  Active: ${report.activeCount} (${String.format("%.1f", report.activePercentage)}%)")
+                echo("  Orphaned: ${report.orphanedCount} (${String.format("%.1f", report.orphanPercentage)}%)")
+                echo("  Uncertain: ${report.uncertainCount}")
+
+                if (report.uncertainByConfidence.isNotEmpty()) {
+                    echo()
+                    echo("Uncertain by confidence:")
+                    report.uncertainByConfidence.forEach { (level, count) ->
+                        echo("  $level: $count")
+                    }
+                }
+            }
+
+            echo()
+            echo("-".repeat(80))
+            echo("Orphan candidates (${orphans.size} found, showing up to $limit):")
+            echo("-".repeat(80))
+
+            for ((contentId, status) in orphans.take(limit)) {
+                echo()
+                echo("Content ID: $contentId")
+                echo("  Status: $status")
+
+                val details = detector.getOrphanDetails(contentId)
+                details.lastReferencePath?.let { echo("  Last path: $it") }
+                details.lastReferenceTime?.let {
+                    val timeStr = it.atZone(java.time.ZoneId.systemDefault())
+                        .format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                    echo("  Last seen: $timeStr")
+                }
+                details.contentSize?.let { echo("  Size: $it bytes") }
+            }
+
+            if (orphans.size > limit) {
+                echo()
+                echo("... and ${orphans.size - limit} more orphan candidates")
+            }
+
+            detector.close()
+        } catch (e: Exception) {
+            echo("Error: ${e.message}")
+            e.printStackTrace()
+        }
+    }
+}
+
 fun main(args: Array<String>) = LocalHistoryTool()
     .subcommands(
         SearchCommand(),
@@ -1499,9 +2054,17 @@ fun main(args: Array<String>) = LocalHistoryTool()
         RecoverCommand(),
         FindDeletedCommand(),
         AnalyzeDeletionsCommand(),
+        AnalyzePatternsCommand(),
+        ExportLLMCommand(),
+        CacheCommand(),
         OrphanAnalyzeCommand(),
         OrphanCheckCommand(),
         OrphanCleanCommand(),
-        ScanOrphansCommand()
+        ScanOrphansCommand(),
+        // New facade-based commands
+        FacadeSearchCommand(),
+        FacadeListCommand(),
+        FacadeStatsCommand(),
+        FacadeOrphanScanCommand()
     )
     .main(args)

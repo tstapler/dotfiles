@@ -1,6 +1,6 @@
 # Claude Proxy Makefile
 
-.PHONY: help install uninstall update start stop restart status logs error-logs clean deps update-token
+.PHONY: help install uninstall update start stop restart status logs app-logs http-logs clean deps update-token
 
 help:
 	@echo "Claude Proxy Management Commands:"
@@ -11,8 +11,9 @@ help:
 	@echo "  make stop          - Stop the proxy"
 	@echo "  make restart       - Restart the proxy"
 	@echo "  make status        - Check proxy status"
-	@echo "  make logs          - View proxy logs"
-	@echo "  make error-logs    - View error logs"
+	@echo "  make logs          - View access logs (uvicorn HTTP)"
+	@echo "  make app-logs      - View application logs (fallback, providers)"
+	@echo "  make http-logs     - View HTTP request logs (httpx)"
 	@echo "  make clean         - Clean up logs and temp files"
 	@echo "  make deps          - Install/update dependencies"
 	@echo "  make update-token  - Update OAuth token in plist"
@@ -73,7 +74,10 @@ stop:
 	@echo "Claude Proxy stopped"
 
 # Restart the proxy
-restart: stop start
+restart: stop
+	@echo "Clearing Python bytecode cache..."
+	@rm -rf __pycache__ providers/__pycache__
+	@$(MAKE) start
 	@echo "Claude Proxy restarted"
 
 # Check proxy status
@@ -90,20 +94,25 @@ status:
 	@echo "LaunchAgent status:"
 	@launchctl list | grep com.claude-proxy || echo "LaunchAgent not loaded"
 
-# View logs
+# View access logs
 logs:
-	@echo "=== Claude Proxy Logs ==="
+	@echo "=== Claude Proxy Access Logs (uvicorn) ==="
 	@tail -f /tmp/claude-proxy.log
 
-# View error logs
-error-logs:
-	@echo "=== Claude Proxy Error Logs ==="
-	@tail -f /tmp/claude-proxy.error.log
+# View application logs
+app-logs:
+	@echo "=== Claude Proxy Application Logs (fallback, providers) ==="
+	@tail -f /tmp/claude-proxy.app.log
+
+# View HTTP request logs
+http-logs:
+	@echo "=== Claude Proxy HTTP Request Logs (httpx) ==="
+	@tail -f /tmp/claude-proxy.http.log
 
 # Clean up logs and temp files
 clean:
 	@echo "Cleaning up logs and temp files..."
-	@rm -f /tmp/claude-proxy.log /tmp/claude-proxy.error.log
+	@rm -f /tmp/claude-proxy.log /tmp/claude-proxy.app.log* /tmp/claude-proxy.http.log*
 	@echo "Cleanup complete"
 
 # Install/update dependencies
@@ -134,7 +143,12 @@ dev:
 	@echo "Press Ctrl+C to stop"
 	@uv run python main.py
 
-# Test the proxy
+# Run unit tests
+unit-test:
+	@echo "Running unit tests..."
+	@uv run python -m pytest test_providers.py -v
+
+# Test the proxy (live integration test)
 test:
 	@echo "Testing Claude Proxy..."
 	@echo ""
