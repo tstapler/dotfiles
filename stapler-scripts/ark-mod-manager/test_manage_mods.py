@@ -31,7 +31,7 @@ def test_list_mods(mock_print, mock_load):
 def test_tag_mod(mock_save):
     mapping = {}
     manage_mods.tag_mod("111", "Name", mapping)
-    assert mapping["111"] == "Name"
+    assert mapping["111"] == {"name": "Name", "url": ""}
     mock_save.assert_called()
 
 @patch("builtins.open", new_callable=mock_open, read_data=SAMPLE_CONFIG)
