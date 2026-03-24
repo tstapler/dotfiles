@@ -14,6 +14,7 @@ I'll analyze a journal entry, check all linked pages, and generate comprehensive
 
 ### Phase 1: Journal Entry Analysis
 I'll examine the specified journal entry to:
+- **Process [[Needs Processing]] tags**: Specifically look for this tag and recursively process all child bullet points and nested content to ensure full context is captured for synthesis.
 - Extract all page links `[[Page Name]]` and references
 - **Identify implicit topics and concepts** mentioned in the text that could benefit from dedicated zettels
 - **Analyze key terms, technical concepts, and domain-specific terminology** that appear significant
@@ -83,6 +84,7 @@ I'll look for the journal entry in:
 ### Step 2: Comprehensive Content Analysis
 For the journal entry `${1:-[journal_date]}`, I'll:
 - **Parse all `[[Page Name]]` references** (explicit links)
+- **Recursively process [[Needs Processing]] tags**: For any block tagged with `[[Needs Processing]]`, recursively extract and analyze all child bullet points and nested content to maintain full context.
 - **Extract any `#tags` that might need pages**
 - **Perform semantic analysis** to identify implicit topics:
   - Technical terms and jargon that appear significant
@@ -98,7 +100,7 @@ For the journal entry `${1:-[journal_date]}`, I'll:
 
 ### Step 3: Research and Content Generation
 For each missing/incomplete page AND newly identified implicit topics, I'll apply the full synthesize_knowledge process:
-- **Research topics comprehensively** using available MCP tools (both explicit links and implicit concepts)
+- **Research topics comprehensively** using available MCP tools (including all content recursively extracted from `[[Needs Processing]]` blocks)
 - **Analyze multiple authoritative sources** to build robust understanding
 - **Synthesize information into coherent, valuable content** that serves long-term knowledge goals
 - **Structure content for maximum knowledge network value** with proper interconnections

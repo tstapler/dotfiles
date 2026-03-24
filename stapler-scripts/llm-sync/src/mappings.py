@@ -7,6 +7,7 @@ GEMINI_TOOLS: Set[str] = {
     'write_file',
     'glob',
     'search_file_content',
+    'grep_search',  # Alias for search_file_content
     'replace',
     'run_shell_command',
     'web_fetch',
@@ -14,7 +15,12 @@ GEMINI_TOOLS: Set[str] = {
     'save_memory',
     'write_todos',
     'delegate_to_agent',
-    'activate_skill'
+    'activate_skill',
+    'ask_user',
+    'enter_plan_mode',
+    'exit_plan_mode',
+    'get_internal_docs',
+    'browser_agent'
 }
 
 # Mapping from Claude tool names (and common aliases) to Gemini tool names
@@ -29,25 +35,37 @@ CLAUDE_TO_GEMINI_TOOL_MAP: Dict[str, str] = {
     'ls': 'list_directory',
     'list_directory': 'list_directory',
     'glob': 'glob',
-    'grep': 'search_file_content',
-    'search': 'search_file_content',
+    'grep': 'grep_search',
+    'search': 'grep_search',
+    'search_file_content': 'grep_search',
     
     # Shell
     'bash': 'run_shell_command',
     'run_shell_command': 'run_shell_command',
     'sh': 'run_shell_command',
+    'shell': 'run_shell_command',
+    'cmd': 'run_shell_command',
     
     # Web
     'webfetch': 'web_fetch',
     'web_fetch': 'web_fetch',
     'google_search': 'google_web_search',
     'google_web_search': 'google_web_search',
+    'search_web': 'google_web_search',
     
-    # Task/Memory
+    # Task/Memory/Interaction
     'task': 'write_todos',
     'todo': 'write_todos',
     'memory': 'save_memory',
-    'remember': 'save_memory'
+    'remember': 'save_memory',
+    'ask': 'ask_user',
+    'ask_user': 'ask_user',
+    'question': 'ask_user',
+    
+    # Coordination
+    'delegate': 'delegate_to_agent',
+    'activate_skill': 'activate_skill',
+    'skill': 'activate_skill'
 }
 
 def map_tool(tool_name: str) -> str:

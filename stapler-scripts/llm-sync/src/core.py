@@ -1,4 +1,6 @@
-from dataclasses import dataclass, field
+import hashlib
+import json
+from dataclasses import dataclass, field, asdict
 from typing import List, Dict, Any, Optional
 from abc import ABC, abstractmethod
 
@@ -9,6 +11,23 @@ class SyncItem(ABC):
     description: str
     metadata: Dict[str, Any] = field(default_factory=dict)
     source_file: Optional[str] = None
+
+    def get_hash(self) -> str:
+        """Calculate a stable hash of the item's content and key metadata."""
+        # Base components for the hash
+        data = {
+            "name": self.name,
+            "description": self.description,
+            "metadata": {k: v for k, v in self.metadata.items() if k != 'source_file'},
+            "content": getattr(self, 'content', ''),
+            "tools": getattr(self, 'tools', {})
+        }
+        # Serialize to stable JSON string
+        json_data = json.dumps(data, sort_keys=True)
+        return hashlib.sha256(json_data.encode('utf-8')).hexdigest()
+
+# Files to ignore during discovery
+IGNORED_NAMES = {'README', 'CLAUDE', 'LICENSE', 'CONTRIBUTING', '.DS_Store', 'package', 'pyproject', 'uv.lock'}
 
 @dataclass(kw_only=True)
 class Agent(SyncItem):
