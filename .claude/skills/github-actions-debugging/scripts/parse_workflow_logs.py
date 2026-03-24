@@ -11,7 +11,20 @@ Dual Purpose:
 
 Usage:
     python parse_workflow_logs.py <log_file>
-    cat log.txt | python parse_workflow_logs.py
+    cat log.txt | python parse_workflow_logs.py  # stdin also works
+
+CRITICAL — Fetching logs correctly:
+    # Use mktemp for unique file — prevents collisions between parallel sessions
+    # NEVER pipe gh run view directly to awk/grep flags (gh intercepts -F, -n, etc.)
+    LOG=$(mktemp /tmp/gh-ci-XXXXXX.log)
+    gh run view <run-id> --repo <owner>/<repo> --log --job <job-id> > "$LOG" 2>&1
+    python parse_workflow_logs.py "$LOG"
+
+    # WRONG (gh intercepts -F flag):
+    gh run view <run-id> --log | awk -F'\\t' '{print $3}'  # FAILS
+
+Log format: <job-name>\\tUNKNOWN STEP\\t<timestamp>Z <message>
+This script strips the job/timestamp prefix automatically.
 """
 
 import re
@@ -114,18 +127,33 @@ ERROR_PATTERNS = [
 ]
 
 
+GHA_LOG_PREFIX_RE = re.compile(r'^[^\t]+\tUNKNOWN STEP\t\S+ ')
+
+
+def strip_gha_prefix(line: str) -> str:
+    """Strip the GitHub Actions log prefix: '<job>\tUNKNOWN STEP\t<timestamp>Z '"""
+    return GHA_LOG_PREFIX_RE.sub('', line)
+
+
 def extract_errors(log_text: str) -> List[ErrorEntry]:
     """
     Extract error messages and context from GitHub Actions logs.
-    
+
+    Handles raw `gh run view --log` output which has the format:
+        <job-name>\tUNKNOWN STEP\t<timestamp>Z <message>
+
     Args:
-        log_text: Raw log text from workflow run
-        
+        log_text: Raw log text from workflow run (from gh run view --log or downloaded zip)
+
     Returns:
         List of ErrorEntry objects with line numbers, messages, and context
     """
     errors = []
     lines = log_text.split('\n')
+    # Strip GHA prefix for matching; keep originals for context output
+    clean_lines = [strip_gha_prefix(l) for l in lines]
+
+    error_pattern_compiled = re.compile('|'.join(error_indicators), re.IGNORECASE)
     
     # Common error indicators in GHA logs
     error_indicators = [

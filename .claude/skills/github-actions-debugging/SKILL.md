@@ -1,295 +1,158 @@
 ---
 name: github-actions-debugging
-description: Debug GitHub Actions workflow failures by analyzing logs, identifying error patterns (syntax errors, dependency issues, environment problems, timeouts, permissions), and providing actionable solutions. Use when CI/CD workflows fail, jobs timeout, or actions produce unexpected errors.
+description: Debug GitHub Actions workflow failures by analyzing logs, identifying error patterns, and providing actionable fixes. Use when CI/CD workflows fail, jobs timeout, or actions produce unexpected errors.
 ---
 
-# GitHub Actions Debugging Skill
+# GitHub Actions Debugging
 
-You are a GitHub Actions debugging specialist with deep expertise in identifying, diagnosing, and resolving workflow failures across the entire CI/CD pipeline.
+Systematically diagnose and fix GitHub Actions failures. Provide precise fixes, not generic troubleshooting.
 
-## Core Mission
+## Get Logs Fast
 
-Systematically analyze GitHub Actions workflow failures, identify root causes through log analysis and error pattern recognition, and provide specific, actionable solutions that resolve issues quickly. Your goal is to minimize developer debugging time by providing precise fixes, not generic troubleshooting steps.
+Always start here. Use `gh` CLI to fetch failure context before reading workflow files.
 
-## Debugging Methodology
+```bash
+# List recent failed runs
+gh run list --limit 10 --status failure
 
-Apply this 5-phase systematic approach to every workflow failure:
+# View failed run summary (shows failed jobs/steps — get job IDs from here)
+gh run view <run-id>
 
-### Phase 1: Failure Context Gathering
-**Actions:**
-- Identify failed job(s) and step(s) from workflow summary
-- Determine workflow trigger (push, PR, schedule, manual)
-- Check runner type (ubuntu-latest, windows, macos, self-hosted)
-- Note relevant context: PR from fork, matrix build, composite action
+# Get job ID from PR URL (most common starting point)
+gh pr checks <pr-number> --json name,conclusion,detailsUrl
 
-**Tools:**
-- `read` workflow file (.github/workflows/*.yml)
-- `grep` for job/step definitions
-- `bash` to check git context if needed
-
-**Output:** Structured summary of failure context
-
-### Phase 2: Log Analysis
-**Actions:**
-- Extract error messages with surrounding context (±10 lines)
-- Identify error signatures (exit codes, error prefixes)
-- Locate first occurrence of failure (cascading errors vs. root cause)
-- Check for warnings that preceded failure
-
-**Tools:**
-- `grep` with pattern matching for error keywords
-- `pty_read` with pattern filtering for large logs
-- `scripts/parse_workflow_logs.py` for logs >500 lines
-
-**Error Keywords to Search:**
-```
-Error|ERROR|FAIL|Failed|failed|fatal|FATAL|
-npm ERR!|pip error|go: |cargo error|
-Permission denied|timeout|timed out|
-exit code|returned non-zero|
+# List jobs for a run to get job IDs
+gh run view <run-id> --json jobs --jq '.jobs[] | "\(.databaseId) \(.name) \(.conclusion)"'
 ```
 
-**Output:** List of errors with line numbers and context
+### CRITICAL: Always write logs to a unique temp file before parsing
 
-### Phase 3: Error Categorization
-**Actions:**
-- Match errors against known pattern database (see Quick Reference below)
-- Classify by category: Syntax, Dependency, Environment, Permission, Timeout, Network
-- Determine severity: Critical (blocks workflow), Warning (degraded)
-- Identify if error is intermittent or deterministic
+**NEVER** pipe `gh run view --log` directly to `awk`, `grep -n`, or tools with flags.
+The `gh` CLI intercepts flags like `-F`, `-n`, and `-v` when they appear in pipe chains.
+Always use `mktemp` to create unique temp files — prevents collisions between parallel sessions.
 
-**Tools:**
-- Pattern matching against Quick Reference table
-- `read error-patterns.md` for comprehensive database (if needed)
-- `resources/error-patterns.json` for programmatic matching
+```bash
+# CORRECT — unique temp file, then parse
+LOG=$(mktemp /tmp/gh-ci-XXXXXX.log)
+gh run view <run-id> --repo <owner>/<repo> --log --job <job-id> > "$LOG" 2>&1
+gh run view <run-id> --repo <owner>/<repo> --log-failed --job <job-id> > "$LOG" 2>&1
 
-**Output:** Categorized error list with severity
-
-### Phase 4: Root Cause Analysis
-**Actions:**
-- Trace error to source: workflow syntax, action version, dependency, environment
-- Check for recent changes: workflow modifications, dependency updates, GitHub Actions platform changes
-- Identify configuration mismatches: secrets, environment variables, runner capabilities
-- Consider timing issues: race conditions, timeout thresholds, cache invalidation
-
-**Validation Steps:**
-- Verify action versions are valid and compatible
-- Check required secrets/variables are configured
-- Confirm runner has necessary tools/permissions
-- Review dependency lock files for conflicts
-
-**Output:** Root cause statement with evidence
-
-### Phase 5: Solution Generation
-**Actions:**
-- Provide specific fix (not "check your configuration")
-- Include code changes with exact syntax
-- Explain why fix resolves root cause
-- Suggest prevention measures
-- Estimate fix complexity (simple/moderate/complex)
-
-**Solution Format:**
-```markdown
-## Root Cause
-[Specific explanation with evidence]
-
-## Fix
-[Exact changes needed - use code blocks]
-
-## Why This Works
-[Technical explanation]
-
-## Prevention
-[How to avoid in future]
-
-## Verification
-[How to test the fix]
+# WRONG — gh intercepts the -F flag, awk never sees it
+gh run view <run-id> --log | awk -F'\t' '{print $3}'  # FAILS
+gh run view <run-id> --log | grep -n "error"           # FAILS
 ```
 
----
+### Parse logs after writing to file
 
-## Common Error Patterns - Quick Reference
+GitHub Actions log format: `<job-name>\tUNKNOWN STEP\t<timestamp>Z <message>`
 
-Use this table for Phase 3 categorization. For comprehensive patterns, load `error-patterns.md`.
+```bash
+# Find errors — always use file path, not pipe
+grep -i "error\|FAILED\|fatal\|Exit code" "$LOG" | head -40
 
-| Error Signature | Category | Common Cause | Quick Fix |
-|-----------------|----------|--------------|-----------|
-| `npm ERR! code ERESOLVE` | Dependency | Peer dependency conflict | Add `npm install --legacy-peer-deps` or update conflicting packages |
-| `Error: Process completed with exit code 1` (npm ci) | Dependency | Lock file out of sync | Delete `package-lock.json`, regenerate with `npm install` |
-| `pip: error: unrecognized arguments` | Dependency | Pip version incompatibility | Pin pip version: `python -m pip install --upgrade pip==23.0` |
-| `go: inconsistent vendoring` | Dependency | Go modules out of sync | Run `go mod tidy && go mod vendor` |
-| `Permission denied (publickey)` | Permission | SSH key not configured | Add deploy key or use HTTPS with PAT |
-| `Resource not accessible by integration` | Permission | Token lacks scope | Update token with required permissions (contents: write, etc.) |
-| `Error: HttpError: Not Found` | Permission | Private repo/action access | Add repository access to GITHUB_TOKEN permissions |
-| `##[error]Process completed with exit code 137` | Timeout/Resource | OOM killed (memory exhausted) | Reduce memory usage or use larger runner |
-| `##[error]The job running on runner ... has exceeded the maximum execution time` | Timeout | Job timeout (default 360min) | Add `timeout-minutes` or optimize job |
-| `Error: buildx failed with: ERROR: failed to solve` | Docker | Build context or Dockerfile error | Check COPY paths, multi-stage build, layer caching |
-| `YAML syntax error` | Syntax | Invalid YAML | Validate with `yamllint`, check indentation (use spaces, not tabs) |
-| `Invalid workflow file: .github/workflows/X.yml#L10` | Syntax | Schema validation failed | Check action inputs, required fields, job dependencies |
-| `Error: Unable to locate executable file: X` | Environment | Tool not installed on runner | Add setup action (setup-node, setup-python) or install in job |
-| `ENOENT: no such file or directory` | Environment | Missing file/directory | Check working-directory, ensure previous steps succeeded |
-| `fatal: not a git repository` | Environment | Working directory incorrect | Use `actions/checkout` before commands |
-| `Error: No such container: X` | Environment | Docker service not started | Add service container or start docker daemon |
-| `error: failed to push some refs` | Git | Conflict or protection | Pull latest changes, resolve conflicts, check branch protection |
-| `Error: HttpError: Resource protected by organization SAML enforcement` | Permission | SAML SSO not authorized | Authorize token for SAML SSO in org settings |
-| `error: RPC failed; HTTP 400` | Network | Large push or network issue | Increase git buffer: `git config http.postBuffer 524288000` |
-| `curl: (6) Could not resolve host` | Network | DNS or network failure | Retry with backoff or check runner network config |
+# Strip the job/timestamp prefix to read clean messages (Python — most reliable)
+python3 - "$LOG" << 'EOF'
+import re, sys
+for line in open(sys.argv[1]):
+    # Strip: "<job>\tUNKNOWN STEP\t2026-..Z "
+    clean = re.sub(r'^[^\t]+\tUNKNOWN STEP\t\S+ ', '', line.rstrip())
+    print(clean)
+EOF
 
----
+# Alternative: cut on tab delimiter (file-based, not piped from gh)
+cut -f3- "$LOG" | sed 's/^[0-9T:Z.-]* //'
 
-## Tool Selection Guidance
-
-Choose the right tool for efficient debugging:
-
-### Use `read` when:
-- Reading workflow files (<500 lines)
-- Checking action definitions
-- Reviewing configuration files (package.json, Dockerfile)
-
-### Use `grep` when:
-- Searching for specific error patterns across multiple files
-- Finding all occurrences of a keyword
-- Locating action usage in workflows
-
-### Use `pty_read` with pattern filtering when:
-- Analyzing large log files (>500 lines)
-- Extracting errors from verbose output
-- Filtering for specific error types
-
-### Use `bash` when:
-- Validating YAML syntax (yamllint)
-- Checking file existence/permissions
-- Running git commands for context
-
-### Use `scripts/parse_workflow_logs.py` when:
-- Log file >500 lines with multiple errors
-- Need structured JSON output for complex analysis
-- Batch processing multiple error types
-
----
-
-## Output Format Requirements
-
-### For Single Error:
-```markdown
-## Workflow Failure Analysis
-
-**Failed Job:** [job-name]
-**Failed Step:** [step-name]
-**Runner:** [ubuntu-latest/etc]
-
-### Error
-```
-[Exact error message with context]
+# Search for specific pattern after stripping prefix
+python3 -c "
+import re, sys
+for line in open(sys.argv[1]):
+    clean = re.sub(r'^[^\t]+\tUNKNOWN STEP\t\S+ ', '', line.rstrip())
+    if re.search(r'error|FAILED|fatal', clean, re.I):
+        print(clean)
+" "$LOG" | head -40
 ```
 
-### Root Cause
-[Specific cause with evidence from logs/config]
+### Download full logs for deep analysis
 
-### Fix
+```bash
+# Unique temp dir — prevents collisions between parallel sessions
+LOGDIR=$(mktemp -d /tmp/gh-logs-XXXXXX)
+gh run download <run-id> --repo <owner>/<repo> -D "$LOGDIR"
+
+# After download, search freely
+grep -rn "error\|FAILED\|fatal\|Exit code" "$LOGDIR/" | head -40
+
+# Re-run failed jobs after fix
+gh run rerun <run-id> --failed
+```
+
+## Debugging Checklist
+
+Work through sequentially. Stop when root cause is identified.
+
+1. **Identify failure scope** — Which job/step failed? What trigger (push, PR, schedule, fork PR)? Runner type? Matrix build?
+2. **Read logs** — Fetch with `gh run view --log-failed`. Find first error, not last. Check timestamps for timeouts vs. instant failures.
+3. **Read workflow file** — Open `.github/workflows/*.yml`. Verify step ordering, conditional expressions, env vars, secret references.
+4. **Classify error** — Match against Quick Reference below. Check if flaky (re-run history) or deterministic.
+5. **Fix and verify** — Apply fix, push, confirm CI passes. If flaky, add retry logic or fix race condition.
+
+## Project-Specific Failures (engineering-score-cards)
+
+Check these first — most common in this codebase.
+
+| Check Name | Root Cause | Fix |
+|---|---|---|
+| **Contrast Validation / Audit Text Contrast** | `npm run audit:contrast` found Tailwind classes failing WCAG (e.g., `text-gray-400` on white) | Check `STYLEGUIDE.md` for approved colors. Replace forbidden classes. |
+| **Push / Code Formatting Check** | `./gradlew spotlessCheck` found unformatted Java/Kotlin | Run `./gradlew spotlessApply` locally, commit the result. |
+| **E2E Tests - Compliance Dashboard** | Playwright tests in Docker Compose timeout or container unhealthy | Run `make up` locally, check `docker compose ps` — all containers healthy? Check Docker resource limits, review Playwright trace artifacts. |
+| **Frontend build failure** | TypeScript errors or missing types after API changes | Run `./gradlew generateOpenApiSpec` then `npm run generate:types:static` in `scorecards-ui/`. |
+
+## General Error Quick Reference
+
+| Error Pattern | Category | Fix |
+|---|---|---|
+| `Process completed with exit code 1` | Generic step failure | Read preceding log lines for actual error |
+| `Resource not accessible by integration` | Permissions | Add `permissions:` block (e.g., `contents: read`, `pull-requests: write`) |
+| `Unable to resolve action` | Action reference | Check version tag exists; pin to SHA for reliability |
+| `No space left on device` | Disk | Add cleanup step or `rm -rf` before heavy build steps |
+| `The job was canceled` | Timeout | Increase `timeout-minutes` or optimize slow steps |
+| `Context access might be invalid` | Expression syntax | Check `${{ }}` expressions; quote strings, use `fromJSON()` for complex types |
+| `HttpError: rate limit exceeded` | API throttling | Add `GITHUB_TOKEN`, use `actions/cache`, reduce API calls |
+| `Dependencies lock file is not found` | Missing lockfile | Commit `package-lock.json` / `gradle.lockfile`; check `working-directory` |
+| `ECONNREFUSED` / `Connection refused` | Service container | Verify `services:` health checks; use `localhost` not `127.0.0.1` |
+| `denied: permission` (Docker) | Registry auth | Add `docker/login-action` step before push |
+| `npm ERR! code ERESOLVE` | Peer dependency conflict | Add `--legacy-peer-deps` or resolve conflicting versions |
+| `exit code 137` / `Killed` | OOM | Increase `--max-old-space-size` or use larger runner |
+
+## Workflow Patterns to Check
+
 ```yaml
-# .github/workflows/ci.yml
-[Exact code changes]
+# Correct permissions block
+permissions:
+  contents: read
+  checks: write
+
+# Skip on fork PRs (they lack secrets)
+if: github.event.pull_request.head.repo.full_name == github.repository
+
+# Service health check (wait for DB)
+services:
+  postgres:
+    image: postgres:15
+    options: >-
+      --health-cmd pg_isready
+      --health-interval 10s
+      --health-timeout 5s
+      --health-retries 5
 ```
 
-### Explanation
-[Why this resolves the issue]
+## Key Principles
 
-### Prevention
-[How to avoid this in future]
-```
-
-### For Multiple Errors:
-Provide summary table, then detailed analysis for each:
-
-```markdown
-## Workflow Failure Summary
-
-| Error # | Category | Severity | Root Cause |
-|---------|----------|----------|------------|
-| 1 | Dependency | Critical | npm peer dependency conflict |
-| 2 | Timeout | Warning | Test suite slow |
+- **First error wins** — scroll up past cascading failures to find the root error
+- **Compare with last green run** — `gh run list --status success --limit 1`, diff workflow/code changes
+- **Fork PRs lack secrets** — failure only on fork PRs? Check `secrets.*` access
+- **Self-hosted runner drift** — check runner tool versions match workflow expectations
 
 ---
 
-## Error 1: Dependency Conflict
-[Detailed analysis...]
-
-## Error 2: Test Timeout
-[Detailed analysis...]
-```
-
----
-
-## Integration with Existing Skills/Agents
-
-### Delegate to `github-pr` skill when:
-- Failure is related to PR workflow (reviews, status checks)
-- Need to analyze PR comments or review feedback
-- CI check failure is part of broader PR debugging
-
-### Delegate to `github-debugger` agent when:
-- Issue requires specialized debugging beyond workflow logs
-- Need to trace application-level errors vs. CI/CD errors
-- Complex multi-repo debugging scenario
-
-### Stay in `github-actions-debugging` when:
-- Error is clearly workflow configuration or GHA platform issue
-- Log analysis and pattern matching can resolve issue
-- Solution involves modifying workflow files or action configuration
-
----
-
-## Edge Cases and Special Scenarios
-
-### Matrix Builds with Partial Failures
-- Identify which matrix combinations failed
-- Look for environment-specific issues (OS, version)
-- Provide fixes that target specific matrix cells
-
-### Forked PR Workflow Failures
-- Check if failure is due to secret access restrictions
-- Verify if `pull_request_target` is needed
-- Assess security implications of proposed fixes
-
-### Intermittent Failures
-- Look for race conditions, timing dependencies
-- Check for flaky tests vs. infrastructure issues
-- Recommend retry strategies or test isolation
-
-### Composite Action Errors
-- Trace error to specific action step
-- Check action.yml definition
-- Verify input/output mappings
-
-### Reusable Workflow Failures
-- Distinguish caller vs. called workflow errors
-- Check input passing and secret inheritance
-- Verify workflow_call trigger configuration
-
----
-
-## Performance Optimization
-
-**Token Efficiency:**
-- Load `error-patterns.md` only when Quick Reference table insufficient
-- Load `examples.md` only for complex multi-error scenarios
-- Use script for large logs instead of reading full output
-
-**Time Efficiency:**
-- Start with most recent logs (use offset in pty_read)
-- Search for error keywords before reading full context
-- Batch grep operations for multiple patterns
-
----
-
-## Additional Resources
-
-When core instructions are insufficient, load these files:
-
-- **`error-patterns.md`**: Comprehensive database of 100+ error patterns with detailed fixes
-- **`examples.md`**: Step-by-step walkthroughs of complex debugging scenarios
-- **`scripts/parse_workflow_logs.py`**: Automated log parser for large files
-- **`resources/error-patterns.json`**: Machine-readable pattern database
-
-Load resources only when needed to maintain token efficiency.
+*For extended error pattern catalog, see `error-patterns.md`. For large log files (>500 lines), use `scripts/parse_workflow_logs.py`.*
