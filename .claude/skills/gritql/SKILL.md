@@ -21,6 +21,32 @@ Use `grit` for structural code rewrites. Unlike text-based find/replace, gritql 
 - Simple text substitution → use `MultiEdit`
 - Code *searching* → use `ast-grep` instead
 
+## ⚠️ Critical: Go Package Prefix Migrations
+
+When adding package prefixes to Go types (e.g., `FooType` → `pkg.FooType`), two things WILL go wrong without guards:
+
+**1. Double-prefix** — GritQL visits sub-nodes of already-rewritten code. Fix with `not within`:
+
+```grit
+language go
+
+// WRONG: causes detection.detection.FooType
+`FooType` => `detection.FooType`
+
+// CORRECT: use specific not within guard
+`FooType` => `detection.FooType` where {
+  $_ <: not within `detection.$_`
+}
+```
+
+**2. Struct field types missed** — Go uses `type_identifier` AST node in struct fields; GritQL backtick patterns compile as `identifier` (different node type) and don't match. Use `gofmt -r` to cover these:
+
+```bash
+gofmt -r 'FooType -> detection.FooType' -w ./...
+```
+
+Then run `go build ./...` to catch any remaining occurrences.
+
 ## Installation
 
 ```bash
@@ -115,6 +141,14 @@ sg --pattern '$obj.oldMethod($$$)' --lang java src/
 grit apply '`$obj.oldMethod($$$args)` => `$obj.newMethod($$$args)`' --dry-run
 ```
 
+## Go Gotchas Quick Reference
+
+| Issue | Cause | Fix |
+|-------|-------|-----|
+| `detection.detection.FooType` | Pattern matches `FooType` inside already-prefixed `detection.FooType` | Add `where { $_ <: not within \`$_.$_\` }` |
+| Struct field types not rewritten | Go uses `type_identifier` node for type positions; may not match backtick pattern | After GritQL, run `go build ./...` and fix with `Edit` |
+| Missing `qualified_type` in type context | `pkg.Type` in type vs expression position uses different AST nodes | Use `not within` guards; supplement with manual edits |
+
 ## Advanced Patterns Reference
 
-For annotation migration, API migration across versions, and multi-step transformations, see `reference.md`.
+For annotation migration, API migration across versions, multi-step transformations, and Go-specific workarounds, see `reference.md`.
