@@ -40,6 +40,7 @@ Analyze all `.claude/settings.local.json` files across my projects and home dire
    **CAUTION (Show but don't auto-recommend)** - Potentially destructive:
    - `Bash(rm:*)`, `Bash(kill:*)`, `Bash(killall:*)`, `Bash(pkill:*)`
    - `Bash(kubectl delete:*)`
+   - `Bash(git reset:*)`, `Bash(git clean:*)`, `Bash(git stash:*)` — can discard or hide local changes
    - Very broad patterns like `Read(///**)` or `Bash(*)`
    - `SlashCommand(*)` patterns
 
