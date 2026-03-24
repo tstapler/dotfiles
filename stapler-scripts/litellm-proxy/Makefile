@@ -41,7 +41,7 @@ sso-login:
 # Install LiteLLM via uv
 install-litellm:
 	@command -v uv >/dev/null 2>&1 || { echo "Installing uv..."; curl -LsSf https://astral.sh/uv/install.sh | sh; }
-	uv tool install litellm[proxy]
+	uv tool install "litellm[proxy]==1.82.9"
 
 # Start PostgreSQL container (required for health check disable feature)
 postgres-up:
