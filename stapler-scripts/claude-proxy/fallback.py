@@ -14,8 +14,9 @@ logger = logging.getLogger(__name__)
 class FallbackHandler:
     """Orchestrates providers with automatic fallback on rate limits."""
 
-    def __init__(self, providers: List[Provider]):
+    def __init__(self, providers: List[Provider], metrics=None):
         self.providers = providers
+        self.metrics = metrics
         # Use diskcache for persistent cooldown tracking across restarts
         cache_dir = os.path.expanduser("~/.cache/claude-proxy/cooldowns")
         self.cooldowns = diskcache.Cache(cache_dir)
@@ -59,6 +60,7 @@ class FallbackHandler:
         request_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """Send message with automatic fallback."""
+        start_time = time.time()
         last_error = None
         req_prefix = f"[{request_id}] " if request_id else ""
         model = body.get("model", "unknown")
@@ -80,6 +82,8 @@ class FallbackHandler:
 
                     result = await provider.send_message(body, token, auth_type, headers, request_id)
                     logger.info(f"{req_prefix}✓ {provider.name} (model={model})")
+                    if self.metrics:
+                        self.metrics.record_request_complete(provider.name, model, start_time, True, stream=False)
                     return result
 
                 except TimeoutError as e:
@@ -101,6 +105,8 @@ class FallbackHandler:
                     # Anthropic: put in cooldown, move to next provider
                     if provider.name != "bedrock":
                         self._set_cooldown(provider.name, retry_after)
+                        if self.metrics:
+                            self.metrics.record_fallback(provider.name, "bedrock", "rate_limit")
                         break
                     # Bedrock: retry with exponential backoff (never goes in cooldown)
                     if attempt + 1 >= max_retries:
@@ -115,11 +121,15 @@ class FallbackHandler:
                 except ValidationError as e:
                     # Validation errors are client errors - don't retry with other providers
                     logger.error(f"{req_prefix}✗ {provider.name}: validation error (model={model}) - {e}")
+                    if self.metrics:
+                        self.metrics.record_request_complete(provider.name, model, start_time, False, "validation", stream=False)
                     raise
 
                 except AuthenticationError as e:
                     # Authentication errors are not retryable - fail immediately
                     logger.error(f"{req_prefix}✗ {provider.name}: authentication error (model={model}) - {e}")
+                    if self.metrics:
+                        self.metrics.record_request_complete(provider.name, model, start_time, False, "auth", stream=False)
                     raise
 
                 except Exception as e:
@@ -128,6 +138,9 @@ class FallbackHandler:
                     break
 
         # All providers failed
+        if self.metrics:
+            error_type = "rate_limit" if isinstance(last_error, RateLimitError) else "timeout" if isinstance(last_error, TimeoutError) else "unknown"
+            self.metrics.record_request_complete("none", model, start_time, False, error_type, stream=False)
         if last_error:
             raise last_error
         raise Exception("All providers are in cooldown or failed")
@@ -141,6 +154,7 @@ class FallbackHandler:
         request_id: Optional[str] = None
     ) -> AsyncIterator[str]:
         """Stream message with automatic fallback."""
+        start_time = time.time()
         last_error = None
         req_prefix = f"[{request_id}] " if request_id else ""
         model = body.get("model", "unknown")
@@ -179,6 +193,8 @@ class FallbackHandler:
                         logger.warning(f"{req_prefix}Full response:\n{full_response}")
 
                     logger.info(f"{req_prefix}✓ {provider.name} stream ({chunk_count} chunks, model={model})")
+                    if self.metrics:
+                        self.metrics.record_request_complete(provider.name, model, start_time, True, stream=True)
                     return
 
                 except TimeoutError as e:
@@ -200,6 +216,8 @@ class FallbackHandler:
                     # Anthropic: put in cooldown, move to next provider
                     if provider.name != "bedrock":
                         self._set_cooldown(provider.name, retry_after)
+                        if self.metrics:
+                            self.metrics.record_fallback(provider.name, "bedrock", "rate_limit")
                         break
                     # Bedrock: retry with exponential backoff (never goes in cooldown)
                     if attempt + 1 >= max_retries:
@@ -214,11 +232,15 @@ class FallbackHandler:
                 except ValidationError as e:
                     # Validation errors are client errors - don't retry with other providers
                     logger.error(f"{req_prefix}✗ {provider.name}: validation error - {e}")
+                    if self.metrics:
+                        self.metrics.record_request_complete(provider.name, model, start_time, False, "validation", stream=True)
                     raise
 
                 except AuthenticationError as e:
                     # Authentication errors are not retryable - fail immediately
                     logger.error(f"{req_prefix}✗ {provider.name}: authentication error - {e}")
+                    if self.metrics:
+                        self.metrics.record_request_complete(provider.name, model, start_time, False, "auth", stream=True)
                     raise
 
                 except Exception as e:
@@ -227,6 +249,9 @@ class FallbackHandler:
                     break
 
         # All providers failed
+        if self.metrics:
+            error_type = "rate_limit" if isinstance(last_error, RateLimitError) else "timeout" if isinstance(last_error, TimeoutError) else "unknown"
+            self.metrics.record_request_complete("none", model, start_time, False, error_type, stream=True)
         if last_error:
             raise last_error
         raise Exception("All providers are in cooldown or failed")

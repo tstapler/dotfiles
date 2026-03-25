@@ -18,7 +18,7 @@
         <string>10</string>
     </array>
     <key>WorkingDirectory</key>
-    <string>/Users/tylerstapler/dotfiles/stapler-scripts/claude-proxy</string>
+    <string>INSERT_WORKING_DIR_HERE</string>
     <key>EnvironmentVariables</key>
     <dict>
         <key>CLAUDE_CODE_OAUTH_TOKEN</key>

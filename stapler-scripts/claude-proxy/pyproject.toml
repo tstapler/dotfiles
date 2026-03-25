@@ -1,0 +1,20 @@
+[project]
+name = "claude-proxy"
+version = "0.1.0"
+description = "Anthropic/Bedrock proxy with fallback for Claude Code"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi==0.115.5",
+    "uvicorn[standard]==0.32.1",
+    "httpx==0.27.2",
+    "anyio>=4.0.0",
+    "boto3==1.35.78",
+    "pydantic==2.10.3",
+    "aws-sso-lib>=1.14.0",
+    "diskcache==5.6.3",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+]

@@ -1,6 +1,6 @@
 """Claude Proxy - Simple OAuth + Bedrock fallback proxy for Claude Code."""
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.responses import StreamingResponse, JSONResponse, HTMLResponse
 from typing import Dict, Any
 import json
 import logging
@@ -12,6 +12,7 @@ from providers.anthropic import AnthropicProvider
 from providers.bedrock import BedrockProvider
 from providers import ValidationError, AuthenticationError, RateLimitError
 from fallback import FallbackHandler
+from metrics import MetricsCollector
 import config
 
 # Configure logging with rotation and separate files
@@ -60,12 +61,379 @@ BLOCKING_REQUEST_THRESHOLD = 60  # seconds
 # Initialize FastAPI app
 app = FastAPI(title="Claude Proxy", version="1.0.0")
 
+# Initialize metrics collector
+metrics = MetricsCollector()
+
 # Initialize providers
 anthropic = AnthropicProvider()
 bedrock = BedrockProvider()
 
 # Create fallback handler with provider priority
-fallback = FallbackHandler([anthropic, bedrock])
+fallback = FallbackHandler([anthropic, bedrock], metrics=metrics)
+
+# Dashboard HTML template
+DASHBOARD_HTML = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Proxy Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            padding: 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #333;
+        }
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            color: #fff;
+        }
+        .status-bar {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+        .provider-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .status-active { background: #10b981; }
+        .status-cooldown { background: #f59e0b; }
+        .refresh-time {
+            color: #888;
+            font-size: 14px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 16px;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .stat-value {
+            font-size: 32px;
+            font-weight: 600;
+            color: #fff;
+        }
+        .stat-subtitle {
+            font-size: 14px;
+            color: #666;
+            margin-top: 4px;
+        }
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .chart-container {
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 16px;
+        }
+        .chart-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 12px;
+        }
+        .errors-section {
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 16px;
+        }
+        .errors-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 12px;
+        }
+        .errors-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .errors-table th {
+            text-align: left;
+            font-size: 12px;
+            color: #888;
+            padding: 8px 12px;
+            border-bottom: 1px solid #2a2a2a;
+        }
+        .errors-table td {
+            font-size: 13px;
+            padding: 8px 12px;
+            border-bottom: 1px solid #2a2a2a;
+        }
+        .error-type {
+            display: inline-block;
+            padding: 2px 8px;
+            background: #7c2d12;
+            color: #fca5a5;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        .no-errors {
+            color: #666;
+            font-size: 14px;
+            padding: 16px;
+            text-align: center;
+        }
+        @media (max-width: 1024px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Claude Proxy</h1>
+        <div class="status-bar">
+            <div class="provider-status">
+                <span class="status-indicator" id="anthropic-status"></span>
+                <span id="anthropic-text">Anthropic</span>
+            </div>
+            <div class="provider-status">
+                <span class="status-indicator" id="bedrock-status"></span>
+                <span id="bedrock-text">Bedrock</span>
+            </div>
+            <div class="refresh-time" id="refresh-time">Loading...</div>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">Total Requests</div>
+            <div class="stat-value" id="total-requests">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Success Rate</div>
+            <div class="stat-value" id="success-rate">0%</div>
+            <div class="stat-subtitle" id="success-count">0 successful</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Error Rate</div>
+            <div class="stat-value" id="error-rate">0%</div>
+            <div class="stat-subtitle" id="error-count">0 errors</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Fallbacks</div>
+            <div class="stat-value" id="fallback-count">0</div>
+        </div>
+    </div>
+
+    <div class="charts-grid">
+        <div class="chart-container">
+            <div class="chart-title">Requests Per Minute (15 min)</div>
+            <canvas id="rpm-chart"></canvas>
+        </div>
+        <div class="chart-container">
+            <div class="chart-title">Providers</div>
+            <canvas id="provider-chart"></canvas>
+        </div>
+        <div class="chart-container">
+            <div class="chart-title">Duration</div>
+            <canvas id="duration-chart"></canvas>
+        </div>
+    </div>
+
+    <div class="errors-section">
+        <div class="errors-title">Recent Errors</div>
+        <table class="errors-table">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Type</th>
+                    <th>Provider</th>
+                    <th>Model</th>
+                </tr>
+            </thead>
+            <tbody id="errors-body">
+                <tr><td colspan="4" class="no-errors">No errors yet</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Chart instances
+        let rpmChart, providerChart, durationChart;
+
+        // Initialize charts
+        function initCharts() {
+            const chartDefaults = {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { display: false }
+                }
+            };
+
+            rpmChart = new Chart(document.getElementById('rpm-chart'), {
+                type: 'line',
+                data: { labels: [], datasets: [{ data: [], borderColor: '#3b82f6', tension: 0.4 }] },
+                options: {
+                    ...chartDefaults,
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#2a2a2a' }, ticks: { color: '#888' } },
+                        x: { grid: { display: false }, ticks: { color: '#888' } }
+                    }
+                }
+            });
+
+            providerChart = new Chart(document.getElementById('provider-chart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Anthropic', 'Bedrock', 'Failed'],
+                    datasets: [{
+                        data: [0, 0, 0],
+                        backgroundColor: ['#3b82f6', '#10b981', '#ef4444']
+                    }]
+                },
+                options: {
+                    ...chartDefaults,
+                    plugins: { legend: { display: true, position: 'bottom', labels: { color: '#888' } } }
+                }
+            });
+
+            durationChart = new Chart(document.getElementById('duration-chart'), {
+                type: 'bar',
+                data: {
+                    labels: ['< 1s', '1-5s', '5-30s', '30-60s', '> 60s'],
+                    datasets: [{ data: [0, 0, 0, 0, 0], backgroundColor: '#3b82f6' }]
+                },
+                options: {
+                    ...chartDefaults,
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#2a2a2a' }, ticks: { color: '#888' } },
+                        x: { grid: { display: false }, ticks: { color: '#888' } }
+                    }
+                }
+            });
+        }
+
+        // Load metrics and update dashboard
+        async function loadMetrics() {
+            try {
+                const response = await fetch('/metrics');
+                const data = await response.json();
+
+                // Update stats
+                document.getElementById('total-requests').textContent = data.summary.total_requests.toLocaleString();
+                document.getElementById('success-rate').textContent = data.summary.success_rate.toFixed(1) + '%';
+                document.getElementById('success-count').textContent = data.summary.total_success.toLocaleString() + ' successful';
+                document.getElementById('error-rate').textContent = data.summary.error_rate.toFixed(1) + '%';
+                document.getElementById('error-count').textContent = data.summary.total_errors.toLocaleString() + ' errors';
+                document.getElementById('fallback-count').textContent = data.summary.total_fallbacks.toLocaleString();
+
+                // Update provider status
+                if (data.cooldowns) {
+                    for (const [provider, status] of Object.entries(data.cooldowns)) {
+                        const indicator = document.getElementById(`${provider}-status`);
+                        const text = document.getElementById(`${provider}-text`);
+                        if (status.cooling_down && status.remaining_seconds > 0) {
+                            indicator.className = 'status-indicator status-cooldown';
+                            text.textContent = `${provider.charAt(0).toUpperCase() + provider.slice(1)} (${status.remaining_seconds}s)`;
+                        } else {
+                            indicator.className = 'status-indicator status-active';
+                            text.textContent = provider.charAt(0).toUpperCase() + provider.slice(1);
+                        }
+                    }
+                }
+
+                // Update RPM chart
+                rpmChart.data.labels = data.rpm_data.map(d => d.minute);
+                rpmChart.data.datasets[0].data = data.rpm_data.map(d => d.requests);
+                rpmChart.update();
+
+                // Update provider chart
+                providerChart.data.datasets[0].data = [
+                    data.providers.anthropic?.requests || 0,
+                    data.providers.bedrock?.requests || 0,
+                    data.providers.none?.requests || 0
+                ];
+                providerChart.update();
+
+                // Update duration chart
+                const dist = data.duration_distribution;
+                durationChart.data.datasets[0].data = [
+                    dist['< 1s'] || 0,
+                    dist['1-5s'] || 0,
+                    dist['5-30s'] || 0,
+                    dist['30-60s'] || 0,
+                    dist['> 60s'] || 0
+                ];
+                durationChart.update();
+
+                // Update errors table
+                const errorsBody = document.getElementById('errors-body');
+                if (data.recent_errors && data.recent_errors.length > 0) {
+                    errorsBody.innerHTML = data.recent_errors.map(err => {
+                        const time = new Date(err.timestamp).toLocaleTimeString();
+                        return `
+                            <tr>
+                                <td>${time}</td>
+                                <td><span class="error-type">${err.error_type}</span></td>
+                                <td>${err.provider}</td>
+                                <td>${err.model}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                } else {
+                    errorsBody.innerHTML = '<tr><td colspan="4" class="no-errors">No errors yet</td></tr>';
+                }
+
+                // Update refresh time
+                const now = new Date();
+                document.getElementById('refresh-time').textContent = `↺ ${now.toLocaleTimeString()}`;
+
+            } catch (error) {
+                console.error('Failed to load metrics:', error);
+            }
+        }
+
+        // Initialize and start auto-refresh
+        initCharts();
+        loadMetrics();
+        setInterval(loadMetrics, 30000); // Refresh every 30 seconds
+    </script>
+</body>
+</html>
+"""
 
 
 @app.middleware("http")
@@ -441,6 +809,29 @@ async def double_v1_error(request: Request):
     )
 
 
+@app.get("/dashboard", response_class=HTMLResponse)
+async def get_dashboard():
+    """Browser-accessible monitoring dashboard."""
+    return DASHBOARD_HTML
+
+
+@app.get("/metrics")
+async def get_metrics():
+    """JSON metrics endpoint for dashboard and API consumers."""
+    stats = metrics.get_stats()
+
+    # Add live cooldown status from FallbackHandler
+    stats["cooldowns"] = {
+        p.name: {
+            "cooling_down": fallback._is_in_cooldown(p.name),
+            "remaining_seconds": max(0, int((fallback.cooldowns.get(p.name) or 0) - time.time()))
+        }
+        for p in fallback.providers
+    }
+
+    return JSONResponse(stats)
+
+
 @app.get("/")
 async def root():
     """Root endpoint with basic info."""
@@ -452,6 +843,8 @@ async def root():
             "/v1/models - List available models (LiteLLM)",
             "/chat/completions - OpenAI compatible endpoint",
             "/v1/chat/completions - OpenAI compatible endpoint (LiteLLM)",
+            "/dashboard - Monitoring dashboard (HTML)",
+            "/metrics - Metrics endpoint (JSON)",
             "/health - Health check"
         ]
     }
