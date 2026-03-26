@@ -2,6 +2,7 @@
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import StreamingResponse, JSONResponse, HTMLResponse
 from typing import Dict, Any
+import asyncio
 import json
 import logging
 from logging.handlers import RotatingFileHandler
@@ -70,6 +71,25 @@ bedrock = BedrockProvider()
 
 # Create fallback handler with provider priority
 fallback = FallbackHandler([anthropic, bedrock], metrics=metrics)
+
+
+async def _monitor_event_loop_lag():
+    """Sample event loop lag every second and record to metrics."""
+    while True:
+        t = time.perf_counter()
+        await asyncio.sleep(1)
+        lag_ms = max(0.0, (time.perf_counter() - t - 1.0) * 1000)
+        metrics.record_event_loop_lag(lag_ms)
+        if lag_ms > 200:
+            logger.warning(f"⚠️ Event loop lag: {lag_ms:.1f}ms")
+        elif lag_ms > 50:
+            logger.debug(f"Event loop lag: {lag_ms:.1f}ms")
+
+
+@app.on_event("startup")
+async def startup():
+    asyncio.create_task(_monitor_event_loop_lag())
+
 
 # Dashboard HTML template
 DASHBOARD_HTML = """
@@ -255,6 +275,11 @@ DASHBOARD_HTML = """
             <div class="stat-label">Fallbacks</div>
             <div class="stat-value" id="fallback-count">0</div>
         </div>
+        <div class="stat-card">
+            <div class="stat-label">Loop Lag (current)</div>
+            <div class="stat-value" id="loop-lag">0ms</div>
+            <div class="stat-subtitle" id="loop-lag-status">healthy</div>
+        </div>
     </div>
 
     <div class="charts-grid">
@@ -270,6 +295,11 @@ DASHBOARD_HTML = """
             <div class="chart-title">Duration</div>
             <canvas id="duration-chart"></canvas>
         </div>
+    </div>
+
+    <div class="chart-container" style="margin-bottom: 24px;">
+        <div class="chart-title">Event Loop Lag — max ms per minute (15 min)</div>
+        <canvas id="lag-chart"></canvas>
     </div>
 
     <div class="errors-section">
@@ -291,7 +321,7 @@ DASHBOARD_HTML = """
 
     <script>
         // Chart instances
-        let rpmChart, providerChart, durationChart;
+        let rpmChart, providerChart, durationChart, lagChart;
 
         // Initialize charts
         function initCharts() {
@@ -340,6 +370,46 @@ DASHBOARD_HTML = """
                     ...chartDefaults,
                     scales: {
                         y: { beginAtZero: true, grid: { color: '#2a2a2a' }, ticks: { color: '#888' } },
+                        x: { grid: { display: false }, ticks: { color: '#888' } }
+                    }
+                }
+            });
+
+            lagChart = new Chart(document.getElementById('lag-chart'), {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'max',
+                            data: [],
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239,68,68,0.1)',
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'avg',
+                            data: [],
+                            borderColor: '#f59e0b',
+                            borderDash: [4, 4],
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: true, position: 'top', labels: { color: '#888' } },
+                        tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}ms` } }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#2a2a2a' },
+                            ticks: { color: '#888', callback: v => v + 'ms' }
+                        },
                         x: { grid: { display: false }, ticks: { color: '#888' } }
                     }
                 }
@@ -398,6 +468,30 @@ DASHBOARD_HTML = """
                     dist['> 60s'] || 0
                 ];
                 durationChart.update();
+
+                // Update loop lag stat card
+                const lagMs = data.current_lag_ms || 0;
+                const lagEl = document.getElementById('loop-lag');
+                const lagStatus = document.getElementById('loop-lag-status');
+                lagEl.textContent = lagMs.toFixed(1) + 'ms';
+                if (lagMs >= 50) {
+                    lagEl.style.color = '#ef4444';
+                    lagStatus.textContent = 'contended';
+                } else if (lagMs >= 10) {
+                    lagEl.style.color = '#f59e0b';
+                    lagStatus.textContent = 'elevated';
+                } else {
+                    lagEl.style.color = '#10b981';
+                    lagStatus.textContent = 'healthy';
+                }
+
+                // Update event loop lag chart
+                if (data.lag_data) {
+                    lagChart.data.labels = data.lag_data.map(d => d.minute);
+                    lagChart.data.datasets[0].data = data.lag_data.map(d => d.max_ms);
+                    lagChart.data.datasets[1].data = data.lag_data.map(d => d.avg_ms);
+                    lagChart.update();
+                }
 
                 // Update errors table
                 const errorsBody = document.getElementById('errors-body');

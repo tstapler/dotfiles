@@ -107,6 +107,25 @@ class MetricsCollector:
         self._incr(f"fallback_reason:{reason}")
         logger.debug(f"Recorded fallback: {from_provider} -> {to_provider} ({reason})")
 
+    def record_event_loop_lag(self, lag_ms: float):
+        """Record an event loop lag sample (called ~every second)."""
+        minute_key = datetime.now().strftime("%Y-%m-%dT%H:%M")
+        # Store as integer with 0.01ms precision to use atomic incr
+        lag_int = int(lag_ms * 100)
+
+        # Update max for this minute
+        max_key = f"lag:{minute_key}:max"
+        current_max = self._get(max_key, 0)
+        if lag_int > current_max:
+            self._set(max_key, lag_int)
+
+        # Accumulate sum and count for avg
+        self._incr(f"lag:{minute_key}:sum", lag_int)
+        self._incr(f"lag:{minute_key}:count")
+
+        # Keep the latest sample for instant display
+        self._set("lag:current_ms", round(lag_ms, 2))
+
     def get_stats(self) -> Dict[str, Any]:
         """Get current statistics for dashboard and API."""
         # Get basic counters
@@ -179,6 +198,22 @@ class MetricsCollector:
                 "requests": count
             })
 
+        # Event loop lag history for last 15 minutes
+        lag_data = []
+        for i in range(15, -1, -1):
+            minute = now - timedelta(minutes=i)
+            minute_key = minute.strftime("%Y-%m-%dT%H:%M")
+            max_int = self._get(f"lag:{minute_key}:max", 0)
+            sum_int = self._get(f"lag:{minute_key}:sum", 0)
+            count = self._get(f"lag:{minute_key}:count", 0)
+            lag_data.append({
+                "minute": minute.strftime("%H:%M"),
+                "max_ms": round(max_int / 100, 2),
+                "avg_ms": round(sum_int / 100 / count, 2) if count > 0 else 0
+            })
+
+        current_lag_ms = self._get("lag:current_ms", 0.0)
+
         # Recent errors
         recent_errors = self._get("recent_errors", [])
 
@@ -197,6 +232,8 @@ class MetricsCollector:
             "duration_distribution": duration_distribution,
             "fallback_reasons": fallback_reasons,
             "rpm_data": rpm_data,
+            "lag_data": lag_data,
+            "current_lag_ms": current_lag_ms,
             "recent_errors": recent_errors,
             "timestamp": datetime.now().isoformat()
         }
