@@ -17,3 +17,17 @@ uv run main.py --help
 - **Metadata Overrides:** Supports overriding default values (like model, temperature, mode) via YAML frontmatter.
 - **Recursive Directory Creation:** Ensures nested structures are synced correctly.
 - **Custom Paths:** Use `--source-dir`, `--gemini-dir`, or `--opencode-dir` to sync to local project folders.
+
+## Configuration References
+
+### Claude Code
+- **Skills:** https://docs.anthropic.com/en/docs/claude-code/skills
+- **Location:** `.claude/skills/<name>/SKILL.md`, `.claude/commands/<name>.md`
+
+### OpenCode
+- **Agents:** https://opencode.ai/docs/agents/
+- **Location:** `~/.config/opencode/agents/<name>.md`
+
+### Gemini CLI
+- **Configuration:** https://github.com/google-gemini/gemini-cli/blob/main/docs/reference/configuration.md
+- **Location:** `.gemini/agents/*.md`, `.gemini/skills/*/SKILL.md`, `.gemini/commands/*.toml`
