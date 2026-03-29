@@ -22,7 +22,9 @@ Always prefer dedicated tools over Bash for these operations:
 | Search text | `Grep` | `grep`, `rg` |
 | Search code (structural) | `ast-grep` (`sg`) via Bash | `grep` for code patterns |
 | Web search | `WebSearch` | — |
-| Fetch URLs | `WebFetch` / `mcp__read-website-fast__read_website` | `curl` |
+| Read a URL (clean text) | `mcp__read-website-fast__read_website` — save to `/tmp` if page is large | `WebFetch`, `curl` |
+| Download page to disk | `mcp__website-downloader__download_page` | `curl`, wget |
+| Download site to disk | `mcp__website-downloader__download_website` | wget |
 
 Reserve `Bash` exclusively for: git operations, running tests/commands, and system operations with no dedicated tool.
 
