@@ -1,8 +1,16 @@
 """Anthropic API provider implementation."""
 import httpx
 import json
+import os
+import diskcache
 from typing import Dict, Any, AsyncIterator, Optional
-from . import Provider, RateLimitError, ValidationError
+from . import Provider, RateLimitError, ValidationError, ModelUnsupportedError
+
+_model_cache = diskcache.Cache(
+    os.path.expanduser("~/.cache/claude-proxy/model-cache"),
+    size_limit=1 * 1024 * 1024
+)
+_MODEL_CACHE_TTL = 3600  # 1 hour
 
 
 class AnthropicProvider(Provider):
@@ -21,6 +29,30 @@ class AnthropicProvider(Provider):
     @property
     def name(self) -> str:
         return "anthropic"
+
+    async def _get_supported_models(self, token: str, auth_type: str) -> set:
+        """Fetch and cache the list of model IDs supported by the Anthropic API.
+
+        Returns empty set on error so callers fall back to attempting the request.
+        """
+        import logging
+        logger = logging.getLogger(__name__)
+        cache_key = f"anthropic_models:{auth_type}"
+        cached = _model_cache.get(cache_key)
+        if cached is not None:
+            return cached
+        try:
+            headers = self._build_headers(token, auth_type)
+            response = await self.client.get(f"{self.base_url}/v1/models", headers=headers)
+            if response.status_code == 200:
+                model_ids = {m["id"] for m in response.json().get("data", [])}
+                _model_cache.set(cache_key, model_ids, expire=_MODEL_CACHE_TTL)
+                logger.debug(f"Cached {len(model_ids)} Anthropic models")
+                return model_ids
+            logger.warning(f"GET /v1/models returned {response.status_code} — skipping model check")
+        except Exception as e:
+            logger.warning(f"Could not fetch Anthropic model list: {e} — skipping model check")
+        return set()
 
     def _build_headers(
         self,
@@ -151,6 +183,12 @@ class AnthropicProvider(Provider):
         if "model" in body:
             body["model"] = self.normalize_model_name(body["model"])
 
+        # Check model is supported before sending (avoids a wasted round-trip)
+        model = body.get("model", "")
+        supported = await self._get_supported_models(token, auth_type)
+        if supported and model not in supported:
+            raise ModelUnsupportedError(f"Model '{model}' not available on Anthropic API")
+
         # Log tool count before cleaning
         if "tools" in body:
             logger.info(f"[{request_id}] Found {len(body['tools'])} tools before cleaning")
@@ -240,6 +278,12 @@ class AnthropicProvider(Provider):
         # Normalize model name
         if "model" in body:
             body["model"] = self.normalize_model_name(body["model"])
+
+        # Check model is supported before sending (avoids a wasted round-trip)
+        model = body.get("model", "")
+        supported = await self._get_supported_models(token, auth_type)
+        if supported and model not in supported:
+            raise ModelUnsupportedError(f"Model '{model}' not available on Anthropic API")
 
         # Log tool count before cleaning
         if "tools" in body:

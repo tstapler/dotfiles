@@ -3,7 +3,7 @@ import time
 import asyncio
 import logging
 from typing import Dict, Any, List, AsyncIterator, Optional
-from providers import Provider, RateLimitError, ValidationError, TimeoutError, AuthenticationError
+from providers import Provider, RateLimitError, ValidationError, TimeoutError, AuthenticationError, ModelUnsupportedError
 import config
 import diskcache
 import os
@@ -118,6 +118,12 @@ class FallbackHandler:
                     await asyncio.sleep(backoff)
                     continue
 
+                except ModelUnsupportedError as e:
+                    # Model not supported by this provider — try the next one, no cooldown
+                    logger.info(f"{req_prefix}⤳ {provider.name}: model unsupported ({model}) - trying next provider")
+                    last_error = e
+                    break
+
                 except ValidationError as e:
                     # Validation errors are client errors - don't retry with other providers
                     logger.error(f"{req_prefix}✗ {provider.name}: validation error (model={model}) - {e}")
@@ -228,6 +234,12 @@ class FallbackHandler:
                     logger.info(f"{req_prefix}⏸ Waiting {backoff}s before retry...")
                     await asyncio.sleep(backoff)
                     continue
+
+                except ModelUnsupportedError as e:
+                    # Model not supported by this provider — try the next one, no cooldown
+                    logger.info(f"{req_prefix}⤳ {provider.name}: model unsupported ({model}) - trying next provider")
+                    last_error = e
+                    break
 
                 except ValidationError as e:
                     # Validation errors are client errors - don't retry with other providers

@@ -27,6 +27,11 @@ class AuthenticationError(Exception):
     pass
 
 
+class ModelUnsupportedError(Exception):
+    """Raised when a provider doesn't support the requested model (try next provider)."""
+    pass
+
+
 class Provider(ABC):
     """Abstract base class for API providers."""
 
