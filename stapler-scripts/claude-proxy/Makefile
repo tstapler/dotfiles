@@ -1,6 +1,6 @@
 # Claude Proxy Makefile
 
-.PHONY: help install uninstall update start stop restart status logs app-logs http-logs clean deps update-token
+.PHONY: help install uninstall update start stop restart reload status logs app-logs http-logs clean deps update-token
 
 help:
 	@echo "Claude Proxy Management Commands:"
@@ -9,7 +9,8 @@ help:
 	@echo "  make update        - Update code, plist, and restart proxy"
 	@echo "  make start         - Start the proxy"
 	@echo "  make stop          - Stop the proxy"
-	@echo "  make restart       - Restart the proxy"
+	@echo "  make reload        - Gracefully reload (zero downtime, HUP signal)"
+	@echo "  make restart       - Restart the proxy (with validation)"
 	@echo "  make status        - Check proxy status"
 	@echo "  make logs          - View access logs (uvicorn HTTP)"
 	@echo "  make app-logs      - View application logs (fallback, providers)"
@@ -79,12 +80,34 @@ stop:
 		launchctl bootout gui/$$(id -u) ~/Library/LaunchAgents/com.claude-proxy.plist 2>/dev/null || true
 	@echo "Claude Proxy stopped"
 
-# Restart the proxy
-restart: stop
+# Graceful reload (zero downtime with uvicorn multi-worker)
+reload:
+	@echo "Validating new code..."
+	@uv run python -c "import main" || (echo "❌ Import failed, aborting reload"; exit 1)
+	@uv run python -m pytest test_providers.py -q || (echo "❌ Tests failed, aborting reload"; exit 1)
+	@echo "✅ Validation passed, sending HUP signal for graceful reload..."
+	@MASTER_PID=$$(pgrep -f "uvicorn main:app" | head -1); \
+	if [ -n "$$MASTER_PID" ]; then \
+		kill -HUP $$MASTER_PID && echo "✅ Graceful reload initiated (PID: $$MASTER_PID)"; \
+		sleep 3; \
+		curl -sf http://localhost:47000/health > /dev/null && echo "✅ Proxy healthy after reload" || echo "⚠️  Health check failed"; \
+	else \
+		echo "⚠️  Could not find uvicorn master process, falling back to restart..."; \
+		$(MAKE) restart; \
+	fi
+
+# Restart the proxy (with validation)
+restart:
+	@echo "Validating new code..."
+	@uv run python -c "import main" || (echo "❌ Import failed, aborting restart"; exit 1)
+	@uv run python -m pytest test_providers.py -q || (echo "❌ Tests failed, aborting restart"; exit 1)
+	@echo "✅ Validation passed, restarting..."
+	@$(MAKE) stop
 	@echo "Clearing Python bytecode cache..."
 	@rm -rf __pycache__ providers/__pycache__
 	@$(MAKE) start
-	@echo "Claude Proxy restarted"
+	@sleep 3
+	@curl -sf http://localhost:47000/health > /dev/null && echo "✅ Proxy healthy after restart" || echo "⚠️  Health check failed"
 
 # Check proxy status
 status:

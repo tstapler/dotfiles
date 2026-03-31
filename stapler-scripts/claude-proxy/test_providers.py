@@ -4,7 +4,8 @@ Tests the pure logic functions that don't require live AWS/Anthropic connections
 """
 import json
 import pytest
-from unittest.mock import MagicMock, patch, call
+import asyncio
+from unittest.mock import MagicMock, patch, call, AsyncMock
 
 
 # ---------------------------------------------------------------------------
@@ -459,3 +460,347 @@ class TestAnthropicCleanRequestBody:
         # Should not raise
         result = self.provider._clean_request_body(body)
         assert result["system"] == "plain string system"
+
+
+# ===========================================================================
+# AnthropicProvider._get_supported_models — model lookup and caching
+# ===========================================================================
+
+class TestGetSupportedModels:
+    def setup_method(self):
+        from providers.anthropic import _model_cache
+        _model_cache.clear()
+
+    @pytest.mark.asyncio
+    async def test_fetches_and_caches_model_list(self):
+        mock_client = AsyncMock()
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "data": [
+                {"id": "claude-sonnet-4-6"},
+                {"id": "claude-opus-4-6"},
+                {"id": "claude-haiku-4-5-20251001"},
+            ]
+        }
+        mock_client.get.return_value = mock_response
+
+        with patch("providers.anthropic.httpx.AsyncClient", return_value=mock_client):
+            from providers.anthropic import AnthropicProvider
+            provider = AnthropicProvider()
+            result = await provider._get_supported_models("token", "oauth")
+
+        assert "claude-sonnet-4-6" in result
+        assert "claude-opus-4-6" in result
+        assert "claude-haiku-4-5-20251001" in result
+        assert len(result) == 3
+
+    @pytest.mark.asyncio
+    async def test_returns_cached_result_on_second_call(self):
+        mock_client = AsyncMock()
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "data": [{"id": "claude-sonnet-4-6"}]
+        }
+        mock_client.get.return_value = mock_response
+
+        with patch("providers.anthropic.httpx.AsyncClient", return_value=mock_client):
+            from providers.anthropic import AnthropicProvider
+            provider = AnthropicProvider()
+
+            # First call
+            result1 = await provider._get_supported_models("token", "oauth")
+            # Second call
+            result2 = await provider._get_supported_models("token", "oauth")
+
+        # Should only call API once (cached)
+        assert mock_client.get.call_count == 1
+        assert result1 == result2
+
+    @pytest.mark.asyncio
+    async def test_returns_empty_set_on_api_error(self):
+        mock_client = AsyncMock()
+        mock_client.get.side_effect = Exception("Network error")
+
+        with patch("providers.anthropic.httpx.AsyncClient", return_value=mock_client):
+            from providers.anthropic import AnthropicProvider
+            provider = AnthropicProvider()
+            result = await provider._get_supported_models("token", "oauth")
+
+        assert result == set()
+
+    @pytest.mark.asyncio
+    async def test_returns_empty_set_on_non_200_status(self):
+        mock_client = AsyncMock()
+        mock_response = MagicMock()
+        mock_response.status_code = 403
+        mock_client.get.return_value = mock_response
+
+        with patch("providers.anthropic.httpx.AsyncClient", return_value=mock_client):
+            from providers.anthropic import AnthropicProvider
+            provider = AnthropicProvider()
+            result = await provider._get_supported_models("token", "oauth")
+
+        assert result == set()
+
+
+# ===========================================================================
+# Model validation in send_message and stream_message
+# ===========================================================================
+
+class TestModelValidation:
+    def setup_method(self):
+        from providers.anthropic import _model_cache
+        _model_cache.clear()
+
+    @pytest.mark.asyncio
+    async def test_send_message_raises_when_model_not_supported(self):
+        from providers import ModelUnsupportedError
+
+        mock_client = AsyncMock()
+
+        with patch("providers.anthropic.httpx.AsyncClient", return_value=mock_client):
+            from providers.anthropic import AnthropicProvider
+            provider = AnthropicProvider()
+
+            # Mock _get_supported_models to return limited set
+            async def mock_get_models(token, auth_type):
+                return {"claude-sonnet-4-6", "claude-opus-4-6"}
+
+            provider._get_supported_models = mock_get_models
+
+            body = {"model": "claude-unsupported-model", "messages": []}
+
+            with pytest.raises(ModelUnsupportedError, match="not available on Anthropic API"):
+                await provider.send_message(body, "token", "oauth", request_id="req123")
+
+    @pytest.mark.asyncio
+    async def test_send_message_allows_supported_model(self):
+        mock_client = AsyncMock()
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"id": "msg_123", "content": []}
+        mock_client.post.return_value = mock_response
+
+        with patch("providers.anthropic.httpx.AsyncClient", return_value=mock_client):
+            from providers.anthropic import AnthropicProvider
+            provider = AnthropicProvider()
+
+            # Mock _get_supported_models to return model list
+            async def mock_get_models(token, auth_type):
+                return {"claude-sonnet-4-6"}
+
+            provider._get_supported_models = mock_get_models
+
+            body = {"model": "claude-sonnet-4-6", "messages": []}
+
+            # Should not raise
+            result = await provider.send_message(body, "token", "oauth", request_id="req123")
+            assert result["id"] == "msg_123"
+
+    @pytest.mark.asyncio
+    async def test_send_message_skips_check_when_api_returns_empty(self):
+        mock_client = AsyncMock()
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"id": "msg_123"}
+        mock_client.post.return_value = mock_response
+
+        with patch("providers.anthropic.httpx.AsyncClient", return_value=mock_client):
+            from providers.anthropic import AnthropicProvider
+            provider = AnthropicProvider()
+
+            # Mock _get_supported_models to return empty set (API error)
+            async def mock_get_models(token, auth_type):
+                return set()
+
+            provider._get_supported_models = mock_get_models
+
+            body = {"model": "claude-any-model", "messages": []}
+
+            # Should not raise even though model might not be supported
+            # (fallback to attempting the request)
+            result = await provider.send_message(body, "token", "oauth", request_id="req123")
+            assert result["id"] == "msg_123"
+
+
+# ===========================================================================
+# FallbackHandler — provider selection and error handling
+# ===========================================================================
+
+class TestFallbackHandler:
+    def setup_method(self):
+        # Mock providers
+        self.anthropic = MagicMock()
+        self.anthropic.name = "anthropic"
+        self.anthropic.send_message = AsyncMock()
+        self.anthropic.stream_message = AsyncMock()
+
+        self.bedrock = MagicMock()
+        self.bedrock.name = "bedrock"
+        self.bedrock.send_message = AsyncMock()
+        self.bedrock.stream_message = AsyncMock()
+
+        # Mock diskcache and config
+        with patch("fallback.diskcache.Cache") as mock_cache_cls, \
+             patch("fallback.config"):
+            mock_cache = MagicMock()
+            mock_cache.get.return_value = None  # No cooldowns by default
+            mock_cache.__iter__.return_value = iter([])  # Empty cooldowns
+            mock_cache_cls.return_value = mock_cache
+
+            from fallback import FallbackHandler
+            self.handler = FallbackHandler([self.anthropic, self.bedrock])
+            self.mock_cooldowns = mock_cache
+
+    @pytest.mark.asyncio
+    async def test_tries_anthropic_first_when_not_in_cooldown(self):
+        self.anthropic.send_message.return_value = {"id": "msg_123"}
+
+        result = await self.handler.send_message({}, "token", "oauth", "req123")
+
+        assert result["id"] == "msg_123"
+        self.anthropic.send_message.assert_called_once()
+        self.bedrock.send_message.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_falls_back_to_bedrock_on_rate_limit(self):
+        from providers import RateLimitError
+
+        self.anthropic.send_message.side_effect = RateLimitError("Rate limited")
+        self.bedrock.send_message.return_value = {"id": "msg_456"}
+
+        result = await self.handler.send_message({}, "token", "oauth", "req123")
+
+        assert result["id"] == "msg_456"
+        self.anthropic.send_message.assert_called_once()
+        self.bedrock.send_message.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_does_not_fall_back_on_validation_error(self):
+        from providers import ValidationError
+
+        self.anthropic.send_message.side_effect = ValidationError("Bad request")
+
+        with pytest.raises(ValidationError):
+            await self.handler.send_message({}, "token", "oauth", "req123")
+
+        self.anthropic.send_message.assert_called_once()
+        self.bedrock.send_message.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_falls_back_on_model_unsupported_error(self):
+        from providers import ModelUnsupportedError
+
+        self.anthropic.send_message.side_effect = ModelUnsupportedError("Model not supported")
+        self.bedrock.send_message.return_value = {"id": "msg_789"}
+
+        result = await self.handler.send_message({}, "token", "oauth", "req123")
+
+        assert result["id"] == "msg_789"
+        # Should try both providers
+        self.anthropic.send_message.assert_called_once()
+        self.bedrock.send_message.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_retries_bedrock_on_timeout(self):
+        from providers import TimeoutError
+        import time
+
+        # Mock config to set max retries
+        with patch("fallback.config") as mock_config:
+            mock_config.BEDROCK_MAX_RETRIES = 3
+
+            # Set anthropic in cooldown, bedrock not in cooldown
+            def get_cooldown(provider_name):
+                if provider_name == "anthropic":
+                    return time.time() + 9999  # In cooldown
+                return None  # Not in cooldown
+
+            self.mock_cooldowns.get.side_effect = get_cooldown
+
+            # First call times out, second succeeds
+            self.bedrock.send_message.side_effect = [
+                TimeoutError("Timeout"),
+                {"id": "msg_retry"}
+            ]
+
+            result = await self.handler.send_message({}, "token", "oauth", "req123")
+
+            assert result["id"] == "msg_retry"
+            assert self.bedrock.send_message.call_count == 2
+
+
+# ===========================================================================
+# BedrockProvider._handle_bedrock_error — error classification
+# ===========================================================================
+
+class TestHandleBedrockError:
+    def setup_method(self):
+        self.provider = make_bedrock_provider()
+
+    def test_throttling_exception_raises_rate_limit_error(self):
+        from providers import RateLimitError
+
+        error = self.provider.client.exceptions.ThrottlingException(
+            {"Error": {"Message": "Rate exceeded"}},
+            "invoke_model"
+        )
+
+        with pytest.raises(RateLimitError, match="Bedrock rate limit"):
+            self.provider._handle_bedrock_error(error)
+
+    def test_validation_exception_raises_validation_error(self):
+        from providers import ValidationError
+
+        error = self.provider.client.exceptions.ValidationException(
+            {"Error": {"Message": "Invalid model"}},
+            "invoke_model"
+        )
+
+        with pytest.raises(ValidationError, match="Bedrock validation"):
+            self.provider._handle_bedrock_error(error)
+
+    def test_timeout_in_message_raises_timeout_error(self):
+        from providers import TimeoutError
+
+        error = Exception("Timeout waiting for response")
+
+        with pytest.raises(TimeoutError, match="timeout"):
+            self.provider._handle_bedrock_error(error)
+
+    def test_read_timeout_raises_timeout_error(self):
+        from providers import TimeoutError
+        from botocore.exceptions import ReadTimeoutError
+
+        error = ReadTimeoutError(endpoint_url="https://example.com")
+
+        with pytest.raises(TimeoutError):
+            self.provider._handle_bedrock_error(error)
+
+    def test_connect_timeout_raises_timeout_error(self):
+        from providers import TimeoutError
+        from botocore.exceptions import ConnectTimeoutError
+
+        error = ConnectTimeoutError(endpoint_url="https://example.com")
+
+        with pytest.raises(TimeoutError):
+            self.provider._handle_bedrock_error(error)
+
+    def test_expired_credentials_raises_auth_error(self):
+        from providers import AuthenticationError
+
+        error = Exception("The security token expired")
+
+        with pytest.raises(AuthenticationError, match="credentials expired"):
+            self.provider._handle_bedrock_error(error)
+
+    def test_generic_exception_re_raises(self):
+        # _handle_bedrock_error expects to be called in an exception context
+        # (it uses bare 'raise' at the end)
+        try:
+            raise Exception("Unknown error")
+        except Exception as e:
+            with pytest.raises(Exception, match="Unknown error"):
+                self.provider._handle_bedrock_error(e)
