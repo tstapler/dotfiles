@@ -79,7 +79,8 @@ async def _monitor_event_loop_lag():
         t = time.perf_counter()
         await asyncio.sleep(1)
         lag_ms = max(0.0, (time.perf_counter() - t - 1.0) * 1000)
-        metrics.record_event_loop_lag(lag_ms)
+        # Use async version to avoid blocking event loop with disk I/O
+        await metrics.record_event_loop_lag_async(lag_ms)
         if lag_ms > 200:
             logger.warning(f"⚠️ Event loop lag: {lag_ms:.1f}ms")
         elif lag_ms > 50:

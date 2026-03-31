@@ -1,7 +1,9 @@
 """Metrics collection and reporting for Claude Proxy."""
 import time
 import os
+import asyncio
 from typing import Dict, Any, Optional
+from collections import deque
 import diskcache
 from datetime import datetime, timedelta
 import logging
@@ -19,6 +21,15 @@ class MetricsCollector:
 
         # 50MB cache size limit
         self.cache = diskcache.Cache(cache_dir, size_limit=50 * 1024 * 1024)
+
+        # In-memory deque for recent errors (no file locking!)
+        self.recent_errors = deque(maxlen=20)
+
+        # Cached stats (updated every 5s instead of computing on every request)
+        self._cached_stats = None
+        self._stats_last_computed = 0
+        self._stats_cache_ttl = 5  # seconds
+
         logger.info(f"Metrics collector initialized: {cache_dir}")
 
     def _incr(self, key: str, value: int = 1):
@@ -62,18 +73,14 @@ class MetricsCollector:
             if error_type:
                 self._incr(f"error_type:{error_type}")
 
-                # Add to recent errors list (limit to 20)
-                with diskcache.Lock(self.cache, "recent_errors_lock"):
-                    recent_errors = self._get("recent_errors", [])
-                    error_entry = {
-                        "timestamp": datetime.now().isoformat(),
-                        "error_type": error_type,
-                        "provider": provider,
-                        "model": model
-                    }
-                    recent_errors.insert(0, error_entry)
-                    recent_errors = recent_errors[:20]  # Keep last 20
-                    self._set("recent_errors", recent_errors)
+                # Add to recent errors list (in-memory deque, no locking needed!)
+                error_entry = {
+                    "timestamp": datetime.now().isoformat(),
+                    "error_type": error_type,
+                    "provider": provider,
+                    "model": model
+                }
+                self.recent_errors.appendleft(error_entry)  # Thread-safe
 
         # Provider counters
         self._incr(f"provider:{provider}:requests")
@@ -108,7 +115,10 @@ class MetricsCollector:
         logger.debug(f"Recorded fallback: {from_provider} -> {to_provider} ({reason})")
 
     def record_event_loop_lag(self, lag_ms: float):
-        """Record an event loop lag sample (called ~every second)."""
+        """Record an event loop lag sample (called ~every second).
+
+        DEPRECATED: Use async record_event_loop_lag_async() instead.
+        """
         minute_key = datetime.now().strftime("%Y-%m-%dT%H:%M")
         # Store as integer with 0.01ms precision to use atomic incr
         lag_int = int(lag_ms * 100)
@@ -126,8 +136,48 @@ class MetricsCollector:
         # Keep the latest sample for instant display
         self._set("lag:current_ms", round(lag_ms, 2))
 
+    async def record_event_loop_lag_async(self, lag_ms: float):
+        """Record an event loop lag sample asynchronously (non-blocking)."""
+        # Offload to thread pool to avoid blocking event loop
+        await asyncio.to_thread(self.record_event_loop_lag, lag_ms)
+
+    async def record_request_complete_async(
+        self,
+        provider: str,
+        model: str,
+        start_time: float,
+        success: bool,
+        error_type: Optional[str] = None,
+        stream: bool = False
+    ):
+        """Record a completed request asynchronously (non-blocking)."""
+        # Offload to thread pool to avoid blocking event loop
+        await asyncio.to_thread(
+            self.record_request_complete,
+            provider, model, start_time, success, error_type, stream
+        )
+
     def get_stats(self) -> Dict[str, Any]:
-        """Get current statistics for dashboard and API."""
+        """Get current statistics for dashboard and API.
+
+        Results are cached for 5s to avoid expensive cache.iterkeys() scans.
+        """
+        now = time.time()
+        if self._cached_stats and (now - self._stats_last_computed) < self._stats_cache_ttl:
+            # Return cached stats (avoid expensive iterkeys() scan)
+            return self._cached_stats
+
+        # Compute fresh stats
+        stats = self._compute_stats()
+
+        # Cache the result
+        self._cached_stats = stats
+        self._stats_last_computed = now
+
+        return stats
+
+    def _compute_stats(self) -> Dict[str, Any]:
+        """Internal method to compute stats (expensive)."""
         # Get basic counters
         total_requests = self._get("total_requests", 0)
         total_success = self._get("total_success", 0)
@@ -214,8 +264,8 @@ class MetricsCollector:
 
         current_lag_ms = self._get("lag:current_ms", 0.0)
 
-        # Recent errors
-        recent_errors = self._get("recent_errors", [])
+        # Recent errors (from in-memory deque)
+        recent_errors = list(self.recent_errors)
 
         return {
             "summary": {
