@@ -244,6 +244,8 @@ class AnthropicProvider(Provider):
 
         if 400 <= response.status_code < 500:
             error_text = response.text
+            if "Invalid model name" in error_text or "invalid_model" in error_text:
+                raise ModelUnsupportedError(f"Model '{body.get('model')}' not recognized by Anthropic API")
             raise ValidationError(f"Anthropic API error ({response.status_code}): {error_text}", status_code=response.status_code)
 
         if response.status_code != 200:
@@ -328,6 +330,9 @@ class AnthropicProvider(Provider):
 
             if 400 <= response.status_code < 500:
                 error_text = await response.aread()
+                error_str = error_text.decode() if isinstance(error_text, bytes) else str(error_text)
+                if "Invalid model name" in error_str or "invalid_model" in error_str:
+                    raise ModelUnsupportedError(f"Model '{body.get('model')}' not recognized by Anthropic API")
                 raise ValidationError(f"Anthropic API error ({response.status_code}): {error_text}", status_code=response.status_code)
 
             if response.status_code != 200:

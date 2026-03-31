@@ -27,8 +27,7 @@ Claude Code → FastAPI Proxy → Anthropic API (OAuth)
 
 1. Install dependencies with uv:
 ```bash
-uv venv
-uv pip install -r requirements.txt
+uv sync
 ```
 
 2. Set environment variables:
@@ -68,7 +67,8 @@ make logs
 ```bash
 make start          # Start the proxy
 make stop           # Stop the proxy
-make restart        # Restart the proxy
+make restart        # Restart the proxy (runs tests first)
+make reload         # Graceful reload via HUP (zero downtime)
 make status         # Check proxy status
 make logs           # View access logs (uvicorn)
 make app-logs       # View application logs (fallback, providers)
@@ -141,6 +141,8 @@ litellm --model claude-sonnet-4-20250514
 
 - `GET /` - Basic info about the proxy
 - `GET /health` - Health check endpoint
+- `GET /dashboard` - Browser monitoring dashboard (requests, errors, event loop lag)
+- `GET /metrics` - JSON metrics endpoint (for scripting/alerting)
 - `POST /v1/messages` - Claude Code compatible endpoint (Anthropic Messages API format)
 - `POST /chat/completions` - OpenAI compatible endpoint
 - `POST /v1/chat/completions` - OpenAI compatible endpoint (LiteLLM)
@@ -178,6 +180,60 @@ curl -X POST 'http://localhost:47000/chat/completions' \
     "messages": [{"role": "user", "content": "Hello"}],
     "max_tokens": 10
   }'
+```
+
+## Debugging & Profiling
+
+### Dashboard
+
+Open `http://localhost:47000/dashboard` in a browser for live metrics: requests per minute, provider usage, duration distribution, event loop lag (15-min history), and recent errors.
+
+### Event Loop Lag
+
+The proxy samples event loop lag every second and logs warnings when it exceeds thresholds:
+
+| Lag | Level | Meaning |
+|-----|-------|---------|
+| < 10ms | — | Healthy |
+| 10–50ms | debug | Elevated (monitor) |
+| 50–200ms | debug | Contended |
+| > 200ms | warning | Blocked — investigate |
+
+Lag data is visible in the dashboard and `/metrics` JSON under `lag_data` and `current_lag_ms`.
+
+### py-spy (CPU profiling)
+
+For on-demand profiling of a running proxy worker without code changes:
+
+```bash
+# Install
+brew install py-spy
+
+# Live top-style view (find the uvicorn PID first)
+pgrep -f "uvicorn main:app"
+py-spy top --pid <PID>
+
+# Record a flamegraph (30 seconds)
+py-spy record -o /tmp/proxy-flame.svg --pid <PID> --duration 30
+open /tmp/proxy-flame.svg
+```
+
+Flamegraphs show exactly where CPU time is spent — useful when lag warnings appear but the cause isn't obvious from logs.
+
+### Log Files
+
+| File | Contains |
+|------|----------|
+| `/tmp/claude-proxy.app.log` | Fallback logic, provider switches, lag warnings |
+| `/tmp/claude-proxy.http.log` | Raw HTTP requests/responses (httpx) |
+| `/tmp/claude-proxy.log` | Uvicorn access log (status codes) |
+
+```bash
+# Follow a specific request by ID
+grep "abc12345" /tmp/claude-proxy.app.log
+
+# Watch for lag warnings
+tail -f /tmp/claude-proxy.app.log | grep "lag\|⚠️\|🐌"
 ```
 
 ## Comparison with LiteLLM
