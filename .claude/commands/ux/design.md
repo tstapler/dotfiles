@@ -1,105 +1,75 @@
 ---
 title: UX Design
 description: Generate design recommendations and guidance for new features using ux-expert agent
-arguments: [feature_description]
+arguments: [feature_name_or_description]
 ---
 
 # UX Design Command
 
-Generate comprehensive design recommendations and guidance for a new feature, component, or interface using the specialized ux-expert agent.
+Generate comprehensive design recommendations for a feature using the `ux-expert` agent. Automatically reads from an existing PRD in `docs/tasks/` if one exists, so UX builds on PM work rather than starting blind.
 
-## Feature Description
+## Input
 
-${1:-Please describe the feature you want to design}
-
-## Process
-
-This command will launch the **ux-expert agent** to provide design guidance including:
-
-1. **User Flow and Information Architecture**
-   - Recommended user journey and task flows
-   - Information hierarchy and content structure
-   - Navigation patterns and wayfinding
-
-2. **UI Pattern Recommendations**
-   - Appropriate design patterns for the use case
-   - Examples from established design systems
-   - Component composition and layout suggestions
-   - Responsive design considerations
-
-3. **Interaction Design**
-   - Input methods and controls
-   - Feedback mechanisms (loading, success, errors)
-   - Micro-interactions and transitions
-   - State management (empty, loading, error, success)
-
-4. **Accessibility Requirements**
-   - Keyboard navigation patterns
-   - Screen reader considerations
-   - ARIA roles and attributes needed
-   - Color contrast and visual requirements
-   - Focus management
-
-5. **Visual Design Guidance**
-   - Visual hierarchy principles
-   - Typography and spacing recommendations
-   - Color usage and semantic meaning
-   - Iconography and imagery guidance
-
-6. **Mobile and Responsive Considerations**
-   - Touch target sizing and placement
-   - Gesture support recommendations
-   - Progressive disclosure patterns
-   - One-handed use considerations
-
-7. **Similar Patterns and Examples**
-   - References to existing design system components
-   - Industry standard patterns
-   - Best-in-class examples
-
-## Expected Deliverables
-
-- Comprehensive design guidance document
-- Recommended UI patterns with rationale
-- Accessibility checklist for the feature
-- References to relevant design patterns and systems
-- Implementation considerations and gotchas
+`$ARGUMENTS` — either a feature name matching an existing `docs/tasks/<name>.md`, or a free-form description.
 
 ## Instructions to Claude
 
-**Step 1**: Launch the `ux-expert` agent with the following context:
+**Step 1: Check for existing PRD**
 
-**Feature to Design**: ${1:-Please describe the feature you want to design}
+Before launching the agent, check whether a feature doc already exists:
+- Look for `docs/tasks/$ARGUMENTS.md` or a close match (use Glob)
+- If found, read it — the agent will use it as context
+- If not found, proceed with the description as-is
 
-**Agent Task**: Provide comprehensive design guidance for this feature including:
+**Step 2**: Launch the `ux-expert` agent with the following context:
 
-1. **Understanding the Use Case**
-   - Identify primary user goals and tasks
-   - Consider different user types and contexts
-   - Map critical user flows step-by-step
+**Feature**: $ARGUMENTS
 
-2. **Pattern Research**
-   - Search the user's zettelkasten for relevant design patterns using Grep/Read tools
-   - Search online for established patterns in major design systems (Material Design, Carbon, Polaris, Atlassian)
-   - Identify similar features in well-designed products
+**Existing PRD** (if found above): [paste content or path]
 
-3. **Design Recommendations**
-   - Recommend specific UI patterns with justification
-   - Provide layout and composition guidance
-   - Suggest appropriate components and interactions
-   - Include accessibility requirements from the start
+**Agent Task**: Provide comprehensive UX design guidance for this feature.
 
-4. **Implementation Guidance**
-   - List key states to design (default, hover, active, disabled, loading, error, success, empty)
-   - Identify potential usability pitfalls to avoid
-   - Suggest quick wins vs. enhanced experiences
-   - Provide mobile-specific considerations
+If a PRD was found:
+- Extract the user goals, JTBD, and acceptance criteria from it
+- Design for the specific users and outcomes defined in the PRD
+- Flag any UX concerns about the scope or assumptions in the PRD
 
-5. **Design Validation**
-   - Create checklist for validating the design against usability heuristics
-   - List accessibility requirements to verify
-   - Suggest usability testing approaches
+If no PRD exists:
+- Note that no PRD was found and flag this — ideally the `product-management` skill should be run first
+- Proceed with available description, but call out missing context explicitly
 
-**Step 2**: Format the recommendations in a clear, structured document that can be used by designers and developers.
+**Design deliverables**:
 
-Execute this workflow now for: ${1:-Please describe the feature you want to design}
+1. **User Flow and Information Architecture**
+   - Step-by-step user journey for the primary task
+   - Information hierarchy and content structure
+   - Navigation patterns and entry/exit points
+
+2. **UI Pattern Recommendations**
+   - Specific patterns for the use case with justification
+   - Component composition and layout
+   - Responsive / mobile considerations
+
+3. **Key States**
+   - All states that must be designed: empty, loading, error, success, disabled, edge cases
+   - Transitions and feedback mechanisms
+
+4. **Accessibility Requirements**
+   - Keyboard navigation
+   - Screen reader / ARIA needs
+   - Color contrast, focus management
+   - Touch target sizing (min 44x44px)
+
+5. **Usability Validation Checklist**
+   - Nielsen heuristics applicable to this feature
+   - POUR accessibility checks
+   - Potential friction points and how to address them
+
+**Step 3**: Append UX guidance to the existing feature doc (if one exists) under a `## UX Design` section, or output as a standalone document.
+
+**Step 4**: Confirm whether the UX readiness gate is met so the feature can proceed to `@project-coordinator` for task breakdown:
+- [ ] User flow mapped
+- [ ] Key states identified
+- [ ] Accessibility requirements noted
+
+Execute this workflow now for: $ARGUMENTS

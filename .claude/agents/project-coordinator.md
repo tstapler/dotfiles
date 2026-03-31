@@ -506,7 +506,8 @@ grep -r "SEVERITY: High" docs/bugs/open/ docs/bugs/in-progress/
 
 ## Integration with Other Agents
 
-- **@software-planner**: Use for initial feature analysis before task breakdown, include bug mitigation planning
+- **@product-management skill**: **Primary upstream input.** Use this skill first when a feature idea needs PRD writing, roadmap placement, user story drafting, or trade-off analysis. The PRD (`requirements.md`) becomes the Epic input for this agent's Phase 1 decomposition. User stories become Story inputs. Always check if a `requirements.md` exists before starting Epic definition — if not, invoke the product-management skill first.
+- **@software-planner**: Use for initial technical architecture analysis before task breakdown, include bug mitigation planning
 - **@code-refactoring**: Coordinate refactoring tasks within project plans, consider bugs that may be fixed by refactoring
 - **@pr-reviewer**: Validate completed tasks before marking done, verify bug fixes
 - **@java-test-debugger**: Assist with testing strategy for tasks and bug reproduction
