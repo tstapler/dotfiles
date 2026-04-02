@@ -1,0 +1,22 @@
+[project]
+name = "slack-emoji-export"
+version = "0.1.0"
+description = "Extract Slack emojis from HAR files"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.mypy]
+strict = true
+ignore_missing_imports = true
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "mypy",
+    "ruff",
+]

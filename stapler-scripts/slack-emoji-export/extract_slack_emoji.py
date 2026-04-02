@@ -42,7 +42,7 @@ def save_emoji(emoji: EmojiDTO, output_directory: Path) -> None:
         f.write(emoji.content)
 
 
-def main(args):
+def main(args: argparse.Namespace) -> None:
     print("Extracting emoji data...")
     emojis = extract_emoji_data_from_har(args.har_filepath)
 
