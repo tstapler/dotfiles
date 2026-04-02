@@ -2,6 +2,7 @@ import os
 import json
 import base64
 import pytest
+import sys
 from har2img import process_har
 
 def test_process_har_success(tmp_path):
@@ -143,3 +144,6 @@ def test_process_har_mixed_entries(tmp_path, capsys):
 
     assert (output_dir / "valid.png.png").exists()
     assert not (output_dir / "invalid.png.png").exists()
+
+if __name__ == "__main__":
+    sys.exit(pytest.main([__file__]))

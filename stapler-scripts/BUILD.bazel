@@ -1,0 +1,23 @@
+load("@rules_python//python:defs.bzl", "py_binary", "py_library", "py_test")
+
+py_library(
+    name = "har2img_lib",
+    srcs = ["har2img.py"],
+    visibility = ["//visibility:public"],
+)
+
+py_binary(
+    name = "har2img",
+    srcs = ["har2img.py"],
+    main = "har2img.py",
+    deps = [":har2img_lib"],
+)
+
+py_test(
+    name = "test_har2img",
+    srcs = ["test_har2img.py"],
+    deps = [
+        ":har2img_lib",
+    ],
+    main = "test_har2img.py",
+)
