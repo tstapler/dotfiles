@@ -2,9 +2,13 @@ name: CI
 
 on:
   push:
-    branches: [ testing-slack-emoji-export ]
+    paths:
+      - 'stapler-scripts/slack-emoji-export/**'
+      - '.github/workflows/ci.yml'
   pull_request:
-    branches: [ testing-slack-emoji-export ]
+    paths:
+      - 'stapler-scripts/slack-emoji-export/**'
+      - '.github/workflows/ci.yml'
 
 jobs:
   test:
