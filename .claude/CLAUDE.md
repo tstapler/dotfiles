@@ -37,46 +37,43 @@ Reserve `Bash` exclusively for: git operations, running tests/commands, and syst
 
 ---
 
-## Spec-Driven Development Workflow
+## Manifest-Driven Development (MDD) Workflow
 
-For non-trivial features, follow these phases in order. Each produces an artifact the next phase requires. See `project_plans/README.md` for directory conventions.
+For non-trivial features, follow these phases in order. Each produces an artifact the next phase requires. Full system documentation: `@~/.claude/STAPLER.md`. Directory conventions: `@project_plans/README.md`.
 
-### Directory Structure
+### Two Artifact Layers
 
-Artifacts live under `project_plans/<project>/` — or `project_plans/<project>/<feature>/` for multi-feature projects:
+MDD uses two stores. **Do not confuse them:**
 
-```
-project_plans/<project>/
-├── README.md            # navigation + status
-├── requirements.md      # spec (ideation output)
-├── research/            # research output (one file per dimension)
-├── implementation/
-│   ├── plan.md          # planning output
-│   └── validation.md    # test coverage map (before any code)
-└── <feature>/           # repeat structure for each feature/phase
-    ├── requirements.md
-    ├── research/
-    └── implementation/
-```
+| Layer | Location | Phases | Contents |
+|---|---|---|---|
+| **Spec** | `project_plans/<project>/` | 1–4 (pre-code) | requirements.md, research/, plan.md, validation.md, decisions/ADR-NNN-*.md |
+| **Execution** | `docs/tasks/{feature}.md` in target repo | 5–6 (in-code) | Implementation Plan, bug tracking |
+
+`/plan:feature` bridges them — it reads `project_plans/` and writes `docs/tasks/`.
 
 ### Phase Gates
 
-| Phase | Skill/Command | Input | Output |
-|-------|--------------|-------|--------|
-| Ideation | `AskUserQuestion` interview | User's idea | `requirements.md` |
-| Research | `/research-workflow` | `requirements.md` | `research/*.md` (parallel: stack, features, architecture, pitfalls) |
-| Planning | `/plan:feature` or `/handy:plan` | `requirements.md` + `research/` | `implementation/plan.md` |
-| Validation | `/quality:test-planner` | `plan.md` | `implementation/validation.md` |
-| Implementation | `/code:implement` | `plan.md` + `validation.md` | Code + passing tests |
-| QA | `/quality:does-it-work`, `/code:review` | Implementation | Sign-off or fix plans |
+| Phase | Command | Input | Output | Location |
+|---|---|---|---|---|
+| **1. Ideation** | `/plan:mdd-start` | User's idea | `requirements.md` | `project_plans/<project>/` |
+| **2. Research** | `/research-workflow` | `requirements.md` | `research/*.md` | `project_plans/<project>/research/` |
+| **3. Planning** | `/plan:feature` or `/handy:plan` | requirements + research | `plan.md` + ADRs (via `/plan:adr`) | `project_plans/<project>/implementation/` + `decisions/` |
+| **4. Validation** | `/quality:test-planner` | `plan.md` | `validation.md` | `project_plans/<project>/implementation/` |
+| **5. Implementation** | `/code:implement` | plan + validation | Code + tests | Target repo |
+| **6. QA** | `/quality:does-it-work`, `/code:review` | Implementation | Sign-off | Target repo |
 
 ### Rules
 
-- **Fresh session before implementation** — planning context degrades implementation quality
+- **Fresh session before Phase 5** — planning context degrades implementation quality
 - **Never skip phases** — each artifact is the required input for the next
-- **Research in parallel** — spawn agents for: stack, features, architecture, pitfalls dimensions
+- **Research in parallel** — spawn agents for: stack, features, architecture, pitfalls
 - **Validation before code** — `validation.md` maps test coverage to requirements before writing a line
 
 ---
 
 @~/.claude/skills-index.md
+
+@~/.claude/STAPLER.md
+
+@RTK.md

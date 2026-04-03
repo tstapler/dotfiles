@@ -53,6 +53,12 @@ links:
     os: "Linux Darwin"
   - src: .claude/skills
     os: "Linux Darwin"
+  - src: .claude/STAPLER.md
+    os: "Linux Darwin"
+  - src: .claude/RTK.md
+    os: "Linux Darwin"
+  - src: .claude/skills-index.md
+    os: "Linux Darwin"
 
 ignore:
   # Globbing patterns to ignore when
