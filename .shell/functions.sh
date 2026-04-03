@@ -1,3 +1,27 @@
+# Return the path to the local Logseq wiki (personal-wiki repo)
+function logseq_path {
+  local default="$HOME/Documents/personal-wiki/logseq"
+  if [[ -d "$default" ]]; then
+    echo "$default"
+  elif [[ -n "$LOGSEQ_PATH" ]]; then
+    echo "$LOGSEQ_PATH"
+  else
+    echo "$default"
+  fi
+}
+
+# Return the root of the personal-wiki repo
+function wiki_path {
+  local default="$HOME/Documents/personal-wiki"
+  if [[ -d "$default" ]]; then
+    echo "$default"
+  elif [[ -n "$WIKI_PATH" ]]; then
+    echo "$WIKI_PATH"
+  else
+    echo "$default"
+  fi
+}
+
 function gen_pass {
   local PYTHON_BIN
   for bin in python python3 python2; do

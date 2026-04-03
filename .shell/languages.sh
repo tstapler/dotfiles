@@ -27,7 +27,7 @@ plugin_map=(
   )
 
 # Add ASDF plugins if they don't exist
-for plug in nodejs python java golang clojure terraform cdk nim; do
+for plug in nodejs python java golang clojure terraform cdk nim buf; do
     if [ ! -d "$ASDF_PLUGIN_DIR/$plug" ]; then
       if [[ ${plugin_map[$plug]} ]]; then
         # Add plugins with URLs
