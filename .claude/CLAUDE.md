@@ -55,7 +55,7 @@ MDD uses two stores. **Do not confuse them:**
 ### Phase Gates
 
 | Phase | Command | Input | Output | Location |
-|---|---|---|---|---|
+|---|---|---|---|---|---|
 | **1. Ideation** | `/plan:mdd-start` | User's idea | `requirements.md` | `project_plans/<project>/` |
 | **2. Research** | `/research-workflow` | `requirements.md` | `research/*.md` | `project_plans/<project>/research/` |
 | **3. Planning** | `/plan:feature` or `/handy:plan` | requirements + research | `plan.md` + ADRs (via `/plan:adr`) | `project_plans/<project>/implementation/` + `decisions/` |
@@ -73,7 +73,5 @@ MDD uses two stores. **Do not confuse them:**
 ---
 
 @~/.claude/skills-index.md
-
 @~/.claude/STAPLER.md
-
 @RTK.md
