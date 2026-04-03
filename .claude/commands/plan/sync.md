@@ -27,7 +27,7 @@ Execute the structured plan synchronization process defined in the XML prompt be
         <expertise>
             <area>Git-integrated documentation management</area>
             <area>Project state analysis and documentation freshness assessment</area>
-            <area>ATOMIC-INVEST-CONTEXT (AIC) framework compliance validation</area>
+            <area>Implementation Plan compliance validation</area>
             <area>Parallel task execution and coordination</area>
             <area>Documentation archival and version control best practices</area>
         </expertise>
@@ -64,7 +64,7 @@ Execute the structured plan synchronization process defined in the XML prompt be
         <category name="Update Execution">
             <item>Archive completed plans to docs/archive/ or docs/tasks/completed/</item>
             <item>Update outdated but relevant plans with current information</item>
-            <item>Ensure task hierarchies follow AIC framework (3-5 files, 1-4 hours per task)</item>
+            <item>Ensure task hierarchies follow Implementation Plan format (3-5 files, 1-4 hours per task)</item>
             <item>Add missing context, dependencies, or validation criteria</item>
             <item>Update references to archived/deleted plans in other documents</item>
             <item>Remove obsolete or irrelevant plans entirely</item>
@@ -138,7 +138,7 @@ Execute the structured plan synchronization process defined in the XML prompt be
                     <steps>
                         <step>Open plan file for editing</step>
                         <step>Update outdated information to match current implementation state</step>
-                        <step>Ensure task hierarchies follow AIC framework:
+                        <step>Ensure task hierarchies follow Implementation Plan format:
                             - Maximum 3-5 files per task
                             - 1-4 hour task duration
                             - Single responsibility per task
@@ -196,7 +196,7 @@ Execute the structured plan synchronization process defined in the XML prompt be
                 <recommendations>
                     <recommendation>Consider creating new plan for [emerging feature area]</recommendation>
                     <recommendation>Multiple TODO.md files found - consider consolidating to single source of truth</recommendation>
-                    <recommendation>Some tasks in [plan-name] exceed AIC context boundaries - consider decomposition</recommendation>
+                    <recommendation>Some tasks in [plan-name] exceed Implementation Plan context boundaries - consider decomposition</recommendation>
                 </recommendations>
 
                 <git_commit_summary>
@@ -212,7 +212,7 @@ Execute the structured plan synchronization process defined in the XML prompt be
         <constraint>Commit incrementally - create git commit after each file modification or related group of modifications</constraint>
         <constraint>Preserve history - archive completed plans rather than deleting when possible</constraint>
         <constraint>Maintain structure - keep docs organized according to existing directory structure</constraint>
-        <constraint>Follow AIC framework - ensure all task hierarchies use ATOMIC-INVEST-CONTEXT principles (3-5 files, 1-4 hours per task)</constraint>
+        <constraint>Follow Implementation Plan format — ensure all task hierarchies use atomic principles (3-5 files, 1-4 hours per task)</constraint>
         <constraint>All analysis must use project-coordinator, not direct file manipulation without context</constraint>
     </constraints>
 
@@ -236,7 +236,7 @@ Execute the structured plan synchronization process defined in the XML prompt be
         <criterion>Obsolete plans removed to reduce documentation noise</criterion>
         <criterion>All changes committed with descriptive messages</criterion>
         <criterion>Summary report provided with statistics and recommendations</criterion>
-        <criterion>No AIC framework violations introduced in updated plans</criterion>
+        <criterion>No Implementation Plan format violations introduced in updated plans</criterion>
     </success_criteria>
 </prompt>
 ```

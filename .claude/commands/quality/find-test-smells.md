@@ -241,7 +241,7 @@ Task(
   3. Address High priority items next
   4. Schedule Medium/Low as time permits
 
-  Please use the AIC framework to:
+  Please use the Implementation Plan format to:
   1. Create a structured project plan for test quality improvement
   2. Break down remediation work into ATOMIC tasks
   3. Organize by priority and refactoring effort

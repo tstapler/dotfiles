@@ -94,7 +94,7 @@ Execute the task with specific instructions and context
 - ✅ Query performance analysis with EXPLAIN
 - ✅ Anti-pattern detection (N+1, over-indexing, under-indexing)
 - ✅ Zero-downtime migration strategies
-- ✅ AIC-compliant task breakdown for optimizations
+- ✅ Implementation Plan task breakdown for optimizations
 
 ### Coming Soon
 - **/db:optimize** - Execute specific database optimizations
@@ -139,7 +139,7 @@ Execute the task with specific instructions and context
 **Prompt Format**: All /plan commands use **XML format** for structured, hierarchical instructions (see Agent Architecture section above)
 
 ### Key Features
-- ✅ ATOMIC-INVEST-CONTEXT (AIC) framework enforcement
+- ✅ Implementation Plan format enforcement
 - ✅ Context boundaries (3-5 files, 1-4 hours per task)
 - ✅ TODO.md curation and Git integration
 - ✅ Generates `docs/tasks/{feature-name}.md` documentation
@@ -148,7 +148,7 @@ Execute the task with specific instructions and context
 - ✅ XML-structured prompts for complex planning workflows
 
 ### Coming Soon
-- **/plan:create** - Create new AIC-compliant task or project plan
+- **/plan:create** - Create new Implementation Plan
 - **/plan:archive** - Archive completed plans and update references
 
 ## Meta-Development (`/meta:*`)
@@ -321,7 +321,7 @@ Commands are organized in namespaces using subdirectories:
 ├── plan/
 │   ├── status.md     → /plan:status
 │   ├── sync.md       → /plan:sync
-│   ├── next-step.md  → /plan:next-step  (comprehensive TODO analysis + AIC)
+│   ├── next-step.md  → /plan:next-step  (comprehensive TODO analysis + Implementation Plans)
 │   └── feature.md    → /plan:feature    (architecture + task documentation)
 ├── meta/
 │   ├── new-agent.md    → /meta:new-agent

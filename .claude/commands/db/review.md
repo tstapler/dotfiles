@@ -95,7 +95,7 @@ Completed comprehensive schema review identifying [N] optimization opportunities
 - Use `CREATE INDEX CONCURRENTLY` for production
 
 **Request**:
-1. Create `docs/tasks/database-optimization.md` using AIC framework
+1. Create `docs/tasks/database-optimization.md` using Implementation Plan format
 2. Break down optimizations into atomic tasks (1-4 hours each):
    - Specific tables/indexes to modify
    - Clear success criteria

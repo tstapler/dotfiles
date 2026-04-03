@@ -136,7 +136,7 @@ Invoke the project-coordinator subagent with the following context:
 ```
 Use the project-coordinator subagent to organize documentation pruning tasks.
 
-I've completed a comprehensive documentation pruning analysis. Please help me organize the findings into an ATOMIC task hierarchy following the AIC (ATOMIC-INVEST-CONTEXT) framework.
+I've completed a comprehensive documentation pruning analysis. Please help me organize the findings into an Implementation Plan.
 
 **Context**:
 We analyzed [N] documentation files, identified [M] items to prune/consolidate across the following categories:
@@ -170,7 +170,7 @@ We analyzed [N] documentation files, identified [M] items to prune/consolidate a
 - Each task should be 1-4 hours of focused work
 
 **Request**:
-1. Create a project task document in `docs/tasks/documentation-pruning.md` using the AIC framework
+1. Create a project task document in `docs/tasks/documentation-pruning.md` using Implementation Plan format
 2. Break down pruning work into atomic tasks (1-4 hours each) with:
    - Specific files to modify/delete/consolidate
    - Clear success criteria

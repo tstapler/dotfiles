@@ -346,7 +346,7 @@ Task(
 
   [Insert consolidated Code Review Report from Step 2]
 
-  Please use the AIC framework to:
+  Please use the Implementation Plan format to:
 
   1. **Create Project Structure**:
      - Organize findings by category and priority

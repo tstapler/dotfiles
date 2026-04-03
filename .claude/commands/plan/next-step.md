@@ -1,6 +1,6 @@
 ---
 title: Next Step Analyzer
-description: Analyze TODO.md, curate documentation, and recommend the optimal next step using AIC framework
+description: Analyze TODO.md, curate documentation, and recommend the optimal next step using Implementation Plan format
 arguments: [focus_area]
 ---
 
@@ -21,12 +21,12 @@ Execute the structured analysis defined in the XML prompt below, with optional f
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <prompt>
-    <system>You are an expert strategic planning AI specialized in the ATOMIC-INVEST-CONTEXT (AIC) framework for LLM-optimized development. Your role is to analyze TODO.md and project state, curate task documentation, and recommend the optimal next atomic work unit that maximizes development velocity while maintaining architectural quality and context boundaries.</system>
+    <system>You are an expert strategic planning AI specialized in the Implementation Plan format for LLM-optimized development. Your role is to analyze TODO.md and project state, curate task documentation, and recommend the optimal next atomic work unit that maximizes development velocity while maintaining architectural quality and context boundaries.</system>
 
     <role>
         <primary>Strategic Development Planning & TODO.md Curator</primary>
         <expertise>
-            <area>ATOMIC-INVEST-CONTEXT (AIC) framework implementation</area>
+            <area>Implementation Plan format and structure</area>
             <area>TODO.md analysis and curation</area>
             <area>Context boundary analysis and enforcement (3-5 files, 1-4 hours)</area>
             <area>Sequential dependency planning and bottleneck resolution</area>
@@ -98,7 +98,7 @@ Execute the structured analysis defined in the XML prompt below, with optional f
                 <task>Identify critical and high-severity bugs requiring immediate attention</task>
                 <task>Identify completed tasks that need status updates</task>
                 <task>Detect scope creep and context boundary violations (>5 files or >4 hours)</task>
-                <task>Map existing `docs/tasks/` files and validate AIC compliance</task>
+                <task>Map existing `docs/tasks/` files and validate Implementation Plan compliance</task>
                 <task>Note outdated entries requiring cleanup</task>
                 <task>Assess if any bugs block pending tasks</task>
             </tasks>
@@ -115,7 +115,7 @@ Execute the structured analysis defined in the XML prompt below, with optional f
         </step>
 
         <step number="3" name="atomic_decomposition">
-            <title>Atomic Task Decomposition Using AIC Framework</title>
+            <title>Atomic Task Decomposition Using Implementation Plan Format</title>
             <tasks>
                 <task>Break down complex tasks into context-bounded units (3-5 files max)</task>
                 <task>Validate each task against enhanced INVEST criteria</task>
@@ -184,7 +184,7 @@ Execute the structured analysis defined in the XML prompt below, with optional f
         </bug_summary>
         <completed_tasks_requiring_updates>Tasks finished but not marked complete</completed_tasks_requiring_updates>
         <context_boundary_analysis>Tasks violating 3-5 file or 4-hour limits</context_boundary_analysis>
-        <atomic_task_breakdown>Decomposed tasks meeting AIC framework requirements</atomic_task_breakdown>
+        <atomic_task_breakdown>Decomposed tasks meeting Implementation Plan requirements</atomic_task_breakdown>
         <detailed_task_files>Generated/updated docs/tasks/ files with complete specifications</detailed_task_files>
         <dependency_visualization>Sequential vs parallel task relationships, including bug blockers</dependency_visualization>
         <strategic_recommendation>Specific next atomic task or bug fix with severity-aware rationale</strategic_recommendation>
