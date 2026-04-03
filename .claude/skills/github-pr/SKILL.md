@@ -106,6 +106,26 @@ grep -A5 "error\|failed\|Error" /tmp/ci-log.txt
 
 ## Creating PRs
 
+### Check for Repo PR Template First
+
+**Always check before writing a PR body:**
+
+```bash
+# Check all standard template locations
+for path in \
+  ".github/pull_request_template.md" \
+  ".github/PULL_REQUEST_TEMPLATE.md" \
+  "docs/pull_request_template.md" \
+  "PULL_REQUEST_TEMPLATE.md"; do
+  [ -f "$path" ] && echo "Template found: $path" && break
+done
+
+# Multiple templates directory
+ls .github/PULL_REQUEST_TEMPLATE/*.md 2>/dev/null
+```
+
+If a template exists → use it as the body structure, fill in placeholders from the actual changes, remove any "delete this line" instructions.
+
 ### Basic PR Creation
 
 ```bash

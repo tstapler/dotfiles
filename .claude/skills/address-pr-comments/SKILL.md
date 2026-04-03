@@ -37,15 +37,19 @@ Or the user provides the PR number directly: `PR_NUMBER = 123`.
 
 ## Step 2: Fetch All Unresolved Review Threads
 
-Write to `/tmp/fetch_threads.py` and run with `python3 /tmp/fetch_threads.py`.
+Use **PR-specific file names** (e.g. `/tmp/review-threads-{OWNER}-{REPO}-{PR}.json`) to avoid collisions with parallel sessions working on different PRs. Write the script inline with hardcoded values — do NOT use `sys.argv` for OWNER/REPO/PR.
+
+Write to `/tmp/fetch_threads_{PR}.py` and run it. Include `databaseId` in the comments query — the REST reply API requires the numeric database ID, not the GraphQL node ID.
 
 ```python
 #!/usr/bin/env python3
-import subprocess, json, sys
+import subprocess, json
 
-OWNER = sys.argv[1]
-REPO  = sys.argv[2]
-PR    = int(sys.argv[3])
+OWNER = "REPLACE_WITH_OWNER"
+REPO  = "REPLACE_WITH_REPO"
+PR    = REPLACE_WITH_PR_NUMBER
+
+OUTPUT_FILE = f"/tmp/review-threads-{OWNER}-{REPO}-{PR}.json"
 
 QUERY = """
 query($owner: String!, $repo: String!, $pr: Int!) {
@@ -58,7 +62,7 @@ query($owner: String!, $repo: String!, $pr: Int!) {
           path
           line
           comments(first: 20) {
-            nodes { id body author { login } createdAt }
+            nodes { id databaseId body author { login } createdAt }
           }
         }
       }
@@ -77,27 +81,22 @@ result = subprocess.run(
 )
 if result.returncode != 0:
     print("ERROR:", result.stderr, file=sys.stderr)
-    sys.exit(1)
+    exit(1)
 
 data = json.loads(result.stdout)
 threads = data["data"]["repository"]["pullRequest"]["reviewThreads"]["nodes"]
 open_threads = [t for t in threads if not t["isResolved"]]
 
-with open("/tmp/review-threads.json", "w") as f:
+with open(OUTPUT_FILE, "w") as f:
     json.dump(open_threads, f, indent=2)
 
-print(f"Fetched {len(threads)} threads, {len(open_threads)} unresolved")
+print(f"Fetched {len(threads)} threads, {len(open_threads)} unresolved → {OUTPUT_FILE}")
 for t in open_threads:
     first = t["comments"]["nodes"][0]
-    print(f"  [{t['id'][:20]}...]  {t['path']}:{t.get('line','?')}  @{first['author']['login']}: {first['body'][:60]}")
+    print(f"  [{t['id'][:20]}...]  {t['path']}:{t.get('line','?')}  @{first['author']['login']} (dbId={first['databaseId']}): {first['body'][:60]}")
 ```
 
-Run it:
-```bash
-python3 /tmp/fetch_threads.py OWNER REPO PR_NUMBER
-```
-
-Parse `/tmp/review-threads.json`. Write a summary to `/tmp/review-summary.md` with columns: thread ID, file path, line, first comment body (truncated), author.
+Parse the output file. Write a summary to `/tmp/review-summary-{OWNER}-{REPO}-{PR}.md` with columns: thread ID, database ID, file path, line, first comment body (truncated), author.
 
 ## Step 3: Group and Prioritize
 
@@ -136,22 +135,24 @@ When accepting, make the code change using Edit/Write tools. Group related fixes
 
 ### Respond to the Thread
 
-Write `/tmp/reply_threads.py` and run with `python3 /tmp/reply_threads.py`:
+**Critical**: The REST reply endpoint requires the numeric `databaseId` (e.g. `2966584414`), NOT the GraphQL node ID (e.g. `PRRC_kwDO...`). The `databaseId` is returned by the fetch script above.
+
+Write `/tmp/reply_{PR}.py` (PR-specific name) and run with `python3 /tmp/reply_{PR}.py`:
 
 ```python
 #!/usr/bin/env python3
 """Reply to a PR review thread comment via REST API."""
 import subprocess, json, sys
 
-OWNER      = sys.argv[1]
-REPO       = sys.argv[2]
-PR_NUMBER  = sys.argv[3]
-COMMENT_ID = sys.argv[4]   # first comment ID in the thread
-BODY       = sys.argv[5]   # response text
+OWNER      = "REPLACE_WITH_OWNER"
+REPO       = "REPLACE_WITH_REPO"
+PR_NUMBER  = "REPLACE_WITH_PR_NUMBER"
+COMMENT_DB_ID = sys.argv[1]   # numeric databaseId of the first comment in the thread
+BODY          = sys.argv[2]   # response text
 
 result = subprocess.run(
     ["gh", "api",
-     f"repos/{OWNER}/{REPO}/pulls/{PR_NUMBER}/comments/{COMMENT_ID}/replies",
+     f"repos/{OWNER}/{REPO}/pulls/{PR_NUMBER}/comments/{COMMENT_DB_ID}/replies",
      "-f", f"body={BODY}"],
     capture_output=True, text=True
 )
@@ -163,9 +164,9 @@ resp = json.loads(result.stdout)
 print(f"Replied (comment id={resp['id']})")
 ```
 
-Run it for each thread:
+Run it for each thread, using the `databaseId` from the fetch output:
 ```bash
-python3 /tmp/reply_threads.py "$OWNER" "$REPO" "$PR_NUMBER" "$COMMENT_ID" "Fixed. [description]"
+python3 /tmp/reply_{PR}.py "2966584414" "Fixed. [description]"
 ```
 
 **Response patterns:**
@@ -252,7 +253,7 @@ Include counts: X fixed, Y declined, Z deferred, total N threads addressed.
 
 - Fetch all threads in one GraphQL call (Step 2), not per-thread REST calls.
 - Read files only when processing their threads. Do not pre-read all files.
-- Write the full thread JSON to `/tmp/review-threads.json` so it can be re-read if needed without re-fetching.
+- Use PR-specific file names (e.g. `/tmp/review-threads-{OWNER}-{REPO}-{PR}.json`) to prevent stale data from parallel sessions on different PRs polluting reads.
 - Process files in order to avoid reading the same file twice for threads on different lines.
 - For files with many threads, read the file once and address all threads before moving on.
-- Batch all thread resolutions into a single `python3 /tmp/resolve_threads.py ...` call.
+- Batch all thread resolutions into a single `python3 /tmp/resolve_{PR}.py ...` call.

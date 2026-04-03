@@ -125,7 +125,33 @@ I'll verify all commits follow Conventional Commits format:
 - Use `BREAKING CHANGE:` in footer OR
 - Append exclamation mark after type/scope: `feat!:` or `feat(api)!:`
 
-## PR Description Generation
+## PR Template Detection
+
+**Before writing any PR body, check the repo for an existing template:**
+
+```bash
+# Standard GitHub template locations (check in this order)
+for path in \
+  ".github/pull_request_template.md" \
+  ".github/PULL_REQUEST_TEMPLATE.md" \
+  "docs/pull_request_template.md" \
+  "PULL_REQUEST_TEMPLATE.md"; do
+  [ -f "$path" ] && echo "Found: $path" && cat "$path" && break
+done
+
+# Multiple-template directory (list options for user to choose)
+ls .github/PULL_REQUEST_TEMPLATE/*.md 2>/dev/null
+```
+
+**If a template is found:**
+- Use it as the base structure for the PR body
+- Fill in the template's placeholders with content from the actual changes
+- Remove any instructions/boilerplate lines from the template that say "delete this line" or similar
+- Do NOT substitute the template with a different format
+
+**If no template is found:** use the description format below.
+
+## PR Description Generation (no template found)
 
 I'll create a comprehensive PR description following this template:
 
