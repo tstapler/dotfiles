@@ -1,7 +1,231 @@
 ---
-title: Tech Stack and Direction Review
-description: High-level architecture review evaluating directional correctness, documentation quality, and FBG tech stack alignment
-arguments: [scope]
+description: High-level architecture review evaluating directional correctness, documentation
+  quality, and FBG tech stack alignment
+prompt: "# Tech Stack and Direction Review: ${1:-.}\n\nPerform a high-level architecture\
+  \ review focusing on three key questions:\n\n1. **Are we heading in the right direction\
+  \ architecturally?**\n2. **Do we have the right documentation and diagrams?**\n\
+  3. **Are we using the right technologies aligned with FBG standards?**\n\n## Scope\n\
+  \nReview scope: `${1:-.}` (defaults to entire project)\n\n---\n\n## FBG Supported\
+  \ Tech Stack Standards\n\nThe FBG (Fanatics Betting & Gaming) supported technology\
+  \ stack includes:\n\n### **Infrastructure and Platform**\n- **Cloud Provider**:\
+  \ AWS (Amazon Web Services)\n- **Container Orchestration**: Amazon EKS (Elastic\
+  \ Kubernetes Service)\n- **Service Mesh**: Istio (if applicable)\n- **Infrastructure\
+  \ as Code**: Terraform, CloudFormation\n\n### **Application Stack**\n- **Primary\
+  \ Language**: Java (Java 17+)\n- **Application Framework**: Spring Boot 3.x\n  -\
+  \ Spring Web / WebFlux (for reactive)\n  - Spring Data JPA\n  - Spring Security\n\
+  \  - Spring Cloud (for microservices patterns)\n- **Build Tools**: Gradle (preferred)\
+  \ or Maven\n\n### **Data Storage**\n- **Relational Database**: Amazon RDS PostgreSQL\n\
+  - **Caching**: Amazon ElastiCache for Redis\n- **Message Streaming**: Apache Kafka\
+  \ (MSK - Managed Streaming for Kafka)\n\n### **Observability**\n- **Metrics and\
+  \ Monitoring**: Datadog\n- **Logging**: Datadog Logs\n- **Tracing**: Datadog APM\n\
+  - **Alerting**: Datadog Monitors\n\n### **CI/CD and Development**\n- **Version Control**:\
+  \ GitHub\n- **CI/CD**: GitHub Actions\n- **Container Registry**: Amazon ECR\n- **Secrets\
+  \ Management**: AWS Secrets Manager\n- **Configuration**: AWS Systems Manager Parameter\
+  \ Store\n\n---\n\n## Phase 1: Directional Correctness Review\n\n### Architecture\
+  \ Direction Assessment\n\n**Evaluate the following architectural aspects:**\n\n\
+  1. **Microservices vs Monolith**\n   - [ ] Is the service boundary appropriate for\
+  \ the domain?\n   - [ ] Are services at the right granularity (not too fine, not\
+  \ too coarse)?\n   - [ ] Is there a clear bounded context for each service?\n  \
+  \ - [ ] Are inter-service dependencies minimal and well-defined?\n   - **Questions\
+  \ to Answer**:\n     - Should this be a microservice or part of a larger service?\n\
+  \     - Are we creating a distributed monolith?\n     - Do service boundaries align\
+  \ with business domains?\n\n2. **Data Architecture**\n   - [ ] Is data ownership\
+  \ clear (database per service pattern)?\n   - [ ] Are we avoiding distributed transactions\
+  \ where possible?\n   - [ ] Is caching strategy appropriate for access patterns?\n\
+  \   - [ ] Is event-driven architecture used where appropriate?\n   - **Questions\
+  \ to Answer**:\n     - Should services share a database or own their data?\n   \
+  \  - Are we using Kafka events for inter-service communication correctly?\n    \
+  \ - Is our caching strategy (Redis) aligned with read/write patterns?\n\n3. **Scalability\
+  \ and Performance**\n   - [ ] Can the application scale horizontally?\n   - [ ]\
+  \ Are there obvious bottlenecks in the design?\n   - [ ] Is database design optimized\
+  \ for expected load?\n   - [ ] Are caching strategies preventing database overload?\n\
+  \   - **Questions to Answer**:\n     - Will this architecture handle expected scale\
+  \ (users, transactions, data volume)?\n     - Are we using reactive patterns (WebFlux)\
+  \ where high concurrency is needed?\n     - Is connection pooling (HikariCP, PGBouncer)\
+  \ configured correctly?\n\n4. **Reliability and Resilience**\n   - [ ] Are circuit\
+  \ breakers implemented for external dependencies?\n   - [ ] Is retry logic appropriate\
+  \ and idempotent?\n   - [ ] Are timeouts configured at all integration points?\n\
+  \   - [ ] Is graceful degradation possible?\n   - **Questions to Answer**:\n   \
+  \  - What happens when dependencies fail?\n     - Are we implementing resilience\
+  \ patterns (Resilience4j)?\n     - Is chaos engineering considered in design?\n\n\
+  5. **Security Architecture**\n   - [ ] Is authentication and authorization handled\
+  \ correctly?\n   - [ ] Are secrets managed properly (AWS Secrets Manager)?\n   -\
+  \ [ ] Is data encrypted at rest and in transit?\n   - [ ] Are API gateways and service\
+  \ meshes securing inter-service communication?\n   - **Questions to Answer**:\n\
+  \     - How are we handling authentication (JWT, OAuth)?\n     - Are we following\
+  \ least-privilege principles?\n     - Is PII/sensitive data protected?\n\n### Directional\
+  \ Red Flags\n\n**Watch for these anti-patterns:**\n\n- ❌ **Over-Engineering**: Building\
+  \ for scale before it's needed\n- ❌ **Under-Engineering**: Ignoring known scale/reliability\
+  \ requirements\n- ❌ **Technology Proliferation**: Adding technologies outside FBG\
+  \ standards without justification\n- ❌ **Distributed Monolith**: Microservices that\
+  \ are tightly coupled\n- ❌ **Data Sprawl**: No clear data ownership or strategy\n\
+  - ❌ **Synchronous Coupling**: Microservices making blocking calls to many other\
+  \ services\n- ❌ **Missing Observability**: No instrumentation for debugging production\
+  \ issues\n\n---\n\n## Phase 2: Documentation and Diagram Assessment\n\n### Required\
+  \ Documentation Checklist\n\n**Architecture Documentation**:\n- [ ] **System Context\
+  \ Diagram**: Shows system boundaries and external integrations\n  - Format: C4 Level\
+  \ 1 (Context)\n  - Shows: Users, external systems, boundaries\n  - Missing or outdated:\
+  \ [yes/no]\n\n- [ ] **Container Diagram**: Shows high-level technology choices\n\
+  \  - Format: C4 Level 2 (Container)\n  - Shows: Applications, databases, message\
+  \ queues, caches\n  - Missing or outdated: [yes/no]\n\n- [ ] **Component Diagram**:\
+  \ Shows internal structure of key services\n  - Format: C4 Level 3 (Component)\n\
+  \  - Shows: Controllers, services, repositories, domain models\n  - Missing or outdated:\
+  \ [yes/no]\n\n- [ ] **Data Flow Diagrams**: Shows how data moves through the system\n\
+  \  - Shows: API calls, events, data persistence\n  - Missing or outdated: [yes/no]\n\
+  \n- [ ] **Deployment Diagram**: Shows infrastructure and runtime environment\n \
+  \ - Shows: EKS clusters, RDS instances, ElastiCache, Kafka clusters\n  - Includes:\
+  \ Regions, availability zones, network topology\n  - Missing or outdated: [yes/no]\n\
+  \n**Technical Documentation**:\n- [ ] **Architecture Decision Records (ADRs)**\n\
+  \  - Template: MADR or similar\n  - Coverage: Major technology and pattern choices\n\
+  \  - Up-to-date: [yes/no]\n\n- [ ] **API Documentation**\n  - Format: OpenAPI/Swagger\
+  \ specs\n  - Coverage: All REST endpoints\n  - Automated generation: [yes/no]\n\n\
+  - [ ] **Database Schema Documentation**\n  - ERD diagrams for key entities\n  -\
+  \ Migration strategy documented\n  - Index strategy documented\n\n- [ ] **Kafka\
+  \ Topic Documentation**\n  - Topic inventory\n  - Event schemas (Avro/JSON Schema)\n\
+  \  - Producer/consumer mappings\n\n- [ ] **Runbooks and Operations Guides**\n  -\
+  \ Deployment procedures\n  - Rollback procedures\n  - Common troubleshooting scenarios\n\
+  \  - On-call playbooks\n\n- [ ] **README Files**\n  - Project overview\n  - Local\
+  \ development setup\n  - Build and test instructions\n  - Deployment instructions\n\
+  \n### Documentation Quality Assessment\n\n**For each documentation artifact, evaluate:**\n\
+  \n1. **Accuracy**: Is documentation current with the code?\n2. **Completeness**:\
+  \ Does it cover all critical aspects?\n3. **Clarity**: Is it understandable by the\
+  \ target audience?\n4. **Maintainability**: Is it easy to keep up-to-date?\n5. **Discoverability**:\
+  \ Can developers find it when needed?\n\n**Identify Documentation Gaps**:\n- Critical\
+  \ gaps: [list missing docs that block understanding/operations]\n- Important gaps:\
+  \ [list missing docs that cause friction]\n- Nice-to-have gaps: [list docs that\
+  \ would help but aren't critical]\n\n### Diagram Tooling Recommendations\n\n**Preferred\
+  \ Tools**:\n- **Architecture Diagrams**: PlantUML, Mermaid, Draw.io, Lucidchart\n\
+  - **C4 Diagrams**: Structurizr, PlantUML with C4 extension\n- **Data Models**: DBeaver,\
+  \ ERD tools, dbdiagram.io\n- **Sequence Diagrams**: PlantUML, Mermaid (in docs)\n\
+  \n**Diagram-as-Code Benefits**:\n- Version controlled alongside code\n- Can be reviewed\
+  \ in pull requests\n- Automated diagram generation possible\n\n---\n\n## Phase 3:\
+  \ Technology Stack Alignment\n\n### Technology Compliance Assessment\n\n**Evaluate\
+  \ current technology choices against FBG standards:**\n\n#### Infrastructure and\
+  \ Platform\n| Component | FBG Standard | Current Usage | Aligned? | Notes/Justification\
+  \ |\n|-----------|-------------|---------------|----------|---------------------|\n\
+  | Cloud Provider | AWS | [Auto-detect] | [Yes/No] | [Reason if No] |\n| Container\
+  \ Orchestration | EKS | [Auto-detect] | [Yes/No] | [Reason if No] |\n| IaC | Terraform/CFN\
+  \ | [Auto-detect] | [Yes/No] | [Reason if No] |\n\n#### Application Stack\n| Component\
+  \ | FBG Standard | Current Usage | Aligned? | Notes/Justification |\n|-----------|-------------|---------------|----------|---------------------|\n\
+  | Language | Java 17+ | [Auto-detect from pom.xml/build.gradle] | [Yes/No] | [Reason\
+  \ if No] |\n| Framework | Spring Boot 3.x | [Auto-detect] | [Yes/No] | [Reason if\
+  \ No] |\n| Build Tool | Gradle/Maven | [Auto-detect] | [Yes/No] | [Reason if No]\
+  \ |\n\n#### Data Storage\n| Component | FBG Standard | Current Usage | Aligned?\
+  \ | Notes/Justification |\n|-----------|-------------|---------------|----------|---------------------|\n\
+  | RDBMS | PostgreSQL (RDS) | [Auto-detect from config] | [Yes/No] | [Reason if No]\
+  \ |\n| Cache | Redis (ElastiCache) | [Auto-detect from config] | [Yes/No] | [Reason\
+  \ if No] |\n| Streaming | Kafka (MSK) | [Auto-detect from config] | [Yes/No] | [Reason\
+  \ if No] |\n\n#### Observability\n| Component | FBG Standard | Current Usage | Aligned?\
+  \ | Notes/Justification |\n|-----------|-------------|---------------|----------|---------------------|\n\
+  | APM/Monitoring | Datadog | [Auto-detect from dependencies] | [Yes/No] | [Reason\
+  \ if No] |\n\n### Non-Standard Technology Review\n\n**For any technology not in\
+  \ the FBG stack:**\n\n1. **Technology**: [Name of non-standard tech]\n   - **Purpose**:\
+  \ [What problem does it solve?]\n   - **Justification**: [Why is FBG standard not\
+  \ suitable?]\n   - **Alternatives Considered**: [List FBG-compliant alternatives\
+  \ evaluated]\n   - **Risk Assessment**: [Operational risk, support concerns, skills\
+  \ gap]\n   - **Recommendation**: [Keep, Replace with FBG standard, Propose as new\
+  \ FBG standard]\n\n2. **Technology**: [Name of non-standard tech]\n   - [Repeat\
+  \ analysis]\n\n### Technology Debt Identification\n\n**Identify outdated or problematic\
+  \ technology choices:**\n\n- **Legacy Versions**: Libraries or frameworks that are\
+  \ outdated\n  - Java < 17\n  - Spring Boot < 3.x\n  - Postgres < 13\n\n- **Deprecated\
+  \ Technologies**: Using technologies scheduled for retirement\n  - [List any deprecated\
+  \ tech in use]\n\n- **Security Vulnerabilities**: Known CVEs in dependencies\n \
+  \ - Run `mvn dependency-check:check` or `gradle dependencyCheckAnalyze`\n  - List\
+  \ critical/high severity vulnerabilities\n\n---\n\n## Phase 4: Comprehensive Review\
+  \ Report\n\n### Executive Summary\n\nGenerate a concise executive summary answering\
+  \ the three key questions:\n\n#### 1. Are we heading in the right direction architecturally?\n\
+  \n**Overall Direction**: [On Track / Needs Adjustment / Significant Concerns]\n\n\
+  **Key Strengths**:\n- [List 2-3 positive directional choices]\n\n**Key Concerns**:\n\
+  - [List 2-3 directional issues requiring attention]\n\n**Directional Recommendation**:\n\
+  - [Overall guidance: Continue current path / Make specific adjustments / Consider\
+  \ pivot]\n\n#### 2. Do we have the right documentation and diagrams?\n\n**Documentation\
+  \ Coverage**: [Excellent / Good / Adequate / Insufficient]\n\n**What We Have**:\n\
+  - [List existing, up-to-date documentation]\n\n**What We're Missing**:\n- **Critical**:\
+  \ [List missing docs blocking effective development/operations]\n- **Important**:\
+  \ [List missing docs causing friction]\n\n**Documentation Recommendation**:\n- [Prioritized\
+  \ list of documentation to create/update]\n\n#### 3. Are we using the right technologies?\n\
+  \n**Tech Stack Alignment**: [Fully Aligned / Mostly Aligned / Partially Aligned\
+  \ / Non-Compliant]\n\n**Compliant Technologies**:\n- [List FBG-standard technologies\
+  \ in use]\n\n**Non-Compliant Technologies**:\n- [List non-standard tech with justification\
+  \ assessment]\n\n**Technology Recommendation**:\n- [List tech to replace, migrate,\
+  \ or formally justify]\n\n### Detailed Findings\n\n**Architecture Direction**:\n\
+  1. [Finding 1 with severity: Critical/High/Medium/Low]\n   - **Current State**:\
+  \ [Description]\n   - **Concern**: [Why this is an issue]\n   - **Recommendation**:\
+  \ [Specific action to take]\n   - **Impact**: [Effort and risk of change]\n\n2.\
+  \ [Finding 2...]\n\n**Documentation Gaps**:\n1. [Gap 1 with severity]\n   - **Missing**:\
+  \ [What documentation is absent]\n   - **Impact**: [How this affects team]\n   -\
+  \ **Recommendation**: [What to create]\n   - **Effort**: [Estimated effort to create]\n\
+  \n2. [Gap 2...]\n\n**Technology Alignment**:\n1. [Technology Issue 1 with severity]\n\
+  \   - **Technology**: [Name]\n   - **Standard**: [FBG standard]\n   - **Gap**: [Deviation\
+  \ description]\n   - **Recommendation**: [Replace / Justify / Migrate]\n   - **Migration\
+  \ Path**: [If replacement needed]\n\n2. [Technology Issue 2...]\n\n### Prioritized\
+  \ Action Plan\n\n**Immediate Actions (This Sprint)**:\n1. [ ] [P0 item - critical\
+  \ directional or tech issue]\n2. [ ] [P0 item - critical documentation gap]\n\n\
+  **Short Term (Next 2-4 Weeks)**:\n1. [ ] [P1 item - important directional adjustment]\n\
+  2. [ ] [P1 item - key documentation creation]\n3. [ ] [P1 item - high-priority tech\
+  \ stack alignment]\n\n**Medium Term (1-3 Months)**:\n1. [ ] [P2 item - architectural\
+  \ improvement]\n2. [ ] [P2 item - documentation completion]\n3. [ ] [P2 item - technology\
+  \ migration]\n\n**Long Term (3-6 Months)**:\n1. [ ] [P3 item - nice-to-have improvements]\n\
+  2. [ ] [P3 item - comprehensive documentation]\n\n### Decision Points Requiring\
+  \ Input\n\n**Key Decisions Needing Resolution**:\n\n1. **Decision**: [Description\
+  \ of architectural decision needed]\n   - **Options**: [List 2-3 options]\n   -\
+  \ **Recommendation**: [Preferred option with rationale]\n   - **Trade-offs**: [Analysis\
+  \ of each option]\n   - **Stakeholders**: [Who should be involved in decision]\n\
+  \n2. **Decision**: [Next decision...]\n\n---\n\n## Phase 5: Execution Guidance\n\
+  \n### Using Agents for Improvements\n\n**For Detailed Architecture Analysis**: Use\
+  \ existing `/quality:architecture-review` command\n```bash\n# After this high-level\
+  \ review identifies issues, use the detailed review\n/quality:architecture-review\
+  \ src/main/java/com/example/\n```\n\n**For Generating ADRs**: Create ADRs for key\
+  \ decisions identified\n```markdown\n# Example ADR template\n# ADR-XXX: [Decision\
+  \ Title]\n\n## Status\n[Proposed | Accepted | Deprecated | Superseded]\n\n## Context\n\
+  [Describe the issue and the forces at play]\n\n## Decision\n[Describe the decision\
+  \ and its rationale]\n\n## Consequences\n[Positive and negative outcomes]\n\n##\
+  \ Alternatives Considered\n[List alternatives and why they weren't chosen]\n```\n\
+  \n**For Creating Diagrams**: Use diagram-as-code tools\n```plantuml\n# Example C4\
+  \ Container Diagram\n@startuml\n!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml\n\
+  \nPerson(user, \"User\", \"A user of the system\")\nSystem_Boundary(c1, \"System\
+  \ Name\") {\n    Container(web, \"Web Application\", \"Spring Boot\", \"Delivers\
+  \ content\")\n    ContainerDb(db, \"Database\", \"PostgreSQL\", \"Stores data\"\
+  )\n    Container(cache, \"Cache\", \"Redis\", \"Caches frequently accessed data\"\
+  )\n}\n@enduml\n```\n\n### Tech Stack Migration Strategies\n\n**For Java Version\
+  \ Upgrades**:\n1. Update build tool configuration (pom.xml/build.gradle)\n2. Update\
+  \ language level in IDE and compiler\n3. Run tests and fix compilation errors\n\
+  4. Update CI/CD pipelines\n5. Update container base images\n\n**For Spring Boot\
+  \ Upgrades**:\n1. Check Spring Boot 3.x migration guide\n2. Update javax.* to jakarta.*\
+  \ namespace\n3. Update dependencies to compatible versions\n4. Test thoroughly (breaking\
+  \ changes are common)\n\n**For Database Migrations**:\n1. Document current database\
+  \ usage patterns\n2. Plan migration strategy (dual-write, event streaming, etc.)\n\
+  3. Test performance and compatibility\n4. Plan rollback strategy\n5. Execute phased\
+  \ migration\n\n---\n\n## Review Execution\n\n### Step 1: Automated Discovery\n-\
+  \ Use Grep/Read to detect technologies from config files\n- Map dependencies from\
+  \ pom.xml/build.gradle\n- Identify infrastructure from Terraform/CloudFormation\n\
+  - Find documentation files\n\n### Step 2: Directional Analysis\n- Evaluate architecture\
+  \ against scale/reliability requirements\n- Assess microservices boundaries and\
+  \ coupling\n- Review data architecture and event flows\n- Identify directional red\
+  \ flags\n\n### Step 3: Documentation Audit\n- Inventory existing documentation\n\
+  - Assess quality and currency\n- Identify critical gaps\n- Recommend diagram-as-code\
+  \ approaches\n\n### Step 4: Tech Stack Compliance\n- Compare detected technologies\
+  \ against FBG standards\n- Evaluate justifications for non-standard tech\n- Identify\
+  \ migration paths for non-compliant tech\n- Assess security and operational risks\n\
+  \n### Step 5: Report and Recommendations\n- Generate comprehensive report\n- Prioritize\
+  \ findings by impact and effort\n- Provide concrete action plan\n- Identify key\
+  \ decision points\n\n---\n\n## Success Criteria\n\n- ✅ Clear answer to \"Are we\
+  \ heading in the right direction?\"\n- ✅ Complete documentation gap analysis with\
+  \ priorities\n- ✅ Full tech stack compliance assessment\n- ✅ Prioritized action\
+  \ plan (P0, P1, P2, P3)\n- ✅ Identified key decisions requiring stakeholder input\n\
+  - ✅ Concrete migration plans for non-compliant technologies\n\n---\n\n## Usage Examples\n\
+  \n```bash\n# Review entire project\n/quality:tech-stack-review\n\n# Review specific\
+  \ service\n/quality:tech-stack-review services/payment-service\n\n# Review with\
+  \ focus on documentation\n/quality:tech-stack-review --focus=documentation\n\n#\
+  \ Review with focus on tech compliance\n/quality:tech-stack-review --focus=tech-stack\n\
+  ```\n\n---\n\n## Related Commands\n\n- `/quality:architecture-review` - Detailed\
+  \ code-level architecture analysis (SOLID, Clean Architecture, DDD)\n- `/code:implement`\
+  \ - Implement features following FBG standards\n- `/plan:feature` - Plan features\
+  \ with architecture considerations\n\n---\n\n**Remember**: This is a high-level\
+  \ strategic review focused on direction, documentation, and tech stack alignment.\
+  \ For detailed code-level analysis, use `/quality:architecture-review`. The goal\
+  \ is to ensure the team is building the right thing, the right way, with the right\
+  \ tools.\n"
 ---
 
 # Tech Stack and Direction Review: ${1:-.}

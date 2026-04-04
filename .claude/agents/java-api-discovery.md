@@ -1,11 +1,9 @@
 ---
+name: java-api-discovery
 description: Discover Java API signatures from compiled JARs using javap instead of
   guessing or relying on incomplete documentation. Use when encountering unknown methods,
   pagination patterns, union types, or compilation errors from incorrect API assumptions.
-mode: subagent
 temperature: 0.1
-tools: []
-name: java-api-discovery
 ---
 
 # Java API Discovery

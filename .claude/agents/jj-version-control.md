@@ -1,13 +1,11 @@
 ---
+name: jj-version-control
 description: This skill should be used when the user works with Jujutsu (jj) version
   control, asks to "commit with jj", "rebase in jj", "use revsets", "create bookmarks",
   "push to git with jj", "split commits", "squash changes", "edit history", or mentions
   jj-specific concepts like changes, revsets, bookmarks, operation log, or anonymous
   branches.
-mode: subagent
 temperature: 0.1
-tools: []
-name: jj-version-control
 ---
 
 # Jujutsu (jj) Version Control

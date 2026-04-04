@@ -1,6 +1,18 @@
 ---
-title: Confluence Documentation
 description: Create or update Confluence documentation using the Diataxis framework
+prompt: "# Create Confluence Documentation\n\nUse the jira-project-manager agent to\
+  \ create high-quality Confluence documentation following the Diataxis framework.\n\
+  \n## Task\n\nI need help with Confluence documentation for: $*\n\n## Requirements\n\
+  \nUse the @task jira-project-manager agent to:\n1. Apply the Diataxis framework\
+  \ (Tutorials, How-to Guides, Technical Reference, or Explanation)\n2. Create clear,\
+  \ structured documentation with:\n   - Appropriate document type for the content\n\
+  \   - Consistent formatting and structure\n   - Proper cross-references to related\
+  \ Jira tickets\n   - Easy retrieval and team collaboration focus\n\n## Documentation\
+  \ Types\n\n- **Tutorials**: Step-by-step learning for onboarding\n- **How-to Guides**:\
+  \ Problem-solving instructions for specific scenarios\n- **Technical Reference**:\
+  \ Detailed system information for lookup\n- **Explanation**: Context and decision-making\
+  \ rationale\n\n## Context\n\nMaintain FBG's high documentation standards with clear,\
+  \ useful content that reduces support requests and facilitates team collaboration.\n"
 ---
 
 # Create Confluence Documentation

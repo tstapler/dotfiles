@@ -24,7 +24,6 @@ Synthesize knowledge from multiple sources into interconnected Zettelkasten note
 
 ### 1. Research Phase
 
-- **Handle [[Needs Processing]] tags**: When encountering this tag, recursively process all child bullet points and nested content to ensure full context is captured for synthesis.
 - Search multiple source types (academic, books, authoritative sites)
 - Find foundational works and key authors
 - Identify supporting AND contradicting evidence

@@ -1,10 +1,8 @@
 ---
+name: docker-build-test
 description: Docker build and test workflow with mandatory pre-push validation checklist
   to prevent CI/CD failures
-mode: subagent
 temperature: 0.1
-tools: []
-name: docker-build-test
 ---
 
 # Docker Build & Test

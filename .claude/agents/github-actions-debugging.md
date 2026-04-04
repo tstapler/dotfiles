@@ -1,12 +1,10 @@
 ---
+name: github-actions-debugging
 description: Debug GitHub Actions workflow failures by analyzing logs, identifying
   error patterns (syntax errors, dependency issues, environment problems, timeouts,
   permissions), and providing actionable solutions. Use when CI/CD workflows fail,
   jobs timeout, or actions produce unexpected errors.
-mode: subagent
 temperature: 0.1
-tools: []
-name: github-actions-debugging
 ---
 
 # GitHub Actions Debugging Skill

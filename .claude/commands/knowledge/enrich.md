@@ -1,3 +1,198 @@
+---
+description: ''
+prompt: "# Knowledge Enrichment Orchestrator\n\n**Single entry point** for processing\
+  \ all knowledge enrichment tags in journal entries across Tyler's personal wiki.\n\
+  \n**Status**: Production-ready command\n\n**Repository**: `~/Documents/personal-wiki`\
+  \ or `~/personal-wiki`\n\n---\n\n## Purpose\n\nDiscover and process enrichment tags\
+  \ (`[[Needs Research]]`, `[[Needs Synthesis]]`, `[[Needs Handy Plan]]`, `[[Book\
+  \ Recommendation]]`) from journal entries, delegating to specialized handlers.\n\
+  \n**CRITICAL**: All handlers MUST include source attribution. Pages without sources\
+  \ will fail validation.\n\n---\n\n## Arguments\n\n| Argument | Values | Default\
+  \ | Description |\n|----------|--------|---------|-------------|\n| `scope` | today,\
+  \ week, month, all | week | Time range to scan for tags |\n| `--only` | all, processing,\
+  \ synthesis, research, handy-plan, book | all | Filter to specific tag type |\n\
+  | `--validate` | - | false | Run source validation after processing |\n\n**Note**:\
+  \ `processing` is the recommended unified tag. `research` and `synthesis` are kept\
+  \ for backward compatibility.\n\n---\n\n## Core Workflow\n\n### Phase 1: Discovery\n\
+  \n**Objective**: Scan journals and discover ALL enrichment tags within scope.\n\n\
+  ```xml\n<instructions>\n1. Determine repository location:\n   - Check ~/Documents/personal-wiki\
+  \ first\n   - Fallback to ~/personal-wiki\n   - Error if neither exists\n\n2. Calculate\
+  \ date range based on scope:\n   - today: Current date only\n   - week: Last 7 days\n\
+  \   - month: Last 30 days\n   - all: Entire history\n\n3. Search for all tags in\
+  \ parallel:\n   ```bash\n   grep -rn \"\\[\\[Needs Processing\\]\\]\" ~/Documents/personal-wiki/logseq/journals/\n\
+  \   grep -rn \"\\[\\[Needs Synthesis\\]\\]\" ~/Documents/personal-wiki/logseq/journals/\n\
+  \   grep -rn \"\\[\\[Needs Research\\]\\]\" ~/Documents/personal-wiki/logseq/journals/\n\
+  \   grep -rn \"\\[\\[Needs Handy Plan\\]\\]\" ~/Documents/personal-wiki/logseq/journals/\n\
+  \   grep -rn \"\\[\\[Book Recommendation\\]\\]\" ~/Documents/personal-wiki/logseq/journals/\n\
+  \   ```\n\n4. Filter results:\n   - Parse journal filenames (YYYY_MM_DD.md)\n  \
+  \ - Include only dates within scope\n   - Skip already-processed entries (~~[[Tag]]~~)\n\
+  \   - Skip section headers (## Title [[Tag]])\n   - **CRITICAL**: Sort entries in\
+  \ REVERSE CHRONOLOGICAL order (newest first)\n\n5. Apply --only filter if specified\n\
+  \n6. Generate discovery report showing counts by tag type\n\n**IMPORTANT**: All\
+  \ entries must be processed in REVERSE CHRONOLOGICAL order (newest journal dates\
+  \ first) to prioritize recent work over old journal entries. This ensures that recently\
+  \ captured knowledge is fleshed out before moving on to historical entries.\n</instructions>\n\
+  ```\n\n**Output**: List of entries to process, categorized by tag type\n\n---\n\n\
+  ### Phase 2: Handler Dispatch\n\n**Objective**: Process each tag type through its\
+  \ specialized handler.\n\n**CRITICAL REQUIREMENT**: Handlers MUST be invoked using\
+  \ the Read tool to load handler instructions, then following those instructions\
+  \ directly. DO NOT duplicate handler logic.\n\n**Processing Order** (by tag type):\n\
+  1. **Book Recommendations** - Fastest, independent\n2. **Handy Plans** - Self-contained\n\
+  3. **Research** - May inform synthesis\n4. **Synthesis** - Most comprehensive\n\n\
+  **For Each Tag Type** with entries:\n\n```xml\n<instructions>\n1. Read handler skill\
+  \ file:\n   ```bash\n   # Handler locations\n   ~/.claude/skills/knowledge/handlers/processing-handler.md\
+  \      # [[Needs Processing]] (RECOMMENDED)\n   ~/.claude/skills/knowledge/handlers/research-handler.md\
+  \        # [[Needs Research]] (legacy)\n   ~/.claude/skills/knowledge/handlers/synthesis-handler.md\
+  \       # [[Needs Synthesis]] (legacy)\n   ~/.claude/skills/knowledge/handlers/handy-plan-handler.md\n\
+  \   ~/.claude/skills/knowledge/handlers/book-recommendation-handler.md\n   ```\n\
+  \n2. Process entries sequentially following handler methodology\n\n3. Track results\
+  \ for each entry:\n   ```yaml\n   entry: \"[preview]\"\n   tag_type: \"[[Needs Research]]\"\
+  \n   status: \"success|partial|failed\"\n   pages_created:\n     - \"[[Page Name]]\"\
+  \n   pages_updated: []\n   issues: []\n   sources_documented: int  # NEW: Track\
+  \ source count\n   ```\n\n4. Validate source attribution (see Phase 4)\n\n5. Handle\
+  \ errors gracefully:\n   - Log error details\n   - Mark entry status appropriately\n\
+  \   - Continue with next entry\n   - Accumulate failures for report\n</instructions>\n\
+  ```\n\n**Success Criteria** (per tag type):\n- All entries processed\n- Results\
+  \ tracked for each\n- Sources documented for research/synthesis/handy-plan\n- Errors\
+  \ logged but don't halt processing\n\n---\n\n### Phase 3: Tag Cleanup\n\n**Objective**:\
+  \ Remove processed tags consistently across all entries.\n\n**CRITICAL**: This phase\
+  \ is centralized to ensure consistent cleanup.\n\n```xml\n<instructions>\nFor each\
+  \ successfully processed entry:\n\n1. Locate exact line in journal:\n   - Use file\
+  \ path and line number from discovery\n   - Re-read file to confirm content matches\n\
+  \   - Handle if file was modified during processing\n\n2. Transform based on tag\
+  \ type:\n\n   | Tag Type | Transformation Pattern |\n   |----------|----------------------|\n\
+  \   | [[Needs Processing]] | `- Topic [[Needs Processing]]` → `- [[Topic]] ✓ Processed\
+  \ (Research/Synthesis/Hybrid) - N sources [[Processed YYYY-MM-DD]]` |\n   | [[Needs\
+  \ Synthesis]] | `- Topic [[Needs Synthesis]]` → `- Synthesized [[Topic Page]] -\
+  \ see [[Knowledge Synthesis - YYYY-MM-DD]]` |\n   | [[Needs Research]] | `- Research\
+  \ X [[Needs Research]]` → `- Researched [[X]] - comprehensive guide with N sources\
+  \ [[Researched YYYY-MM-DD]]` |\n   | [[Needs Handy Plan]] | `- Fix X [[Needs Handy\
+  \ Plan]]` → `- Created plan for [[X Project]] (Difficulty: Medium, Time: X hrs)\
+  \ [[Planned YYYY-MM-DD]]` |\n   | [[Book Recommendation]] | `- \"Book\" by Author\
+  \ [[Book Recommendation]]` → `- Added [[Book Title]] to library (Audiobook: Yes/No)\
+  \ [[Added YYYY-MM-DD]]` |\n\n3. Cleanup rules (ALL types):\n   - REMOVE the enrichment\
+  \ tag entirely\n   - ADD wiki link to created page(s)\n   - ADD completion date\
+  \ marker [[Tag YYYY-MM-DD]]\n   - ADD metadata about result (source count, difficulty,\
+  \ audiobook status, etc.)\n   - TRANSFORM verb tense to past\n   - PRESERVE nested\
+  \ content below entry\n\n4. Verify each edit:\n   - Re-read line after edit\n  \
+  \ - Confirm tag is removed\n   - Confirm link is present\n   - Log any failures\n\
+  </instructions>\n```\n\n---\n\n### Phase 4: Source Validation\n\n**Objective**:\
+  \ Verify all research-based pages have proper source attribution.\n\n**MANDATORY\
+  \ FOR**: `[[Needs Research]]`, `[[Needs Synthesis]]`, `[[Needs Handy Plan]]`\n\n\
+  **NOT REQUIRED FOR**: `[[Book Recommendation]]` (uses book-sync system)\n\n```xml\n\
+  <validation>\nFor each page created during processing:\n\n1. Read page content from\
+  \ logseq/pages/\n\n2. Check for \"## Sources\" section:\n   ```python\n   has_sources_section\
+  \ = re.search(r'^##\\s+Sources', page_content, re.MULTILINE)\n   ```\n\n3. Count\
+  \ documented sources:\n   ```python\n   # Match markdown links or numbered lists\
+  \ with URLs\n   sources = re.findall(r'\\[.+?\\]\\(.+?\\)', page_content)\n   source_count\
+  \ = len(sources)\n   ```\n\n4. Validation rules:\n   - MINIMUM 2 sources required\n\
+  \   - Sources MUST be in \"## Sources\" section\n   - Sources MUST be actual URLs\
+  \ (not placeholders)\n   - Sources MUST use markdown link format: [Title](URL)\n\
+  \n5. Validation failure actions:\n   - Mark entry status as \"failed\"\n   - DO\
+  \ NOT remove tag from journal\n   - Log specific validation error\n   - Include\
+  \ in issues list for report\n\n6. Example valid sources section:\n   ```markdown\n\
+  \   ## Sources\n\n   1. [How to Date a Ball Jar — Minnetrista](https://www.minnetrista.net/blog/blog/2013/06/27/ball-family-history/how-to-date-a-ball-jar)\n\
+  \   2. [How to Date Old Ball Mason Jars - wikiHow](https://www.wikihow.com/Date-Old-Ball-Mason-Jars)\n\
+  \   3. [Ball Mason Jar Age Chart - Taste of Home](https://www.tasteofhome.com/article/ball-mason-jar-age-chart/)\n\
+  \   ```\n\n7. Example INVALID (will fail validation):\n   ```markdown\n   ## Sources\n\
+  \n   - [Source 1](url)\n   - [Source 2](url)\n   ```\n   OR missing section entirely\n\
+  </validation>\n```\n\n**Validation Report**:\n```yaml\nvalidation_results:\n  total_pages:\
+  \ int\n  passed: int\n  failed: int\n  failures:\n    - page: \"[[Page Name]]\"\n\
+  \      issue: \"No Sources section found\"\n    - page: \"[[Page Name 2]]\"\n  \
+  \    issue: \"Only 1 source documented, minimum 2 required\"\n```\n\n---\n\n###\
+  \ Phase 5: Completion Report\n\n**Objective**: Generate comprehensive report with\
+  \ validation results.\n\n```markdown\n## Knowledge Enrichment Complete\n\n**Processing\
+  \ Summary**:\n- Scope: [scope] ([date range])\n- Repository: [path]\n- Total entries\
+  \ discovered: [count]\n- Successfully processed: [count]\n- Failed validation: [count]\n\
+  - Partial success: [count]\n- Failed: [count]\n\n---\n\n### [[Needs Synthesis]]\
+  \ Results\n- Entries processed: [count]\n- Topic pages created: [count]\n  - [[Topic\
+  \ 1]] (N sources, X words)\n  - [[Topic 2]] (N sources, X words)\n- Validation:\
+  \ [X/Y passed]\n- Issues: [list or \"None\"]\n\n---\n\n### [[Needs Research]] Results\n\
+  - Entries processed: [count]\n- Research pages created: [count]\n  - [[Research\
+  \ Topic 1]] ([N sources](logseq/pages/Research Topic 1.md:75), X words)\n  - [[Comparison:\
+  \ A vs B]] ([N sources](logseq/pages/Comparison A vs B.md:82), X words)\n- Validation:\
+  \ [X/Y passed]\n- Issues: [list or \"None\"]\n\n---\n\n### [[Needs Handy Plan]]\
+  \ Results\n- Entries processed: [count]\n- Project plans created: [count]\n  - [[Project\
+  \ Plan 1]] (Difficulty: Medium, [N sources](logseq/pages/Project Plan 1.md:307),\
+  \ Cost: $X-Y)\n  - [[Project Plan 2]] (Difficulty: Easy, [N sources](logseq/pages/Project\
+  \ Plan 2.md:312), Cost: $X-Y)\n- Validation: [X/Y passed]\n- Issues: [list or \"\
+  None\"]\n\n---\n\n### [[Book Recommendation]] Results\n- Entries processed: [count]\n\
+  - Books added to library: [count]\n  - [[Book Title 1]] by Author (Audiobook: Yes,\
+  \ Enriched: OpenLibrary + Audible)\n  - [[Book Title 2]] by Author (Audiobook: No,\
+  \ Enriched: OpenLibrary only)\n- Already in library: [count]\n- Validation: Not\
+  \ required (book-sync system)\n- Issues: [list or \"None\"]\n\n---\n\n### Verification\
+  \ Status\n- ✅/❌ Tags removed: [status]\n- ✅/❌ Pages created: [status]\n- ✅/❌ Sources\
+  \ validated: [X/Y pages passed]\n- ✅/❌ Links validated: [status]\n- ✅/❌ No broken\
+  \ references: [status]\n\n### Pages Requiring Manual Review\n[List any entries that\
+  \ failed validation with specific issues]\n\n**Example**:\n- [[Dating Ball Glass\
+  \ Jars]] - MISSING SOURCES SECTION\n  - Issue: No \"## Sources\" section found\n\
+  \  - Action: Add sources used during research\n  - Research tools used: mcp__brave-search__brave_web_search,\
+  \ mcp__read-website-fast__read_website\n  - Entry location: logseq/journals/2026_01_09.md:15\n\
+  \n### Recommended Follow-Up\n- Run `/knowledge/validate-links` to verify knowledge\
+  \ graph health\n- Run `uv run book-sync enrich run` to enhance book metadata\n-\
+  \ Review entries marked for clarification\n- Fix pages with missing sources (listed\
+  \ above)\n</markdown>\n```\n\n---\n\n## Error Handling\n\n### Individual Entry Failures\n\
+  - Log error details with context\n- Mark entry as failed\n- Continue with remaining\
+  \ entries\n- Include in final report with file:line reference\n\n### Handler Invocation\
+  \ Failures\n- Log which handler failed and why\n- Skip entries for that tag type\n\
+  - Report which tag types were skipped\n- Suggest manual processing\n\n### Validation\
+  \ Failures\n- DO NOT mark entry as complete\n- DO NOT remove tag from journal\n\
+  - Log specific validation issue\n- Include page path and line number for manual\
+  \ fix\n\n### Multiple Consecutive Failures\n- Pause after 5 consecutive failures\n\
+  - Report current progress\n- Suggest troubleshooting:\n  - Check handler files exist\n\
+  \  - Verify web search tools accessible\n  - Check file permissions\n- Allow user\
+  \ to continue or abort\n\n---\n\n## Usage Examples\n\n### Default (Process All,\
+  \ Last Week)\n```bash\n/knowledge/enrich\n```\n\n### Scope-Based\n```bash\n/knowledge/enrich\
+  \ today\n/knowledge/enrich month\n/knowledge/enrich all\n```\n\n### Filtered by\
+  \ Tag Type\n```bash\n/knowledge/enrich week --only research\n/knowledge/enrich today\
+  \ --only synthesis\n/knowledge/enrich --only book\n```\n\n### With Validation\n\
+  ```bash\n/knowledge/enrich week --validate\n```\n\n---\n\n## Repository Location\n\
+  \nThe command automatically locates Tyler's personal wiki:\n\n```python\ndef find_wiki_repo()\
+  \ -> Path:\n    \"\"\"Find personal wiki repository.\"\"\"\n    candidates = [\n\
+  \        Path.home() / \"Documents\" / \"personal-wiki\",\n        Path.home() /\
+  \ \"personal-wiki\"\n    ]\n\n    for path in candidates:\n        if path.exists()\
+  \ and (path / \"logseq\").exists():\n            return path\n\n    raise FileNotFoundError(\n\
+  \        \"Personal wiki not found. Expected at:\\n\"\n        \"  ~/Documents/personal-wiki\\\
+  n\"\n        \"  ~/personal-wiki\"\n    )\n```\n\n---\n\n## Quality Standards\n\n\
+  ### Discovery Quality\n- All tags found within scope\n- No false positives (headers\
+  \ filtered)\n- Proper date range filtering\n- Accurate counts\n\n### Processing\
+  \ Quality\n- Handlers actually invoked (not duplicated)\n- Each handler applies\
+  \ domain standards\n- Results tracked per entry\n- Errors don't cascade\n\n### Validation\
+  \ Quality\n- **ALL research pages have ≥2 sources**\n- Sources are real URLs, not\
+  \ placeholders\n- Validation failures prevent tag removal\n- Clear error messages\
+  \ with file locations\n\n### Cleanup Quality\n- Tags removed ONLY after validation\
+  \ passes\n- Consistent transformation format\n- Wiki links validated\n- No content\
+  \ corruption\n\n### Reporting Quality\n- All metrics accurate\n- Source counts visible\
+  \ (with line numbers)\n- Clear breakdown by tag type\n- Actionable next steps with\
+  \ file paths\n- Any issues clearly documented with locations\n\n---\n\n## Integration\
+  \ with Handler Skills\n\nHandler skill locations:\n```\n~/.claude/skills/knowledge/handlers/\n\
+  ├── processing-handler.md     # [[Needs Processing]] (RECOMMENDED - auto-detects\
+  \ approach)\n├── synthesis-handler.md      # [[Needs Synthesis]] (legacy - explicit\
+  \ synthesis)\n├── research-handler.md       # [[Needs Research]] (legacy - explicit\
+  \ research)\n├── handy-plan-handler.md     # [[Needs Handy Plan]]\n└── book-recommendation-handler.md\
+  \  # [[Book Recommendation]]\n```\n\n**Unified Processing** (`processing-handler.md`):\n\
+  - Automatically detects context richness\n- Chooses optimal approach: research,\
+  \ synthesis, or hybrid\n- Reduces cognitive load - just tag with `[[Needs Processing]]`\n\
+  - Produces same high-quality, well-sourced pages\n\n**Handler Contract**:\nEach\
+  \ handler receives:\n- Entry content and context\n- Journal date and line number\n\
+  - Repository path\n\nEach handler returns:\n- Processing status\n- Pages created/updated\n\
+  - Source count (research/synthesis/handy-plan)\n- Any issues encountered\n\nThe\
+  \ orchestrator handles:\n- Discovery across all tags\n- Handler invocation (by reading\
+  \ skill files)\n- Source validation\n- Tag cleanup\n- Progress reporting\n- Error\
+  \ accumulation\n\n---\n\n## Source Attribution Examples\n\n### Good Example (Research)\n\
+  ```markdown\n# Dating Ball Glass Jars\n\n[... content ...]\n\n## Sources\n\n1. [How\
+  \ to Date a Ball Jar — Minnetrista](https://www.minnetrista.net/blog/blog/2013/06/27/ball-family-history/how-to-date-a-ball-jar)\n\
+  2. [How to Date Old Ball Mason Jars - wikiHow](https://www.wikihow.com/Date-Old-Ball-Mason-Jars)\n\
+  3. [Ball Mason Jar Age Chart - Taste of Home](https://www.tasteofhome.com/article/ball-mason-jar-age-chart/)\n\
+  ```\n✅ **PASSES**: 3 sources with real URLs in proper format\n\n### Bad Example\
+  \ (Will Fail Validation)\n```markdown\n# Dating Ball Glass Jars\n\n[... content\
+  \ ...]\n\n## Resources\n- [[Midwest Antique Fruit Jar and Bottle Club]]\n```\n❌\
+  \ **FAILS**: Wrong section name, no URLs, only 1 source\n\n---\n\n## Retroactive\
+  \ Validation\n\nTo audit existing pages for missing sources:\n\n```bash\n# Run validation\
+  \ on all existing research pages\n/knowledge/enrich all --only research --validate\n\
+  ```\n\nThis will scan ALL research pages and report any missing source sections.\n"
+---
+
 # Knowledge Enrichment Orchestrator
 
 **Single entry point** for processing all knowledge enrichment tags in journal entries across Tyler's personal wiki.

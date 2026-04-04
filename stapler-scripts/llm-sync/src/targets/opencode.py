@@ -154,8 +154,9 @@ class OpenCodeTarget(SyncTarget, SyncSource):
                 "description": agent.description,
                 "mode": "subagent",
                 "temperature": 0.1,
-                "tools": opencode_tools,
             }
+            if opencode_tools:
+                frontmatter["tools"] = opencode_tools
 
             # Metadata overrides - use allow list to filter fields
             # Also handle max_steps -> steps conversion

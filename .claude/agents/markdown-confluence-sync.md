@@ -1,11 +1,9 @@
 ---
+name: markdown-confluence-sync
 description: Sync markdown projects to Confluence using the markdown_confluence tool.
   Use for publishing, crawling, and managing Confluence pages from local markdown
   files.
-mode: subagent
 temperature: 0.1
-tools: []
-name: markdown-confluence-sync
 ---
 
 # Markdown Confluence Sync

@@ -1,10 +1,8 @@
 ---
+name: infrastructure-testing
 description: Run TestKube and PGBouncer tests on Kubernetes clusters with mandatory
   context verification to prevent accidental deployments to wrong environments
-mode: subagent
 temperature: 0.1
-tools: []
-name: infrastructure-testing
 ---
 
 # Infrastructure Testing

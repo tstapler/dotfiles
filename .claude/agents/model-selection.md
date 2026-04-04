@@ -1,11 +1,9 @@
 ---
+name: model-selection
 description: Select appropriate Claude model (Opus 4.5, Sonnet, Haiku) for agents,
   commands, or Task tool invocations based on task complexity, reasoning depth, and
   cost/speed requirements.
-mode: subagent
 temperature: 0.1
-tools: []
-name: model-selection
 ---
 
 # Model Selection Guide

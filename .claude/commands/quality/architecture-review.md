@@ -1,34 +1,372 @@
 ---
-title: Architecture Review with Best Practices
-description: Comprehensive architecture review analyzing SOLID, Clean Architecture, Clean Code, DDD, and Design Patterns adherence with actionable recommendations
-arguments: [path]
-options:
-  - name: target
-    type: string
-    description: "Specific component to analyze (class:Name, package:path, module:name, layer:domain)"
-  - name: depth
-    type: string
-    choices: [quick, standard, deep]
-    default: auto
-    description: "Analysis depth - quick (5min), standard (15min), deep (30min+)"
-  - name: context
-    type: string
-    choices: [current, changes, recent, all]
-    default: auto
-    description: "Context to use - current file, git changes, recent commits, or all code"
-  - name: principles
-    type: array
-    choices: [srp, ocp, lsp, isp, dip, clean-arch, clean-code, ddd, patterns, coupling, all]
-    default: auto
-    description: "Specific principles to analyze (comma-separated)"
-  - name: format
-    type: string
-    choices: [summary, detailed, actionable, pr-review, report]
-    default: auto
-    description: "Output format based on use case"
-  - name: focus
-    type: string
-    description: "Legacy option - maintained for backward compatibility, maps to principles"
+description: Comprehensive architecture review analyzing SOLID, Clean Architecture,
+  Clean Code, DDD, and Design Patterns adherence with actionable recommendations
+prompt: "# Architecture Review: Context-Aware Analysis\n\nPerform targeted or comprehensive\
+  \ architecture reviews with automatic context detection and configurable depth.\
+  \ The review adapts to your current workflow - whether you're doing a quick PR review,\
+  \ analyzing a specific component, or conducting a full architectural assessment.\n\
+  \n## Smart Context Detection\n\nThe command automatically detects and uses context\
+  \ when no explicit parameters are provided:\n\n### Auto-Detection Logic\n\nWhen\
+  \ invoked without explicit parameters, the review intelligently determines:\n1.\
+  \ **Scope**: What code to analyze (current file, changes, or full codebase)\n2.\
+  \ **Depth**: How thorough the analysis should be (quick, standard, or deep)\n3.\
+  \ **Principles**: Which architectural principles are most relevant\n4. **Format**:\
+  \ The most appropriate output format for the situation\n\n### Context Detection\
+  \ Rules\n\n#### Current File Context (`--context=current`)\n- Triggered when a file\
+  \ is open in the editor\n- Analyzes the current class/module and its immediate dependencies\n\
+  - Automatically sets `--depth=quick` for single files\n- Focuses on principles relevant\
+  \ to the file type\n\n#### Git Changes Context (`--context=changes`)\n- Triggered\
+  \ when uncommitted changes exist\n- Reviews modified files and their architectural\
+  \ impact\n- Sets `--depth=standard` for change sets\n- Emphasizes regression prevention\
+  \ and maintaining standards\n\n#### Recent Activity Context (`--context=recent`)\n\
+  - Reviews commits from current branch\n- Useful for pre-PR comprehensive review\n\
+  - Sets `--depth=standard` or `deep` based on change volume\n- Focus on architectural\
+  \ consistency\n\n#### Full Context (`--context=all`)\n- Complete codebase analysis\n\
+  - Sets `--depth=deep` for thorough review\n- Comprehensive principle evaluation\n\
+  \n## Targeted Component Analysis\n\n### Component Targeting Syntax\n\n```bash\n\
+  # Class-level analysis\n--target=class:ServiceCorrelationService\n\n# Package/namespace\
+  \ analysis\n--target=package:bet.fanatics.scorecards.service\n\n# Module analysis\n\
+  --target=module:scorecards-core\n\n# Layer analysis\n--target=layer:domain\n--target=layer:infrastructure\n\
+  --target=layer:application\n\n# Pattern-based targeting\n--target=pattern:*Repository\
+  \  # All repositories\n--target=pattern:*Controller  # All controllers\n--target=pattern:*Service\
+  \     # All services\n```\n\n### Target Resolution Strategy\n\n**Class Target**:\
+  \ Analyzes the class, its dependencies, interfaces, coupling, and single responsibility\n\
+  **Package Target**: Reviews all classes, package cohesion, inter-package dependencies,\
+  \ bounded contexts\n**Module Target**: Reviews module boundaries, public APIs, dependencies,\
+  \ separation of concerns\n**Layer Target**: Reviews layer compliance, dependency\
+  \ directions, clean architecture rules\n\n## Analysis Depth Configuration\n\n###\
+  \ Quick Assessment (`--depth=quick`)\n**Duration**: 5-10 minutes | **Use Cases**:\
+  \ PR reviews, spot checks, pre-commit validation\n\n- Targets component only with\
+  \ direct dependencies\n- Identifies obvious violations and critical issues (P0-P1)\n\
+  - Provides violation counts and top 3-5 issues\n- Quick fixes and pass/fail recommendation\n\
+  \n### Standard Review (`--depth=standard`)\n**Duration**: 15-30 minutes | **Use\
+  \ Cases**: Feature completion, sprint reviews, module refactoring\n\n- Targets and\
+  \ related components with transitive dependencies\n- Identifies common violations\
+  \ and P0-P2 issues\n- Provides scored assessment (1-10) with categorized issues\n\
+  - Refactoring suggestions and priority recommendations\n\n### Deep Analysis (`--depth=deep`)\n\
+  **Duration**: 30-60+ minutes | **Use Cases**: Architecture reviews, technical debt\
+  \ assessment\n\n- Complete dependency graph analysis\n- All architectural layers\
+  \ and comprehensive metrics\n- All priority issues with detailed scoring\n- Complete\
+  \ refactoring roadmap and documentation\n\n## Principle-Focused Reviews\n\n### Selective\
+  \ Principle Analysis\n\n```bash\n# Single principle focus\n--principles=srp    \
+  \                # Single Responsibility only\n--principles=dip,isp            \
+  \   # Dependency Inversion + Interface Segregation\n--principles=clean-arch,clean-code\
+  \  # Architecture and code quality\n--principles=all                    # Comprehensive\
+  \ analysis\n```\n\n### Principle Shortcuts\n\n- `srp`: Single Responsibility Principle\n\
+  - `ocp`: Open/Closed Principle\n- `lsp`: Liskov Substitution Principle\n- `isp`:\
+  \ Interface Segregation Principle\n- `dip`: Dependency Inversion Principle\n- `clean-arch`:\
+  \ Clean Architecture layers and boundaries\n- `clean-code`: Naming, functions, organization,\
+  \ error handling\n- `ddd`: Domain-Driven Design patterns and boundaries\n- `patterns`:\
+  \ Design pattern usage and opportunities\n- `coupling`: Coupling and cohesion analysis\n\
+  \n## Output Format Options\n\n### Summary Format (`--format=summary`)\nConcise overview\
+  \ with score, critical issues, and quick wins. Ideal for quick assessments.\n\n\
+  ### PR Review Format (`--format=pr-review`)\nStructured feedback for pull requests\
+  \ with approval status, good practices, and suggestions.\n\n### Actionable Format\
+  \ (`--format=actionable`)\nStep-by-step refactoring plans with specific commands\
+  \ and agent usage instructions.\n\n### Detailed Format (`--format=detailed`)\nComprehensive\
+  \ analysis with examples, metrics, and in-depth recommendations (default for deep\
+  \ analysis).\n\n### Report Format (`--format=report`)\nExecutive-friendly format\
+  \ with visualizations, trends, and strategic recommendations.\n\n## Enhanced Usage\
+  \ Examples\n\n### Context-Aware Quick Reviews\n```bash\n# Auto-detect context and\
+  \ scope\n/quality:architecture-review\n\n# Quick review of current file\n/quality:architecture-review\
+  \ --context=current\n\n# PR review of changes\n/quality:architecture-review --context=changes\
+  \ --format=pr-review\n```\n\n### Targeted Analysis\n```bash\n# Review specific class\
+  \ for SOLID violations\n/quality:architecture-review --target=class:UserService\
+  \ --principles=srp,ocp,lsp,isp,dip\n\n# Deep coupling analysis of a module\n/quality:architecture-review\
+  \ --target=module:core --principles=coupling --depth=deep\n\n# DDD review of domain\
+  \ layer\n/quality:architecture-review --target=layer:domain --principles=ddd\n```\n\
+  \n### Workflow Integration\n```bash\n# Pre-commit check\n/quality:architecture-review\
+  \ --context=changes --depth=quick --format=summary\n\n# Sprint review\n/quality:architecture-review\
+  \ --context=recent --depth=standard --format=actionable\n\n# Technical debt assessment\n\
+  /quality:architecture-review --depth=deep --format=report\n```\n\n## Backward Compatibility\n\
+  \nThe command maintains full backward compatibility:\n- Basic invocation (`/quality:architecture-review`)\
+  \ works identically\n- Path arguments are still supported\n- `--focus` flag is mapped\
+  \ to `--principles` for legacy support\n- Default behavior preserved when no options\
+  \ specified\n\n---\n\n## Review Framework\n\nThis review is grounded in authoritative\
+  \ software engineering principles:\n\n### 1. **SOLID Principles**\n- **Single Responsibility\
+  \ Principle (SRP)**: Classes have one reason to change\n- **Open/Closed Principle\
+  \ (OCP)**: Open for extension, closed for modification\n- **Liskov Substitution\
+  \ Principle (LSP)**: Subtypes replaceable with base types\n- **Interface Segregation\
+  \ Principle (ISP)**: No client forced to depend on unused methods\n- **Dependency\
+  \ Inversion Principle (DIP)**: Depend on abstractions, not concretions\n\n### 2.\
+  \ **Clean Architecture Layers**\n- **Entities Layer**: Enterprise-wide business\
+  \ rules\n- **Use Cases Layer**: Application-specific business rules\n- **Interface\
+  \ Adapters Layer**: Controllers, presenters, gateways\n- **Frameworks and Drivers\
+  \ Layer**: External tools and frameworks\n- **Dependency Rule**: Dependencies point\
+  \ inward toward business logic\n\n### 3. **Clean Code Principles**\n- **Meaningful\
+  \ Names**: Intention-revealing, searchable, pronounceable\n- **Functions**: Small,\
+  \ single responsibility, few arguments\n- **Comments**: Explain \"why\" not \"what\"\
+  , avoid redundancy\n- **Error Handling**: Use exceptions, informative messages,\
+  \ don't return null\n- **Classes**: Small, high cohesion, maintain encapsulation\n\
+  \n### 4. **Domain-Driven Design**\n- **Ubiquitous Language**: Shared vocabulary\
+  \ in code\n- **Bounded Contexts**: Explicit boundaries for domain models\n- **Entities**:\
+  \ Identity-based domain objects\n- **Value Objects**: Attribute-based immutable\
+  \ objects\n- **Aggregates**: Transaction and consistency boundaries\n- **Domain\
+  \ Events**: Business-significant occurrences\n- **Repositories**: Collection-like\
+  \ access to aggregates\n\n### 5. **Design Patterns**\n- **Creational**: Factory,\
+  \ Singleton, Builder\n- **Structural**: Adapter, Facade, Decorator\n- **Behavioral**:\
+  \ Strategy, Observer, Command\n\n---\n\n## Phase 1: Discovery and Mapping (Using\
+  \ Explore Agent)\n\nUse the **Explore agent** to systematically discover and map\
+  \ the architecture:\n\n### Codebase Exploration Tasks\n\n1. **Identify Project Structure**:\n\
+  \   - Find main source directories and package organization\n   - Identify framework\
+  \ and technology choices\n   - Discover configuration and dependency management\n\
+  \   - Map test structure and coverage\n\n2. **Discover Domain Boundaries**:\n  \
+  \ - Search for domain models and entities\n   - Identify services and use cases\n\
+  \   - Find repositories and data access patterns\n   - Locate infrastructure and\
+  \ framework code\n\n3. **Analyze Dependencies**:\n   - Map import/dependency relationships\n\
+  \   - Identify coupling between modules\n   - Find circular dependencies\n   - Discover\
+  \ tight coupling to frameworks\n\n4. **Find Key Abstractions**:\n   - Locate interfaces\
+  \ and abstract classes\n   - Identify design pattern implementations\n   - Find\
+  \ dependency injection usage\n   - Discover architectural boundaries\n\n### Exploration\
+  \ Queries\n\nLaunch the Explore agent with these queries (adjust based on language/framework):\n\
+  \n```\n# Project structure and organization\n\"What is the overall project structure\
+  \ and how is code organized?\"\n\n# Domain model discovery\n\"Find all domain entities,\
+  \ value objects, and aggregates\"\n\n# Dependency analysis\n\"Analyze coupling between\
+  \ packages/modules and identify tight coupling\"\n\n# Interface and abstraction\
+  \ usage\n\"Find all interfaces and analyze dependency inversion usage\"\n\n# Design\
+  \ pattern usage\n\"Identify design pattern implementations (Factory, Strategy, Repository,\
+  \ etc.)\"\n\n# Testing architecture\n\"Analyze test structure and how tests are\
+  \ organized relative to production code\"\n```\n\n---\n\n## Phase 2: Principle-by-Principle\
+  \ Analysis\n\n### SOLID Principles Analysis\n\n**Single Responsibility Principle\
+  \ (SRP)**\n- [ ] Identify classes with multiple responsibilities\n- [ ] Look for\
+  \ classes that change for multiple reasons\n- [ ] Check for \"God classes\" (>500\
+  \ lines, many methods)\n- [ ] Verify each class has clear, focused purpose\n- [\
+  \ ] Example violations:\n  - Classes mixing business logic with persistence\n  -\
+  \ Controllers handling validation, business rules, and presentation\n  - Services\
+  \ doing too many unrelated tasks\n\n**Open/Closed Principle (OCP)**\n- [ ] Find\
+  \ code requiring modification for extensions\n- [ ] Check for long if/else or switch\
+  \ statements on types\n- [ ] Verify use of polymorphism for behavior variation\n\
+  - [ ] Look for hardcoded dependencies that prevent extension\n- [ ] Example violations:\n\
+  \  - Switch statements on enum/type that require modification\n  - Classes that\
+  \ can't be extended without modifying source\n\n**Liskov Substitution Principle\
+  \ (LSP)**\n- [ ] Verify subtypes can replace base types\n- [ ] Check for override\
+  \ methods that change expected behavior\n- [ ] Look for precondition strengthening\
+  \ or postcondition weakening\n- [ ] Identify inheritance misuse (using inheritance\
+  \ for code reuse only)\n- [ ] Example violations:\n  - Subclasses throwing unexpected\
+  \ exceptions\n  - Overridden methods with stricter preconditions\n\n**Interface\
+  \ Segregation Principle (ISP)**\n- [ ] Find \"fat\" interfaces with many methods\n\
+  - [ ] Check for clients depending on unused methods\n- [ ] Verify interfaces are\
+  \ client-specific, not general-purpose\n- [ ] Look for interfaces forcing empty\
+  \ implementations\n- [ ] Example violations:\n  - Large interfaces with 10+ methods\n\
+  \  - Implementations with many no-op methods\n\n**Dependency Inversion Principle\
+  \ (DIP)**\n- [ ] Check high-level modules depending on low-level modules\n- [ ]\
+  \ Verify dependencies on abstractions (interfaces) not concretions\n- [ ] Look for\
+  \ new keyword creating concrete dependencies\n- [ ] Check for proper dependency\
+  \ injection usage\n- [ ] Example violations:\n  - Business logic directly instantiating\
+  \ database implementations\n  - Controllers creating service instances directly\n\
+  \n### Clean Architecture Analysis\n\n**Layer Separation and Dependency Rule**\n\
+  - [ ] Map code to architectural layers (Entities, Use Cases, Adapters, Frameworks)\n\
+  - [ ] Verify dependencies only point inward\n- [ ] Check for business logic free\
+  \ of framework dependencies\n- [ ] Identify leaky abstractions between layers\n\
+  - [ ] Example violations:\n  - Domain entities depending on ORM annotations\n  -\
+  \ Use cases importing web framework types\n  - Business logic coupled to database\
+  \ implementation\n\n**Boundary Crossings**\n- [ ] Verify proper use of interfaces\
+  \ at boundaries\n- [ ] Check data structures crossing boundaries (DTOs)\n- [ ] Look\
+  \ for framework types leaking into domain\n- [ ] Identify proper adapter usage\n\
+  - [ ] Example violations:\n  - HTTP request/response objects in domain layer\n \
+  \ - Database entities used as domain models\n  - Framework exceptions propagating\
+  \ to business logic\n\n**Testability**\n- [ ] Verify business rules testable without\
+  \ frameworks\n- [ ] Check for mocking capabilities at boundaries\n- [ ] Look for\
+  \ dependency injection enabling test doubles\n- [ ] Identify hard-to-test code due\
+  \ to tight coupling\n- [ ] Example issues:\n  - Business logic requiring database\
+  \ for testing\n  - Use cases needing web server to test\n  - Static dependencies\
+  \ preventing mocking\n\n### Clean Code Analysis\n\n**Naming Quality**\n- [ ] Check\
+  \ for intention-revealing names\n- [ ] Identify abbreviations and unclear names\n\
+  - [ ] Look for inconsistent naming conventions\n- [ ] Verify domain language used\
+  \ in code\n- [ ] Example violations:\n  - `processData()`, `doStuff()`, `handle()`\n\
+  \  - Single-letter variables (except loop counters)\n  - Inconsistent naming (getUser\
+  \ vs fetchUser vs retrieveUser)\n\n**Function Quality**\n- [ ] Identify long functions\
+  \ (>20 lines)\n- [ ] Check for functions doing multiple things\n- [ ] Look for functions\
+  \ with many parameters (>3)\n- [ ] Verify functions at single abstraction level\n\
+  - [ ] Example violations:\n  - Functions with mixed abstraction (high and low level)\n\
+  \  - Functions with side effects not indicated by name\n  - Functions both querying\
+  \ and mutating state\n\n**Comment Quality**\n- [ ] Identify redundant comments (explaining\
+  \ obvious code)\n- [ ] Look for outdated or misleading comments\n- [ ] Check if\
+  \ comments indicate code smell (needs refactoring)\n- [ ] Verify meaningful comments\
+  \ explain \"why\" not \"what\"\n- [ ] Example issues:\n  - `// increment counter`\
+  \ above `counter++;`\n  - Commented-out code blocks\n  - TODOs without tickets or\
+  \ timelines\n\n**Error Handling**\n- [ ] Check for proper exception usage\n- [ ]\
+  \ Look for null returns/checks that could use Optional\n- [ ] Verify informative\
+  \ error messages\n- [ ] Identify swallowed exceptions (empty catch blocks)\n- [\
+  \ ] Example violations:\n  - Returning null instead of Optional or empty collections\n\
+  \  - Generic exception messages without context\n  - Catch-all exception handlers\n\
+  \n**Code Organization**\n- [ ] Check for logical grouping within classes\n- [ ]\
+  \ Verify vertical ordering (public → private)\n- [ ] Look for mixed concerns in\
+  \ single file\n- [ ] Identify inconsistent formatting\n- [ ] Example issues:\n \
+  \ - Private methods at top, public at bottom\n  - Related functionality scattered\
+  \ across file\n  - Inconsistent indentation or spacing\n\n### Domain-Driven Design\
+  \ Analysis\n\n**Ubiquitous Language**\n- [ ] Verify business terminology used in\
+  \ code\n- [ ] Check for technical jargon where business terms should be\n- [ ] Look\
+  \ for inconsistent naming of domain concepts\n- [ ] Identify translation layers\
+  \ between business and code\n- [ ] Example violations:\n  - Business calls it \"\
+  Reservation\" but code uses \"Booking\"\n  - Domain concepts named with generic\
+  \ terms (Manager, Handler, Processor)\n\n**Bounded Contexts**\n- [ ] Identify logical\
+  \ domain boundaries\n- [ ] Check for clearly separated contexts\n- [ ] Look for\
+  \ context mixing (same concept different meanings)\n- [ ] Verify anti-corruption\
+  \ layers between contexts\n- [ ] Example issues:\n  - \"Customer\" meaning different\
+  \ things without separation\n  - Shared models across different business domains\n\
+  \  - Missing translation between contexts\n\n**Tactical Patterns Usage**\n- [ ]\
+  \ Identify Entities vs Value Objects usage\n- [ ] Check for proper Aggregate boundaries\n\
+  - [ ] Verify Aggregate Root enforcement\n- [ ] Look for Domain Events capturing\
+  \ business occurrences\n- [ ] Analyze Repository abstraction quality\n- [ ] Example\
+  \ issues:\n  - Everything modeled as Entity (no Value Objects)\n  - Missing Aggregate\
+  \ boundaries (direct access to internals)\n  - Anemic domain model (all logic in\
+  \ services)\n\n**Domain Services**\n- [ ] Check for stateless domain operations\n\
+  - [ ] Verify services contain domain logic, not just orchestration\n- [ ] Look for\
+  \ services that should be entity methods\n- [ ] Identify infrastructure concerns\
+  \ in domain services\n- [ ] Example violations:\n  - Domain services with database\
+  \ dependencies\n  - Services with getter/setter only (should be value objects)\n\
+  \n**Anemic Domain Model Detection**\n- [ ] Identify entities with only getters/setters\n\
+  - [ ] Check for business logic in service layer instead of domain\n- [ ] Look for\
+  \ validation outside domain objects\n- [ ] Verify invariant enforcement in aggregates\n\
+  - [ ] Example violations:\n  - All business rules in application services\n  - Domain\
+  \ objects as data containers only\n  - Public setters allowing invalid state\n\n\
+  ### Design Patterns Analysis\n\n**Pattern Recognition**\n- [ ] Identify existing\
+  \ pattern implementations\n- [ ] Check for correct pattern application\n- [ ] Look\
+  \ for pattern misuse or over-engineering\n- [ ] Verify patterns solve actual problems\n\
+  - [ ] Common patterns to identify:\n  - Factory/Factory Method for object creation\n\
+  \  - Repository for data access abstraction\n  - Strategy for algorithm variation\n\
+  \  - Observer for event handling\n  - Adapter for interface translation\n  - Facade\
+  \ for subsystem simplification\n\n**Pattern Opportunities**\n- [ ] Identify code\
+  \ that would benefit from patterns\n- [ ] Look for duplicated object creation logic\
+  \ (need Factory)\n- [ ] Find complex conditional logic (need Strategy)\n- [ ] Check\
+  \ for tight coupling to implementations (need Adapter/Facade)\n- [ ] Verify proper\
+  \ abstraction of concerns\n\n---\n\n## Phase 3: Coupling and Dependency Analysis\n\
+  \n### Types of Coupling to Identify\n\n**Tight Coupling Indicators**\n- [ ] Direct\
+  \ class instantiation (new keyword)\n- [ ] Static method calls\n- [ ] Concrete class\
+  \ dependencies instead of interfaces\n- [ ] Framework types in domain code\n- [\
+  \ ] Circular dependencies\n\n**Coupling Metrics**\n- [ ] Afferent coupling (Ca):\
+  \ Incoming dependencies\n- [ ] Efferent coupling (Ce): Outgoing dependencies\n-\
+  \ [ ] Instability (I = Ce / (Ca + Ce)): 0=stable, 1=unstable\n- [ ] Distance from\
+  \ main sequence\n\n**Dependency Analysis**\n- [ ] Create dependency graph of key\
+  \ modules\n- [ ] Identify coupling hotspots (highly coupled modules)\n- [ ] Find\
+  \ circular dependencies\n- [ ] Check dependency direction (should point toward stable\
+  \ abstractions)\n\n### Cohesion Analysis\n\n**High Cohesion Indicators** (Good)\n\
+  - [ ] Methods use most instance variables\n- [ ] All methods support single responsibility\n\
+  - [ ] Clear focused purpose\n- [ ] Related functionality grouped\n\n**Low Cohesion\
+  \ Indicators** (Bad)\n- [ ] Methods using different subsets of variables\n- [ ]\
+  \ Unrelated functionality in single class\n- [ ] \"Utility\" classes with disparate\
+  \ methods\n- [ ] Large classes doing many things\n\n---\n\n## Phase 4: Architecture\
+  \ Review Report\n\n### Report Structure\n\nGenerate a comprehensive report with\
+  \ the following sections:\n\n#### 1. Executive Summary\n- Overall architecture quality\
+  \ score (1-10)\n- Key strengths identified\n- Critical issues requiring immediate\
+  \ attention\n- Recommended priority for improvements\n\n#### 2. Principle Adherence\
+  \ Analysis\n\n**SOLID Principles** (Score each 1-10)\n- **SRP Score**: X/10\n  -\
+  \ Violations found: [count]\n  - Example violations: [file:line references]\n  -\
+  \ Impact: [description]\n  - Recommendations: [specific improvements]\n\n- **OCP\
+  \ Score**: X/10\n  - Areas requiring modification for extension: [list]\n  - Example\
+  \ violations: [file:line references]\n  - Impact: [description]\n  - Recommendations:\
+  \ [specific improvements]\n\n- **LSP Score**: X/10\n  - Inheritance issues found:\
+  \ [list]\n  - Example violations: [file:line references]\n  - Impact: [description]\n\
+  \  - Recommendations: [specific improvements]\n\n- **ISP Score**: X/10\n  - Fat\
+  \ interfaces found: [count]\n  - Example violations: [file:line references]\n  -\
+  \ Impact: [description]\n  - Recommendations: [specific improvements]\n\n- **DIP\
+  \ Score**: X/10\n  - Concrete dependencies found: [count]\n  - Example violations:\
+  \ [file:line references]\n  - Impact: [description]\n  - Recommendations: [specific\
+  \ improvements]\n\n**Clean Architecture** (Score each 1-10)\n- **Layer Separation**:\
+  \ X/10\n  - Dependency violations: [list with file:line]\n  - Leaky abstractions:\
+  \ [list]\n  - Recommendations: [specific improvements]\n\n- **Testability**: X/10\n\
+  \  - Hard-to-test areas: [list]\n  - Framework dependencies in domain: [count]\n\
+  \  - Recommendations: [specific improvements]\n\n**Clean Code** (Score each 1-10)\n\
+  - **Naming Quality**: X/10\n  - Unclear names found: [count]\n  - Recommendations:\
+  \ [specific improvements]\n\n- **Function Quality**: X/10\n  - Long functions (>20\
+  \ lines): [count]\n  - High parameter counts: [list]\n  - Recommendations: [specific\
+  \ improvements]\n\n- **Code Organization**: X/10\n  - Organizational issues: [list]\n\
+  \  - Recommendations: [specific improvements]\n\n**Domain-Driven Design** (Score\
+  \ each 1-10)\n- **Ubiquitous Language**: X/10\n  - Terminology mismatches: [list]\n\
+  \  - Recommendations: [specific improvements]\n\n- **Bounded Contexts**: X/10\n\
+  \  - Context boundary issues: [list]\n  - Recommendations: [specific improvements]\n\
+  \n- **Tactical Patterns**: X/10\n  - Anemic domain model indicators: [yes/no with\
+  \ evidence]\n  - Missing patterns: [list]\n  - Recommendations: [specific improvements]\n\
+  \n**Design Patterns** (Score 1-10)\n- **Pattern Usage**: X/10\n  - Patterns found:\
+  \ [list with purpose]\n  - Pattern misuse: [list with issues]\n  - Missing pattern\
+  \ opportunities: [list]\n  - Recommendations: [specific improvements]\n\n#### 3.\
+  \ Coupling and Cohesion Analysis\n\n**Coupling Issues**\n- Highly coupled modules:\
+  \ [list with coupling metrics]\n- Circular dependencies: [list]\n- Framework coupling\
+  \ in domain: [list with file:line]\n- Recommendations: [specific decoupling strategies]\n\
+  \n**Cohesion Issues**\n- Low cohesion classes: [list with descriptions]\n- \"God\
+  \ classes\": [list with line counts]\n- Recommendations: [specific improvements]\n\
+  \n#### 4. Critical Issues (Priority Ranking)\n\n**P0 - Critical** (Fix Immediately)\n\
+  1. [Issue description with file:line]\n   - **Impact**: [business/technical impact]\n\
+  \   - **Root Cause**: [explanation]\n   - **Recommendation**: [specific fix with\
+  \ code-refactoring agent usage]\n\n**P1 - High Priority** (Fix This Sprint)\n1.\
+  \ [Issue description with file:line]\n   - **Impact**: [business/technical impact]\n\
+  \   - **Root Cause**: [explanation]\n   - **Recommendation**: [specific fix]\n\n\
+  **P2 - Medium Priority** (Plan for Next Sprint)\n1. [Issue description with file:line]\n\
+  \   - **Impact**: [business/technical impact]\n   - **Root Cause**: [explanation]\n\
+  \   - **Recommendation**: [specific fix]\n\n**P3 - Low Priority** (Technical Debt\
+  \ Backlog)\n1. [Issue description with file:line]\n   - **Impact**: [business/technical\
+  \ impact]\n   - **Root Cause**: [explanation]\n   - **Recommendation**: [specific\
+  \ fix]\n\n#### 5. Refactoring Recommendations\n\nFor each major issue, provide:\n\
+  \n**Refactoring Plan**:\n1. **Current State**: [describe current implementation]\n\
+  2. **Target State**: [describe desired implementation]\n3. **Refactoring Steps**:\n\
+  \   - Step 1: [specific action]\n   - Step 2: [specific action]\n   - Step 3: [specific\
+  \ action]\n4. **Agent Usage**: [which agent to use - code-refactoring, Explore,\
+  \ etc.]\n5. **Testing Strategy**: [how to verify refactoring]\n6. **Risk Assessment**:\
+  \ [what could go wrong]\n\n#### 6. Architecture Improvement Roadmap\n\n**Short Term\
+  \ (1-2 Sprints)**\n- [ ] Priority 0 and 1 issues\n- [ ] Quick wins with high impact\n\
+  - [ ] Establish architectural standards\n\n**Medium Term (3-6 Sprints)**\n- [ ]\
+  \ Priority 2 issues\n- [ ] Introduce missing patterns\n- [ ] Improve layer separation\n\
+  - [ ] Refactor high-coupling areas\n\n**Long Term (6+ Sprints)**\n- [ ] Priority\
+  \ 3 issues\n- [ ] Comprehensive refactoring\n- [ ] Architecture documentation\n\
+  - [ ] Team training and knowledge sharing\n\n#### 7. Positive Patterns and Strengths\n\
+  \nDocument what the codebase does well:\n- Well-implemented patterns: [list with\
+  \ examples]\n- Good abstractions: [list with examples]\n- Strong separation of concerns:\
+  \ [list with examples]\n- High-quality code areas: [list with file references]\n\
+  \nThese should be protected and used as examples for improvements.\n\n---\n\n##\
+  \ Phase 5: Actionable Implementation Plan\n\n### Using Agents for Improvements\n\
+  \n**For Structural Refactoring**: Use `code-refactoring` agent\n```\n# Example:\
+  \ Extract interface for dependency inversion\nUse code-refactoring agent to extract\
+  \ interface from concrete class\nand update all dependencies to use the abstraction\n\
+  ```\n\n**For Understanding Impact**: Use `Explore` agent\n```\n# Example: Find all\
+  \ usages before refactoring\nUse Explore agent to find all usages of a class before\n\
+  extracting functionality or changing interfaces\n```\n\n**For Research**: Use `knowledge-synthesis`\
+  \ agent\n```\n# Example: Research pattern implementation\nUse knowledge-synthesis\
+  \ agent to research best practices\nfor implementing Repository pattern in [your\
+  \ framework]\n```\n\n### Creating Follow-Up Tickets\n\nFor each P0-P2 issue, create\
+  \ tickets with:\n- **Title**: Clear, actionable description\n- **Description**:\
+  \ Issue explanation, current state, target state\n- **Acceptance Criteria**: How\
+  \ to verify fix\n- **References**: File:line references, related tickets\n- **Effort\
+  \ Estimate**: Based on complexity and scope\n- **Priority**: Based on impact and\
+  \ risk\n\n---\n\n## Review Execution Strategy\n\n### Step 1: Automated Discovery\
+  \ (15-20% of effort)\nLaunch Explore agent with systematic queries to map architecture\n\
+  \n### Step 2: Principle Analysis (40-50% of effort)\nDeep analysis of each principle\
+  \ with concrete examples and metrics\n\n### Step 3: Report Generation (20-30% of\
+  \ effort)\nComprehensive report with scores, examples, and recommendations\n\n###\
+  \ Step 4: Actionable Planning (10-20% of effort)\nPrioritized roadmap with agent\
+  \ usage and ticket creation\n\n---\n\n## Success Criteria\n\n- ✅ Complete mapping\
+  \ of architectural layers and dependencies\n- ✅ Scored assessment of each principle\
+  \ (SOLID, Clean Architecture, etc.)\n- ✅ Concrete examples for each violation (file:line\
+  \ references)\n- ✅ Prioritized list of issues (P0-P3)\n- ✅ Actionable refactoring\
+  \ plans with specific steps\n- ✅ Agent usage guidance for each improvement\n- ✅\
+  \ Short/medium/long-term roadmap\n- ✅ Documentation of architectural strengths to\
+  \ preserve\n\n---\n\n## Usage Examples\n\n```bash\n# Review entire codebase\n/quality:architecture-review\n\
+  \n# Review specific module/package\n/quality:architecture-review src/main/java/com/example/payments\n\
+  \n# Review with focus on specific principle\n/quality:architecture-review --focus=solid\n\
+  \n# Review with emphasis on coupling\n/quality:architecture-review --focus=coupling\n\
+  ```\n\n---\n\n## Anti-Patterns to Watch For\n\n### Over-Engineering\n- ✅ Recommend\
+  \ patterns only when justified by complexity\n- ✅ Don't force DDD on simple CRUD\
+  \ operations\n- ✅ Consider project context and constraints\n\n### Perfectionism\n\
+  - ✅ Prioritize based on actual impact, not theoretical purity\n- ✅ Accept pragmatic\
+  \ trade-offs when appropriate\n- ✅ Focus on high-value improvements first\n\n###\
+  \ Analysis Paralysis\n- ✅ Provide concrete, actionable recommendations\n- ✅ Break\
+  \ large refactorings into incremental steps\n- ✅ Balance thoroughness with practicality\n\
+  \n---\n\n## Integration with Development Workflow\n\n**During Sprint Planning**:\n\
+  - Review P0-P1 issues and plan fixes\n- Allocate time for architectural improvements\
+  \ (20% of capacity)\n- Include architecture tickets in sprint backlog\n\n**During\
+  \ Development**:\n- Apply findings to new code\n- Use review as reference for design\
+  \ decisions\n- Follow refactoring recommendations incrementally\n\n**During Code\
+  \ Review**:\n- Reference architecture review findings\n- Ensure new code doesn't\
+  \ repeat identified anti-patterns\n- Validate improvements align with recommendations\n\
+  \n**During Retrospectives**:\n- Track progress on architecture improvements\n- Measure\
+  \ impact of refactoring efforts\n- Adjust priorities based on learnings\n\n---\n\
+  \n## Related Commands\n\n- `/code:implement` - Implement features following best\
+  \ practices\n- `/fix-failures` - Systematically fix test and linter failures\n-\
+  \ `/quality:refactor-code` - Refactor specific code using established principles\n\
+  \n---\n\n**Remember**: Architecture reviews are most valuable when they lead to\
+  \ concrete improvements. Focus on actionable recommendations that balance ideal\
+  \ design with pragmatic constraints. Use agents strategically to accelerate implementation\
+  \ of architectural improvements.\n"
 ---
 
 # Architecture Review: Context-Aware Analysis

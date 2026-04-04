@@ -1,12 +1,10 @@
 ---
+name: github-pr
 description: This skill should be used when working with GitHub pull requests, reviewing
   PRs, creating PRs, checking PR status, viewing PR comments, analyzing CI failures,
   or using gh CLI commands. Emphasizes token-efficient patterns using filters, file
   buffers, and targeted queries.
-mode: subagent
 temperature: 0.1
-tools: []
-name: github-pr
 ---
 
 # GitHub Pull Request Operations

@@ -15,7 +15,7 @@ Follow this systematic approach for research, fact-finding, or web verification 
 
 - Break down the query into core components
 - Identify key concepts and relationships
-- Plan search and verification strategy
+- **For multi-subtopic queries (2+ distinct aspects): write `research_plan.md` first** — list subtopics, assign search strategy per subtopic, and commit to scope before searching
 - Determine which tools will be most effective
 
 ### 2. Primary Search (Brave Search)
@@ -51,6 +51,8 @@ Follow this systematic approach for research, fact-finding, or web verification 
 - NEVER make consecutive calls without sleeping 1+ seconds
 - OR run a different command between searches
 
+**Search cap**: 3–5 searches maximum per subtopic — scope each subtopic in `research_plan.md` before starting to prevent runaway token usage.
+
 **Best practices**:
 - Use `count` parameter for result volume
 - Apply `offset` for pagination
@@ -74,6 +76,16 @@ Follow this systematic approach for research, fact-finding, or web verification 
 - Access dates
 - Source links for quotes
 - Citation metadata from search results
+
+## Multi-Topic Research Protocol
+
+For queries with 2+ distinct subtopics, use parallel subagent delegation instead of sequential in-context research:
+
+1. **Write `research/research_plan.md` first** — list each subtopic, its search strategy, and a 3–5 search cap
+2. **Delegate in parallel** — spawn one Task subagent per subtopic (up to 3 simultaneously); each subagent writes findings to `research/findings-<subtopic>.md`
+3. **Synthesize from files** — read findings files back into context only at synthesis time; do not accumulate subagent output in-context
+
+This isolates each subtopic's context window, preventing degradation across long research sessions (see `context-engineering` skill for the underlying principle).
 
 ## Best Practices
 

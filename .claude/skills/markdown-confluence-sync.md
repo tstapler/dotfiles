@@ -1,45 +1,70 @@
 ---
 name: markdown-confluence-sync
-description: Sync markdown projects to Confluence using the markdown_confluence tool.
-  Use for publishing, crawling, and managing Confluence pages from local markdown
-  files.
+description: Publish markdown files to Confluence, crawl Confluence pages to local
+  markdown, sync bidirectionally, validate links, and manage page hierarchy. Use when
+  publishing documentation, downloading Confluence content, checking sync status,
+  resolving conflicts, managing comments, or troubleshooting Confluence page issues.
 ---
 
 # Markdown Confluence Sync
 
-Synchronize local markdown projects with Confluence using the `markdown-confluence` CLI tool.
+Manage the bidirectional flow between local markdown files and Confluence pages using the `markdown-confluence` CLI.
 
-## Tool Location
+## Tool Binary
 
-```bash
+```
 /Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence/.venv/bin/markdown-confluence
 ```
 
-## Quick Reference
+All commands below use this absolute path. Alias as `MC` in examples for brevity.
 
-### Environment Variables (Required for Authentication)
+## Authentication
+
+Three environment variables are required for every operation:
 
 ```bash
 export CONFLUENCE_BASE_URL="https://betfanatics.atlassian.net"
 export ATLASSIAN_USER_NAME="tyler.stapler@betfanatics.com"
-# ATLASSIAN_API_TOKEN must be set (retrieved from keychain/secrets)
+# ATLASSIAN_API_TOKEN must be set (from keychain or secrets manager)
+# Create at: https://id.atlassian.net/manage-profile/security/api-tokens
 ```
 
-### Core Commands
+Verify setup:
+
+```bash
+CONFLUENCE_BASE_URL="https://betfanatics.atlassian.net" \
+ATLASSIAN_USER_NAME="tyler.stapler@betfanatics.com" \
+/Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence/.venv/bin/markdown-confluence \
+status --env
+```
+
+## Command Map
 
 | Command | Purpose |
 |---------|---------|
 | `publish` | Upload markdown to Confluence |
-| `crawl page` | Download a single Confluence page |
-| `crawl page-tree` | Download page and descendants |
-| `handle-deleted` | Manage deleted local files |
-| `validate-links` | Check broken links |
+| `crawl page` | Download a single page |
+| `crawl page-tree` | Download page and all descendants |
+| `crawl space` | Download entire space |
+| `sync status` | Check sync status of files |
+| `sync pull` | Pull remote changes to local |
+| `sync resolve` | Interactively resolve conflicts |
+| `handle-deleted` | Report/delete/archive removed pages |
+| `validate-links` | Check for broken links |
+| `cache` | Clear/inspect content cache |
+| `comments fetch` | Fetch page comments |
+| `comments add` | Add footer comment |
+| `comments reply` | Reply to a comment |
+| `migrate-editor` | Migrate legacy editor pages to ADF |
+| `crawl page-versions` | Fetch/compare page version history |
+| `crawl analyze-adf` | Analyze ADF document structure |
+| `crawl compare` | Compare markdown with generated ADF |
 
-## Publishing Workflow
+## Workflow 1: Publish Markdown to Confluence
 
-### 1. Setup Configuration
+### Step 1: Create Config File
 
-Create `.markdown-confluence.json` in your project:
+Create `.markdown-confluence.json` in your project root:
 
 ```json
 {
@@ -57,20 +82,21 @@ Create `.markdown-confluence.json` in your project:
 }
 ```
 
-### 2. Add Frontmatter to Markdown Files
+### Step 2: Add Frontmatter to Files
 
 ```markdown
 ---
 connie-title: "Custom Page Title"
-connie-page-id: "123456"        # Existing page ID (auto-added after first publish)
-connie-parent-id: "789012"      # Override parent page
-connie-publish: true            # Set false to skip
+connie-parent-id: "789012"      # Override parent page (optional)
+connie-publish: true             # Set false to skip
 ---
 
 # Your Content Here
 ```
 
-### 3. Publish Commands
+After first publish, `connie-page-id` is auto-injected for future updates.
+
+### Step 3: Dry Run Then Publish
 
 ```bash
 # Always dry-run first
@@ -82,15 +108,39 @@ publish . --config .markdown-confluence.json --dry-run --verbose
 # Actual publish
 /Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence/.venv/bin/markdown-confluence \
 publish . --config .markdown-confluence.json --verbose
-
-# Force update unchanged content
-publish . --config .markdown-confluence.json --force
-
-# Stop on first error
-publish . --config .markdown-confluence.json --fail-fast
 ```
 
-## Crawling Confluence
+### One-Off Single File Publish
+
+Publish a single file without a config file using CLI flags:
+
+```bash
+/Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence/.venv/bin/markdown-confluence \
+publish ONE_PAGER.md --parent-id "1394901392" --verbose
+```
+
+Or update an existing page:
+
+```bash
+/Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence/.venv/bin/markdown-confluence \
+publish updated_doc.md --page-id "2307522893" --verbose
+```
+
+### Key Publish Options
+
+| Option | Effect |
+|--------|--------|
+| `--dry-run` | Preview without publishing |
+| `--force` | Force update unchanged pages |
+| `--fail-fast` | Stop on first error |
+| `--delete-archived` | Delete archived pages (default: on) |
+| `--force-hierarchy` | Use directory structure, ignore frontmatter parents |
+| `--update-frontmatter` | Update frontmatter parent IDs (requires `--force-hierarchy`) |
+| `--pattern "**/*.md"` | Filter files to publish |
+| `--exclude "**/drafts/**"` | Exclude file patterns |
+| `--private` | Restrict page to current user only |
+
+## Workflow 2: Crawl Confluence Pages
 
 ### Download Single Page
 
@@ -98,67 +148,112 @@ publish . --config .markdown-confluence.json --fail-fast
 CONFLUENCE_BASE_URL="https://betfanatics.atlassian.net" \
 ATLASSIAN_USER_NAME="tyler.stapler@betfanatics.com" \
 /Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence/.venv/bin/markdown-confluence \
-crawl page PAGE_ID_OR_URL --output ./output_dir --verbose
+crawl page 1070956670 --output /tmp/crawled_page --verbose
+```
+
+Accepts page IDs or full URLs:
+
+```bash
+/Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence/.venv/bin/markdown-confluence \
+crawl page "https://betfanatics.atlassian.net/wiki/spaces/ENG/pages/1070956670/My+Page" \
+--output /tmp/crawled_page --verbose
 ```
 
 ### Download Page Tree
 
 ```bash
-markdown-confluence crawl page-tree PAGE_ID --output ./output_dir --max-depth 3 --verbose
+/Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence/.venv/bin/markdown-confluence \
+crawl page-tree 1070956670 --output /tmp/crawled_tree --max-depth 3 --verbose
 ```
 
-## Key Publish Options
+### Download Entire Space
 
-| Option | Description |
-|--------|-------------|
-| `--dry-run` | Preview without publishing |
-| `--verbose` / `-v` | Increase output detail |
-| `--force` | Force update unchanged pages |
-| `--fail-fast` | Stop on first error |
-| `--delete-archived` | Delete archived pages |
-| `--force-hierarchy` | Use directory structure for hierarchy |
-| `--update-frontmatter` | Update frontmatter with corrected IDs |
-| `--pattern "**/*.md"` | Filter files to publish |
-| `--exclude "**/draft/**"` | Exclude patterns |
+```bash
+/Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence/.venv/bin/markdown-confluence \
+crawl space MYSPACE --output /tmp/crawled_space --verbose
+```
+
+### Output Structure
+
+Crawled pages are saved as structured directories with:
+- `metadata.json` - Page metadata (title, space, version, status)
+- `content.adf.json` - ADF format content
+- `content.storage.html` - Storage format HTML
+- `index.json` - Index of all crawled pages (space/tree crawls)
+
+## Workflow 3: Sync and Conflict Resolution
+
+### Check Status
+
+```bash
+/Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence/.venv/bin/markdown-confluence \
+sync status . --recursive
+```
+
+Shows per-file status: up-to-date, local changes, remote changes, conflicted, not tracked.
+
+### Pull Remote Changes
+
+```bash
+/Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence/.venv/bin/markdown-confluence \
+sync pull . --recursive
+
+# Auto-resolve conflicts
+sync pull . --recursive --auto-resolve --prefer-remote
+```
+
+### Resolve Conflicts Interactively
+
+```bash
+/Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence/.venv/bin/markdown-confluence \
+sync resolve docs/page.md
+```
+
+Prompts to choose: keep local, take remote, or cancel.
 
 ## Frontmatter Fields
 
 | Field | Purpose |
 |-------|---------|
-| `connie-title` | Custom page title |
-| `connie-page-id` | Existing page ID (for updates) |
-| `connie-parent-id` | Parent page ID |
-| `connie-parent-page-id` | Alternative parent field |
-| `connie-publish` | Enable/disable publishing |
-| `connie-skip-link-resolution` | Skip link resolution |
+| `connie-title` | Custom page title (overrides filename) |
+| `connie-page-id` | Existing page ID (auto-set after first publish) |
+| `connie-parent-id` | Parent page ID (sets/moves hierarchy) |
+| `connie-publish` | `true`/`false` to enable/disable publishing |
+| `connie-skip-link-resolution` | `true` to exclude from link graph |
 
-## Common Workflows
+## Troubleshooting
 
-### New Project Setup
+| Error | Cause | Fix |
+|-------|-------|-----|
+| 400 Bad Request | Corrupted parent page format | Run `fix_page_format.py` debug tool |
+| Duplicate title | Title already exists in space | Add unique `connie-title` in frontmatter |
+| Page not found | Invalid page ID | Tool auto-creates new page |
+| Archived page blocking | Archived page at same title | Use `--delete-archived` flag |
+| Version not incrementing | No content change detected | Use `--force` flag |
+| Auth failure | Missing/invalid API token | Check `status --env` output |
 
-1. Create project directory with markdown files
-2. Create `.markdown-confluence.json` with parent page ID
-3. Run `--dry-run` to verify structure
-4. Publish - frontmatter will be auto-updated with page IDs
+### Debug Tools
 
-### Update Existing Project
+Located at `/Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence/debug_tools/`:
 
-1. Edit markdown files
-2. Run publish (tool detects changes via hashing)
-3. Use `--force` if content unchanged but needs update
-
-### Troubleshooting
-
-- **400 Bad Request**: Parent page may have corrupted format
-- **Duplicate title**: Add unique `connie-title` in frontmatter
-- **Page not found**: Page ID invalid, tool will auto-create new page
-- **Archived pages**: Use `--delete-archived` to recreate
+```bash
+# Fix corrupted parent page
+cd /Users/tylerstapler/Documents/personal-wiki/tools/markdown_confluence
+uv run python debug_tools/fix_page_format.py \
+  --config=/path/to/.markdown-confluence.json \
+  --page-id=PARENT_PAGE_ID
+```
 
 ## Features
 
-- Mermaid diagram rendering
-- Wikilink support (`[[page]]` and `[[page|title]]`)
-- Relative link resolution between markdown files
-- Directory hierarchy to page hierarchy mapping
-- Asset/image handling
-- Content hashing for efficient updates
+- Mermaid diagrams: auto-rendered to images and uploaded as attachments
+- Wikilinks: `[[Page Name]]` and `[[Page Name|Display Text]]` resolved to Confluence links
+- Relative links: `[Doc B](./doc_b.md)` converted to Confluence page links
+- Directory hierarchy: maps to Confluence page hierarchy with `--force-hierarchy`
+- Content hashing: skips unchanged pages for efficient updates
+- Asset handling: images auto-uploaded, paths converted to attachment references
+
+## Progressive Context
+
+- Full CLI option reference: see `reference.md` in this skill directory
+- Worked examples: see `examples.md` in this skill directory

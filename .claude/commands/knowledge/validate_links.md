@@ -1,7 +1,89 @@
 ---
-title: Validate Links
-description: Validates all [[wiki links]] and #[[tag links]] in the Logseq repository to ensure they point to existing pages
-tools: Read, Glob, Grep, Bash
+description: Validates all [[wiki links]] and
+prompt: "# Validate Links Command\n\nValidates all [[wiki links]] and #[[tag links]]\
+  \ in the Logseq repository to ensure they point to existing pages.\n\n## Installation\n\
+  \nThe `logseq-validate-links` tool is part of the stapler-logseq-tools package.\
+  \ Ensure it's installed:\n\n```bash\ncd ~/Documents/personal-wiki\nuv install -e\
+  \ .\n```\n\nThis will make the `logseq-validate-links` command available in your\
+  \ environment.\n\n## Usage\n\n```bash\n# Basic validation - shows broken links only\n\
+  logseq-validate-links validate\n\n# Validation with detailed output\nlogseq-validate-links\
+  \ validate --show-valid\n\n# Create stub pages for missing links\nlogseq-validate-links\
+  \ validate --create-missing\n\n# Quick check for missing links only\nlogseq-validate-links\
+  \ missing\n\n# Show wiki statistics and analysis\nlogseq-validate-links stats\n\
+  ```\n\n## Features\n\n### Validation (`validate` command)\n- Scans all `.md` files\
+  \ in `logseq/pages/` and `logseq/journals/`\n- Extracts all `[[wiki links]]` and\
+  \ `#[[tag links]]`\n- Reports broken links (links to non-existent pages)\n- Shows\
+  \ which files contain broken links\n- Option to auto-create stub pages for missing\
+  \ links\n- Exits with error code if broken links found (useful for CI/CD)\n\n###\
+  \ Missing Links (`missing` command)\n- Quick scan to list all missing links\n- Useful\
+  \ for getting a simple list of pages that need to be created\n- Supports file pattern\
+  \ filtering\n\n### Statistics (`stats` command)\n- Overall wiki health metrics\n\
+  - Total files, pages, unique links, and tags\n- Most connected files (files with\
+  \ most outbound links)\n- Missing link count\n\n### Enhanced Connection Analysis\
+  \ (NEW)\n**Integrate with `logseq-analyze connections` for deeper insights**:\n\n\
+  ```bash\n# Run connection analysis for comprehensive link health\ncd ~/Documents/personal-wiki\n\
+  uv run logseq-analyze connections logseq/\n\n# Provides:\n# - Orphaned pages (no\
+  \ incoming links)\n# - Poorly connected pages (< 3 total connections)\n# - Hub pages\
+  \ (highly connected, > 10 links)\n# - Average connections per page\n# - Link distribution\
+  \ statistics\n```\n\nThis goes beyond simple broken link detection to identify:\n\
+  - **Isolated content** that needs integration\n- **Important hubs** that may need\
+  \ expansion\n- **Connection patterns** in your knowledge graph\n\n## Command Line\
+  \ Options\n\n### `validate` command:\n- `--show-valid`: Include valid links in detailed\
+  \ output\n- `--create-missing`: Automatically create stub pages for missing links\n\
+  - `--exclude-tags`: Don't validate tag links (`#[[tags]]`)\n\n### `missing` command:\n\
+  - `--file-pattern`: File pattern to search (default: `*.md`)\n\n## Example Output\n\
+  \n```\n\U0001F517 Broken Links Found\n┏━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n\
+  ┃ Missing Page       ┃ Referenced In                ┃\n┡━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩\n\
+  │ New Concept        │ 2025_09_08.md               │\n│ Technical Topic    │ Some\
+  \ Page.md, Another.md    │\n└────────────────────┴──────────────────────────────┘\n\
+  \n\U0001F4CA Link Validation Summary\n┏━━━━━━━━━━━━━━━━┳━━━━━━━┓\n┃ Metric     \
+  \    ┃ Count ┃\n┡━━━━━━━━━━━━━━━━╇━━━━━━━┩\n│ Total Pages    │   156 │\n│ Files\
+  \ Validated│    89 │\n│ Valid Links    │   423 │\n│ Broken Links   │     2 │\n│\
+  \ Tag Links      │    78 │\n└────────────────┴───────┘\n```\n\n## Integration with\
+  \ Development Workflow\n\n### Pre-commit Hook\nAdd to `.git/hooks/pre-commit`:\n\
+  ```bash\n#!/bin/bash\nlogseq-validate-links validate\nif [ $? -eq 1 ]; then\n  \
+  \  echo \"❌ Commit blocked: Broken links found\"\n    echo \"Run 'logseq-validate-links\
+  \ validate --create-missing' to fix\"\n    exit 1\nfi\n```\n\n### CI/CD Integration\n\
+  ```yaml\n# GitHub Actions example\n- name: Validate Wiki Links\n  run: |\n    cd\
+  \ ~/Documents/personal-wiki\n    uv run logseq-validate-links validate\n```\n\n\
+  ### Daily Health Check\n```bash\n# Add to cron or scheduled task\nlogseq-validate-links\
+  \ stats > wiki_health_report.txt\n```\n\n## Stub Page Creation\n\nWhen using `--create-missing`,\
+  \ the tool creates basic stub pages with this template:\n\n```markdown\n- **Core\
+  \ Definition**: [Page Name]\n\n## Background/Context\n- TODO: Add context and background\
+  \ information\n\n## Key Characteristics/Principles\n- TODO: Add key characteristics\n\
+  \n## Related Concepts\n- TODO: Add related concept links\n\n## Significance\n- TODO:\
+  \ Add significance and importance\n\n**Related Topics**: #[[TODO]]\n```\n\nThis\
+  \ ensures all links resolve while providing a structured template for future content\
+  \ development.\n\n## Enhanced Workflow: Comprehensive Link Health Check\n\n### Step\
+  \ 1: Traditional Link Validation\n```bash\n# Check for broken links\nlogseq-validate-links\
+  \ validate\n```\n\n### Step 2: Connection Analysis\n```bash\n# Analyze connection\
+  \ patterns\ncd ~/Documents/personal-wiki\nuv run logseq-analyze connections logseq/\n\
+  ```\n\n### Step 3: Combined Insights\nMerge results to identify:\n- **Broken links**\
+  \ → Create stub pages or remove references\n- **Orphaned pages** → Add incoming\
+  \ links from related content\n- **Poorly connected** → Enhance with bidirectional\
+  \ links\n- **Hub pages** → Consider splitting or expanding\n\n### Step 4: Prioritized\
+  \ Actions\n```bash\n# Fix broken links first (critical)\nlogseq-validate-links validate\
+  \ --create-missing\n\n# Then address orphaned pages (high priority)\n# Review list\
+  \ from connection analysis and add links\n\n# Finally, improve poorly connected\
+  \ pages (medium priority)\n# Use synthesis to enhance content and connections\n\
+  ```\n\n## Use Cases\n\n1. **Before Publishing**: Ensure all references are valid\n\
+  2. **After Major Edits**: Verify no links were broken during restructuring\n3. **Content\
+  \ Planning**: Identify which concepts need dedicated pages\n4. **Quality Assurance**:\
+  \ Regular health checks of knowledge base integrity\n5. **Automated Validation**:\
+  \ Integration with CI/CD for continuous validation\n6. **Knowledge Graph Health**:\
+  \ Use connection analysis to maintain a well-connected wiki\n7. **Content Discovery**:\
+  \ Find isolated content that needs integration\n\n## Fallback Strategy for Tool\
+  \ Availability Issues\n\nIf `logseq-validate-links` is not installed or not accessible:\n\
+  \n### Manual Installation\n```bash\ncd ~/Documents/personal-wiki\nuv install -e\
+  \ .\n```\n\n### Manual Link Validation\nIf the tool still doesn't work, perform\
+  \ manual validation using grep:\n\n```bash\n# Find all wiki links\ncd ~/Documents/personal-wiki\n\
+  grep -rho '\\[\\[.*\\]\\]' logseq/pages/ logseq/journals/ | sort -u > all_links.txt\n\
+  \n# Find all existing pages\nfind logseq/pages -name \"*.md\" -exec basename {}\
+  \ .md \\; | sort > all_pages.txt\n\n# Compare to find broken links (requires manual\
+  \ review)\ncomm -23 all_links.txt all_pages.txt\n```\n\n### Read-Only Analysis Mode\n\
+  If file modifications aren't possible:\n1. Generate a report of broken links in\
+  \ markdown format\n2. Provide stub page templates in code blocks\n3. List exact\
+  \ file paths for manual creation\n4. Prioritize links by frequency of reference\n"
 ---
 
 # Validate Links Command

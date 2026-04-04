@@ -127,22 +127,32 @@ class GeminiTarget(SyncTarget, SyncSource):
             if agent_file.exists() and not force:
                 continue
 
-            enabled_tools = [
-                t for t, enabled in agent.tools.items() if enabled and t in GEMINI_TOOLS
-            ]
-
             frontmatter = {
                 "name": agent.name,
                 "description": agent.description,
             }
 
-            if enabled_tools:
-                frontmatter["tools"] = enabled_tools
+            # If tools are restricted (not all tools), we could specify them.
+            # But the user suggested not specifying them at all to rely on inheritance.
+            # We'll skip tools for now.
+            # enabled_tools = [
+            #     t for t, enabled in agent.tools.items() if enabled and t in GEMINI_TOOLS
+            # ]
+            # if enabled_tools:
+            #     frontmatter["tools"] = enabled_tools
 
-            for key in ["model", "temperature", "max_turns", "timeout_mins"]:
+            for key in ["temperature", "max_turns", "timeout_mins"]:
                 if key in agent.metadata:
                     frontmatter[key] = agent.metadata[key]
 
+            # Filter model names - only allow known Gemini models
+            model = agent.metadata.get("model")
+            if model and isinstance(model, str):
+                model_lower = model.lower()
+                if "gemini" in model_lower:
+                    frontmatter["model"] = model
+                # If it's a Claude model name, we omit it so it defaults to the session model
+            
             fm_yaml = yaml.dump(frontmatter, sort_keys=False)
             full_content = f"---\n{fm_yaml}---\n\n{agent.content}"
 

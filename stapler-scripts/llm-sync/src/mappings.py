@@ -4,23 +4,21 @@ from typing import Dict, List, Set
 GEMINI_TOOLS: Set[str] = {
     'list_directory',
     'read_file',
+    'read_many_files',
     'write_file',
     'glob',
-    'search_file_content',
-    'grep_search',  # Alias for search_file_content
+    'grep_search',
     'replace',
     'run_shell_command',
     'web_fetch',
     'google_web_search',
     'save_memory',
     'write_todos',
-    'delegate_to_agent',
     'activate_skill',
     'ask_user',
     'enter_plan_mode',
     'exit_plan_mode',
     'get_internal_docs',
-    'browser_agent'
 }
 
 # Mapping from Claude tool names (and common aliases) to Gemini tool names
@@ -28,6 +26,7 @@ CLAUDE_TO_GEMINI_TOOL_MAP: Dict[str, str] = {
     # File System
     'read': 'read_file',
     'read_file': 'read_file',
+    'read_many_files': 'read_many_files',
     'write': 'write_file',
     'write_file': 'write_file',
     'edit': 'replace',
@@ -63,7 +62,6 @@ CLAUDE_TO_GEMINI_TOOL_MAP: Dict[str, str] = {
     'question': 'ask_user',
     
     # Coordination
-    'delegate': 'delegate_to_agent',
     'activate_skill': 'activate_skill',
     'skill': 'activate_skill'
 }

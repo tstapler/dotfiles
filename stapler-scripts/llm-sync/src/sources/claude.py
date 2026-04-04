@@ -2,7 +2,6 @@ import yaml
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 from core import Agent, Skill, Command, SyncSource, SyncTarget, IGNORED_NAMES
-from mappings import map_tool, GEMINI_TOOLS
 from rich.console import Console
 
 console = Console()
@@ -140,14 +139,10 @@ class ClaudeSource(SyncSource, SyncTarget):
                     name = metadata.get("name") or default_name
                     description = metadata.get("description", "")
 
-                    claude_tools = metadata.get("tools", [])
-                    tools = self._convert_tools(claude_tools)
-
                     return Agent(
                         name=name,
                         description=description,
                         content=agent_content,
-                        tools=tools,
                         metadata=metadata,
                         source_file=str(agent_file),
                     )
@@ -166,33 +161,6 @@ class ClaudeSource(SyncSource, SyncTarget):
                     metadata[key] = value
         return metadata
 
-    def _convert_tools(self, claude_tools: Any) -> Dict[str, bool]:
-        result = {}
-
-        def process_tool(t_name):
-            t_name = t_name.lower().strip()
-            if t_name in ["*", "all"]:
-                for tool in GEMINI_TOOLS:
-                    result[tool] = True
-                return
-
-            gemini_tool = map_tool(t_name)
-            if gemini_tool:
-                result[gemini_tool] = True
-            else:
-                result[t_name] = True
-
-        if isinstance(claude_tools, str):
-            if "," in claude_tools:
-                for t in claude_tools.split(","):
-                    process_tool(t)
-            else:
-                process_tool(claude_tools)
-        elif isinstance(claude_tools, list):
-            for t in claude_tools:
-                process_tool(str(t))
-        return result
-
     def save_agents(
         self, agents: List[Agent], dry_run: bool = False, force: bool = False
     ) -> int:
@@ -206,7 +174,6 @@ class ClaudeSource(SyncSource, SyncTarget):
             metadata = agent.metadata.copy()
             metadata["name"] = agent.name
             metadata["description"] = agent.description
-            metadata["tools"] = [t for t, enabled in agent.tools.items() if enabled]
 
             fm_yaml = yaml.dump(metadata, sort_keys=False, allow_unicode=True)
             content = f"---\n{fm_yaml}---\n\n{agent.content}"

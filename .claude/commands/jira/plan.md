@@ -1,6 +1,18 @@
 ---
-title: Project Planning
 description: Break down features and organize project work following INVEST principles
+prompt: "# Project Planning and Organization\n\nUse the jira-project-manager agent\
+  \ to break down large features into manageable, well-structured work items.\n\n\
+  ## Task\n\nI need help planning and organizing: $*\n\n## Requirements\n\nUse the\
+  \ @task jira-project-manager agent to:\n1. Break down complex features into proper\
+  \ hierarchy:\n   - Features → Epics → Stories/Tasks/Bugs → Sub-tasks\n2. Apply INVEST\
+  \ principles to ensure each story is:\n   - Independent (can be developed in isolation)\n\
+  \   - Negotiable (allows for discussion)\n   - Valuable (clear business value)\n\
+  \   - Estimable (sufficient detail for estimation)\n   - Small (completable within\
+  \ a sprint)\n   - Testable (clear acceptance criteria)\n3. Identify and manage relationships\
+  \ through proper linking\n4. Ensure appropriate sizing for sprint planning\n\n##\
+  \ Context\n\nComplex project organization for FBG requires:\n- Strict hierarchy\
+  \ compliance\n- Clear story independence within Epic boundaries\n- Proper use of\
+  \ dependencies and issue links\n- Alignment with team capacity and business priorities\n"
 ---
 
 # Project Planning and Organization

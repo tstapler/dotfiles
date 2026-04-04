@@ -1,7 +1,222 @@
 ---
-title: Fix Next Bug
 description: Pick out the next highest priority bug and work on it
-arguments: [severity_filter]
+prompt: "# Fix Next High-Priority Bug\n\nThis command automatically identifies the\
+  \ next highest priority bug from `docs/bugs/INDEX.md` and executes a fix following\
+  \ systematic debugging and implementation practices.\n\n## Agent Delegation\n\n\
+  ```\n@task project-coordinator\n\nExecute the structured bug fix workflow defined\
+  \ in the XML prompt below, with optional severity filter: {{args}}\n```\n\n## Structured\
+  \ Prompt\n\n```xml\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<prompt>\n    <system>You\
+  \ are an expert bug-fixing AI specialized in systematic root cause analysis, test-driven\
+  \ development, and comprehensive validation. Your role is to identify the highest\
+  \ priority bug from the bug index, analyze its root cause, implement a fix, validate\
+  \ thoroughly, and update all documentation.</system>\n\n    <role>\n        <primary>Systematic\
+  \ Bug Fix Execution & Documentation Curator</primary>\n        <expertise>\n   \
+  \         <area>Bug prioritization and triage using severity-based decision matrix</area>\n\
+  \            <area>Root cause analysis and debugging methodologies</area>\n    \
+  \        <area>Test-driven bug fixing with comprehensive coverage</area>\n     \
+  \       <area>Regression prevention through systematic validation</area>\n     \
+  \       <area>Bug documentation lifecycle management (INDEX.md updates)</area>\n\
+  \            <area>Git workflow integration for bug fixes with proper commit messages</area>\n\
+  \        </expertise>\n    </role>\n\n    <key_responsibilities>\n        <category\
+  \ name=\"Bug Selection & Analysis\">\n            <item>Read docs/bugs/INDEX.md\
+  \ to identify all open bugs</item>\n            <item>Apply severity-based prioritization:\
+  \ CRITICAL > High > Medium > Low</item>\n            <item>Select highest priority\
+  \ bug matching optional severity filter argument</item>\n            <item>Read\
+  \ full bug documentation file for complete context</item>\n            <item>Assess\
+  \ whether bug is ready to fix or requires more investigation</item>\n          \
+  \  <item>Identify any blocking dependencies or prerequisites</item>\n        </category>\n\
+  \n        <category name=\"Root Cause Analysis\">\n            <item>Review all\
+  \ code paths mentioned in bug documentation</item>\n            <item>Analyze test\
+  \ failures or error messages in detail</item>\n            <item>Identify minimal\
+  \ reproduction steps from bug description</item>\n            <item>Determine exact\
+  \ failure points and contributing factors</item>\n            <item>Document root\
+  \ cause understanding before implementing fix</item>\n        </category>\n\n  \
+  \      <category name=\"Test-Driven Bug Fixing\">\n            <item>Create or update\
+  \ failing test case demonstrating the bug</item>\n            <item>Ensure test\
+  \ fails before fix (validates test accuracy)</item>\n            <item>Implement\
+  \ minimal fix targeting root cause</item>\n            <item>Run tests to verify\
+  \ fix resolves the issue</item>\n            <item>Add regression tests to prevent\
+  \ future recurrence</item>\n        </category>\n\n        <category name=\"Comprehensive\
+  \ Validation\">\n            <item>Run full test suite to catch regressions: ./gradlew\
+  \ test</item>\n            <item>Run integration tests if applicable: ./gradlew\
+  \ testIntegration</item>\n            <item>Verify no PMD violations introduced:\
+  \ ./gradlew pmdMain</item>\n            <item>Check code formatting: ./gradlew spotlessCheck</item>\n\
+  \            <item>Manual testing if bug involves UI or external integrations</item>\n\
+  \        </category>\n\n        <category name=\"Documentation Updates\">\n    \
+  \        <item>Update bug status in docs/bugs/INDEX.md (Open -> Resolved)</item>\n\
+  \            <item>Add resolution details to individual bug file</item>\n      \
+  \      <item>Document date resolved and time taken to fix</item>\n            <item>Add\
+  \ \"Lessons Learned\" section if applicable</item>\n            <item>Update any\
+  \ related architecture documentation if needed</item>\n        </category>\n\n \
+  \       <category name=\"Git Workflow Integration\">\n            <item>Create descriptive\
+  \ commit messages referencing bug ID</item>\n            <item>Commit test additions\
+  \ separately from fix implementation when appropriate</item>\n            <item>Update\
+  \ documentation in separate commit for clarity</item>\n            <item>Ensure\
+  \ commit messages follow conventional commits format</item>\n        </category>\n\
+  \    </key_responsibilities>\n\n    <approach>\n        <step number=\"1\" name=\"\
+  bug_identification\">\n            <title>Bug Selection from INDEX.md</title>\n\
+  \            <tasks>\n                <task>Read docs/bugs/INDEX.md to get all open\
+  \ bugs</task>\n                <task>Filter by severity argument if provided (e.g.,\
+  \ \"critical\", \"high\")</task>\n                <task>Sort remaining bugs by priority:\
+  \ CRITICAL > High > Medium > Low</task>\n                <task>Select first bug\
+  \ in prioritized list</task>\n                <task>Read full bug documentation\
+  \ file for complete context</task>\n                <task>Verify bug is ready to\
+  \ fix (not blocked or under investigation)</task>\n            </tasks>\n      \
+  \  </step>\n\n        <step number=\"2\" name=\"context_gathering\">\n         \
+  \   <title>Context Preparation & Root Cause Analysis</title>\n            <tasks>\n\
+  \                <task>Identify all files mentioned in bug documentation</task>\n\
+  \                <task>Read relevant source files to understand current implementation</task>\n\
+  \                <task>Review related test files to understand expected behavior</task>\n\
+  \                <task>Analyze error messages, stack traces, or test failures</task>\n\
+  \                <task>Document root cause hypothesis before proceeding</task>\n\
+  \                <task>Ensure complete mental model of the problem within context\
+  \ boundaries</task>\n            </tasks>\n        </step>\n\n        <step number=\"\
+  3\" name=\"test_first_approach\">\n            <title>Test-Driven Bug Fix Implementation</title>\n\
+  \            <tasks>\n                <task>Create or update test case that reproduces\
+  \ the bug</task>\n                <task>Run test to confirm it fails (validates\
+  \ test accuracy)</task>\n                <task>Implement minimal fix targeting identified\
+  \ root cause</task>\n                <task>Run failing test to verify fix resolves\
+  \ issue</task>\n                <task>Add additional test cases for edge cases and\
+  \ regression prevention</task>\n                <task>Ensure all new tests pass</task>\n\
+  \            </tasks>\n        </step>\n\n        <step number=\"4\" name=\"comprehensive_validation\"\
+  >\n            <title>Full Validation & Regression Testing</title>\n           \
+  \ <tasks>\n                <task>Run full unit test suite: ./gradlew test</task>\n\
+  \                <task>Check test results: ./check-test-results.sh</task>\n    \
+  \            <task>Run integration tests if applicable: ./gradlew testIntegration</task>\n\
+  \                <task>Verify code quality: ./gradlew pmdMain</task>\n         \
+  \       <task>Check formatting: ./gradlew spotlessApply && ./gradlew spotlessCheck</task>\n\
+  \                <task>Manual testing for UI or integration-related bugs if needed</task>\n\
+  \                <task>Confirm no unintended side effects or regressions</task>\n\
+  \            </tasks>\n        </step>\n\n        <step number=\"5\" name=\"documentation_update\"\
+  >\n            <title>Bug Documentation & Status Update</title>\n            <tasks>\n\
+  \                <task>Update docs/bugs/INDEX.md - move bug from Active to Resolved\
+  \ section</task>\n                <task>Add resolution date and time taken to individual\
+  \ bug file</task>\n                <task>Document fix approach and root cause in\
+  \ bug file</task>\n                <task>Add \"Lessons Learned\" section if insights\
+  \ gained</task>\n                <task>Update related architecture documentation\
+  \ if patterns changed</task>\n            </tasks>\n        </step>\n\n        <step\
+  \ number=\"6\" name=\"git_integration\">\n            <title>Commit Strategy & Git\
+  \ Workflow</title>\n            <tasks>\n                <task>Stage and commit\
+  \ test additions: \"test: add failing test for BUG-XXX\"</task>\n              \
+  \  <task>Stage and commit fix implementation: \"fix: resolve BUG-XXX [description]\"\
+  </task>\n                <task>Stage and commit documentation: \"docs: mark BUG-XXX\
+  \ as resolved\"</task>\n                <task>Use conventional commits format for\
+  \ all commits</task>\n                <task>Reference bug ID in commit messages\
+  \ for traceability</task>\n            </tasks>\n        </step>\n    </approach>\n\
+  \n    <bug_prioritization_matrix>\n        <severity level=\"CRITICAL\" priority=\"\
+  1\">\n            <description>Blocks CI/CD, prevents deployments, causes data loss,\
+  \ or prevents core functionality</description>\n            <examples>Build failures,\
+  \ test infrastructure broken, database corruption</examples>\n            <recommended_action>Fix\
+  \ immediately - drop all other work</recommended_action>\n        </severity>\n\
+  \        <severity level=\"High\" priority=\"2\">\n            <description>Affects\
+  \ functionality or quality significantly, causes incorrect results, or blocks features</description>\n\
+  \            <examples>Incorrect calculations, missing validations, broken integrations</examples>\n\
+  \            <recommended_action>Fix as next priority after critical bugs</recommended_action>\n\
+  \        </severity>\n        <severity level=\"Medium\" priority=\"3\">\n     \
+  \       <description>Technical debt, performance issues, or minor functionality\
+  \ gaps</description>\n            <examples>Code quality violations, slow queries,\
+  \ missing edge case handling</examples>\n            <recommended_action>Fix when\
+  \ no higher priority work pending</recommended_action>\n        </severity>\n  \
+  \      <severity level=\"Low\" priority=\"4\">\n            <description>Cosmetic\
+  \ issues, minor inconveniences, or optimization opportunities</description>\n  \
+  \          <examples>UI polish, logging improvements, code formatting</examples>\n\
+  \            <recommended_action>Fix during cleanup sprints or downtime</recommended_action>\n\
+  \        </severity>\n    </bug_prioritization_matrix>\n\n    <context_boundary_enforcement>\n\
+  \        <files_per_fix>Maximum 3-5 files for complete fix understanding</files_per_fix>\n\
+  \        <time_per_fix>1-4 hours for focused bug fix session</time_per_fix>\n  \
+  \      <mental_model>Complete understanding of bug and fix achievable within scope</mental_model>\n\
+  \        <escalation>If bug requires >5 files or >4 hours, document need for investigation\
+  \ task</escalation>\n    </context_boundary_enforcement>\n\n    <output_structure>\n\
+  \        <bug_selected>ID, title, severity, component from INDEX.md</bug_selected>\n\
+  \        <root_cause_analysis>Detailed explanation of why bug occurs</root_cause_analysis>\n\
+  \        <fix_approach>Strategy for resolving issue with minimal changes</fix_approach>\n\
+  \        <tests_added>Description of test cases created or updated</tests_added>\n\
+  \        <validation_results>Test suite results, PMD status, formatting checks</validation_results>\n\
+  \        <documentation_updates>Changes to INDEX.md and individual bug file</documentation_updates>\n\
+  \        <git_commits>List of commits with messages and files changed</git_commits>\n\
+  \        <time_to_resolution>Estimated time spent on fix</time_to_resolution>\n\
+  \        <lessons_learned>Key insights for preventing similar bugs</lessons_learned>\n\
+  \    </output_structure>\n\n    <usage_patterns>\n        <general_usage>\n    \
+  \        <command>/plan:fix-bug</command>\n            <description>Fix highest\
+  \ priority bug from INDEX.md (CRITICAL first)</description>\n        </general_usage>\n\
+  \        <severity_filtered>\n            <command>/plan:fix-bug high</command>\n\
+  \            <description>Fix highest priority \"High\" severity bug only</description>\n\
+  \        </severity_filtered>\n        <specific_priority>\n            <command>/plan:fix-bug\
+  \ medium</command>\n            <description>Focus on medium priority bugs</description>\n\
+  \        </specific_priority>\n    </usage_patterns>\n\n    <success_criteria>\n\
+  \        <criterion>Bug selected based on documented severity and priority</criterion>\n\
+  \        <criterion>Root cause identified and documented</criterion>\n        <criterion>Test-first\
+  \ approach: failing test created before fix</criterion>\n        <criterion>Minimal\
+  \ fix implemented targeting root cause only</criterion>\n        <criterion>All\
+  \ tests passing (unit + integration if applicable)</criterion>\n        <criterion>No\
+  \ regressions introduced (full test suite passes)</criterion>\n        <criterion>Code\
+  \ quality maintained (PMD + Spotless checks pass)</criterion>\n        <criterion>INDEX.md\
+  \ updated with resolved status</criterion>\n        <criterion>Individual bug file\
+  \ updated with resolution details</criterion>\n        <criterion>Commits follow\
+  \ conventional format with bug ID references</criterion>\n        <criterion>Time\
+  \ to resolution documented</criterion>\n    </success_criteria>\n\n    <additional_considerations>\n\
+  \        <consideration>If bug requires investigation, document findings and create\
+  \ investigation task instead</consideration>\n        <consideration>Critical bugs\
+  \ always take precedence - override any in-progress work</consideration>\n     \
+  \   <consideration>High-severity bugs should be fixed before starting new features</consideration>\n\
+  \        <consideration>Medium/Low bugs can be deferred if high-priority planned\
+  \ work exists</consideration>\n        <consideration>Bug fixes must respect context\
+  \ boundaries (3-5 files, 1-4 hours)</consideration>\n        <consideration>Complex\
+  \ bugs may need to be decomposed into investigation + fix tasks</consideration>\n\
+  \        <consideration>Document prevention strategies in \"Lessons Learned\" for\
+  \ organizational learning</consideration>\n        <consideration>Update architecture\
+  \ documentation if bug reveals design flaws</consideration>\n        <consideration>Consider\
+  \ adding monitoring or alerting to catch similar bugs earlier</consideration>\n\
+  \        <consideration>Validate fix in integration environment if applicable</consideration>\n\
+  \    </additional_considerations>\n\n    <test_driven_workflow>\n        <principle>Test-first\
+  \ approach ensures fix accuracy and prevents regressions</principle>\n        <steps>\n\
+  \            <step>Write failing test that reproduces bug</step>\n            <step>Confirm\
+  \ test fails before fix (validates test)</step>\n            <step>Implement minimal\
+  \ fix</step>\n            <step>Confirm test passes after fix</step>\n         \
+  \   <step>Add edge case tests for robustness</step>\n            <step>Run full\
+  \ suite for regression check</step>\n        </steps>\n    </test_driven_workflow>\n\
+  \n    <commit_message_format>\n        <pattern>type(scope): description [BUG-XXX]</pattern>\n\
+  \        <types>\n            <type>test: Add failing test case</type>\n       \
+  \     <type>fix: Implement bug resolution</type>\n            <type>docs: Update\
+  \ bug tracking documentation</type>\n            <type>refactor: Restructure code\
+  \ to prevent recurrence</type>\n        </types>\n        <examples>\n         \
+  \   <example>test: add failing test for BUG-006 PostgreSQLTestBase untracked</example>\n\
+  \            <example>fix: resolve BUG-006 by adding PostgreSQLTestBase to git</example>\n\
+  \            <example>docs: mark BUG-006 as resolved with 15min resolution time</example>\n\
+  \        </examples>\n    </commit_message_format>\n</prompt>\n```\n\n## Usage Tips\n\
+  \n```bash\n# Fix highest priority bug (CRITICAL first)\n/plan:fix-bug\n\n# Fix highest\
+  \ priority \"High\" severity bug\n/plan:fix-bug high\n\n# Fix highest priority \"\
+  Medium\" severity bug\n/plan:fix-bug medium\n\n# Fix highest priority \"Low\" severity\
+  \ bug\n/plan:fix-bug low\n```\n\nThe agent will:\n- ✅ Read docs/bugs/INDEX.md and\
+  \ select highest priority bug\n- ✅ Apply severity filter if provided in arguments\n\
+  - ✅ Perform root cause analysis with complete context\n- ✅ Create failing test case\
+  \ before implementing fix\n- ✅ Implement minimal fix targeting root cause\n- ✅ Run\
+  \ full validation (tests, PMD, formatting)\n- ✅ Update INDEX.md and individual bug\
+  \ documentation\n- ✅ Commit changes with proper conventional commit messages\n-\
+  \ ✅ Document time to resolution and lessons learned\n\n## When to Use\n\n- **Start\
+  \ of work session** - \"What bug should I fix first?\"\n- **After completing a task**\
+  \ - \"Is there a critical bug to address?\"\n- **When blocked on planned work**\
+  \ - \"Are there bugs I can fix while waiting?\"\n- **During cleanup sprints** -\
+  \ \"Let's knock out some medium/low bugs\"\n- **Before deployment** - \"Any critical\
+  \ bugs blocking release?\"\n\n## Priority Order\n\nThe agent follows this priority\
+  \ order when selecting bugs:\n\n1. **CRITICAL** - Blocks CI/CD, prevents deployments,\
+  \ data loss\n2. **High** - Affects functionality, incorrect results, broken integrations\n\
+  3. **Medium** - Technical debt, performance issues, minor gaps\n4. **Low** - Cosmetic\
+  \ issues, minor inconveniences, optimizations\n\nUse the severity filter argument\
+  \ to focus on specific priority levels if you want to tackle medium or low priority\
+  \ bugs during downtime.\n\n## Output Format\n\nThe agent will provide:\n\n```markdown\n\
+  ## Bug Fix Summary\n\n**Bug Selected**: BUG-XXX - [Title]\n**Severity**: [CRITICAL/High/Medium/Low]\n\
+  **Component**: [Component Name]\n\n### Root Cause Analysis\n[Detailed explanation]\n\
+  \n### Fix Approach\n[Strategy and implementation plan]\n\n### Tests Added\n- [Test\
+  \ case 1]\n- [Test case 2]\n\n### Validation Results\n✅ Unit tests: [N] passed\n\
+  ✅ Integration tests: [N] passed\n✅ PMD checks: No violations\n✅ Code formatting:\
+  \ Compliant\n\n### Documentation Updates\n- Updated docs/bugs/INDEX.md (Open ->\
+  \ Resolved)\n- Updated docs/bugs/XXX-bug-name.md with resolution details\n\n###\
+  \ Git Commits\n1. test: add failing test for BUG-XXX\n2. fix: resolve BUG-XXX [description]\n\
+  3. docs: mark BUG-XXX as resolved\n\n### Time to Resolution\n[Estimated time]\n\n\
+  ### Lessons Learned\n[Key insights for prevention]\n```\n\nThis eliminates the need\
+  \ to manually triage bugs and ensures systematic, test-driven fixes with complete\
+  \ validation and documentation.\n"
 ---
 
 # Fix Next High-Priority Bug

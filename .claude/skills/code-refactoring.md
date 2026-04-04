@@ -1,12 +1,13 @@
 ---
 name: code-refactoring
-description: Systematic AST-based code refactoring using gritql for safe, validated
-  multi-file transformations with mandatory preview and verification steps
+description: Orchestrate large structural code refactors combining semantic search
+  (ast-grep) with AST-based transformation (gritql). Use for multi-file renames, API
+  migrations, and pattern modernization with mandatory quality gates.
 ---
 
 # Code Refactoring
 
-Use AST-based tools (gritql) for systematic, safe code transformations. This skill provides a structured workflow for structural changes requiring code semantics understanding.
+Orchestrate large structural refactors using `ast-grep` to discover scope and `gritql` to apply transformations safely.
 
 ## When to Use
 
@@ -17,97 +18,88 @@ Use AST-based tools (gritql) for systematic, safe code transformations. This ski
 - Code modernization (language idioms, best practices)
 
 **Don't use for:**
-- Single-file simple changes → Use Edit tool
+- Single-file simple changes → Use `Edit` tool directly
 - Logic changes requiring context → Manual review
-- Non-code files (YAML, JSON, MD) → Use Edit tool
+- Non-code files (YAML, JSON, MD) → Use `Edit` tool
 
-## Core Workflow
+## Workflow
 
 ### 1. Pre-Flight Checks
 
 ```bash
-# Clean git state
-git status
-
-# Feature branch
+git status          # Must be clean
 git checkout -b refactor/<description>
-
-# Baseline validation
-./gradlew clean build && ./gradlew test
 ```
 
-### 2. Preview (MANDATORY)
+Run baseline build + tests before starting.
+
+### 2. Discover Scope with ast-grep
+
+Before transforming anything, understand the full impact:
 
 ```bash
-# Always dry-run first
-grit apply '<pattern>' --dry-run > /tmp/preview.diff
-less /tmp/preview.diff
+# Find all sites that will be affected
+sg --pattern '$obj.oldMethod($$$)' --lang java src/
+
+# Verify count and locations are expected
 ```
 
-### 3. Apply
+See `ast-grep` skill for full pattern syntax.
+
+### 3. Preview with gritql (MANDATORY)
+
+```bash
+grit apply '<pattern>' --dry-run > /tmp/preview.diff
+# Review ALL changes before applying
+```
+
+See `gritql` skill for transformation pattern syntax.
+
+### 4. Apply and Verify (MANDATORY)
 
 ```bash
 grit apply '<pattern>'
-./gradlew spotlessApply
-git add -u
-```
 
-### 4. Verify (MANDATORY)
+# Format
+./gradlew spotlessApply  # or equivalent formatter
 
-```bash
-# Compilation
+# Compile
 ./gradlew compileJava compileKotlin
 
-# Tests
+# Full test suite
 ./gradlew test testIntegration
 
-# Review
+# Review diff
 git diff HEAD
 ```
 
 ### 5. Commit
 
 ```bash
+git add -u
 git commit -m "refactor: <clear description>"
-git push origin refactor/<description>
-```
-
-## Quick Reference
-
-### Class Rename
-```bash
-grit apply 'class OldName' -> 'class NewName' --dry-run
-```
-
-### Method Rename
-```bash
-grit apply '`$obj.oldMethod($$$args)` => `$obj.newMethod($$$args)`' --dry-run
-```
-
-### Import Update
-```bash
-grit apply 'import old.package.Class' -> 'import new.package.Class' --dry-run
 ```
 
 ## Quality Gates
 
-Before completing:
-- [ ] Dry-run reviewed and validated
-- [ ] Code formatted (spotlessApply)
+Before completing any refactor:
+- [ ] ast-grep scope review done before applying
+- [ ] Dry-run previewed and all changes intentional
+- [ ] Code formatted
 - [ ] Clean build (no compilation errors)
-- [ ] Tests passing (full suite)
-- [ ] Git diff reviewed (all changes intentional)
-- [ ] Descriptive commit message
+- [ ] Tests passing
+- [ ] Git diff reviewed
 
 ## Tool Selection
 
 | Scenario | Tool |
 |----------|------|
-| Multi-file structural changes | gritql |
-| Single file, simple change | Edit |
-| Same text change across files | MultiEdit |
+| Find all affected code sites | `ast-grep` (`sg`) |
+| Multi-file structural transformation | `gritql` |
+| Single file, simple change | `Edit` |
+| Same text change across files | `MultiEdit` |
 
 ## Progressive Context
 
-- For advanced patterns (annotation migration, API migration): see `reference.md`
-- For troubleshooting: see `reference.md`
+- For transformation patterns (rename, import, annotation migration): see `gritql` skill and `reference.md`
+- For search patterns (finding callers, usages, class definitions): see `ast-grep` skill

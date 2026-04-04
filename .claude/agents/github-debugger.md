@@ -1,7 +1,6 @@
 ---
 name: github-debugger
 description: Use this agent when github actions builds or checks are failing
-model: inherit
 ---
 
 <?xml version="1.0" encoding="UTF-8"?>

@@ -1,6 +1,99 @@
 ---
-title: Prune Documentation
-description: Remove duplication, outdated content, and condense documentation while following Diataxis principles
+description: Remove duplication, outdated content, and condense documentation while
+  following Diataxis principles
+prompt: "# Prune and Consolidate Documentation\n\nThis command orchestrates a comprehensive\
+  \ documentation pruning workflow using specialized subagents.\n\n## Workflow Overview\n\
+  \n1. **Analysis Phase**: Use doc-quality-analyzer subagent for systematic analysis\n\
+  2. **Organization Phase**: Use project-coordinator subagent for task breakdown\n\
+  \nPlease use the doc-quality-analyzer subagent to systematically prune and consolidate\
+  \ our documentation:\n\n## Phase 1: Discovery and Assessment\n\n1. **Inventory all\
+  \ documentation**:\n   - Scan all `.md` files in the project\n   - Create a comprehensive\
+  \ list with file paths and purposes\n   - Identify the apparent content type (tutorial,\
+  \ how-to, reference, explanation)\n\n2. **Identify duplication**:\n   - Find content\
+  \ that appears in multiple files\n   - Detect overlapping or redundant explanations\n\
+  \   - Flag near-duplicate sections that cover the same topics\n\n3. **Detect outdated\
+  \ content**:\n   - Find references to files, classes, or features that no longer\
+  \ exist\n   - Identify commands or code examples that don't work anymore\n   - Flag\
+  \ documentation with old dates or version references\n   - Check for references\
+  \ to deprecated tools or practices\n\n## Phase 2: Pruning Analysis\n\n1. **Classify\
+  \ duplication severity**:\n   - **Critical duplication**: Exact copies that should\
+  \ be consolidated\n   - **High duplication**: Very similar content with minor variations\n\
+  \   - **Medium duplication**: Related content that could be merged\n   - **Low duplication**:\
+  \ Acceptable repetition for context\n\n2. **Assess outdated content**:\n   - **Remove\
+  \ entirely**: Completely obsolete information\n   - **Update in place**: Fixable\
+  \ with minor edits\n   - **Consolidate**: Merge with other content during pruning\n\
+  \n3. **Identify condensation opportunities**:\n   - Verbose explanations that could\
+  \ be more concise\n   - Examples that could be simplified\n   - Redundant context\
+  \ that's repeated unnecessarily\n\n## Phase 3: Diataxis Compliance Check\n\nBefore\
+  \ making changes, verify:\n1. **Content type alignment**: Ensure each document serves\
+  \ one primary Diataxis purpose\n2. **Appropriate location**: Check if content belongs\
+  \ in its current location\n3. **Cross-references**: Verify that consolidation won't\
+  \ break important links\n4. **Preservation of value**: Ensure we're not losing important\
+  \ institutional knowledge\n\n## Phase 4: Execute Pruning\n\nFor each identified\
+  \ issue:\n\n1. **Remove complete duplicates**:\n   - Keep the most comprehensive\
+  \ or well-written version\n   - Update all references to point to the kept version\n\
+  \   - Delete the redundant files\n\n2. **Consolidate related content**:\n   - Merge\
+  \ similar documentation into single, authoritative sources\n   - Maintain Diataxis\
+  \ separation (don't mix tutorials with reference)\n   - Preserve valuable details\
+  \ from all sources\n\n3. **Delete obsolete content**:\n   - Remove documentation\
+  \ for features that no longer exist\n   - Delete outdated command references\n \
+  \  - Remove references to deprecated tools\n\n4. **Condense verbose content**:\n\
+  \   - Tighten prose while maintaining clarity\n   - Simplify examples where appropriate\n\
+  \   - Remove unnecessary repetition\n\n## Phase 5: Verification\n\nAfter pruning:\n\
+  1. **Check for broken links**: Ensure all internal references still work\n2. **Verify\
+  \ completeness**: Confirm no critical information was lost\n3. **Test examples**:\
+  \ Validate that remaining code examples still work\n4. **Review structure**: Ensure\
+  \ Diataxis principles are maintained\n\n## Output Requirements\n\nProvide:\n\n1.\
+  \ **Executive Summary**:\n   - Total files analyzed\n   - Files to be deleted\n\
+  \   - Files to be consolidated\n   - Files to be updated\n   - Estimated documentation\
+  \ size reduction\n\n2. **Detailed Pruning Plan**:\n   - Specific files to delete\
+  \ with justification\n   - Consolidation recommendations with target files\n   -\
+  \ Content to condense with specific sections\n   - Before/after structure comparison\n\
+  \n3. **Risk Assessment**:\n   - Content that seems outdated but might still be relevant\n\
+  \   - High-risk deletions that need human review\n   - Dependencies that might be\
+  \ affected\n\n4. **Action Plan**:\n   - Prioritized list of changes\n   - Specific\
+  \ file operations (delete, merge, edit)\n   - Order of operations to minimize disruption\n\
+  \n## Guidelines\n\n- **Preserve over delete**: When in doubt, flag for review rather\
+  \ than delete\n- **Consolidate thoughtfully**: Don't merge content that serves different\
+  \ purposes\n- **Maintain Diataxis**: Keep tutorials, how-tos, references, and explanations\
+  \ separate\n- **Document decisions**: Explain why content is being removed or consolidated\n\
+  - **Respect structure**: Don't break existing navigation patterns without good reason\n\
+  \nBe thorough but conservative. The goal is to improve documentation quality and\
+  \ maintainability, not to minimize file count at any cost.\n\n## Phase 6: Task Organization\
+  \ with project-coordinator Subagent\n\nAfter the doc-quality-analyzer subagent completes\
+  \ the pruning analysis, use the project-coordinator subagent to organize the work\
+  \ into atomic tasks.\n\nInvoke the project-coordinator subagent with the following\
+  \ context:\n\n```\nUse the project-coordinator subagent to organize documentation\
+  \ pruning tasks.\n\nI've completed a comprehensive documentation pruning analysis.\
+  \ Please help me organize the findings into an Implementation Plan.\n\n**Context**:\n\
+  We analyzed [N] documentation files, identified [M] items to prune/consolidate across\
+  \ the following categories:\n- Files to delete: [COUNT]\n- Files to consolidate:\
+  \ [COUNT]\n- Files to update: [COUNT]\n- Estimated size reduction: [PERCENTAGE]\n\
+  \n**Findings Summary by Priority**:\n\n**Priority 0 (Critical - Dangerous or Incorrect\
+  \ Content)**:\n[List P0 findings - factually incorrect information, security issues,\
+  \ broken examples]\n\n**Priority 1 (High - Significant Quality Impact)**:\n[List\
+  \ P1 findings - major duplication, significantly outdated content, structural issues]\n\
+  \n**Priority 2 (Medium - Nice to Have)**:\n[List P2 findings - minor improvements,\
+  \ style consistency, Diataxis violations]\n\n**Priority 3 (Low - Future Consideration)**:\n\
+  [List P3 findings - optional enhancements, minor cleanup]\n\n**Dependencies Identified**:\n\
+  [Note any dependencies between documentation changes - e.g., must consolidate before\
+  \ deleting]\n\n**Constraints**:\n- Preserve institutional knowledge - backup before\
+  \ major deletions\n- Maintain Diataxis framework separation (don't mix content types)\n\
+  - Test examples and commands before removing documentation\n- Update cross-references\
+  \ when moving/consolidating content\n- Each task should be 1-4 hours of focused\
+  \ work\n\n**Request**:\n1. Create a project task document in `docs/tasks/documentation-pruning.md`\
+  \ using Implementation Plan format\n2. Break down pruning work into atomic tasks\
+  \ (1-4 hours each) with:\n   - Specific files to modify/delete/consolidate\n   -\
+  \ Clear success criteria\n   - Context boundaries (3-5 files per task)\n   - Testing\
+  \ requirements (validate examples, check links)\n3. Identify task dependencies (e.g.,\
+  \ Task 2.1 \"Consolidate X and Y\" must complete before Task 2.2 \"Delete Y\")\n\
+  4. Recommend the next action to start with (prioritize high-impact quick wins or\
+  \ critical fixes)\n5. Provide progress tracking structure for the pruning epic\n\
+  ```\n\n**Expected Output**: The project-coordinator subagent will create a structured\
+  \ task document with:\n- Epic overview for documentation pruning\n- Story breakdown\
+  \ (e.g., \"Story 1: Remove dangerous content\", \"Story 2: Consolidate duplicates\"\
+  )\n- Atomic tasks with file-level specificity\n- Dependency visualization\n- Clear\
+  \ next action recommendation\n"
 ---
 
 # Prune and Consolidate Documentation

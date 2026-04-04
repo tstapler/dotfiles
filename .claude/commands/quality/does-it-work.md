@@ -1,7 +1,27 @@
 ---
-title: Does It Work
 description: Review if changes are ready for commit and review
-arguments: []
+prompt: "# Does It Work Review\n\nThis command helps evaluate if the current branch\
+  \ changes are ready for commit and review. I'll perform a comprehensive readiness\
+  \ check on your code changes, focusing on:\n\n1. Code compilation/build status\n\
+  2. Test suite results\n3. Code quality checks\n4. Manual testing verification\n\n\
+  ## Analysis Process\n\nI'll run through the following steps:\n\n1. **Check git status\
+  \ and changes**\n   - Review what files have been modified\n   - Analyze the scope\
+  \ and impact of changes\n\n2. **Verify build/compilation**\n   - Run appropriate\
+  \ build commands based on the project type\n   - For Java: `./gradlew clean build`\n\
+  \   - Report any compilation errors or warnings\n\n3. **Check test suite**\n   -\
+  \ Run unit tests and integration tests\n   - For Java: `./gradlew test` and `./gradlew\
+  \ testIntegration`\n   - Report on test coverage and any failing tests\n\n4. **Code\
+  \ quality verification**\n   - Run linting and formatting checks\n   - For Java:\
+  \ `./gradlew checkstyleMain` and `./gradlew spotlessCheck`\n   - Identify any style\
+  \ violations or potential issues\n\n5. **Manual testing verification**\n   - Prompt\
+  \ you about manual testing scenarios\n   - Confirm if you've tested all user-facing\
+  \ changes\n   - Document test scenarios that have been covered\n\n## Report\n\n\
+  I'll provide a comprehensive report with:\n- ✅ Items that pass verification\n- ❌\
+  \ Items that need attention\n- \U0001F50D Suggestions for additional testing or\
+  \ verification\n- \U0001F4DD A readiness summary\n\n## Recommendations\n\nBased\
+  \ on the verification results, I'll recommend whether the code is:\n- Ready for\
+  \ commit and PR\n- Needs specific fixes before proceeding\n- Requires additional\
+  \ tests or validation\n"
 ---
 
 # Does It Work Review

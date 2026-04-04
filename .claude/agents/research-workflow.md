@@ -1,11 +1,9 @@
 ---
+name: research-workflow
 description: Apply systematic research methodology for multi-step research, fact-finding,
   web search, or verification tasks. Use when performing Brave Search, Puppeteer navigation,
   or synthesizing information from multiple sources.
-mode: subagent
 temperature: 0.1
-tools: []
-name: research-workflow
 ---
 
 # Research Workflow

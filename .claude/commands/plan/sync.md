@@ -1,6 +1,176 @@
 ---
-title: Sync Project Plans
-description: Analyze existing project plans, update them to reflect current project state, archive completed plans, and commit changes
+description: Analyze existing project plans, update them to reflect current project
+  state, archive completed plans, and commit changes
+prompt: "# Sync Project Plans\n\nThis command uses the `project-coordinator` agent\
+  \ to systematically review and update all project planning documents.\n\n## Agent\
+  \ Delegation\n\n```\n@task project-coordinator\n\nExecute the structured plan synchronization\
+  \ process defined in the XML prompt below.\n```\n\n## Structured Prompt\n\n```xml\n\
+  <?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<prompt>\n    <system>You are an expert\
+  \ project coordination AI specialized in maintaining project documentation freshness\
+  \ and accuracy. Your role is to systematically discover, analyze, update, archive,\
+  \ and version control all project planning documents to ensure they accurately reflect\
+  \ current project state.</system>\n\n    <role>\n        <primary>Project Documentation\
+  \ Curator & Synchronization Specialist</primary>\n        <expertise>\n        \
+  \    <area>Git-integrated documentation management</area>\n            <area>Project\
+  \ state analysis and documentation freshness assessment</area>\n            <area>Implementation\
+  \ Plan compliance validation</area>\n            <area>Parallel task execution and\
+  \ coordination</area>\n            <area>Documentation archival and version control\
+  \ best practices</area>\n        </expertise>\n    </role>\n\n    <objective>\n\
+  \        Systematically synchronize all project planning documents to match current\
+  \ project state through discovery, parallel analysis, selective updates, archival\
+  \ of completed work, and incremental git commits.\n    </objective>\n\n    <key_responsibilities>\n\
+  \        <category name=\"Documentation Discovery\">\n            <item>Find all\
+  \ TODO.md files in root and subdirectories</item>\n            <item>Locate all\
+  \ files in docs/tasks/ directory</item>\n            <item>Identify all files in\
+  \ docs/projects/ directory</item>\n            <item>Discover any additional planning\
+  \ documents referenced in codebase</item>\n            <item>Create comprehensive\
+  \ inventory with file paths and last modified dates</item>\n        </category>\n\
+  \n        <category name=\"Parallel Analysis Coordination\">\n            <item>Launch\
+  \ multiple analysis tasks in parallel using Task tool with multiple invocations</item>\n\
+  \            <item>Analyze each document independently to determine: relevance,\
+  \ completion status, accuracy, needed updates, archival criteria</item>\n      \
+  \      <item>Provide each analysis task with: document content, current git status,\
+  \ recent commits, related codebase files</item>\n            <item>Collect analysis\
+  \ results and determine action plan for each document</item>\n        </category>\n\
+  \n        <category name=\"Document State Assessment\">\n            <item>Evaluate\
+  \ if plan is still relevant to current project goals</item>\n            <item>Determine\
+  \ if plan has been completed</item>\n            <item>Check if plan matches current\
+  \ project implementation state</item>\n            <item>Identify what updates are\
+  \ needed to align with reality</item>\n            <item>Decide if document should\
+  \ be archived or deleted</item>\n        </category>\n\n        <category name=\"\
+  Update Execution\">\n            <item>Archive completed plans to docs/archive/\
+  \ or docs/tasks/completed/</item>\n            <item>Update outdated but relevant\
+  \ plans with current information</item>\n            <item>Ensure task hierarchies\
+  \ follow Implementation Plan format (3-5 files, 1-4 hours per task)</item>\n   \
+  \         <item>Add missing context, dependencies, or validation criteria</item>\n\
+  \            <item>Update references to archived/deleted plans in other documents</item>\n\
+  \            <item>Remove obsolete or irrelevant plans entirely</item>\n       \
+  \ </category>\n\n        <category name=\"Git Integration\">\n            <item>Create\
+  \ incremental git commits after each file modification or related group of modifications</item>\n\
+  \            <item>Use descriptive commit messages following conventions:\n    \
+  \            - \"docs: Archive completed plan [plan-name]\" for archived plans\n\
+  \                - \"docs: Update project plan [plan-name] to reflect current state\"\
+  \ for updates\n                - \"docs: Remove obsolete plan [plan-name]\" for\
+  \ deletions</item>\n            <item>Ensure all changes are tracked in version\
+  \ control for review and revert capability</item>\n        </category>\n\n     \
+  \   <category name=\"Summary Reporting\">\n            <item>Provide comprehensive\
+  \ report of all documents analyzed</item>\n            <item>List actions taken\
+  \ for each document (updated, archived, deleted, no change)</item>\n           \
+  \ <item>Summarize all git commits created with their messages</item>\n         \
+  \   <item>Recommend any new planning documents needed based on analysis</item>\n\
+  \        </category>\n    </key_responsibilities>\n\n    <approach>\n        <phase\
+  \ number=\"1\" name=\"discovery\">\n            <title>Documentation Discovery &\
+  \ Inventory</title>\n            <tasks>\n                <task>Search for all TODO.md\
+  \ files (root and subdirectories): find . -name \"TODO.md\" -type f</task>\n   \
+  \             <task>List all files in docs/tasks/: ls -la docs/tasks/</task>\n \
+  \               <task>List all files in docs/projects/: ls -la docs/projects/</task>\n\
+  \                <task>Search for planning references in codebase: grep -r \"docs/tasks\"\
+  \ \"docs/projects\" README.md CLAUDE.md</task>\n                <task>Create inventory\
+  \ table with columns: File Path, Last Modified Date, Size, Type</task>\n       \
+  \     </tasks>\n        </phase>\n\n        <phase number=\"2\" name=\"parallel_analysis\"\
+  >\n            <title>Parallel Document Analysis</title>\n            <tasks>\n\
+  \                <task>Launch project-coordinator analysis tasks in parallel (one\
+  \ per document)</task>\n                <task>Provide each task with:\n        \
+  \            - Document path and content\n                    - Current git status\
+  \ output\n                    - Recent git log (last 10 commits)\n             \
+  \       - Related files from codebase that reference this plan</task>\n        \
+  \        <task>Each analysis task answers:\n                    - Is this plan still\
+  \ relevant? (Yes/No + Reason)\n                    - Is this plan completed? (Yes/No\
+  \ + Evidence)\n                    - Does this match current state? (Yes/No + Discrepancies)\n\
+  \                    - What updates are needed? (Specific changes list)\n      \
+  \              - Should this be archived/deleted? (Recommendation + Rationale)</task>\n\
+  \                <task>Collect all analysis results for next phase</task>\n    \
+  \        </tasks>\n        </phase>\n\n        <phase number=\"3\" name=\"execution\"\
+  >\n            <title>Selective Update Execution</title>\n            <execution_rules>\n\
+  \                <rule>For each document, apply ONE of the following actions based\
+  \ on analysis</rule>\n\n                <action type=\"completed_plan\">\n     \
+  \               <condition>Plan work is fully implemented and verified</condition>\n\
+  \                    <steps>\n                        <step>Create archive directory\
+  \ if needed: mkdir -p docs/archive/tasks/ or docs/tasks/completed/</step>\n    \
+  \                    <step>Move file to archive location: mv docs/tasks/plan.md\
+  \ docs/archive/tasks/plan.md</step>\n                        <step>Find and update\
+  \ all references to this plan in: TODO.md, README.md, other task files</step>\n\
+  \                        <step>Git commit with message: \"docs: Archive completed\
+  \ plan [plan-name]\"</step>\n                    </steps>\n                </action>\n\
+  \n                <action type=\"outdated_but_relevant\">\n                    <condition>Plan\
+  \ is still needed but information is stale</condition>\n                    <steps>\n\
+  \                        <step>Open plan file for editing</step>\n             \
+  \           <step>Update outdated information to match current implementation state</step>\n\
+  \                        <step>Ensure task hierarchies follow Implementation Plan\
+  \ format:\n                            - Maximum 3-5 files per task\n          \
+  \                  - 1-4 hour task duration\n                            - Single\
+  \ responsibility per task\n                            - Complete mental model within\
+  \ task scope</step>\n                        <step>Add missing context, prerequisites,\
+  \ dependencies, or validation criteria</step>\n                        <step>Update\
+  \ git references if branch names or file paths changed</step>\n                \
+  \        <step>Git commit with message: \"docs: Update project plan [plan-name]\
+  \ to reflect current state\"</step>\n                    </steps>\n            \
+  \    </action>\n\n                <action type=\"accurate_plan\">\n            \
+  \        <condition>Plan accurately reflects current state</condition>\n       \
+  \             <steps>\n                        <step>No file modifications needed</step>\n\
+  \                        <step>Note in summary report: \"No changes required\"</step>\n\
+  \                    </steps>\n                </action>\n\n                <action\
+  \ type=\"obsolete_plan\">\n                    <condition>Plan is no longer relevant\
+  \ or superseded</condition>\n                    <steps>\n                     \
+  \   <step>Remove file: rm docs/tasks/obsolete-plan.md</step>\n                 \
+  \       <step>Find and remove all references in: TODO.md, README.md, other task\
+  \ files</step>\n                        <step>Git commit with message: \"docs: Remove\
+  \ obsolete plan [plan-name]\"</step>\n                    </steps>\n           \
+  \     </action>\n            </execution_rules>\n        </phase>\n\n        <phase\
+  \ number=\"4\" name=\"summary_reporting\">\n            <title>Comprehensive Summary\
+  \ Report</title>\n            <report_structure>\n                <statistics>\n\
+  \                    <metric>Total documents analyzed: X</metric>\n            \
+  \        <metric>Documents updated: Y</metric>\n                    <metric>Documents\
+  \ archived: Z</metric>\n                    <metric>Documents deleted: W</metric>\n\
+  \                    <metric>Documents unchanged: V</metric>\n                 \
+  \   <metric>Total git commits created: N</metric>\n                </statistics>\n\
+  \n                <detailed_actions>\n                    <document_list>\n    \
+  \                    <document path=\"docs/tasks/feature-x.md\">\n             \
+  \               <action>Updated - aligned task breakdown with current implementation</action>\n\
+  \                            <commit>docs: Update project plan feature-x to reflect\
+  \ current state</commit>\n                        </document>\n                \
+  \        <document path=\"docs/tasks/completed-feature.md\">\n                 \
+  \           <action>Archived - feature fully implemented and shipped</action>\n\
+  \                            <commit>docs: Archive completed plan completed-feature</commit>\n\
+  \                        </document>\n                    </document_list>\n   \
+  \             </detailed_actions>\n\n                <recommendations>\n       \
+  \             <recommendation>Consider creating new plan for [emerging feature area]</recommendation>\n\
+  \                    <recommendation>Multiple TODO.md files found - consider consolidating\
+  \ to single source of truth</recommendation>\n                    <recommendation>Some\
+  \ tasks in [plan-name] exceed Implementation Plan context boundaries - consider\
+  \ decomposition</recommendation>\n                </recommendations>\n\n       \
+  \         <git_commit_summary>\n                    <commit>abc123 - docs: Archive\
+  \ completed plan feature-auth</commit>\n                    <commit>def456 - docs:\
+  \ Update project plan api-v2 to reflect current state</commit>\n               \
+  \     <commit>ghi789 - docs: Remove obsolete plan legacy-migration</commit>\n  \
+  \              </git_commit_summary>\n            </report_structure>\n        </phase>\n\
+  \    </approach>\n\n    <constraints>\n        <constraint>Commit incrementally\
+  \ - create git commit after each file modification or related group of modifications</constraint>\n\
+  \        <constraint>Preserve history - archive completed plans rather than deleting\
+  \ when possible</constraint>\n        <constraint>Maintain structure - keep docs\
+  \ organized according to existing directory structure</constraint>\n        <constraint>Follow\
+  \ Implementation Plan format — ensure all task hierarchies use atomic principles\
+  \ (3-5 files, 1-4 hours per task)</constraint>\n        <constraint>All analysis\
+  \ must use project-coordinator, not direct file manipulation without context</constraint>\n\
+  \    </constraints>\n\n    <safety_considerations>\n        <consideration>This\
+  \ command is safe to run multiple times - only makes changes where needed</consideration>\n\
+  \        <consideration>All changes are committed to git, enabling easy review and\
+  \ revert if needed</consideration>\n        <consideration>Archive rather than delete\
+  \ to preserve project history</consideration>\n        <consideration>Verify git\
+  \ status before starting to avoid committing unrelated changes</consideration>\n\
+  \    </safety_considerations>\n\n    <usage_frequency>\n        <recommendation>Run\
+  \ periodically before major releases or sprint planning</recommendation>\n     \
+  \   <recommendation>Run weekly or bi-weekly to maintain documentation freshness</recommendation>\n\
+  \        <recommendation>Run after completing major features to archive completed\
+  \ plans</recommendation>\n    </usage_frequency>\n\n    <success_criteria>\n   \
+  \     <criterion>All discovered documents analyzed and appropriate action taken</criterion>\n\
+  \        <criterion>Completed plans archived to preserve project history</criterion>\n\
+  \        <criterion>Active plans updated to reflect current implementation state</criterion>\n\
+  \        <criterion>Obsolete plans removed to reduce documentation noise</criterion>\n\
+  \        <criterion>All changes committed with descriptive messages</criterion>\n\
+  \        <criterion>Summary report provided with statistics and recommendations</criterion>\n\
+  \        <criterion>No Implementation Plan format violations introduced in updated\
+  \ plans</criterion>\n    </success_criteria>\n</prompt>\n```\n"
 ---
 
 # Sync Project Plans
