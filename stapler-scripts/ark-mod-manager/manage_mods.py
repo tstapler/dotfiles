@@ -14,6 +14,8 @@ CONFIGS_FILE = os.path.join(SCRIPT_DIR, "mod_configs.json")
 PRESETS_FILE = os.path.join(SCRIPT_DIR, "tuning_presets.json")
 BACKUP_DIR = os.path.join(SCRIPT_DIR, ".backups")
 
+RE_MOD_ID = re.compile(r"^(\d+)_")
+
 STEAM_APPS = os.path.expanduser("~/.local/share/Steam/steamapps/common")
 ARK_ROOT = os.path.join(STEAM_APPS, "ARK Survival Ascended")
 ARK_CONFIG_DIR = os.path.join(ARK_ROOT, "ShooterGame/Saved/Config/Windows")
@@ -72,12 +74,7 @@ def get_active_mods(config_content):
 def get_installed_mod_ids():
     if not os.path.exists(MODS_DIR):
         return []
-    ids = []
-    for item in os.listdir(MODS_DIR):
-        match = re.match(r"^(\d+)_", item)
-        if match:
-            ids.append(match.group(1))
-    return list(set(ids))
+    return list({m.group(1) for item in os.listdir(MODS_DIR) if (m := RE_MOD_ID.match(item))})
 
 def get_mod_info(mod_id, mapping):
     info = mapping.get(mod_id)
@@ -132,7 +129,7 @@ def scan_local_mods(mapping):
         mod_dir = os.path.join(MODS_DIR, item)
         if not os.path.isdir(mod_dir):
             continue
-        match = re.match(r"^(\d+)_", item)
+        match = RE_MOD_ID.match(item)
         if not match:
             continue
         
