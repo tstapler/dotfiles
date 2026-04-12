@@ -32,6 +32,7 @@ android_sdk_path="$android_root/Sdk"
 if [[ -d "$android_sdk_path" ]]; then
 	export ANDROID_HOME="$android_sdk_path"
 	export ANDROID_SDK_ROOT="$ANDROID_HOME"
+	pathadd "$ANDROID_HOME/platform-tools"
 fi
 
 adv_home="$HOME/.android/avd"
