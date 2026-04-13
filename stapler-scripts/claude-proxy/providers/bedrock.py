@@ -9,6 +9,7 @@ import time
 import configparser
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 from botocore.config import Config
 from botocore.exceptions import ReadTimeoutError, ConnectTimeoutError
 from typing import Dict, Any, AsyncIterator, Optional, Tuple
@@ -22,6 +23,39 @@ SSO_LOCK_FILE = "/tmp/claude-proxy-sso-login.lock"
 SSO_LOCK_TIMEOUT = 120  # 2 minutes
 
 logger = logging.getLogger(__name__)
+
+
+def _load_bedrock_model_mapping() -> Dict[str, str]:
+    """Load Bedrock model mapping from config file.
+
+    Returns mapping with us. inference profile prefix added.
+    Fallback to hardcoded mapping if config file not found.
+    """
+    config_file = Path(__file__).parent.parent / "config" / "bedrock_models.json"
+
+    if config_file.exists():
+        try:
+            with open(config_file) as f:
+                data = json.load(f)
+                # Add us. prefix to all model IDs for cross-region inference profiles
+                return {
+                    normalized: f"us.{bedrock_id}"
+                    for normalized, bedrock_id in data.get("models", {}).items()
+                }
+        except Exception as e:
+            logger.warning(f"Failed to load {config_file}: {e}, using hardcoded mapping")
+
+    # Hardcoded fallback (subset of common models)
+    return {
+        "claude-sonnet-4-6": "us.anthropic.claude-sonnet-4-6",
+        "claude-opus-4-6": "us.anthropic.claude-opus-4-6-v1",
+        "claude-sonnet-4-5-20250929": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+        "claude-opus-4-5-20251101": "us.anthropic.claude-opus-4-5-20251101-v1:0",
+        "claude-haiku-4-5-20251001": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+        "claude-3-7-sonnet-20250219": "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+        "claude-3-5-haiku-20241022": "us.anthropic.claude-3-5-haiku-20241022-v1:0",
+        "claude-3-haiku-20240307": "us.anthropic.claude-3-haiku-20240307-v1:0",
+    }
 
 # Beta flags supported by Bedrock with model compatibility
 # Reference: https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-anthropic-claude-messages-request-response.html
@@ -86,8 +120,8 @@ class BedrockProvider(Provider):
             config=boto_config
         )
         # Thread pool for running blocking boto3 calls without blocking event loop
-        # Use max_workers=20 to handle concurrent requests across workers
-        self.executor = ThreadPoolExecutor(max_workers=20, thread_name_prefix="bedrock-io")
+        # Sized via BEDROCK_THREAD_POOL_SIZE (default 40) — all boto3 calls use this pool
+        self.executor = ThreadPoolExecutor(max_workers=config.BEDROCK_THREAD_POOL_SIZE, thread_name_prefix="bedrock-io")
         # Disk cache for SSO config and credential validity checks
         # Shared across all workers via /tmp directory
         self.cache = Cache("/tmp/claude-proxy-bedrock-cache")
@@ -410,7 +444,14 @@ class BedrockProvider(Provider):
             return False
 
     def _convert_to_bedrock_model(self, model: str) -> str:
-        """Convert model name to Bedrock format."""
+        """Convert model name to Bedrock format.
+
+        Uses config/bedrock_models.json (generated via scripts/validate_bedrock_models.py)
+        with fallback to common models if config unavailable.
+
+        Raises:
+            ValidationError: If model is not available on Bedrock
+        """
         # Remove any existing prefixes
         model = self.normalize_model_name(model)
 
@@ -418,31 +459,19 @@ class BedrockProvider(Provider):
         if model.endswith("-bedrock"):
             model = model[:-8]
 
-        # Map to Bedrock model ID
-        # Note: ALL Claude models require inference profiles (us./global./eu./jp./apac.)
-        # Base model IDs without prefixes are NOT supported for on-demand throughput
-        # Reference: https://platform.claude.com/docs/en/build-with-claude/claude-on-amazon-bedrock
-        model_mapping = {
-            # Claude 4.6 models (require US inference profile prefix)
-            "claude-opus-4-6": "us.anthropic.claude-opus-4-6-v1",
-            "claude-sonnet-4-6": "us.anthropic.claude-sonnet-4-6",
-            # Claude 4.5 models (require US inference profile prefix)
-            "claude-opus-4-5-20251101": "us.anthropic.claude-opus-4-5-20251101-v1:0",
-            "claude-sonnet-4-5-20250929": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
-            "claude-haiku-4-5-20251001": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-            # Claude 4 models (require US inference profile prefix)
-            "claude-opus-4-1-20250805": "us.anthropic.claude-opus-4-1-20250805-v1:0",
-            "claude-opus-4-20250514": "us.anthropic.claude-opus-4-20250514-v1:0",
-            "claude-sonnet-4-20250514": "us.anthropic.claude-sonnet-4-20250514-v1:0",
-            # Claude 3.x models (older format, use base ID)
-            "claude-3-7-sonnet-20250219": "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
-            "claude-3-5-sonnet-20241022": "us.anthropic.claude-3-5-sonnet-20241022-v2:0",
-            "claude-3-5-haiku-20241022": "us.anthropic.claude-3-5-haiku-20241022-v1:0",
-            "claude-3-opus-20240229": "us.anthropic.claude-3-opus-20240229-v1:0",
-            "claude-3-haiku-20240307": "us.anthropic.claude-3-haiku-20240307-v1:0",
-        }
+        # Load mapping from config (cached at module level)
+        if not hasattr(self.__class__, '_model_mapping_cache'):
+            self.__class__._model_mapping_cache = _load_bedrock_model_mapping()
 
-        return model_mapping.get(model, f"us.anthropic.{model}-v1:0")
+        model_mapping = self.__class__._model_mapping_cache
+
+        # Try exact match first
+        if model in model_mapping:
+            return model_mapping[model]
+
+        # Fallback: construct model ID (may fail if model doesn't exist)
+        logger.warning(f"Model {model} not in Bedrock mapping, constructing ID (may fail)")
+        return f"us.anthropic.{model}-v1:0"
 
     def _convert_response(self, bedrock_response: Dict[str, Any], model: str) -> Dict[str, Any]:
         """Convert Bedrock response to Anthropic format."""
@@ -636,8 +665,11 @@ class BedrockProvider(Provider):
         bedrock_body = self._prepare_bedrock_body(body, normalized_model, headers)
 
         try:
-            # Synchronous call wrapped in async using thread pool
-            response = await anyio.to_thread.run_sync(
+            # Run invoke_model in dedicated thread pool (not anyio's default pool)
+            # This ensures all Bedrock I/O shares the same bounded, configurable executor
+            loop = asyncio.get_event_loop()
+            response = await loop.run_in_executor(
+                self.executor,
                 lambda: self.client.invoke_model(
                     modelId=bedrock_model,
                     contentType="application/json",
@@ -646,8 +678,8 @@ class BedrockProvider(Provider):
                 )
             )
 
-            # Parse response - reading from the body is also blocking I/O
-            body_content = await anyio.to_thread.run_sync(response["body"].read)
+            # Reading response body is also blocking I/O — run in same pool
+            body_content = await loop.run_in_executor(self.executor, response["body"].read)
             result = json.loads(body_content)
             return self._convert_response(result, original_model)
 
@@ -702,17 +734,7 @@ class BedrockProvider(Provider):
 
             for event in response["body"]:
                 chunk = json.loads(event["chunk"]["bytes"])
-
-                # Convert to SSE format matching Anthropic
-                if chunk.get("type") == "content_block_delta":
-                    sse_data = {
-                        "type": "content_block_delta",
-                        "index": 0,
-                        "delta": chunk.get("delta", {})
-                    }
-                    anyio.from_thread.run(send_stream.send, f"data: {json.dumps(sse_data)}\n")
-                elif chunk.get("type") == "message_stop":
-                    anyio.from_thread.run(send_stream.send, "data: [DONE]\n")
+                anyio.from_thread.run(send_stream.send, f"data: {json.dumps(chunk)}\n\n")
 
         except Exception as e:
             self._handle_bedrock_error(e)
