@@ -1,5 +1,5 @@
 ---
-name: address-review-comments
+name: address-pr-comments
 description: Systematically address all open GitHub PR review comments — fix code or decline with reasoning, reply to every thread, resolve when done
 ---
 
@@ -228,7 +228,42 @@ To push when ready:
 git push
 ```
 
-## Step 6: Summarize
+## Step 6: Check Merge Readiness
+
+After pushing (or at any point during the skill), check whether the PR can be merged:
+
+```bash
+gh pr view {PR_NUMBER} --json mergeable,mergeStateStatus,baseRefName \
+  -q '{mergeable: .mergeable, state: .mergeStateStatus, base: .baseRefName}'
+```
+
+**Interpret the result and act:**
+
+| `mergeable` | `mergeStateStatus` | Meaning | Action |
+|-------------|-------------------|---------|--------|
+| `MERGEABLE` | `CLEAN` | Ready to merge | Nothing to do — inform the user |
+| `MERGEABLE` | `BLOCKED` | Awaiting review approval | Normal after addressing comments — inform the user |
+| `MERGEABLE` | `UNSTABLE` | CI failing | Investigate CI failures before requesting review |
+| `CONFLICTING` | `DIRTY` | Merge conflicts with base branch | **Must resolve before merge** — see below |
+| `UNKNOWN` | — | GitHub still computing | Wait ~30 s and re-check |
+
+**Resolving conflicts (`CONFLICTING` / `DIRTY`):**
+
+1. Fetch the base branch and attempt a merge:
+   ```bash
+   git fetch origin {base}
+   git merge origin/{base}
+   ```
+2. If merge fails with conflicts, resolve each conflicted file:
+   - Prefer the base branch version for lock files, generated files, and dependency version bumps — then regenerate (e.g. `uv lock`) rather than hand-editing.
+   - For source files, identify whether the conflict is structural (new API vs old API) or additive (two independent changes). Merge both sets of changes if additive; prefer HEAD if our changes supersede the conflicting commit.
+3. Stage resolved files: `git add <files>`
+4. Commit the merge: `git commit -m "Merge origin/{base} — resolve <description>"`
+5. Push and re-check mergeability.
+
+**Note**: Rebase (`git rebase origin/{base}`) is cleaner history but can cause complex conflicts when early commits in the stack are superseded by later review commits. Prefer `git merge` for PRs with multiple review rounds.
+
+## Step 7: Summarize
 
 Print a final summary table:
 
