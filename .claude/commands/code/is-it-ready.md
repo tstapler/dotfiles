@@ -439,13 +439,70 @@ After all agents return, produce this report:
 
 ---
 
+## Step 4 — Fix Loop (Auto-remediate FIX THEN SHIP verdicts)
+
+If the verdict is ⚠️ **FIX THEN SHIP**, do not stop. Automatically attempt to fix blocking issues and re-verify. Loop until 🚀 **SHIP IT** or until no more progress can be made without human input.
+
+### Fixable vs. Human-Required
+
+**Auto-fix (proceed without asking):**
+- PR review comments — address each: fix bugs, reply with rationale for declines
+- CI check failures — diagnose logs, apply fix, push
+- Code quality issues (naming, complexity, DRY, magic values) — direct edits
+- Architecture violations (layer boundary crossed, SRP violated) — refactor the specific file
+- Test coverage gaps — add the missing test cases
+- Missing logging/metrics instrumentation — add spans/counters at flagged locations
+
+**Pause and ask human before proceeding:**
+- Security 🔴 — confirm fix approach before touching auth/crypto code
+- Ops: SLIs/SLOs 🔴 — SLO targets require product decision, not code
+- Architecture 🔴 (systemic redesign required, not a single-file fix)
+- HOLD verdict with multiple 🔴 across unrelated dimensions
+
+### Fix Agent Dispatch
+
+For each blocking issue, invoke the appropriate existing skill or agent:
+
+| Dimension | How to Fix |
+|-----------|------------|
+| PR Review Comments | Invoke the `address-review-comments` skill — it handles fetching threads, fix-or-decline triage, replies, and resolution automatically |
+| CI / PR Checks | `general-purpose` agent — pass failing check name + log excerpt (max 50 lines) |
+| Architecture | `code-refactoring` agent — pass violation description + specific file(s) only |
+| Code Quality | `code-refactoring` agent — pass issue list + specific file(s) only |
+| Test Quality | `general-purpose` agent — pass missing case description + test file + source file |
+| Ops: Observability | `general-purpose` agent — pass flagged code path + logging/metrics conventions |
+
+**Launch all independent fixes simultaneously (single message, multiple Task calls).**
+
+### Re-verify After Fixes
+
+After fix agents complete:
+
+1. Re-run CI check status: `gh pr checks <PR_NUMBER>`
+2. Re-fetch PR comments: check for newly resolved threads
+3. Re-run the test suite
+4. Re-launch only the reviewer agents for dimensions that were 🟡 or 🔴
+5. Regenerate the shipping gate report
+
+### Loop Termination
+
+| Condition | Action |
+|-----------|--------|
+| All dimensions 🟢 | Exit with 🚀 SHIP IT |
+| Progress made but issues remain | Loop again (max 3 fix iterations) |
+| No progress (same issues two rounds in a row) | Stop, report as "needs human" |
+| Security or SLO 🔴 encountered | Stop, ask human for direction |
+| 3 fix iterations exhausted | Stop with final report showing remaining blockers |
+
+---
+
 ## Verdict Criteria
 
 | Verdict | Condition |
 |---------|-----------|
 | 🚀 **SHIP IT** | All dimensions 🟢, or only 🟡 with no blocking issues |
-| ⚠️ **FIX THEN SHIP** | One or more 🟡 with fixable blocking issues (< 2h work) |
-| 🛑 **HOLD** | Any 🔴, or multiple blocking issues across dimensions |
+| ⚠️ **FIX THEN SHIP** | One or more 🟡 with fixable blocking issues (< 2h work) — triggers Step 4 loop |
+| 🛑 **HOLD** | Any 🔴, or multiple blocking issues across dimensions — pause for human |
 
 A single 🔴 in **Security** or **Ops: SLIs / SLOs** (new user-facing feature with no SLO) always produces a **HOLD** regardless of other scores.
 

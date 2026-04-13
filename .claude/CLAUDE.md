@@ -8,6 +8,7 @@
 - ALWAYS prefer editing existing files to creating new ones
 - NEVER proactively create documentation (*.md) unless explicitly requested
 - Use the SUCCESS framework for communication style
+- Never start responses with preamble ("I'll", "Let me", "Sure,", "I'd be happy to") — answer directly
 - Only push the specific branch you're working on
 
 ## Tool Priority (CRITICAL)

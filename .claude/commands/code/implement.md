@@ -746,6 +746,26 @@ This parallel approach will complete in 3 hours instead of 8-10 hours sequential
 
 ---
 
+## Final Phase: Automated Quality Gate (REQUIRED)
+
+After all implementation phases complete, **always run `/code:fix-loop`** before declaring the feature done.
+
+```
+/code:fix-loop
+```
+
+This automatically:
+1. Runs build, tests, lint, and type checks in parallel using minimal-context agents
+2. Fixes every failure found (auto-fix for lint, targeted agents for test/type/build failures)
+3. Re-verifies after fixes, looping until all checks pass (max 5 iterations)
+4. Exits with a report of what was fixed and what (if anything) needs human attention
+
+**Do not open a PR or declare the feature complete until `fix-loop` exits with ✅ All green.**
+
+After `fix-loop` passes, run `/code:is-it-ready` for architectural sign-off before opening the PR.
+
+---
+
 ## Related Resources
 
 - Six-Phase Software Implementation Methodology (enhanced with parallelization)
