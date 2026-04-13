@@ -116,8 +116,8 @@ Use the `Task` tool to generate all concepts in parallel. This is significantly 
    - Receive the full design brief (format, style, colors, viewBox, SVG conventions)
    - Be assigned a specific creative direction (e.g., "geometric letterform", "abstract symbol", "mascot-based")
    - Write its SVG to a specific file path (e.g., `logos/concepts/concept-1.svg`)
-   - Use `subagent_type: "general-purpose"` and `mode: "bypassPermissions"`
-3. After all agents complete, generate `logos/preview.html` and present the results
+   - Use `subagent_type: "general-purpose"`
+3. After all agents complete, **you** (the main agent) generate `logos/preview.html` — do not delegate this step, as it must happen in the same turn as presenting results to the user
 
 **Example dispatch pattern** (all in one message):
 
@@ -277,9 +277,9 @@ Once the user picks a concept direction, iterate on it.
 
 1. Dispatch one `Task` agent per variation, all in the same message
 2. Each agent receives: the base SVG content (copy the full SVG inline in the prompt), the specific variation to apply, the target file path, and the full SVG conventions
-3. After all agents complete, regenerate `logos/preview.html` and present the results
+3. After all agents complete, **you** (the main agent) regenerate `logos/preview.html` and present the results
 
-Use `subagent_type: "general-purpose"` and `mode: "bypassPermissions"` for each agent. Always include the full base SVG content in each agent's prompt — agents do not share context.
+Use `subagent_type: "general-purpose"` for each agent. Always include the full base SVG content in each agent's prompt — agents do not share context.
 
 ### File output
 
@@ -313,10 +313,10 @@ When the user says "export", "I'm happy with this", "this is the one", or simila
 1. Identify the final iteration SVG (ask the user to confirm which one if ambiguous)
 2. Create the `logos/export/` directory
 3. Copy the final SVG to `logos/export/logo.svg`
-4. Run the bundled export script to generate PNGs:
+4. Run the bundled export script to generate PNGs. Use the **absolute path** to the SVG — relative paths fail when working in git worktrees:
 
 ```bash
-bash ~/.claude/skills/logo-designer/scripts/export.sh logos/export/logo.svg logos/export/
+bash ~/.claude/skills/logo-designer/scripts/export.sh /absolute/path/to/logos/export/logo.svg /absolute/path/to/logos/export/
 ```
 
 The script produces: `logo-16.png`, `logo-32.png`, `logo-48.png`, `logo-192.png`, `logo-512.png`, `logo-1024.png`, `logo-2048.png`

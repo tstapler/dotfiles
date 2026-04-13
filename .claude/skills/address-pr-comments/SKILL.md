@@ -39,7 +39,7 @@ Or the user provides the PR number directly: `PR_NUMBER = 123`.
 
 Use **PR-specific file names** (e.g. `/tmp/review-threads-{OWNER}-{REPO}-{PR}.json`) to avoid collisions with parallel sessions working on different PRs. Write the script inline with hardcoded values — do NOT use `sys.argv` for OWNER/REPO/PR.
 
-Write to `/tmp/fetch_threads_{PR}.py` and run it. Include `databaseId` in the comments query — the REST reply API requires the numeric database ID, not the GraphQL node ID.
+Write to `/tmp/fetch_threads_{OWNER}_{REPO}_{PR}.py` and run it. Include `databaseId` in the comments query — the REST reply API requires the numeric database ID, not the GraphQL node ID.
 
 ```python
 #!/usr/bin/env python3

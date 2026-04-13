@@ -11,8 +11,11 @@ BASENAME="logo"
 
 mkdir -p "$OUTPUT_DIR"
 
-# Copy SVG to output
-cp "$INPUT_SVG" "$OUTPUT_DIR/$BASENAME.svg"
+# Copy SVG to output (skip if source and destination are the same file)
+DEST_SVG="$OUTPUT_DIR/$BASENAME.svg"
+if [ "$(realpath "$INPUT_SVG")" != "$(realpath "$DEST_SVG" 2>/dev/null)" ]; then
+  cp "$INPUT_SVG" "$DEST_SVG"
+fi
 
 # Detect available tool
 TOOL=""
