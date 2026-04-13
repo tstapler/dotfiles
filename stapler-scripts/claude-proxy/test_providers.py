@@ -8,6 +8,12 @@ import asyncio
 from unittest.mock import MagicMock, patch, call, AsyncMock
 
 
+@pytest.fixture(autouse=True)
+def disable_compression(monkeypatch):
+    """Ensure all existing provider tests bypass compression."""
+    monkeypatch.setenv("STAPLER_COMPRESS", "0")
+
+
 # ---------------------------------------------------------------------------
 # Helpers to instantiate providers without real AWS/Anthropic connections
 # ---------------------------------------------------------------------------
@@ -242,7 +248,7 @@ class TestStreamBedrockSync:
         sse_payload = send_calls[0].args[1]
         assert "content_block_delta" in sse_payload
 
-    def test_message_stop_sends_done(self):
+    def test_message_stop_sends_anthropic_format(self):
         send_stream = MagicMock()
         events = [self._make_event("message_stop")]
         self.provider.client.invoke_model_with_response_stream.return_value = {
@@ -255,9 +261,13 @@ class TestStreamBedrockSync:
         run_calls = mock_run.call_args_list
         send_calls = [c for c in run_calls if c.args[0] == send_stream.send]
         assert len(send_calls) == 1
-        assert "[DONE]" in send_calls[0].args[1]
+        payload = send_calls[0].args[1]
+        assert "message_stop" in payload
+        assert payload.startswith("data: ")
+        assert payload.endswith("\n\n")
 
-    def test_unknown_event_type_ignored(self):
+    def test_all_event_types_forwarded(self):
+        """All Bedrock event types should be forwarded directly, not filtered."""
         send_stream = MagicMock()
         events = [self._make_event("ping"), self._make_event("message_start")]
         self.provider.client.invoke_model_with_response_stream.return_value = {
@@ -269,7 +279,7 @@ class TestStreamBedrockSync:
 
         run_calls = mock_run.call_args_list
         send_calls = [c for c in run_calls if c.args[0] == send_stream.send]
-        assert len(send_calls) == 0  # No data events sent for ping/message_start
+        assert len(send_calls) == 2  # Both ping and message_start forwarded
 
     def test_stream_always_closed_in_finally(self):
         send_stream = MagicMock()

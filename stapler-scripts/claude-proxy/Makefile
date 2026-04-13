@@ -1,6 +1,6 @@
 # Claude Proxy Makefile
 
-.PHONY: help install uninstall update start stop restart reload status logs app-logs http-logs clean deps update-token
+.PHONY: help install uninstall update start stop restart reload status logs app-logs http-logs clean deps update-token bench bench-compare bench-watch test-instance
 
 help:
 	@echo "Claude Proxy Management Commands:"
@@ -19,6 +19,18 @@ help:
 	@echo "  make deps          - Install/update dependencies"
 	@echo "  make update-token  - Update OAuth token in plist"
 	@echo "  make dev           - Run proxy in development mode (foreground)"
+	@echo ""
+	@echo "Benchmarking:"
+	@echo "  make bench         - Run compression benchmark (dry-run, no API calls)"
+	@echo "  make bench-compare - Compare port 47000 vs port 47001 side-by-side"
+	@echo "  make bench-watch   - Live /metrics terminal dashboard"
+	@echo "  make test-instance - Start a test proxy on port 47001"
+	@echo ""
+	@echo "Model Configuration:"
+	@echo "  make validate-models    - Validate Bedrock model mappings"
+	@echo "  make list-models        - List all available models (Bedrock + Anthropic)"
+	@echo "  make regenerate-configs - Regenerate model config files"
+	@echo ""
 	@echo "  install.sh         - Interactive installer for new users"
 
 # Install proxy as LaunchAgent
@@ -80,34 +92,98 @@ stop:
 		launchctl bootout gui/$$(id -u) ~/Library/LaunchAgents/com.claude-proxy.plist 2>/dev/null || true
 	@echo "Claude Proxy stopped"
 
-# Graceful reload (zero downtime with uvicorn multi-worker)
+# Graceful reload (zero downtime: canary smoke test → HUP → worker cycle)
 reload:
 	@echo "Validating new code..."
 	@uv run python -c "import main" || (echo "❌ Import failed, aborting reload"; exit 1)
 	@uv run python -m pytest test_providers.py -q || (echo "❌ Tests failed, aborting reload"; exit 1)
-	@echo "✅ Validation passed, sending HUP signal for graceful reload..."
-	@MASTER_PID=$$(pgrep -f "uvicorn main:app" | head -1); \
-	if [ -n "$$MASTER_PID" ]; then \
-		kill -HUP $$MASTER_PID && echo "✅ Graceful reload initiated (PID: $$MASTER_PID)"; \
-		sleep 3; \
-		curl -sf http://localhost:47000/health > /dev/null && echo "✅ Proxy healthy after reload" || echo "⚠️  Health check failed"; \
+	@echo "✅ Tests passed, starting canary on :47001..."
+	@OAUTH_TOKEN=$$(if [ -n "$$CLAUDE_CODE_OAUTH_TOKEN" ]; then echo "$$CLAUDE_CODE_OAUTH_TOKEN"; else /usr/libexec/PlistBuddy -c "Print :EnvironmentVariables:CLAUDE_CODE_OAUTH_TOKEN" ~/Library/LaunchAgents/com.claude-proxy.plist 2>/dev/null; fi); \
+	MASTER_PID=$$(pgrep -f "uvicorn main:app" | head -1); \
+	PROXY_PORT=47001 WORKERS=1 uv run uvicorn main:app --host 127.0.0.1 --port 47001 --workers 1 --log-level warning > /tmp/claude-proxy-canary.log 2>&1 & \
+	CANARY_PID=$$!; \
+	echo "Canary started (PID: $$CANARY_PID)"; \
+	HEALTHY=0; \
+	for i in 1 2 3 4 5 6 7 8 9 10; do \
+		sleep 2; \
+		if curl -sf http://localhost:47001/health > /dev/null 2>&1; then \
+			echo "✅ Canary healthy ($$((i*2))s)"; \
+			HEALTHY=1; \
+			break; \
+		fi; \
+		echo "  Waiting for canary... ($$((i*2))s)"; \
+	done; \
+	if [ "$$HEALTHY" -eq 0 ]; then \
+		echo "❌ Canary failed to start - aborting, old proxy unchanged"; \
+		kill $$CANARY_PID 2>/dev/null; \
+		exit 1; \
+	fi; \
+	if [ -n "$$OAUTH_TOKEN" ]; then \
+		echo "Running smoke test against canary..."; \
+		SMOKE_RESULT=$$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:47001/v1/messages/dry-run \
+			-H "Authorization: Bearer $$OAUTH_TOKEN" \
+			-H "Content-Type: application/json" \
+			-d '{"model":"claude-haiku-4-5-20251001","messages":[{"role":"user","content":"hello"}],"max_tokens":10}'); \
+		if [ "$$SMOKE_RESULT" = "200" ]; then \
+			echo "✅ Smoke test passed (HTTP $$SMOKE_RESULT)"; \
+		else \
+			echo "❌ Smoke test failed (HTTP $$SMOKE_RESULT) - aborting, old proxy unchanged"; \
+			kill $$CANARY_PID 2>/dev/null; \
+			exit 1; \
+		fi; \
 	else \
-		echo "⚠️  Could not find uvicorn master process, falling back to restart..."; \
-		$(MAKE) restart; \
+		echo "⚠️  No OAuth token found, skipping smoke test"; \
+	fi; \
+	kill $$CANARY_PID 2>/dev/null; \
+	echo "Canary validated and stopped, reloading main process..."; \
+	rm -rf __pycache__ providers/__pycache__; \
+	if [ -n "$$MASTER_PID" ]; then \
+		kill -HUP $$MASTER_PID && echo "✅ HUP sent to main process (PID: $$MASTER_PID)"; \
+		for i in 1 2 3 4 5; do \
+			sleep 2; \
+			if curl -sf http://localhost:47000/health > /dev/null 2>&1; then \
+				echo "✅ Proxy healthy after reload ($$((i*2))s)"; \
+				exit 0; \
+			fi; \
+		done; \
+		echo "⚠️  Health check failed after HUP - check logs with: make app-logs"; \
+	else \
+		echo "⚠️  Main process not found, falling back to hard start..."; \
+		$(MAKE) start; \
+		for i in 1 2 3 4 5; do \
+			sleep 2; \
+			if curl -sf http://localhost:47000/health > /dev/null 2>&1; then \
+				echo "✅ Proxy healthy after start ($$((i*2))s)"; \
+				exit 0; \
+			fi; \
+		done; \
 	fi
 
-# Restart the proxy (with validation)
+# Restart the proxy (validates via canary, zero-downtime via HUP, hard restart as fallback)
 restart:
 	@echo "Validating new code..."
 	@uv run python -c "import main" || (echo "❌ Import failed, aborting restart"; exit 1)
 	@uv run python -m pytest test_providers.py -q || (echo "❌ Tests failed, aborting restart"; exit 1)
 	@echo "✅ Validation passed, restarting..."
-	@$(MAKE) stop
-	@echo "Clearing Python bytecode cache..."
-	@rm -rf __pycache__ providers/__pycache__
-	@$(MAKE) start
-	@sleep 3
-	@curl -sf http://localhost:47000/health > /dev/null && echo "✅ Proxy healthy after restart" || echo "⚠️  Health check failed"
+	@MASTER_PID=$$(pgrep -f "uvicorn main:app" | head -1); \
+	if [ -n "$$MASTER_PID" ]; then \
+		echo "Live process found — using zero-downtime reload..."; \
+		$(MAKE) reload; \
+	else \
+		echo "No live process — starting fresh..."; \
+		rm -rf __pycache__ providers/__pycache__; \
+		$(MAKE) start; \
+		echo "Waiting for proxy to start..."; \
+		for i in 1 2 3 4 5 6 7 8 9 10; do \
+			sleep 2; \
+			if curl -sf http://localhost:47000/health > /dev/null 2>&1; then \
+				echo "✅ Proxy healthy after restart ($$((i*2))s)"; \
+				exit 0; \
+			fi; \
+			echo "  Waiting... ($$((i*2))s)"; \
+		done; \
+		echo "⚠️  Health check failed after 20s - check logs with: make app-logs"; \
+	fi
 
 # Check proxy status
 status:
@@ -191,5 +267,38 @@ test:
 	else \
 		echo "CLAUDE_CODE_OAUTH_TOKEN not set, skipping OAuth test"; \
 	fi
+
+# Benchmarking targets (no API calls needed for dry-run/watch)
+bench:
+	@uv run python bench.py dry-run
+
+bench-compare:
+	@uv run python bench.py compare
+
+bench-watch:
+	@uv run python bench.py watch
+
+# Start a separate test proxy instance on port 47001
+test-instance:
+	@echo "Starting test proxy on port 47001..."
+	@echo "Point a test agent at it: alias test-claude='env -u CLAUDE_CODE_USE_BEDROCK ANTHROPIC_BASE_URL=http://localhost:47001 claude'"
+	PROXY_PORT=47001 uv run python main.py
+
+# Model config validation and generation
+validate-models:
+	@echo "Validating Bedrock model mappings..."
+	@python3 scripts/validate_bedrock_models.py --validate
+
+list-models:
+	@echo "=== Bedrock Models ==="
+	@python3 scripts/validate_bedrock_models.py --list
+	@echo "\n=== Anthropic Models ==="
+	@python3 scripts/fetch_anthropic_models.py --list
+
+regenerate-configs:
+	@echo "Regenerating model configs..."
+	@python3 scripts/validate_bedrock_models.py --generate
+	@python3 scripts/fetch_anthropic_models.py --generate
+	@echo "✅ Configs regenerated - reload proxy to apply"
 
 .DEFAULT_GOAL := help
