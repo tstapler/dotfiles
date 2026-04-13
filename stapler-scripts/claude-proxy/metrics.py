@@ -2,6 +2,7 @@
 import time
 import os
 import asyncio
+from dataclasses import dataclass, asdict
 from typing import Dict, Any, Optional
 from collections import deque
 import diskcache
@@ -9,6 +10,24 @@ from datetime import datetime, timedelta
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class RequestDetail:
+    """Lightweight per-request record for the recent requests feed."""
+    request_id: str
+    timestamp: str
+    model: str
+    tokens_before: int
+    tokens_after: int
+    compressed: bool
+    stream: bool
+    # Timing (populated by fallback after request completes)
+    provider: str = "unknown"
+    duration_ms: float = 0.0       # wall-clock time proxy held the request
+    first_byte_ms: float = 0.0     # time to first SSE chunk (TTFT)
+    bedrock_invocation_ms: int = 0  # Bedrock's own invocationLatency from message_stop
+    bedrock_first_byte_ms: int = 0  # Bedrock's own firstByteLatency from message_stop
 
 
 class MetricsCollector:
@@ -22,8 +41,9 @@ class MetricsCollector:
         # 50MB cache size limit
         self.cache = diskcache.Cache(cache_dir, size_limit=50 * 1024 * 1024)
 
-        # In-memory deque for recent errors (no file locking!)
-        self.recent_errors = deque(maxlen=20)
+        # In-memory deques for recent items (no file locking!)
+        self.recent_errors: deque = deque(maxlen=20)
+        self.recent_requests: deque[RequestDetail] = deque(maxlen=100)
 
         # Cached stats (updated every 5s instead of computing on every request)
         self._cached_stats = None
@@ -107,6 +127,94 @@ class MetricsCollector:
         # Requests per minute tracking
         minute_key = datetime.now().strftime("rpm:%Y-%m-%dT%H:%M")
         self._incr(minute_key)
+
+    def record_compression(self, tokens_before: int, tokens_after: int, blocks_skipped: int = 0):
+        """Record a compression event."""
+        saved = tokens_before - tokens_after
+        self._incr("compression:total_before", tokens_before)
+        self._incr("compression:total_after", tokens_after)
+        self._incr("compression:total_saved", saved)
+        self._incr("compression:requests")
+        if blocks_skipped:
+            self._incr("compression:blocks_skipped", blocks_skipped)
+
+    def get_compression_stats(self) -> dict:
+        """Returns aggregate compression stats."""
+        total_before = self._get("compression:total_before", 0)
+        total_after = self._get("compression:total_after", 0)
+        total_saved = self._get("compression:total_saved", 0)
+        requests = self._get("compression:requests", 0)
+        return {
+            "total_tokens_before": total_before,
+            "total_tokens_after": total_after,
+            "total_tokens_saved": total_saved,
+            "total_requests_compressed": requests,
+            "avg_compression_ratio": round(total_saved / total_before, 3) if total_before > 0 else 0,
+        }
+
+    def record_request_detail(
+        self,
+        request_id: str,
+        model: str,
+        tokens_before: int,
+        tokens_after: int,
+        compressed: bool,
+        stream: bool = False,
+    ):
+        """Record a lightweight per-request entry for the recent requests feed."""
+        self.recent_requests.appendleft(RequestDetail(
+            request_id=request_id,
+            timestamp=datetime.now().isoformat(),
+            model=model,
+            tokens_before=tokens_before,
+            tokens_after=tokens_after,
+            compressed=compressed,
+            stream=stream,
+        ))
+
+    def update_request_timing(
+        self,
+        request_id: str,
+        provider: str,
+        duration_ms: float,
+        first_byte_ms: float = 0.0,
+        bedrock_invocation_ms: int = 0,
+        bedrock_first_byte_ms: int = 0,
+    ):
+        """Update timing fields on an existing RequestDetail record (called from fallback after completion)."""
+        for detail in self.recent_requests:
+            if detail.request_id == request_id:
+                detail.provider = provider
+                detail.duration_ms = round(duration_ms, 1)
+                detail.first_byte_ms = round(first_byte_ms, 1)
+                detail.bedrock_invocation_ms = bedrock_invocation_ms
+                detail.bedrock_first_byte_ms = bedrock_first_byte_ms
+                return
+
+    def record_provider_latency(self, provider: str, duration_ms: float, first_byte_ms: float = 0.0):
+        """Record per-provider latency for aggregate stats (sum+count for avg calculation)."""
+        dur_int = int(duration_ms)
+        self._incr(f"latency:{provider}:duration_sum", dur_int)
+        self._incr(f"latency:{provider}:duration_count")
+        if first_byte_ms > 0:
+            fb_int = int(first_byte_ms)
+            self._incr(f"latency:{provider}:first_byte_sum", fb_int)
+            self._incr(f"latency:{provider}:first_byte_count")
+        # Duration bucket per provider
+        if duration_ms < 1000:
+            self._incr(f"latency:{provider}:lt1s")
+        elif duration_ms < 5000:
+            self._incr(f"latency:{provider}:1_5s")
+        elif duration_ms < 30000:
+            self._incr(f"latency:{provider}:5_30s")
+        elif duration_ms < 60000:
+            self._incr(f"latency:{provider}:30_60s")
+        else:
+            self._incr(f"latency:{provider}:gt60s")
+
+    def get_recent_requests(self) -> list[dict]:
+        """Return recent request details as a list of dicts (newest first)."""
+        return [asdict(r) for r in self.recent_requests]
 
     def record_fallback(self, from_provider: str, to_provider: str, reason: str):
         """Record a provider fallback event."""
@@ -267,6 +375,26 @@ class MetricsCollector:
         # Recent errors (from in-memory deque)
         recent_errors = list(self.recent_errors)
 
+        # Per-provider latency averages
+        provider_latency = {}
+        for pname in ["anthropic", "bedrock"]:
+            dur_sum = self._get(f"latency:{pname}:duration_sum", 0)
+            dur_count = self._get(f"latency:{pname}:duration_count", 0)
+            fb_sum = self._get(f"latency:{pname}:first_byte_sum", 0)
+            fb_count = self._get(f"latency:{pname}:first_byte_count", 0)
+            provider_latency[pname] = {
+                "avg_duration_ms": round(dur_sum / dur_count) if dur_count else 0,
+                "avg_first_byte_ms": round(fb_sum / fb_count) if fb_count else 0,
+                "requests": dur_count,
+                "buckets": {
+                    "< 1s":   self._get(f"latency:{pname}:lt1s", 0),
+                    "1-5s":   self._get(f"latency:{pname}:1_5s", 0),
+                    "5-30s":  self._get(f"latency:{pname}:5_30s", 0),
+                    "30-60s": self._get(f"latency:{pname}:30_60s", 0),
+                    "> 60s":  self._get(f"latency:{pname}:gt60s", 0),
+                }
+            }
+
         return {
             "summary": {
                 "total_requests": total_requests,
@@ -277,6 +405,7 @@ class MetricsCollector:
                 "error_rate": round(error_rate, 2)
             },
             "providers": providers,
+            "provider_latency": provider_latency,
             "models": top_models,
             "error_types": error_types,
             "duration_distribution": duration_distribution,
@@ -285,5 +414,7 @@ class MetricsCollector:
             "lag_data": lag_data,
             "current_lag_ms": current_lag_ms,
             "recent_errors": recent_errors,
+            "recent_requests": self.get_recent_requests(),
+            "compression": self.get_compression_stats(),
             "timestamp": datetime.now().isoformat()
         }

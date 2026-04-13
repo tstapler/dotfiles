@@ -1,6 +1,7 @@
 """Fallback handler for provider orchestration."""
 import time
 import asyncio
+import json
 import logging
 from typing import Dict, Any, List, AsyncIterator, Optional
 from providers import Provider, RateLimitError, ValidationError, TimeoutError, AuthenticationError, ModelUnsupportedError
@@ -81,9 +82,13 @@ class FallbackHandler:
                         logger.info(f"{req_prefix}→ {provider.name} (model={model})")
 
                     result = await provider.send_message(body, token, auth_type, headers, request_id)
-                    logger.info(f"{req_prefix}✓ {provider.name} (model={model})")
+                    duration_ms = (time.time() - start_time) * 1000
+                    logger.info(f"{req_prefix}✓ {provider.name} ({duration_ms:.0f}ms, model={model})")
                     if self.metrics:
                         self.metrics.record_request_complete(provider.name, model, start_time, True, stream=False)
+                        if request_id:
+                            self.metrics.update_request_timing(request_id, provider.name, duration_ms)
+                        self.metrics.record_provider_latency(provider.name, duration_ms)
                     return result
 
                 except TimeoutError as e:
@@ -182,7 +187,12 @@ class FallbackHandler:
 
                     chunk_count = 0
                     all_chunks = []
+                    first_chunk_time = None
+                    bedrock_invocation_ms = 0
+                    bedrock_first_byte_ms = 0
                     async for chunk in provider.stream_message(body, token, auth_type, headers, request_id):
+                        if first_chunk_time is None:
+                            first_chunk_time = time.time()
                         chunk_count += 1
                         # Capture chunks for short stream analysis
                         if chunk_count <= 20:
@@ -190,6 +200,19 @@ class FallbackHandler:
                         # Log first chunk for debugging
                         if chunk_count == 1:
                             logger.debug(f"{req_prefix}{provider.name} first chunk: {chunk[:100]}...")
+                        # Extract Bedrock invocation metrics from message_stop event
+                        if provider.name == "bedrock" and "message_stop" in chunk:
+                            try:
+                                raw = chunk.strip()
+                                if raw.startswith("data: "):
+                                    raw = raw[6:]
+                                data = json.loads(raw)
+                                bm = data.get("amazon-bedrock-invocationMetrics", {})
+                                if bm:
+                                    bedrock_invocation_ms = bm.get("invocationLatency", 0)
+                                    bedrock_first_byte_ms = bm.get("firstByteLatency", 0)
+                            except Exception:
+                                pass
                         yield chunk
 
                     # Log suspiciously short streams with complete response
@@ -198,9 +221,17 @@ class FallbackHandler:
                         logger.warning(f"{req_prefix}⚠️  Short stream detected: {chunk_count} chunks (model={model}, max_tokens={body.get('max_tokens')}, thinking={body.get('thinking') is not None})")
                         logger.warning(f"{req_prefix}Full response:\n{full_response}")
 
-                    logger.info(f"{req_prefix}✓ {provider.name} stream ({chunk_count} chunks, model={model})")
+                    duration_ms = (time.time() - start_time) * 1000
+                    first_byte_ms = ((first_chunk_time - start_time) * 1000) if first_chunk_time else 0.0
+                    logger.info(f"{req_prefix}✓ {provider.name} stream ({chunk_count} chunks, {duration_ms:.0f}ms, TTFT {first_byte_ms:.0f}ms, model={model})")
                     if self.metrics:
                         self.metrics.record_request_complete(provider.name, model, start_time, True, stream=True)
+                        if request_id:
+                            self.metrics.update_request_timing(
+                                request_id, provider.name, duration_ms, first_byte_ms,
+                                bedrock_invocation_ms, bedrock_first_byte_ms
+                            )
+                        self.metrics.record_provider_latency(provider.name, duration_ms, first_byte_ms)
                     return
 
                 except TimeoutError as e:

@@ -1,4 +1,5 @@
 """Claude Proxy - Simple OAuth + Bedrock fallback proxy for Claude Code."""
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import StreamingResponse, JSONResponse, HTMLResponse
 from typing import Dict, Any
@@ -14,6 +15,7 @@ from providers.bedrock import BedrockProvider
 from providers import ValidationError, AuthenticationError, RateLimitError
 from fallback import FallbackHandler
 from metrics import MetricsCollector
+from compactor import compress_messages, get_flags, init_compactor
 import config
 
 # Configure logging with rotation and separate files
@@ -59,19 +61,6 @@ logger = logging.getLogger(__name__)
 SLOW_REQUEST_THRESHOLD = 30  # seconds
 BLOCKING_REQUEST_THRESHOLD = 60  # seconds
 
-# Initialize FastAPI app
-app = FastAPI(title="Claude Proxy", version="1.0.0")
-
-# Initialize metrics collector
-metrics = MetricsCollector()
-
-# Initialize providers
-anthropic = AnthropicProvider()
-bedrock = BedrockProvider()
-
-# Create fallback handler with provider priority
-fallback = FallbackHandler([anthropic, bedrock], metrics=metrics)
-
 
 async def _monitor_event_loop_lag():
     """Sample event loop lag every second and record to metrics."""
@@ -87,9 +76,31 @@ async def _monitor_event_loop_lag():
             logger.debug(f"Event loop lag: {lag_ms:.1f}ms")
 
 
-@app.on_event("startup")
-async def startup():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     asyncio.create_task(_monitor_event_loop_lag())
+    init_compactor()
+    # Set anyio's default thread limiter to match BEDROCK_THREAD_POOL_SIZE
+    # so streaming boto3 calls (which must use anyio threads for from_thread.run) are bounded
+    import anyio
+    limiter = anyio.to_thread.current_default_thread_limiter()
+    limiter.total_tokens = config.BEDROCK_THREAD_POOL_SIZE
+    logger.info(f"anyio thread limiter set to {config.BEDROCK_THREAD_POOL_SIZE} threads")
+    yield
+
+
+# Initialize FastAPI app
+app = FastAPI(title="Claude Proxy", version="1.0.0", lifespan=lifespan)
+
+# Initialize metrics collector
+metrics = MetricsCollector()
+
+# Initialize providers
+anthropic = AnthropicProvider()
+bedrock = BedrockProvider()
+
+# Create fallback handler with provider priority
+fallback = FallbackHandler([anthropic, bedrock], metrics=metrics)
 
 
 # Dashboard HTML template
@@ -281,6 +292,11 @@ DASHBOARD_HTML = """
             <div class="stat-value" id="loop-lag">0ms</div>
             <div class="stat-subtitle" id="loop-lag-status">healthy</div>
         </div>
+        <div class="stat-card">
+            <div class="stat-label">Tokens Saved</div>
+            <div class="stat-value" id="tokens-saved">0</div>
+            <div class="stat-subtitle" id="compression-ratio">— compression</div>
+        </div>
     </div>
 
     <div class="charts-grid">
@@ -301,6 +317,77 @@ DASHBOARD_HTML = """
     <div class="chart-container" style="margin-bottom: 24px;">
         <div class="chart-title">Event Loop Lag — max ms per minute (15 min)</div>
         <canvas id="lag-chart"></canvas>
+    </div>
+
+    <div class="chart-container" style="margin-bottom: 24px;">
+        <div class="chart-title">Latency by Provider</div>
+        <div class="stats-grid" style="margin-top: 12px; margin-bottom: 0;">
+            <div class="stat-card">
+                <div class="stat-label">Anthropic Avg Duration</div>
+                <div class="stat-value" id="lat-anthropic-dur">—</div>
+                <div class="stat-subtitle" id="lat-anthropic-req">0 requests</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Anthropic Avg TTFT</div>
+                <div class="stat-value" id="lat-anthropic-ttft">—</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Bedrock Avg Duration</div>
+                <div class="stat-value" id="lat-bedrock-dur">—</div>
+                <div class="stat-subtitle" id="lat-bedrock-req">0 requests</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Bedrock Avg TTFT</div>
+                <div class="stat-value" id="lat-bedrock-ttft">—</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="chart-container" style="margin-bottom: 24px;">
+        <div class="chart-title">Compression</div>
+        <div class="stats-grid" style="margin-top: 12px; margin-bottom: 0;">
+            <div class="stat-card">
+                <div class="stat-label">Requests Compressed</div>
+                <div class="stat-value" id="comp-requests">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Avg Compression Ratio</div>
+                <div class="stat-value" id="comp-ratio">0%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Tokens Before</div>
+                <div class="stat-value" id="comp-before">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Tokens After</div>
+                <div class="stat-value" id="comp-after">0</div>
+            </div>
+        </div>
+        <div id="compression-disabled-notice" style="display:none; color:#888; font-size:13px; padding:8px 0; text-align:center;">
+            Compression inactive — no requests compressed yet (or STAPLER_COMPRESS=0)
+        </div>
+    </div>
+
+    <div class="errors-section" style="margin-bottom: 24px;">
+        <div class="errors-title">Recent Requests</div>
+        <table class="errors-table">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>ID</th>
+                    <th>Provider</th>
+                    <th>Model</th>
+                    <th>Duration</th>
+                    <th>TTFT</th>
+                    <th>Tokens Before → After</th>
+                    <th>Saved</th>
+                    <th>Type</th>
+                </tr>
+            </thead>
+            <tbody id="requests-body">
+                <tr><td colspan="9" class="no-errors">No requests yet</td></tr>
+            </tbody>
+        </table>
     </div>
 
     <div class="errors-section">
@@ -494,6 +581,82 @@ DASHBOARD_HTML = """
                     lagChart.update();
                 }
 
+                // Update compression stats
+                if (data.compression) {
+                    const c = data.compression;
+                    const saved = c.total_tokens_saved || 0;
+                    const ratio = c.avg_compression_ratio || 0;
+                    const requests = c.total_requests_compressed || 0;
+
+                    document.getElementById('tokens-saved').textContent = saved.toLocaleString();
+                    document.getElementById('compression-ratio').textContent =
+                        ratio > 0 ? (ratio * 100).toFixed(1) + '% avg saved' : '— compression';
+
+                    document.getElementById('comp-requests').textContent = requests.toLocaleString();
+                    document.getElementById('comp-ratio').textContent =
+                        ratio > 0 ? (ratio * 100).toFixed(1) + '%' : '0%';
+                    document.getElementById('comp-before').textContent =
+                        (c.total_tokens_before || 0).toLocaleString();
+                    document.getElementById('comp-after').textContent =
+                        (c.total_tokens_after || 0).toLocaleString();
+
+                    const notice = document.getElementById('compression-disabled-notice');
+                    notice.style.display = requests === 0 ? 'block' : 'none';
+                }
+
+                // Update recent requests table
+                const requestsBody = document.getElementById('requests-body');
+                if (data.recent_requests && data.recent_requests.length > 0) {
+                    const abbrevModel = m => {
+                        if (!m || m === 'unknown') return m || '—';
+                        if (m.includes('opus')) return 'opus';
+                        if (m.includes('sonnet')) return 'sonnet';
+                        if (m.includes('haiku')) return 'haiku';
+                        return m.split('-').slice(-1)[0] || m;
+                    };
+                    const fmtMs = ms => !ms ? '—' : ms >= 1000 ? (ms/1000).toFixed(1)+'s' : Math.round(ms)+'ms';
+                    const provColor = p => p === 'anthropic' ? '#1e3a5f' : p === 'bedrock' ? '#1a3a2a' : '#2a2a2a';
+                    requestsBody.innerHTML = data.recent_requests.slice(0, 20).map(r => {
+                        const time = new Date(r.timestamp).toLocaleTimeString();
+                        const saved = r.tokens_before > 0 ? r.tokens_before - r.tokens_after : 0;
+                        const pct = r.tokens_before > 0 ? ((saved / r.tokens_before) * 100).toFixed(1) + '%' : '—';
+                        const tokStr = r.compressed
+                            ? `${r.tokens_before.toLocaleString()} → ${r.tokens_after.toLocaleString()}`
+                            : `${r.tokens_before.toLocaleString()}`;
+                        const typeLabel = r.stream
+                            ? '<span class="error-type" style="background:#1e3a5f">stream</span>'
+                            : '<span class="error-type" style="background:#1a3a1a">sync</span>';
+                        const provLabel = r.provider && r.provider !== 'unknown'
+                            ? `<span class="error-type" style="background:${provColor(r.provider)}">${r.provider}</span>`
+                            : '—';
+                        const ttft = r.bedrock_first_byte_ms > 0 ? fmtMs(r.bedrock_first_byte_ms) : fmtMs(r.first_byte_ms);
+                        return `<tr>
+                            <td>${time}</td>
+                            <td style="font-family:monospace;font-size:11px">${r.request_id}</td>
+                            <td>${provLabel}</td>
+                            <td>${abbrevModel(r.model)}</td>
+                            <td style="font-family:monospace">${fmtMs(r.duration_ms)}</td>
+                            <td style="font-family:monospace">${ttft}</td>
+                            <td style="font-family:monospace">${tokStr}</td>
+                            <td>${r.compressed ? pct : '—'}</td>
+                            <td>${typeLabel}</td>
+                        </tr>`;
+                    }).join('');
+                } else {
+                    requestsBody.innerHTML = '<tr><td colspan="6" class="no-errors">No requests yet</td></tr>';
+                }
+
+                // Update provider latency cards
+                if (data.provider_latency) {
+                    const fmtMs = ms => ms > 0 ? (ms >= 1000 ? (ms/1000).toFixed(1)+'s' : ms+'ms') : '—';
+                    for (const p of ['anthropic', 'bedrock']) {
+                        const pl = data.provider_latency[p] || {};
+                        document.getElementById(`lat-${p}-dur`).textContent = fmtMs(pl.avg_duration_ms || 0);
+                        document.getElementById(`lat-${p}-ttft`).textContent = fmtMs(pl.avg_first_byte_ms || 0);
+                        document.getElementById(`lat-${p}-req`).textContent = (pl.requests || 0).toLocaleString() + ' requests';
+                    }
+                }
+
                 // Update errors table
                 const errorsBody = document.getElementById('errors-body');
                 if (data.recent_errors && data.recent_errors.length > 0) {
@@ -598,6 +761,31 @@ async def messages_endpoint(request: Request):
 
         logger.info(f"[{request_id}] Request: model={body.get('model')}, max_tokens={body.get('max_tokens')}, stream={body.get('stream', False)}")
 
+        # Compression tracking vars (populated below if compression runs)
+        comp_stats: dict = {}
+
+        # Compress messages before forwarding (ADR-001)
+        if config.COMPRESS_ENABLED:
+            try:
+                flags = get_flags()
+                compressed_msgs, updated_tools, comp_stats = await compress_messages(
+                    body.get("messages", []),
+                    body.get("tools") or [],
+                    flags,
+                )
+                body = {**body, "messages": compressed_msgs, "tools": updated_tools}
+                if comp_stats and "original_tokens" in comp_stats:
+                    metrics.record_compression(
+                        comp_stats["original_tokens"],
+                        comp_stats["compressed_tokens"],
+                    )
+            except Exception as comp_err:
+                logger.error(f"[{request_id}] Compression failed — forwarding uncompressed: {comp_err}")
+
+        _tokens_before = comp_stats.get("original_tokens", 0)
+        _tokens_after = comp_stats.get("compressed_tokens", 0)
+        _compressed = bool(_tokens_before)
+
         # Get headers to forward
         headers = {}
         if "anthropic-version" in request.headers:
@@ -637,6 +825,8 @@ async def messages_endpoint(request: Request):
                     }
                     yield f"data: {json.dumps(error_event)}\n\n"
 
+            metrics.record_request_detail(request_id, body.get("model", "unknown"),
+                _tokens_before, _tokens_after, _compressed, stream=True)
             logger.info(f"[{request_id}] ✓ Starting streaming response")
             return StreamingResponse(
                 generate(),
@@ -651,6 +841,8 @@ async def messages_endpoint(request: Request):
         else:
             # Non-streaming response
             result = await fallback.send_message(body, token, auth_type, headers, request_id)
+            metrics.record_request_detail(request_id, body.get("model", "unknown"),
+                _tokens_before, _tokens_after, _compressed, stream=False)
             logger.info(f"[{request_id}] ✓ Non-streaming response complete")
             return JSONResponse(content=result, headers={"X-Request-ID": request_id})
 
@@ -680,6 +872,63 @@ async def messages_endpoint(request: Request):
     except Exception as e:
         logger.error(f"Error in messages endpoint: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/v1/messages/dry-run")
+async def messages_dry_run(request: Request):
+    """
+    Compression preview endpoint — no upstream API call, no metrics recorded.
+    Returns before/after token counts and the compressed body for inspection.
+    """
+    import uuid
+    request_id = str(uuid.uuid4())[:8]
+
+    try:
+        get_auth_from_request(request)  # validate auth header is present
+        body = await request.json()
+        messages = body.get("messages", [])
+        tools = body.get("tools") or []
+        model = body.get("model", "unknown")
+
+        flags = get_flags()
+        compressed_msgs, updated_tools, stats = await compress_messages(messages, tools, flags)
+
+        tokens_before = stats.get("original_tokens", 0)
+        tokens_after = stats.get("compressed_tokens", 0)
+        rewind_injected = (
+            any(t.get("name") == "rewind_retrieve" for t in updated_tools)
+            and not any(t.get("name") == "rewind_retrieve" for t in tools)
+        )
+
+        compressed_body = {**body, "messages": compressed_msgs, "tools": updated_tools}
+
+        return JSONResponse({
+            "request_id": request_id,
+            "model": model,
+            "compression": {
+                "enabled": flags.get("enabled", False),
+                "skipped": stats.get("skipped", False),
+                "tokens_before": tokens_before,
+                "tokens_after": tokens_after,
+                "tokens_saved": tokens_before - tokens_after,
+                "reduction_pct": round(stats.get("reduction_pct", 0.0), 2),
+                "timing_ms": round(stats.get("total_timing_ms", 0.0), 2),
+            },
+            "rewind_tool_injected": rewind_injected,
+            "original_body": body,
+            "compressed_body": compressed_body,
+        })
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"[{request_id}] dry-run error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/requests")
+async def recent_requests_endpoint():
+    """Return the last 100 request details (newest first) for benchmarking inspection."""
+    return JSONResponse(metrics.get_recent_requests())
 
 
 @app.post("/v1/messages/count_tokens")

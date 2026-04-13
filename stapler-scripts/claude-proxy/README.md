@@ -236,6 +236,78 @@ grep "abc12345" /tmp/claude-proxy.app.log
 tail -f /tmp/claude-proxy.app.log | grep "lag\|⚠️\|🐌"
 ```
 
+## Compression (stapler-compactor)
+
+The proxy includes transparent token compression via [claw-compactor](https://pypi.org/project/claw-compactor/)'s FusionEngine. Every request through `/v1/messages` is compressed before forwarding to Anthropic or Bedrock.
+
+### How it works
+
+1. `messages[]` from each Claude Code request is passed to `FusionEngine.compress_messages()`
+2. FusionEngine runs a 14-stage pipeline: dedup, log compression, diff compression, AST-aware code compression, Nexus ML compressor, and more
+3. `tool_use` and `tool_result` blocks pass through untouched — only natural-language and log content is compressed
+4. If any lossy compression occurred, the `rewind_retrieve` tool is injected so Claude can recover original content on demand
+5. Compression stats are tracked in `/metrics` under the `compression` key
+
+### Killswitch
+
+```bash
+STAPLER_COMPRESS=0 make start   # Disable all compression
+```
+
+### Configuration
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `STAPLER_COMPRESS` | `1` | Set to `0` to disable compression entirely |
+| `COMPRESS_FLOOR_BYTES` | `4096` | Skip compression for requests smaller than this |
+
+### Metrics
+
+```bash
+curl http://localhost:47000/metrics | jq '.compression'
+# {
+#   "total_tokens_before": 1234567,
+#   "total_tokens_after": 890123,
+#   "total_tokens_saved": 344444,
+#   "total_requests_compressed": 42,
+#   "avg_compression_ratio": 0.279
+# }
+```
+
+Compression stats are also visible on the `/dashboard` under the **Compression** panel.
+
+### Rewind Recovery
+
+When FusionEngine applies lossy compression to a turn, it:
+
+1. Stores the original content in a local `RewindStore` (in-memory LRU, 500 entries, 10-minute TTL)
+2. Embeds a marker in the compressed text: `[N items compressed to M. Retrieve: hash=XXXX]`
+3. Injects the `rewind_retrieve` tool into the request's `tools[]` array
+
+If Claude needs to recover a compressed turn during its response, it calls `rewind_retrieve` with the `hash_id` from the marker. The tool call is handled by FusionEngine's `RewindStore` and the original content is returned to Claude transparently.
+
+**As an operator**, you don't need to do anything — Rewind is fully automatic. You can observe it in the logs:
+
+```bash
+# See which requests triggered Rewind injection
+grep "rewind_retrieve" /tmp/claude-proxy.app.log
+
+# See compression stats including which turns were lossy
+curl http://localhost:47000/metrics | jq '.compression'
+```
+
+**If Rewind markers appear in Claude's output** (e.g., Claude echoes the marker text), it means Claude tried to reference compressed content but `rewind_retrieve` wasn't called. This is benign — the proxy will not re-compress already-compressed turns (double-compression guard), so the session continues safely.
+
+## Acknowledgements
+
+This project is built on the shoulders of open-source work that directly inspired or enabled its design:
+
+- **[claw-compactor](https://pypi.org/project/claw-compactor/)** (MIT) — the FusionEngine compression library at the heart of the stapler-compactor feature. Its 14-stage pipeline, Rewind reversibility design, and content-type-aware routing made transparent proxy-level compression practical.
+
+- **[LiteLLM](https://github.com/BerriAI/litellm)** — the reference implementation for multi-provider LLM proxying. Claude Proxy was built as a lighter alternative for the specific OAuth + Bedrock fallback use case, but LiteLLM's design informed the provider abstraction layer.
+
+- **[OpenFeature SDK](https://openfeature.dev/)** (Apache 2.0) — CNCF standard for feature flag evaluation. Used here for per-stage compression control via `InMemoryProvider`, making flags adjustable without restarting the proxy.
+
 ## Comparison with LiteLLM
 
 | Feature | Claude Proxy | LiteLLM |

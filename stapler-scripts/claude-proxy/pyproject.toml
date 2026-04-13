@@ -12,6 +12,8 @@ dependencies = [
     "pydantic==2.10.3",
     "aws-sso-lib>=1.14.0",
     "diskcache==5.6.3",
+    "openfeature-sdk==0.8.4",
+    "claw-compactor==7.1.0",
 ]
 
 [dependency-groups]
