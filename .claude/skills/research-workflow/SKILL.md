@@ -214,6 +214,16 @@ If this list is non-empty, a spike should be scheduled before writing the ADR.
 Links to the findings files this synthesis draws from.
 ```
 
+## Repo Research Protocol
+
+**When the research subject is a GitHub, GitLab, or other hosted repository URL**, use `code-archaeology` instead of web search as the primary research method:
+
+1. **Invoke the `code-archaeology` skill** with the repo URL — it will clone to a temp directory and systematically analyze the codebase
+2. **Do not attempt web search first** — the source code is more authoritative than any documentation or blog post
+3. **Supplement with web search** only after code analysis, to gather external perspectives, benchmark comparisons, or related work not visible in the repo itself
+
+This applies whenever the argument to the research workflow is a repo URL (e.g., `https://github.com/org/repo`). The code-archaeology skill handles cloning, survey, and structured analysis. The research-workflow handles synthesis and knowledge integration.
+
 ---
 
 ## Multi-Topic Research Protocol
