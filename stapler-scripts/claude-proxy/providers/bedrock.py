@@ -599,16 +599,57 @@ class BedrockProvider(Provider):
                 bedrock_body["anthropic_beta"] = compatible_betas
                 logger.debug(f"Using beta features for {model}: {compatible_betas}")
 
-        # Remove unsupported parameters and model (model is specified via modelId parameter)
-        # Claude Code-specific fields not supported by Bedrock:
-        # - stream: handled separately via modelId parameter
-        # - model: specified via modelId parameter
-        # - output_config: Claude Code-specific field for effort parameter
-        # - context_management: Claude Code-specific field for context caching
+        # Remove fields that Bedrock does not accept at the top level:
+        # - stream: conveyed via invoke_model_with_response_stream vs invoke_model
+        # - model: specified as modelId parameter, not in the body
+        # - output_config: Anthropic-specific effort parameter (not supported by Bedrock)
+        # - context_management: Anthropic-specific field for prompt caching (not supported by Bedrock)
+        #
+        # Note: While Bedrock has its own context management features, the context_management
+        # field format from Claude Code is Anthropic-specific and causes ValidationException on Bedrock
         bedrock_body.pop("stream", None)
         bedrock_body.pop("model", None)
         bedrock_body.pop("output_config", None)
         bedrock_body.pop("context_management", None)
+
+        # Bedrock-specific: Validate and clean orphaned tool_result blocks after compaction
+        # Problem: Compaction may remove tool_use blocks while keeping tool_result blocks
+        # Bedrock requires: Every tool_use_id in tool_result must have corresponding tool_use in previous message
+        # Solution: Collect all valid tool_use_ids, remove tool_results with orphaned references
+        if "messages" in bedrock_body and isinstance(bedrock_body["messages"], list):
+            for i, message in enumerate(bedrock_body["messages"]):
+                if not isinstance(message, dict) or "content" not in message:
+                    continue
+                if not isinstance(message["content"], list):
+                    continue
+
+                # Collect tool_use_ids from previous message (if exists)
+                valid_tool_use_ids = set()
+                if i > 0:
+                    prev_message = bedrock_body["messages"][i - 1]
+                    if isinstance(prev_message, dict) and "content" in prev_message:
+                        if isinstance(prev_message["content"], list):
+                            for content_item in prev_message["content"]:
+                                if isinstance(content_item, dict) and content_item.get("type") == "tool_use":
+                                    tool_id = content_item.get("id")
+                                    if tool_id:
+                                        valid_tool_use_ids.add(tool_id)
+
+                # Filter out invalid tool_results (missing or orphaned tool_use_id)
+                cleaned_content = []
+                for content_item in message["content"]:
+                    if isinstance(content_item, dict) and content_item.get("type") == "tool_result":
+                        tool_use_id = content_item.get("tool_use_id")
+                        # Bedrock requires tool_use_id field and it must reference a valid tool_use
+                        if not tool_use_id:
+                            logger.debug(f"Removing tool_result with missing tool_use_id field (required by Bedrock)")
+                            continue
+                        if tool_use_id not in valid_tool_use_ids:
+                            logger.debug(f"Removing orphaned tool_result with tool_use_id={tool_use_id} (no matching tool_use found)")
+                            continue
+                    cleaned_content.append(content_item)
+
+                message["content"] = cleaned_content
 
         return bedrock_body
 
