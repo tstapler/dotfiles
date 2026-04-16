@@ -16,6 +16,7 @@ from providers import ValidationError, AuthenticationError, RateLimitError
 from fallback import FallbackHandler
 from metrics import MetricsCollector
 from compactor import compress_messages, get_flags, init_compactor
+from error_tracker import ErrorTracker, ErrorTrackingHandler
 import config
 
 # Configure logging with rotation and separate files
@@ -56,6 +57,34 @@ for http_logger_name in ['httpx', 'httpcore']:
     http_logger.propagate = False  # Don't propagate to root logger
 
 logger = logging.getLogger(__name__)
+
+# Initialize error tracking
+error_tracker = ErrorTracker()
+error_tracking_handler = ErrorTrackingHandler(error_tracker)
+root_logger.addHandler(error_tracking_handler)
+logger.info("Error tracking handler attached")
+
+
+def _msg_type_summary(messages: list) -> tuple[str, dict]:
+    """Count content block types across all messages.
+
+    Returns (json_string, raw_dict) where json_string is a compact representation
+    suitable for logging and storage, e.g. '{"text":5,"tool_use":3,"tool_result":3}'.
+    """
+    counts: dict = {}
+    for msg in messages:
+        content = msg.get("content", "")
+        if isinstance(content, str) and content:
+            counts["text"] = counts.get("text", 0) + 1
+        elif isinstance(content, list):
+            for block in content:
+                if isinstance(block, dict):
+                    t = block.get("type", "unknown")
+                    counts[t] = counts.get(t, 0) + 1
+    if not counts:
+        return "", counts
+    return json.dumps(counts, separators=(",", ":")), counts
+
 
 # Request duration thresholds for monitoring
 SLOW_REQUEST_THRESHOLD = 30  # seconds
@@ -381,6 +410,8 @@ DASHBOARD_HTML = """
                     <th>TTFT</th>
                     <th>Tokens Before → After</th>
                     <th>Saved</th>
+                    <th>Msgs</th>
+                    <th>Content Types</th>
                     <th>Type</th>
                 </tr>
             </thead>
@@ -616,6 +647,16 @@ DASHBOARD_HTML = """
                     };
                     const fmtMs = ms => !ms ? '—' : ms >= 1000 ? (ms/1000).toFixed(1)+'s' : Math.round(ms)+'ms';
                     const provColor = p => p === 'anthropic' ? '#1e3a5f' : p === 'bedrock' ? '#1a3a2a' : '#2a2a2a';
+                    const fmtTypes = (json, cm) => {
+                        if (!json) return '—';
+                        try {
+                            const t = JSON.parse(json);
+                            const abbrevs = {text:'T', tool_use:'TU', tool_result:'TR', image:'IMG', document:'DOC', search_result:'SR'};
+                            const parts = Object.entries(t).map(([k,v]) => `${abbrevs[k]||k}:${v}`);
+                            const cmBadge = cm ? ' <span class="error-type" style="background:#3a2a1a;font-size:10px">CM</span>' : '';
+                            return `<span style="font-size:11px;color:#aaa">${parts.join(' ')}</span>${cmBadge}`;
+                        } catch { return json; }
+                    };
                     requestsBody.innerHTML = data.recent_requests.slice(0, 20).map(r => {
                         const time = new Date(r.timestamp).toLocaleTimeString();
                         const saved = r.tokens_before > 0 ? r.tokens_before - r.tokens_after : 0;
@@ -639,11 +680,13 @@ DASHBOARD_HTML = """
                             <td style="font-family:monospace">${ttft}</td>
                             <td style="font-family:monospace">${tokStr}</td>
                             <td>${r.compressed ? pct : '—'}</td>
+                            <td style="font-family:monospace">${r.message_count || '—'}</td>
+                            <td>${fmtTypes(r.msg_types, r.has_context_management)}</td>
                             <td>${typeLabel}</td>
                         </tr>`;
                     }).join('');
                 } else {
-                    requestsBody.innerHTML = '<tr><td colspan="6" class="no-errors">No requests yet</td></tr>';
+                    requestsBody.innerHTML = '<tr><td colspan="11" class="no-errors">No requests yet</td></tr>';
                 }
 
                 // Update provider latency cards
@@ -750,7 +793,7 @@ async def messages_endpoint(request: Request):
     import uuid
     request_id = str(uuid.uuid4())[:8]
 
-    logger.info(f"[{request_id}] → /v1/messages stream={request.query_params.get('beta', 'false')}")
+    logger.info(f"[{request_id}] → /v1/messages")
 
     try:
         # Get authentication
@@ -759,7 +802,17 @@ async def messages_endpoint(request: Request):
         # Parse request body
         body = await request.json()
 
-        logger.info(f"[{request_id}] Request: model={body.get('model')}, max_tokens={body.get('max_tokens')}, stream={body.get('stream', False)}")
+        # Collect message type analytics before compression mutates the body
+        original_messages = body.get("messages", [])
+        _msg_types_json, _msg_types_dict = _msg_type_summary(original_messages)
+        _has_cm = "context_management" in body
+        _message_count = len(original_messages)
+
+        logger.info(
+            f"[{request_id}] model={body.get('model')} max_tokens={body.get('max_tokens')} "
+            f"stream={body.get('stream', False)} msgs={_message_count} "
+            f"types={_msg_types_json or '{}'} cm={_has_cm}"
+        )
 
         # Compression tracking vars (populated below if compression runs)
         comp_stats: dict = {}
@@ -826,7 +879,9 @@ async def messages_endpoint(request: Request):
                     yield f"data: {json.dumps(error_event)}\n\n"
 
             metrics.record_request_detail(request_id, body.get("model", "unknown"),
-                _tokens_before, _tokens_after, _compressed, stream=True)
+                _tokens_before, _tokens_after, _compressed, stream=True,
+                msg_types=_msg_types_json, has_context_management=_has_cm,
+                message_count=_message_count)
             logger.info(f"[{request_id}] ✓ Starting streaming response")
             return StreamingResponse(
                 generate(),
@@ -842,7 +897,9 @@ async def messages_endpoint(request: Request):
             # Non-streaming response
             result = await fallback.send_message(body, token, auth_type, headers, request_id)
             metrics.record_request_detail(request_id, body.get("model", "unknown"),
-                _tokens_before, _tokens_after, _compressed, stream=False)
+                _tokens_before, _tokens_after, _compressed, stream=False,
+                msg_types=_msg_types_json, has_context_management=_has_cm,
+                message_count=_message_count)
             logger.info(f"[{request_id}] ✓ Non-streaming response complete")
             return JSONResponse(content=result, headers={"X-Request-ID": request_id})
 
