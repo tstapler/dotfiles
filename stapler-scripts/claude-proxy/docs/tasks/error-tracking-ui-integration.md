@@ -520,6 +520,346 @@ def send_desktop_notification(self, fingerprint: str, signature: Dict[str, str])
 
 ---
 
+### Story 9: CLI Query Commands [2-3 hours]
+
+**User Value**: Query error tracking data from command line for scripting and automation.
+
+**Acceptance Criteria**:
+- ✅ `claude-proxy-errors list` shows all error types
+- ✅ `claude-proxy-errors list --provider bedrock` filters by provider
+- ✅ `claude-proxy-errors show <fingerprint>` shows error detail with occurrences
+- ✅ `claude-proxy-errors stats` shows summary statistics (total errors, by provider, by type)
+- ✅ Commands output formatted tables (use Rich library)
+
+#### Task 9.1: Create CLI entry point script [1h]
+
+**Objective**: Create command-line interface for error tracking queries.
+
+**Files**:
+- `cli_errors.py` (new file, +150 lines)
+- `requirements.txt` (+1 line: `rich`)
+
+**Implementation**:
+```python
+#!/usr/bin/env python3
+"""CLI for querying error tracking database."""
+import argparse
+import sys
+from pathlib import Path
+from rich.console import Console
+from rich.table import Table
+from error_tracker import ErrorTracker
+
+def main():
+    parser = argparse.ArgumentParser(description='Query claude-proxy error tracking')
+    subparsers = parser.add_subparsers(dest='command', help='Command')
+
+    # List command
+    list_parser = subparsers.add_parser('list', help='List all error types')
+    list_parser.add_argument('--provider', help='Filter by provider')
+    list_parser.add_argument('--limit', type=int, default=100, help='Max results')
+
+    # Show command
+    show_parser = subparsers.add_parser('show', help='Show error detail')
+    show_parser.add_argument('fingerprint', help='Error fingerprint')
+
+    # Stats command
+    subparsers.add_parser('stats', help='Show summary statistics')
+
+    args = parser.parse_args()
+
+    tracker = ErrorTracker()
+    console = Console()
+
+    if args.command == 'list':
+        list_errors(tracker, console, args.provider, args.limit)
+    elif args.command == 'show':
+        show_error(tracker, console, args.fingerprint)
+    elif args.command == 'stats':
+        show_stats(tracker, console)
+    else:
+        parser.print_help()
+
+if __name__ == '__main__':
+    main()
+```
+
+**Testing**:
+- `python cli_errors.py list` → shows all errors
+- `python cli_errors.py list --provider bedrock` → filtered
+- `python cli_errors.py show <fingerprint>` → error detail
+- `python cli_errors.py stats` → statistics
+
+**Validation**: CLI script runs, all subcommands work, Rich tables format correctly
+
+#### Task 9.2: Implement list command with Rich formatting [1h]
+
+**Objective**: Display error list as formatted table.
+
+**Files**:
+- `cli_errors.py` (+50 lines)
+
+**Implementation**:
+```python
+def list_errors(tracker, console, provider=None, limit=100):
+    """Display error types as formatted table."""
+    errors = tracker.search_errors(provider=provider, limit=limit)
+
+    if not errors:
+        console.print("[yellow]No errors found[/yellow]")
+        return
+
+    table = Table(title=f"Error Types ({len(errors)} total)")
+    table.add_column("Fingerprint", style="cyan", no_wrap=True)
+    table.add_column("Provider", style="magenta")
+    table.add_column("Error Type", style="red")
+    table.add_column("Message", style="white")
+    table.add_column("Count", justify="right", style="green")
+    table.add_column("Last Seen", style="dim")
+
+    for err in errors:
+        table.add_row(
+            err['fingerprint'][:8],
+            err['provider'],
+            err['error_type'],
+            err['message'][:50] + '...' if len(err['message']) > 50 else err['message'],
+            str(err['count']),
+            err['last_seen'][:10]  # Date only
+        )
+
+    console.print(table)
+```
+
+**Testing**:
+- Generate 5 different errors
+- Run `python cli_errors.py list`
+- Verify Rich table with 5 rows
+- Verify columns: fingerprint (8 chars), provider, error_type, message (truncated), count, last_seen
+
+**Validation**: Table formatted correctly, colors applied, data accurate
+
+#### Task 9.3: Implement show command with occurrence details [1h]
+
+**Objective**: Display error detail with occurrence timeline.
+
+**Files**:
+- `cli_errors.py` (+80 lines)
+
+**Implementation**:
+```python
+def show_error(tracker, console, fingerprint):
+    """Display error detail with occurrences."""
+    error = tracker.get_error_by_fingerprint(fingerprint)
+
+    if not error:
+        console.print(f"[red]Error not found: {fingerprint}[/red]")
+        sys.exit(1)
+
+    # Error summary
+    console.print(f"\n[bold cyan]Error Details[/bold cyan]")
+    console.print(f"Fingerprint: {error['fingerprint']}")
+    console.print(f"Provider: {error['provider']}")
+    console.print(f"Operation: {error['operation']}")
+    console.print(f"Error Type: [red]{error['error_type']}[/red]")
+    console.print(f"Message: {error['message']}")
+    console.print(f"First Seen: {error['first_seen']}")
+    console.print(f"Last Seen: {error['last_seen']}")
+    console.print(f"Occurrence Count: [green]{error['count']}[/green]")
+
+    # Occurrences table
+    occurrences = tracker.get_error_occurrences(fingerprint, limit=50)
+
+    if occurrences:
+        console.print(f"\n[bold cyan]Recent Occurrences ({len(occurrences)} shown)[/bold cyan]")
+        table = Table()
+        table.add_column("Timestamp", style="dim")
+        table.add_column("Request ID", style="cyan")
+        table.add_column("Model", style="magenta")
+
+        for occ in occurrences:
+            table.add_row(
+                occ['timestamp'],
+                occ.get('request_id', '—'),
+                occ.get('model', '—')
+            )
+
+        console.print(table)
+```
+
+**Testing**:
+- Generate error with 3 occurrences
+- Capture fingerprint
+- Run `python cli_errors.py show <fingerprint>`
+- Verify error summary + occurrences table
+
+**Validation**: Error detail displays correctly, occurrences table shows all data
+
+---
+
+### Story 10: Export Functionality [2-3 hours]
+
+**User Value**: Export error data to CSV for analysis in spreadsheet tools or external systems.
+
+**Acceptance Criteria**:
+- ✅ `claude-proxy-errors export --format csv` exports error list to CSV
+- ✅ `claude-proxy-errors export <fingerprint> --format csv` exports occurrences to CSV
+- ✅ CSV includes all relevant fields (fingerprint, provider, error_type, message, count, timestamps)
+- ✅ Output to stdout (pipe-able) or file via `--output` flag
+- ✅ JSON export format also supported
+
+#### Task 10.1: Add export command to CLI [1h]
+
+**Objective**: Add export subcommand with format options.
+
+**Files**:
+- `cli_errors.py` (+100 lines)
+
+**Implementation**:
+```python
+# In main()
+export_parser = subparsers.add_parser('export', help='Export error data')
+export_parser.add_argument('fingerprint', nargs='?', help='Export specific error occurrences')
+export_parser.add_argument('--format', choices=['csv', 'json'], default='csv', help='Output format')
+export_parser.add_argument('--output', '-o', help='Output file (default: stdout)')
+export_parser.add_argument('--provider', help='Filter by provider')
+export_parser.add_argument('--limit', type=int, default=1000, help='Max records')
+
+# Handler
+elif args.command == 'export':
+    export_errors(tracker, args.fingerprint, args.format, args.output, args.provider, args.limit)
+```
+
+**Testing**:
+- `python cli_errors.py export --format csv` → CSV to stdout
+- `python cli_errors.py export --output errors.csv` → CSV to file
+- `python cli_errors.py export <fingerprint> --format json` → JSON occurrences
+
+**Validation**: Export command accepts all flags, validates format/output
+
+#### Task 10.2: Implement CSV export logic [1-2h]
+
+**Objective**: Export error data to CSV format.
+
+**Files**:
+- `cli_errors.py` (+80 lines)
+
+**Implementation**:
+```python
+import csv
+import json
+from io import StringIO
+
+def export_errors(tracker, fingerprint, format, output_file, provider, limit):
+    """Export error data to CSV or JSON."""
+    if fingerprint:
+        # Export occurrences for specific error
+        error = tracker.get_error_by_fingerprint(fingerprint)
+        if not error:
+            print(f"Error not found: {fingerprint}", file=sys.stderr)
+            sys.exit(1)
+
+        occurrences = tracker.get_error_occurrences(fingerprint, limit=limit)
+        data = occurrences
+        fieldnames = ['id', 'fingerprint', 'timestamp', 'request_id', 'model', 'full_message']
+    else:
+        # Export error types list
+        errors = tracker.search_errors(provider=provider, limit=limit)
+        data = errors
+        fieldnames = ['fingerprint', 'provider', 'operation', 'error_type', 'message',
+                      'first_seen', 'last_seen', 'count']
+
+    if format == 'csv':
+        output = StringIO() if output_file is None else open(output_file, 'w', newline='')
+        writer = csv.DictWriter(output, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(data)
+
+        if output_file is None:
+            print(output.getvalue())
+        else:
+            output.close()
+            print(f"Exported {len(data)} records to {output_file}", file=sys.stderr)
+
+    elif format == 'json':
+        output = sys.stdout if output_file is None else open(output_file, 'w')
+        json.dump(data, output, indent=2)
+        if output_file:
+            output.close()
+            print(f"Exported {len(data)} records to {output_file}", file=sys.stderr)
+```
+
+**Testing**:
+- Generate 10 errors
+- `python cli_errors.py export --format csv > errors.csv`
+- Open errors.csv, verify all fields present
+- `python cli_errors.py export <fingerprint> --format json > occurrences.json`
+- Verify JSON structure correct
+
+**Validation**: CSV/JSON output valid, all fields included, pipe-able to stdout
+
+#### Task 10.3: Add stats command for summary statistics [30min]
+
+**Objective**: Display aggregate statistics about error types.
+
+**Files**:
+- `cli_errors.py` (+50 lines)
+
+**Implementation**:
+```python
+def show_stats(tracker, console):
+    """Display summary statistics."""
+    errors = tracker.search_errors(limit=10000)  # Get all
+
+    if not errors:
+        console.print("[yellow]No errors found[/yellow]")
+        return
+
+    # Aggregate stats
+    total_errors = len(errors)
+    total_occurrences = sum(e['count'] for e in errors)
+    by_provider = {}
+    by_type = {}
+
+    for err in errors:
+        provider = err['provider']
+        error_type = err['error_type']
+
+        by_provider[provider] = by_provider.get(provider, 0) + err['count']
+        by_type[error_type] = by_type.get(error_type, 0) + err['count']
+
+    # Display summary
+    console.print(f"\n[bold cyan]Error Tracking Statistics[/bold cyan]")
+    console.print(f"Total Error Types: {total_errors}")
+    console.print(f"Total Occurrences: {total_occurrences}")
+
+    # By provider table
+    table = Table(title="Occurrences by Provider")
+    table.add_column("Provider", style="magenta")
+    table.add_column("Count", justify="right", style="green")
+    for provider, count in sorted(by_provider.items(), key=lambda x: x[1], reverse=True):
+        table.add_row(provider, str(count))
+    console.print(table)
+
+    # By error type table
+    table = Table(title="Top 10 Error Types")
+    table.add_column("Error Type", style="red")
+    table.add_column("Count", justify="right", style="green")
+    for error_type, count in sorted(by_type.items(), key=lambda x: x[1], reverse=True)[:10]:
+        table.add_row(error_type, str(count))
+    console.print(table)
+```
+
+**Testing**:
+- Generate errors: 5 bedrock ValidationException, 3 anthropic RateLimitError
+- Run `python cli_errors.py stats`
+- Verify totals correct
+- Verify by-provider table shows bedrock=5, anthropic=3
+- Verify by-type table shows ValidationException=5, RateLimitError=3
+
+**Validation**: Statistics accurate, tables formatted correctly, top 10 error types shown
+
+---
+
 ## Known Issues
 
 ### Bug-001: Race Condition in Error Occurrence Count [SEVERITY: Low]
@@ -573,7 +913,7 @@ function loadMetrics() {
 ## Dependency Visualization
 
 ```
-Story 5 (Backend):
+Story 5 (Backend API):
   5.1 [/api/errors] → 5.2 [/api/errors/{fp}] → 5.3 [Helper method]
   ↓
 Story 6 (Error List):
@@ -584,13 +924,23 @@ Story 7 (Error Detail):
   ↓
 Story 8 (Notifications):
   8.1 [Fingerprint in notification] → 8.2 [terminal-notifier (optional)]
+
+Story 9 (CLI Commands) [Independent]:
+  9.1 [CLI entry point] → 9.2 [List command] → 9.3 [Show command]
+
+Story 10 (Export) [Depends on Story 9]:
+  10.1 [Export command] → 10.2 [CSV export] → 10.3 [Stats command]
 ```
 
-**Critical Path**:
+**Critical Path (Web UI)**:
 1. 5.1 → 6.1 (API before UI)
 2. 6.1 → 7.1 (List before detail routing)
 3. 7.1 → 7.2 (Routing before detail UI)
 4. 5.2 → 7.3 (API before detail fetch)
+
+**Independent Paths**:
+- Stories 9-10 (CLI) can be implemented in parallel with Stories 5-8 (Web UI)
+- Both use ErrorTracker directly (no API dependency)
 
 ---
 
@@ -661,16 +1011,55 @@ curl http://localhost:47000/api/errors/invalid  # Should return 404
 - Verify error detail loads
 - (If installed) Click notification, verify browser opens to detail
 
+### Checkpoint 5: After Story 9 (CLI Commands)
+
+**Verify**:
+- CLI script `cli_errors.py` runs successfully
+- `python cli_errors.py list` shows all error types in Rich table
+- `python cli_errors.py list --provider bedrock` filters correctly
+- `python cli_errors.py show <fingerprint>` displays error detail + occurrences
+- `python cli_errors.py stats` shows summary statistics with tables
+- Rich formatting applies (colors, tables)
+
+**Test**:
+- Generate 5 different errors
+- Run `python cli_errors.py list` → verify 5 errors shown
+- Run `python cli_errors.py show <fingerprint>` → verify detail + occurrences
+- Run `python cli_errors.py stats` → verify counts by provider and type
+- Verify Rich tables formatted correctly (colors, alignment)
+
+### Checkpoint 6: After Story 10 (Export Functionality)
+
+**Verify**:
+- `python cli_errors.py export --format csv` outputs valid CSV to stdout
+- `python cli_errors.py export --output errors.csv` writes to file
+- `python cli_errors.py export <fingerprint> --format json` exports occurrences
+- CSV includes all fields: fingerprint, provider, error_type, message, count, timestamps
+- JSON structure validates correctly
+- Export pipe-able: `python cli_errors.py export | head -10` works
+
+**Test**:
+- Generate 10 errors
+- Export to CSV: `python cli_errors.py export --format csv > errors.csv`
+- Open CSV in spreadsheet, verify all columns present
+- Export to file: `python cli_errors.py export --output errors.csv`
+- Verify file contains header + 10 data rows
+- Export occurrences: `python cli_errors.py export <fingerprint> --format json > occ.json`
+- Verify JSON structure: `{"id": ..., "fingerprint": ..., "timestamp": ...}`
+- Pipe test: `python cli_errors.py export | wc -l` → should show line count
+
 ---
 
 ## Success Criteria
 
-- ✅ All 8 atomic tasks completed and validated
-- ✅ All acceptance criteria met for Stories 5-8
+- ✅ All 17 atomic tasks completed and validated
+- ✅ All acceptance criteria met for Stories 5-10
 - ✅ Integration tests pass (error list, detail, filtering)
 - ✅ End-to-end flow works: error → notification → deep link → detail view
 - ✅ Browser back/forward navigation works correctly
 - ✅ Auto-refresh pauses when viewing error detail
+- ✅ CLI commands work: list, show, stats, export
+- ✅ CSV/JSON export validates correctly
 - ✅ All 6 known issues documented with mitigation strategies
 - ✅ Documentation complete and accurate
 
@@ -684,9 +1073,11 @@ curl http://localhost:47000/api/errors/invalid  # Should return 404
 | Story 6: Error List View | 3 tasks | 4-6 hours |
 | Story 7: Error Detail View | 3 tasks | 4-7 hours |
 | Story 8: Notifications | 2 tasks | 3-4 hours (1 optional) |
-| **Total** | **11 tasks** | **15-22 hours (2-3 days)** |
+| Story 9: CLI Commands | 3 tasks | 2-3 hours |
+| Story 10: Export Functionality | 3 tasks | 2-3 hours |
+| **Total** | **17 tasks** | **19-28 hours (3-4 days)** |
 
-**Critical Path Duration**: 12-16 hours (excluding optional Task 8.2)
+**Critical Path Duration**: 12-16 hours for web UI (Stories 5-8), CLI optional (Stories 9-10)
 
 ---
 
