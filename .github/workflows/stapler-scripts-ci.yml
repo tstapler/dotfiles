@@ -1,0 +1,44 @@
+name: Stapler Scripts CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+      - name: Run Ruff
+        run: uv run --project stapler-scripts ruff check stapler-scripts/
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+      - name: Run tests with pytest (via uv)
+        run: |
+          export PYTHONPATH=$PYTHONPATH:$(pwd)/stapler-scripts
+          uv run --project stapler-scripts pytest stapler-scripts/
+
+  bazel-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Bazel
+        uses: bazelbuild/setup-bazel@v2
+        with:
+          bazelrc: |
+            common --color=yes
+      - name: Run Bazel Tests
+        run: bazel test //stapler-scripts/...

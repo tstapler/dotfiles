@@ -10,20 +10,7 @@ def parse_args():
     parser.add_argument("-o", "--output", type=str, default="imgs", help="Directory where images will be saved. Default is 'imgs'.")
     return parser.parse_args()
 
-def main():
-    args = parse_args()
-
-    # Make sure the output directory exists before running!
-    folder = os.path.abspath(args.output)
-    os.makedirs(folder, exist_ok=True)
-
-    try:
-        with open(args.input, "r") as f:
-            har = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError) as e:
-        print(f"Error reading HAR file: {e}")
-        return
-
+def process_har(har, folder):
     entries = har.get("log", {}).get("entries", [])
     if not entries:
         print("No entries found in HAR file.")
@@ -56,6 +43,22 @@ def main():
             print(f"Successfully saved {file_path}")
         except Exception as e:
             print(f"Error writing file {file_path}: {e}")
+
+def main():
+    args = parse_args()
+
+    # Make sure the output directory exists before running!
+    folder = os.path.abspath(args.output)
+    os.makedirs(folder, exist_ok=True)
+
+    try:
+        with open(args.input, "r") as f:
+            har = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        print(f"Error reading HAR file: {e}")
+        return
+
+    process_har(har, folder)
 
 if __name__ == "__main__":
     main()
