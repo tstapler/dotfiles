@@ -49,6 +49,7 @@ Use the correct command for each workflow phase. Never skip phases — each arti
 | `git-worktrees` | Starting new feature branches needing isolation; working on multiple features simultaneously; requiring clean dependency states or avoiding merge conflicts | "Create a worktree for auth feature", "Set up isolated workspace", "Work on feature without switching branches" |
 | `jj-version-control` | Using Jujutsu (jj) commands; working with revsets, bookmarks, anonymous branches; splitting/squashing commits; editing history; pushing to git remotes | "Commit with jj", "Split this change into multiple commits", "Rebase using jj", "Create bookmark" |
 | `github-pr` | Working with GitHub pull requests; reviewing PRs, creating PRs, checking PR status, viewing comments, analyzing CI failures; using gh CLI commands | "Create a PR for this branch", "Review PR #123", "Check why CI failed", "List open PRs" |
+| `fork-merge-plan` | Planning a bidirectional merge between a personal fork and upstream repo; both branches have diverged and you need to preserve functionality from both sides; produces a written plan with commit classification, conflict map, and merge strategy — no merge is executed | "Plan merging my fork with upstream", "What would conflict if I merged upstream?", "Create a merge plan for stapler-squad", "Classify commits before merging" |
 
 ### Infrastructure & DevOps
 

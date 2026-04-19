@@ -299,6 +299,20 @@ class MergeStrategy(ABC):
 
 ---
 
+## Type-Driven Design
+
+Apply techniques from the `type-driven-design` skill alongside structural patterns. The two work together: patterns describe *how components relate*; type-driven design describes *how to make each component's invariants compiler-enforced*.
+
+Key integration points:
+- **Value Object** (PoEAA) → implement as a smart constructor type: `Money`, `Email`, `DateRange`
+- **Repository** → use phantom/newtype IDs: `Repository[User, UserID]` prevents cross-entity mixups
+- **Domain Model** → replace primitive fields with proven types: `status: OrderStatus` (sum type), not `status: string`
+- **Service Layer boundary** → parse raw input into domain types at the entry point; pass proven types down
+
+**Signs the architecture needs type-driven improvements:** validation logic repeated across service methods, `null`/`None` checks deep inside domain logic, runtime panics from invalid state combinations, `string` or `int` parameters that must satisfy undocumented constraints.
+
+---
+
 ## Decision Guide
 
 | Situation | Pattern |
@@ -309,3 +323,6 @@ class MergeStrategy(ABC):
 | Notify other parts of system about events | Domain Events |
 | Simplify complex subsystem | Facade (named `service`) |
 | Decouple caller from implementation | Dependency Injection |
+| Primitive used where domain type needed | Type-Driven Design (newtype / value object) |
+| Invalid states reachable at runtime | Type-Driven Design (sum types / smart constructors) |
+| Validation repeated across functions | Type-Driven Design (parse at boundary) |
