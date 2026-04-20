@@ -470,7 +470,7 @@ Description of the problem...
 
 ## Related Skills
 
-- `markdown-confluence-sync`: Publish, crawl, and manage Confluence pages
+- `knowledge-confluence-sync`: Publish, crawl, and manage Confluence pages
 - `knowledge-synthesis`: Create Zettelkasten notes for Logseq
 
 ## Tool Location

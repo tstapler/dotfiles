@@ -7,7 +7,7 @@ description: Orchestrate large structural code refactors combining semantic sear
 
 # Code Refactoring
 
-Orchestrate large structural refactors using `ast-grep` to discover scope and `gritql` to apply transformations safely.
+Orchestrate large structural refactors using `code-ast-grep` to discover scope and `code-gritql` to apply transformations safely.
 
 ## When to Use
 
@@ -44,7 +44,7 @@ sg --pattern '$obj.oldMethod($$$)' --lang java src/
 # Verify count and locations are expected
 ```
 
-See `ast-grep` skill for full pattern syntax.
+See `code-ast-grep` skill for full pattern syntax.
 
 ### 3. Preview with gritql (MANDATORY)
 
@@ -53,7 +53,7 @@ grit apply '<pattern>' --dry-run > /tmp/preview.diff
 # Review ALL changes before applying
 ```
 
-See `gritql` skill for transformation pattern syntax.
+See `code-gritql` skill for transformation pattern syntax.
 
 ### 4. Apply and Verify (MANDATORY)
 
@@ -94,12 +94,12 @@ Before completing any refactor:
 
 | Scenario | Tool |
 |----------|------|
-| Find all affected code sites | `ast-grep` (`sg`) |
-| Multi-file structural transformation | `gritql` |
+| Find all affected code sites | `code-ast-grep` (`sg`) |
+| Multi-file structural transformation | `code-gritql` |
 | Single file, simple change | `Edit` |
 | Same text change across files | `MultiEdit` |
 
 ## Progressive Context
 
-- For transformation patterns (rename, import, annotation migration): see `gritql` skill and `reference.md`
-- For search patterns (finding callers, usages, class definitions): see `ast-grep` skill
+- For transformation patterns (rename, import, annotation migration): see `code-gritql` skill and `reference.md`
+- For search patterns (finding callers, usages, class definitions): see `code-ast-grep` skill

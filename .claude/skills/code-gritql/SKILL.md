@@ -1,9 +1,6 @@
 ---
-name: gritql
-description: Use gritql (grit) for AST-based multi-file code transformations. Use
-  when renaming methods/classes, migrating APIs, or modernizing patterns across a
-  codebase. Always preview before applying. Pairs with ast-grep for search-then-transform
-  workflows.
+name: code-gritql
+description: Use gritql (grit) for AST-based multi-file code transformations. Use when renaming methods/classes, migrating APIs, or modernizing patterns across a codebase. Always preview before applying. Pairs with ast-grep for search-then-transform workflows.
 ---
 
 # gritql: AST-Based Code Transformation

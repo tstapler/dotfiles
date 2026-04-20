@@ -1,12 +1,6 @@
 ---
-name: claude-technique-evaluator
-description: Evaluate new Claude and Claude Code techniques, tools, features, prompting
-  patterns, or workflow changes for adoption value. Use when encountering blog posts,
-  release notes, tutorials, community tips, or configuration changes related to Claude
-  and want to assess whether they fit the user's existing workflow (Logseq wiki, Python
-  tools monorepo, skills library), align with Anthropic best practices, and are worth
-  adopting. Produces structured evaluations with go/no-go recommendations and integration
-  paths.
+name: meta-claude-technique-evaluator
+description: Evaluate new Claude and Claude Code techniques, tools, features, prompting patterns, or workflow changes for adoption value. Use when encountering blog posts, release notes, tutorials, community tips, or configuration changes related to Claude and want to assess whether they fit the user's existing workflow (Logseq wiki, Python tools monorepo, skills library), align with Anthropic best practices, and are worth adopting. Produces structured evaluations with go/no-go recommendations and integration paths.
 ---
 
 # Claude Technique Evaluator
@@ -92,13 +86,21 @@ Apply the evaluation framework across six dimensions:
 | **Overlap Assessment** | Does it duplicate existing capabilities? | Novel / Extends / Partial Overlap / Full Overlap |
 | **Risk Assessment** | Any downsides, instability, or concerns? | Minimal / Acceptable / Notable / Prohibitive |
 | **Maturity Level** | How stable/proven is the technique? | Production / Stable / Beta / Experimental |
+| **Adoption Mode** | Can it be used as-is, or does it need changes first? | As-Is / Minor Tweaks / Fork & Adapt / Build from Scratch |
+
+**Adoption Mode guidance:**
+- **As-Is**: Copy the skill's SKILL.md (and any `scripts/`) into `~/.claude/skills/<name>/`, fork the source repo to `tstapler/` on GitHub for update control, and use immediately with no modifications needed
+- **Minor Tweaks**: Fork to `tstapler/`, copy into `~/.claude/skills/<name>/`, then apply small adjustments (fix install commands, adjust paths, update docs) before use
+- **Fork & Adapt**: Fork to `tstapler/`, copy into `~/.claude/skills/<name>/`, then rework significantly — the core concept is sound but the implementation needs changes for this workflow
+- **Build from Scratch**: Concept is valuable but source implementation is not reusable; author a new skill from scratch in `~/.claude/skills/<name>/SKILL.md` using the upstream as inspiration only
 
 **Priority Score** (derived from dimensions):
 
 | Priority | Criteria |
 |----------|----------|
-| **Adopt Now** | Strong alignment + Significant benefit + Low complexity + Novel |
-| **Plan Adoption** | Good alignment + Moderate-Significant benefit + Medium complexity |
+| **Adopt Now (As-Is)** | Strong alignment + Significant benefit + Low complexity + Novel + As-Is or Minor Tweaks |
+| **Adopt Now (Adapted)** | Strong alignment + Significant benefit + Low-Medium complexity + Novel + Fork & Adapt or Build from Scratch |
+| **Plan Adoption** | Good alignment + Moderate-Significant benefit + Medium complexity (any adoption mode) |
 | **Monitor** | Acceptable alignment + Some benefit but High complexity or Experimental |
 | **Skip** | Contradicts guidance OR Full overlap OR Prohibitive risk OR Marginal benefit |
 

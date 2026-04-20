@@ -5,7 +5,7 @@ prompt: '# Product Review
 
 
   Survey your project''s current feature set from a product perspective — what exists,
-  what''s planned, what''s missing, and what to prioritize next. Uses the `product-management`
+  what''s planned, what''s missing, and what to prioritize next. Uses the `pm-product-management`
   skill.
 
 
@@ -49,10 +49,10 @@ prompt: '# Product Review
   If a specific project path was provided (`{{args}}`), focus there.
 
 
-  **Step 2: Apply the product-management skill to assess**
+  **Step 2: Apply the pm-product-management skill to assess**
 
 
-  Using the product-management framework, evaluate:
+  Using the pm-product-management framework, evaluate:
 
 
   **Feature Completeness**
@@ -167,7 +167,7 @@ prompt: '# Product Review
 
 # Product Review
 
-Survey your project's current feature set from a product perspective — what exists, what's planned, what's missing, and what to prioritize next. Uses the `product-management` skill.
+Survey your project's current feature set from a product perspective — what exists, what's planned, what's missing, and what to prioritize next. Uses the `pm-product-management` skill.
 
 ## Scope
 
@@ -193,9 +193,9 @@ Scan the project to build a picture of the current feature landscape:
 
 If a specific project path was provided (`$ARGUMENTS`), focus there.
 
-**Step 2: Apply the product-management skill to assess**
+**Step 2: Apply the pm-product-management skill to assess**
 
-Using the product-management framework, evaluate:
+Using the pm-product-management framework, evaluate:
 
 **Feature Completeness**
 - What core user jobs are currently served?

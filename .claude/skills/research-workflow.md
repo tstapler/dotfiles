@@ -85,7 +85,7 @@ For queries with 2+ distinct subtopics, use parallel subagent delegation instead
 2. **Delegate in parallel** — spawn one Task subagent per subtopic (up to 3 simultaneously); each subagent writes findings to `research/findings-<subtopic>.md`
 3. **Synthesize from files** — read findings files back into context only at synthesis time; do not accumulate subagent output in-context
 
-This isolates each subtopic's context window, preventing degradation across long research sessions (see `context-engineering` skill for the underlying principle).
+This isolates each subtopic's context window, preventing degradation across long research sessions (see `meta-context-engineering` skill for the underlying principle).
 
 ## Best Practices
 

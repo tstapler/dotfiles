@@ -52,7 +52,7 @@ Execute the task with specific instructions and context
 | `project-coordinator` | Project planning and task organization | /plan:status, /plan:next-step, /plan:sync, /db:review (phase 2) |
 | `software-planner` | Feature planning with architectural design | /plan:feature |
 | `jira-project-manager` | Jira ticket creation with FBG standards | /jira:* |
-| `prompt-engineering` | Agent and command refinement | /meta:refine |
+| `meta-prompt-engineering` | Agent and command refinement | /meta:refine |
 | `code-refactoring` | Code quality improvements | /quality:* |
 | `knowledge-synthesis` | Knowledge base integration | /knowledge:* |
 
@@ -159,7 +159,7 @@ Execute the task with specific instructions and context
 | **/meta:new-command** | Create new slash command with namespace organization | When new workflow needed |
 | **/meta:refine** | Improve existing agents, commands, or prompts | When enhancing effectiveness |
 
-**Agent Used:** `prompt-engineering` - Expert in prompt design, agent creation, and command refinement using established patterns and best practices.
+**Agent Used:** `meta-prompt-engineering` - Expert in prompt design, agent creation, and command refinement using established patterns and best practices.
 
 ### Key Features
 - ✅ Transform basic prompts into comprehensive, structured instructions

@@ -1,18 +1,15 @@
 ---
-name: ast-grep
-description: Use ast-grep (sg) for semantic, syntax-aware code searching. Prefer over
-  Grep for code pattern searches that depend on structure rather than text matching.
-  Use when searching for function calls, class definitions, import statements, or
-  any pattern where syntax context matters.
+name: code-ast-grep
+description: Use ast-grep (sg) for semantic, syntax-aware code searching. Prefer over Grep for code pattern searches that depend on structure rather than text matching. Use when searching for function calls, class definitions, import statements, or any pattern where syntax context matters.
 ---
 
 # ast-grep: Semantic Code Search
 
-Use `code-ast-grep` (command: `sg`) for structure-aware code searching. Unlike `Grep` (text search), ast-grep understands syntax and finds patterns by their role in the code, not their textual form.
+Use `ast-grep` (command: `sg`) for structure-aware code searching. Unlike `Grep` (text search), ast-grep understands syntax and finds patterns by their role in the code, not their textual form.
 
 ## When to Use ast-grep vs Grep
 
-| Use `code-ast-grep` | Use `Grep` |
+| Use `ast-grep` | Use `Grep` |
 |----------------|------------|
 | Find all calls to a function | Find a string in any file |
 | Find class definitions | Search logs or text files |
@@ -170,6 +167,6 @@ sg --pattern '<pat>' --lang python --stats
 
 ## Integration with Other Skills
 
-- **Before refactoring**: use `code-ast-grep` to find all affected sites first
-- **Pair with `code-gritql`**: use ast-grep to search, gritql to transform
+- **Before refactoring**: use `ast-grep` to find all affected sites first
+- **Pair with `gritql`**: use ast-grep to search, gritql to transform
 - **Replace Grep for code**: whenever the search is about code structure, prefer `sg` over `Grep`

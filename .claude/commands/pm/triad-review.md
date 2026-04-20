@@ -43,7 +43,7 @@ prompt: '# Product Triad Review
 
   ### Agent 1 — Product (PM) Lens
 
-  Use the `product-management` skill context to assess:
+  Use the `pm-product-management` skill context to assess:
 
   - Is the problem statement clear and falsifiable?
 
@@ -139,7 +139,7 @@ prompt: '# Product Triad Review
 
   Based on the weakest triad leg, recommend the specific command to run next:
 
-  - PM gap → invoke `product-management` skill or write PRD
+  - PM gap → invoke `pm-product-management` skill or write PRD
 
   - UX gap → `/ux:design {{args}}`
 
@@ -175,7 +175,7 @@ Check for an existing feature doc at `docs/tasks/$ARGUMENTS.md` or a close match
 **Step 2: Run three parallel assessments** using the Task tool — launch all three agents simultaneously:
 
 ### Agent 1 — Product (PM) Lens
-Use the `product-management` skill context to assess:
+Use the `pm-product-management` skill context to assess:
 - Is the problem statement clear and falsifiable?
 - Is the target user specific?
 - Are success metrics defined and measurable?
@@ -230,7 +230,7 @@ Produce a triad readiness report:
 **Step 4: Recommend next action**
 
 Based on the weakest triad leg, recommend the specific command to run next:
-- PM gap → invoke `product-management` skill or write PRD
+- PM gap → invoke `pm-product-management` skill or write PRD
 - UX gap → `/ux:design $ARGUMENTS`
 - Engineering gap → invoke `@project-coordinator` with the feature doc
 

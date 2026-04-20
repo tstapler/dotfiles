@@ -15,7 +15,7 @@ prompt: "# UX Design Command\n\nGenerate comprehensive design recommendations fo
   \ this feature.\n\nIf a PRD was found:\n- Extract the user goals, JTBD, and acceptance\
   \ criteria from it\n- Design for the specific users and outcomes defined in the\
   \ PRD\n- Flag any UX concerns about the scope or assumptions in the PRD\n\nIf no\
-  \ PRD exists:\n- Note that no PRD was found and flag this — ideally the `product-management`\
+  \ PRD exists:\n- Note that no PRD was found and flag this — ideally the `pm-product-management`\
   \ skill should be run first\n- Proceed with available description, but call out\
   \ missing context explicitly\n\n**Design deliverables**:\n\n1. **User Flow and Information\
   \ Architecture**\n   - Step-by-step user journey for the primary task\n   - Information\
@@ -67,7 +67,7 @@ If a PRD was found:
 - Flag any UX concerns about the scope or assumptions in the PRD
 
 If no PRD exists:
-- Note that no PRD was found and flag this — ideally the `product-management` skill should be run first
+- Note that no PRD was found and flag this — ideally the `pm-product-management` skill should be run first
 - Proceed with available description, but call out missing context explicitly
 
 **Design deliverables**:
