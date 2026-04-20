@@ -22,6 +22,11 @@ class RequestDetail:
     tokens_after: int
     compressed: bool
     stream: bool
+    # Message content type counts e.g. {"text":5,"tool_use":3,"tool_result":3}
+    msg_types: str = ""
+    # True if the original request body included a context_management field
+    has_context_management: bool = False
+    message_count: int = 0
     # Timing (populated by fallback after request completes)
     provider: str = "unknown"
     duration_ms: float = 0.0       # wall-clock time proxy held the request
@@ -44,6 +49,9 @@ class MetricsCollector:
         # In-memory deques for recent items (no file locking!)
         self.recent_errors: deque = deque(maxlen=20)
         self.recent_requests: deque[RequestDetail] = deque(maxlen=100)
+        # Ring buffer: request_id → full request body dict (last 50)
+        self._request_bodies: dict[str, Any] = {}
+        self._request_body_order: deque[str] = deque(maxlen=50)
 
         # Cached stats (updated every 5s instead of computing on every request)
         self._cached_stats = None
@@ -160,6 +168,9 @@ class MetricsCollector:
         tokens_after: int,
         compressed: bool,
         stream: bool = False,
+        msg_types: str = "",
+        has_context_management: bool = False,
+        message_count: int = 0,
     ):
         """Record a lightweight per-request entry for the recent requests feed."""
         self.recent_requests.appendleft(RequestDetail(
@@ -170,6 +181,9 @@ class MetricsCollector:
             tokens_after=tokens_after,
             compressed=compressed,
             stream=stream,
+            msg_types=msg_types,
+            has_context_management=has_context_management,
+            message_count=message_count,
         ))
 
     def update_request_timing(
@@ -215,6 +229,48 @@ class MetricsCollector:
     def get_recent_requests(self) -> list[dict]:
         """Return recent request details as a list of dicts (newest first)."""
         return [asdict(r) for r in self.recent_requests]
+
+    def store_request_body(self, request_id: str, body: dict, stage: str = "original"):
+        """Store request body snapshot for a request_id.
+
+        stage: 'original' (before compression) or 'compressed' (after).
+        Keyed as '{request_id}:{stage}'. Each unique key counts against the ring buffer.
+        """
+        key = f"{request_id}:{stage}"
+        if len(self._request_body_order) == self._request_body_order.maxlen:
+            oldest = self._request_body_order[0]
+            self._request_bodies.pop(oldest, None)
+        self._request_body_order.append(key)
+        self._request_bodies[key] = body
+
+    def get_request_body(self, request_id: str, stage: str = "original") -> Optional[dict]:
+        """Return stored request body snapshot, or None if evicted."""
+        return self._request_bodies.get(f"{request_id}:{stage}")
+
+    def record_count_tokens(self, success: bool, model: str = "unknown", token_count: int = 0):
+        """Record a count_tokens call result."""
+        self._incr("count_tokens:total")
+        if success:
+            self._incr("count_tokens:success")
+            if token_count > 0:
+                self._set("count_tokens:last_count", token_count)
+                self._set("count_tokens:last_model", model)
+        else:
+            self._incr("count_tokens:failures")
+
+    def get_count_tokens_stats(self) -> dict:
+        """Returns count_tokens call statistics."""
+        total = self._get("count_tokens:total", 0)
+        success = self._get("count_tokens:success", 0)
+        failures = self._get("count_tokens:failures", 0)
+        return {
+            "total": total,
+            "success": success,
+            "failures": failures,
+            "failure_rate": round(failures / total, 3) if total > 0 else 0,
+            "last_count": self._get("count_tokens:last_count", 0),
+            "last_model": self._get("count_tokens:last_model", ""),
+        }
 
     def record_fallback(self, from_provider: str, to_provider: str, reason: str):
         """Record a provider fallback event."""

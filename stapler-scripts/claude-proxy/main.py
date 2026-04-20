@@ -421,8 +421,51 @@ DASHBOARD_HTML = """
         </table>
     </div>
 
+    <div class="errors-section" style="margin-bottom: 24px;">
+        <div class="errors-title">count_tokens Health</div>
+        <div class="stats-grid" style="margin-top: 12px; margin-bottom: 0;">
+            <div class="stat-card">
+                <div class="stat-label">Total Calls</div>
+                <div class="stat-value" id="ct-total">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Failures</div>
+                <div class="stat-value" id="ct-failures">0</div>
+                <div class="stat-subtitle" id="ct-failure-rate">0% failure rate</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Last Token Count</div>
+                <div class="stat-value" id="ct-last-count">—</div>
+                <div class="stat-subtitle" id="ct-last-model">—</div>
+            </div>
+        </div>
+        <div style="color:#888;font-size:12px;padding:8px 0;">
+            count_tokens drives Claude Code auto-compaction. Failures here prevent compaction from triggering.
+        </div>
+    </div>
+
+    <div class="errors-section" style="margin-bottom: 24px;">
+        <div class="errors-title">Unique Error Types (persistent)</div>
+        <table class="errors-table">
+            <thead>
+                <tr>
+                    <th>Fingerprint</th>
+                    <th>Provider</th>
+                    <th>Type</th>
+                    <th>Count</th>
+                    <th>First Seen</th>
+                    <th>Last Seen</th>
+                    <th>Message</th>
+                </tr>
+            </thead>
+            <tbody id="error-types-body">
+                <tr><td colspan="7" class="no-errors">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
     <div class="errors-section">
-        <div class="errors-title">Recent Errors</div>
+        <div class="errors-title">Recent Errors (in-memory)</div>
         <table class="errors-table">
             <thead>
                 <tr>
@@ -436,6 +479,21 @@ DASHBOARD_HTML = """
                 <tr><td colspan="4" class="no-errors">No errors yet</td></tr>
             </tbody>
         </table>
+    </div>
+
+    <!-- Request body inspection modal -->
+    <div id="body-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;overflow:auto;" onclick="if(event.target===this)closeModal()">
+        <div style="background:#1a1a1a;border:1px solid #333;border-radius:8px;max-width:900px;margin:40px auto;padding:24px;position:relative;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <span id="modal-title" style="font-weight:600;color:#e5e5e5;font-size:14px;"></span>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <button id="modal-stage-orig" onclick="switchStage('original')" style="background:#2a2a2a;border:1px solid #444;color:#ccc;cursor:pointer;padding:3px 10px;border-radius:4px;font-size:12px;font-weight:bold;">Original</button>
+                    <button id="modal-stage-comp" onclick="switchStage('compressed')" style="background:#2a2a2a;border:1px solid #444;color:#ccc;cursor:pointer;padding:3px 10px;border-radius:4px;font-size:12px;font-weight:normal;">Compressed</button>
+                    <button onclick="closeModal()" style="background:#333;border:none;color:#aaa;cursor:pointer;padding:4px 10px;border-radius:4px;font-size:14px;">✕</button>
+                </div>
+            </div>
+            <pre id="modal-body" style="background:#111;border:1px solid #2a2a2a;border-radius:6px;padding:16px;overflow:auto;max-height:70vh;font-size:12px;line-height:1.5;color:#d4d4d4;white-space:pre-wrap;word-break:break-all;margin:0;"></pre>
+        </div>
     </div>
 
     <script>
@@ -671,7 +729,7 @@ DASHBOARD_HTML = """
                             ? `<span class="error-type" style="background:${provColor(r.provider)}">${r.provider}</span>`
                             : '—';
                         const ttft = r.bedrock_first_byte_ms > 0 ? fmtMs(r.bedrock_first_byte_ms) : fmtMs(r.first_byte_ms);
-                        return `<tr>
+                        return `<tr style="cursor:pointer" onclick="showRequestBody('${r.request_id}','${r.model}','${time}')">
                             <td>${time}</td>
                             <td style="font-family:monospace;font-size:11px">${r.request_id}</td>
                             <td>${provLabel}</td>
@@ -718,6 +776,19 @@ DASHBOARD_HTML = """
                     errorsBody.innerHTML = '<tr><td colspan="4" class="no-errors">No errors yet</td></tr>';
                 }
 
+                // Update count_tokens stats
+                if (data.count_tokens) {
+                    const ct = data.count_tokens;
+                    document.getElementById('ct-total').textContent = ct.total.toLocaleString();
+                    document.getElementById('ct-failures').textContent = ct.failures.toLocaleString();
+                    document.getElementById('ct-failure-rate').textContent = (ct.failure_rate * 100).toFixed(1) + '% failure rate';
+                    if (ct.failures > 0) {
+                        document.getElementById('ct-failures').style.color = '#ef4444';
+                    }
+                    document.getElementById('ct-last-count').textContent = ct.last_count > 0 ? ct.last_count.toLocaleString() : '—';
+                    document.getElementById('ct-last-model').textContent = ct.last_model || '—';
+                }
+
                 // Update refresh time
                 const now = new Date();
                 document.getElementById('refresh-time').textContent = `↺ ${now.toLocaleTimeString()}`;
@@ -727,10 +798,84 @@ DASHBOARD_HTML = """
             }
         }
 
+        function closeModal() {
+            document.getElementById('body-modal').style.display = 'none';
+        }
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+        let _modalRequestId = null;
+        let _modalStage = 'original';
+
+        async function fetchAndRenderBody() {
+            document.getElementById('modal-body').textContent = 'Loading…';
+            try {
+                const resp = await fetch(`/requests/${_modalRequestId}?stage=${_modalStage}`);
+                if (!resp.ok) {
+                    document.getElementById('modal-body').textContent = _modalStage === 'compressed'
+                        ? '(no compressed snapshot — compression may have been skipped)'
+                        : 'Not found or evicted from ring buffer';
+                    return;
+                }
+                const data = await resp.json();
+                document.getElementById('modal-body').textContent = JSON.stringify(data, null, 2);
+            } catch (e) {
+                document.getElementById('modal-body').textContent = 'Error: ' + e.message;
+            }
+        }
+
+        async function showRequestBody(requestId, model, time) {
+            _modalRequestId = requestId;
+            _modalStage = 'original';
+            document.getElementById('modal-stage-orig').style.fontWeight = 'bold';
+            document.getElementById('modal-stage-comp').style.fontWeight = 'normal';
+            document.getElementById('modal-title').textContent = `[${requestId}] ${model} — ${time}`;
+            document.getElementById('body-modal').style.display = 'block';
+            await fetchAndRenderBody();
+        }
+
+        async function switchStage(stage) {
+            _modalStage = stage;
+            document.getElementById('modal-stage-orig').style.fontWeight = stage === 'original' ? 'bold' : 'normal';
+            document.getElementById('modal-stage-comp').style.fontWeight = stage === 'compressed' ? 'bold' : 'normal';
+            await fetchAndRenderBody();
+        }
+
+        async function loadErrorTypes() {
+            try {
+                const data = await fetch('/errors/summary').then(r => r.json());
+                const tbody = document.getElementById('error-types-body');
+                if (data.errors && data.errors.length > 0) {
+                    tbody.innerHTML = data.errors.map(e => {
+                        const first = new Date(e.first_seen).toLocaleString();
+                        const last = new Date(e.last_seen).toLocaleString();
+                        const fp = e.fingerprint.substring(0, 8);
+                        const msg = e.message.length > 80 ? e.message.substring(0, 80) + '…' : e.message;
+                        return `
+                            <tr>
+                                <td style="font-family:monospace;font-size:11px;">${fp}</td>
+                                <td>${e.provider}</td>
+                                <td><span class="error-type">${e.error_type}</span></td>
+                                <td>${e.count}</td>
+                                <td style="font-size:11px;">${first}</td>
+                                <td style="font-size:11px;">${last}</td>
+                                <td style="font-size:11px;max-width:300px;word-break:break-word;" title="${e.message}">${msg}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="7" class="no-errors">No errors recorded yet</td></tr>';
+                }
+            } catch (error) {
+                console.error('Failed to load error types:', error);
+            }
+        }
+
         // Initialize and start auto-refresh
         initCharts();
         loadMetrics();
+        loadErrorTypes();
         setInterval(loadMetrics, 30000); // Refresh every 30 seconds
+        setInterval(loadErrorTypes, 60000); // Refresh error types every 60 seconds
     </script>
 </body>
 </html>
@@ -808,10 +953,14 @@ async def messages_endpoint(request: Request):
         _has_cm = "context_management" in body
         _message_count = len(original_messages)
 
+        # Store body in ring buffer for dashboard inspection (before compression)
+        metrics.store_request_body(request_id, body)
+
+        _beta = request.headers.get("anthropic-beta", "")
         logger.info(
             f"[{request_id}] model={body.get('model')} max_tokens={body.get('max_tokens')} "
             f"stream={body.get('stream', False)} msgs={_message_count} "
-            f"types={_msg_types_json or '{}'} cm={_has_cm}"
+            f"types={_msg_types_json or '{}'} cm={_has_cm} beta={_beta or 'none'}"
         )
 
         # Compression tracking vars (populated below if compression runs)
@@ -832,6 +981,7 @@ async def messages_endpoint(request: Request):
                         comp_stats["original_tokens"],
                         comp_stats["compressed_tokens"],
                     )
+                metrics.store_request_body(request_id, body, stage="compressed")
             except Exception as comp_err:
                 logger.error(f"[{request_id}] Compression failed — forwarding uncompressed: {comp_err}")
 
@@ -1005,7 +1155,7 @@ async def count_tokens_endpoint(request: Request):
         body = await request.json()
         model = body.get("model", "unknown")
 
-        logger.debug(f"[{request_id}] → /v1/messages/count_tokens (model={model})")
+        logger.info(f"[{request_id}] → /v1/messages/count_tokens (model={model})")
 
         # Get headers to forward
         headers = {}
@@ -1045,13 +1195,16 @@ async def count_tokens_endpoint(request: Request):
             # Known Claude Code bug: count_tokens is called without proper auth headers
             # This is harmless - regular message requests work fine
             if response.status_code == 401:
-                logger.debug(f"[{request_id}] count_tokens auth error (known Claude Code bug): {response.status_code}")
+                logger.info(f"[{request_id}] count_tokens auth error (known Claude Code bug): {response.status_code}")
             else:
                 logger.error(f"[{request_id}] ✗ count_tokens failed: {response.status_code} - {response.text}")
+            metrics.record_count_tokens(success=False, model=model)
             raise HTTPException(status_code=response.status_code, detail=response.text)
 
         result = response.json()
-        logger.debug(f"[{request_id}] ✓ count_tokens: {result.get('input_tokens', 0)} tokens")
+        token_count = result.get('input_tokens', 0)
+        logger.info(f"[{request_id}] ✓ count_tokens: {token_count} tokens (model={model})")
+        metrics.record_count_tokens(success=True, model=model, token_count=token_count)
         return JSONResponse(content=result, headers={"X-Request-ID": request_id})
 
     except HTTPException:
@@ -1216,10 +1369,33 @@ async def get_dashboard():
     return DASHBOARD_HTML
 
 
+@app.get("/errors/summary")
+async def errors_summary():
+    """Return deduplicated error types from persistent storage (last 100, newest first)."""
+    try:
+        errors = error_tracker.search_errors(limit=100)
+        return JSONResponse({"errors": errors, "total": len(errors)})
+    except Exception as e:
+        logger.error(f"Failed to query error tracker: {e}")
+        return JSONResponse({"errors": [], "total": 0, "error": str(e)})
+
+
+@app.get("/requests/{request_id}")
+async def get_request_body(request_id: str, stage: str = "original"):
+    """Return stored request body snapshot (stage: 'original' or 'compressed')."""
+    body = metrics.get_request_body(request_id, stage)
+    if body is None:
+        return JSONResponse({"error": "not found or evicted"}, status_code=404)
+    return JSONResponse(body)
+
+
 @app.get("/metrics")
 async def get_metrics():
     """JSON metrics endpoint for dashboard and API consumers."""
     stats = metrics.get_stats()
+
+    # Add count_tokens stats
+    stats["count_tokens"] = metrics.get_count_tokens_stats()
 
     # Add live cooldown status from FallbackHandler
     stats["cooldowns"] = {

@@ -164,6 +164,56 @@ def _ensure_rewind_tool(tools: list[dict] | None, messages: list[dict]) -> list[
 # Core compression entry point
 # ---------------------------------------------------------------------------
 
+def _validate_tool_pairs(messages: list[dict]) -> tuple[bool, list[str]]:
+    """Check every tool_result has a matching tool_use in the preceding assistant message.
+
+    FusionEngine can remove tool_use blocks while leaving their tool_result
+    counterparts, producing messages Bedrock (and Anthropic) reject with:
+      "unexpected tool_use_id found in tool_result blocks"
+
+    Returns (is_valid, list_of_orphaned_tool_use_ids).
+    """
+    orphaned: list[str] = []
+    for i, msg in enumerate(messages):
+        if msg.get("role") != "user":
+            continue
+        content = msg.get("content", [])
+        if not isinstance(content, list):
+            continue
+
+        # Collect tool_use_ids referenced by tool_result blocks
+        tr_ids: set[str] = set()
+        for block in content:
+            if isinstance(block, dict) and block.get("type") == "tool_result":
+                uid = block.get("tool_use_id")
+                if uid:
+                    tr_ids.add(uid)
+
+        if not tr_ids:
+            continue
+
+        # Verify the preceding message is an assistant turn with matching tool_use blocks
+        if i == 0:
+            orphaned.extend(tr_ids)
+            continue
+
+        prev = messages[i - 1]
+        if prev.get("role") != "assistant":
+            orphaned.extend(tr_ids)
+            continue
+
+        prev_content = prev.get("content", [])
+        tu_ids: set[str] = set()
+        if isinstance(prev_content, list):
+            for block in prev_content:
+                if isinstance(block, dict) and block.get("type") == "tool_use":
+                    tu_ids.add(block.get("id", ""))
+
+        orphaned.extend(tr_ids - tu_ids)
+
+    return len(orphaned) == 0, orphaned
+
+
 def _run_compression_sync(
     messages: list[dict],
     flags: dict,
@@ -214,6 +264,17 @@ async def compress_messages(
 
     if stats.get("skipped"):
         return messages, tools, stats
+
+    # Guard: reject compression if tool_use/tool_result pairing is broken (ADR-003 extension).
+    # FusionEngine may remove tool_use blocks while leaving their tool_result counterparts,
+    # causing Bedrock/Anthropic ValidationException: "unexpected tool_use_id in tool_result blocks"
+    is_valid, orphaned = _validate_tool_pairs(compressed_messages)
+    if not is_valid:
+        logger.warning(
+            f"Compression broke {len(orphaned)} tool_use/tool_result pair(s) — "
+            f"reverting to original messages. Orphaned IDs: {orphaned[:3]}"
+        )
+        return messages, tools, {"skipped": "tool_pair_broken", "orphaned_count": len(orphaned)}
 
     reduction_pct = stats.get("reduction_pct", 0)
     tokens_saved = stats.get("original_tokens", 0) - stats.get("compressed_tokens", 0)

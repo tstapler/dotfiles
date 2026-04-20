@@ -287,3 +287,27 @@ tail -f /tmp/claude-proxy.http.log
 # Endpoint access
 tail -f /tmp/claude-proxy.log
 ```
+
+## Future Work / Research TODOs
+
+Items identified from tool evaluations and architecture reviews. Not blocking current operation.
+
+### Compression (claw-compactor / FusionEngine)
+
+- [ ] **Investigate CacheAligner concept** — headroom's CacheAligner aligns compressed content to Anthropic prompt cache boundaries so compression and caching compound (the 90% cache read discount only activates when prefixes are stable). Check if FusionEngine has any cache-boundary awareness: inspect `_engine.stage_names` at startup and grep claw-compactor source for "cache" or "prefix". If absent, consider a lightweight post-compression pass that stabilizes prefixes before forwarding.
+  - Reference: [headroom CacheAligner](https://github.com/chopratejas/headroom), [[Knowledge Synthesis - 2026-04-16]]
+  - Priority: Medium — compounding effect could meaningfully reduce costs for long sessions
+
+- [ ] **Evaluate headroom Python SDK for non-proxy paths** — tools that make direct Anthropic API calls (bypassing this proxy) currently get no compression. headroom's Python SDK (`from headroom import compress`) could be used in those paths. Assess whether any tools in `~/Documents/personal-wiki/tools/` call the API directly.
+  - Priority: Low — proxy covers all Claude Code traffic
+
+### Session Learning (`headroom learn` concept)
+
+- [ ] **Investigate `headroom learn` for MEMORY.md automation** — headroom reads conversation history from Claude Code, finds failure patterns, and writes corrections to CLAUDE.md. This is exactly the "automated session-end hook to populate MEMORY.md" gap called out in STAPLER.md. Study the implementation before building a custom version.
+  - Reference: [headroom learn docs](https://github.com/chopratejas/headroom), STAPLER.md "Known gaps" section
+  - Priority: High — MEMORY.md is currently empty; this gap actively degrades session quality
+
+### Re-evaluation Triggers
+
+- [ ] Re-evaluate headroom for adoption when it reaches 1.0 (currently 0.x/beta)
+- [ ] Re-evaluate if claw-compactor becomes unmaintained or FusionEngine compression ratios degrade

@@ -99,8 +99,12 @@ class TestPrepareBedrockBody:
             "messages": [],
         }
         result = self._prepare(body)
+        # All of these fields must be stripped (Anthropic-specific, not supported by Bedrock):
+        # - model, stream: conveyed via modelId parameter and API method selection
+        # - output_config: Anthropic-specific effort parameter
+        # - context_management: Anthropic-specific prompt caching field (causes ValidationException on Bedrock)
         for field in ("model", "stream", "output_config", "context_management"):
-            assert field not in result
+            assert field not in result, f"Expected {field!r} to be stripped but it was present"
 
     def test_cleans_tools_removes_unsupported_fields(self):
         body = {
