@@ -49,15 +49,19 @@ Only run this after `/sdd:6-verify` has produced a ✅ PASS verdict. If you skip
 - Closes <issue> (if linked in requirements.md)
 ```
 
-3. **Present integration options** and wait for the user's choice:
-
+3. **Present integration options** using `AskUserQuestion`:
    ```
-   How would you like to proceed?
-
-   A) Open a PR now (recommended)
-   B) Keep branch for more work
-   C) Merge locally (if you have merge permissions)
-   D) Discard changes
+   header: "Ship method"
+   question: "How would you like to proceed?"
+   options:
+     - label: "Open a PR now (recommended)"
+       description: "Push branch and create a GitHub PR with the drafted description"
+     - label: "Keep branch for more work"
+       description: "Leave the branch as-is — no PR yet"
+     - label: "Merge locally"
+       description: "Merge directly if you have permissions (no PR)"
+     - label: "Discard changes"
+       description: "Reset — abandon this branch"
    ```
 
 4. **For option A**: create the PR using `gh pr create` with a body file so multi-line Markdown is preserved:

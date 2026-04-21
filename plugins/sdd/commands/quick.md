@@ -21,10 +21,18 @@ Lightweight end-to-end workflow for tasks simple enough to complete in one conte
 
 1. **Clarify the task.**
 
-   If `$1` was provided, use it as the task description. Otherwise ask:
-   > "What needs to be done? Describe the task or paste the bug/error."
+   If `$1` was provided, use it as the task description and skip this step. Otherwise use `AskUserQuestion`:
+   ```
+   header: "Task type"
+   question: "What needs to be done?"
+   options:
+     - "Fix a bug (I'll describe it via Other)"
+     - "Add a small feature or field"
+     - "Refactor or clean up existing code"
+     - "Other — I'll describe it"
+   ```
 
-   Ask ONE follow-up if genuinely needed (e.g. which file, which behaviour is expected). Do not interview — this is a quick path.
+   Ask ONE follow-up via `AskUserQuestion` if genuinely needed (e.g. which file, which behaviour is expected). Do not interview — this is a quick path.
 
 2. **Read before touching.**
 
@@ -58,4 +66,12 @@ Lightweight end-to-end workflow for tasks simple enough to complete in one conte
    Root cause (if bug): <one sentence>
    ```
 
-   Then ask: "Ready to commit and push, or do you want to review first?"
+   Then use `AskUserQuestion`:
+   ```
+   header: "Next step"
+   question: "Ready to commit and push?"
+   options:
+     - "Yes — commit and push now"
+     - "Let me review the diff first"
+     - "Commit locally but don't push yet"
+   ```
