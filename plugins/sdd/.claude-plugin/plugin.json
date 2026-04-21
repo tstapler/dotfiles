@@ -1,0 +1,8 @@
+{
+    "name": "sdd",
+    "description": "Stapler-Driven Development (SDD) workflow. Enforces spec-before-code with 7 numbered phase commands. Run /sdd:status to find your current phase.",
+    "version": "0.1.0",
+    "author": {
+        "name": "Tyler Stapler"
+    }
+}

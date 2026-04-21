@@ -1,0 +1,14 @@
+{
+  "name": "dotfiles-plugins",
+  "owner": {
+    "name": "Tyler Stapler",
+    "url": "https://github.com/tylerstapler"
+  },
+  "plugins": [
+    {
+      "name": "sdd",
+      "source": "./plugins/sdd",
+      "description": "Stapler-Driven Development — spec-before-code workflow with 7 phase-gated commands from ideation to shipping. Run /sdd:status to find your current phase."
+    }
+  ]
+}
