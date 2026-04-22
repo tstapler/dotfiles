@@ -1,0 +1,24 @@
+{
+  "Stop": [
+    {
+      "matcher": "",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "bash -c 'R=$(find . -maxdepth 3 -name \"requirements.md\" -path \"*/project_plans/*\" 2>/dev/null | head -1); [ -z \"$R\" ] && exit 0; P=$(find . -maxdepth 4 -name \"plan.md\" -path \"*/implementation/*\" 2>/dev/null | head -1); V=$(find . -maxdepth 4 -name \"validation.md\" -path \"*/implementation/*\" 2>/dev/null | head -1); [ -z \"$P\" ] && echo \"📋 SDD: requirements.md ready — next: /sdd:2-research then /sdd:3-plan\" && exit 0; [ -z \"$V\" ] && echo \"📋 SDD: plan.md ready — run /sdd:4-validate before writing any code\" && exit 0; echo \"📋 SDD: planning complete — ready for /sdd:5-implement or /sdd:full\"; exit 0'"
+        }
+      ]
+    }
+  ],
+  "PreToolUse": [
+    {
+      "matcher": "Write|Edit",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "bash -c 'R=$(find . -maxdepth 3 -name \"requirements.md\" -path \"*/project_plans/*\" 2>/dev/null | head -1); P=$(find . -maxdepth 4 -name \"plan.md\" -path \"*/implementation/*\" 2>/dev/null | head -1); V=$(find . -maxdepth 4 -name \"validation.md\" -path \"*/implementation/*\" 2>/dev/null | head -1); [ -n \"$R\" ] && [ -z \"$P\" ] && echo \"⚠️  SDD: requirements.md found but no plan.md — run /sdd:3-plan first, or /sdd:quick for simple one-off changes\" && exit 0; [ -n \"$P\" ] && [ -z \"$V\" ] && echo \"⚠️  SDD: plan.md found but no validation.md — run /sdd:4-validate before implementing\"; exit 0'"
+        }
+      ]
+    }
+  ]
+}

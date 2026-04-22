@@ -5,58 +5,68 @@ user-invocable: true
 
 # sdd:4-validate
 
-Design the test suite against requirements before implementation begins.
+Dispatch a validation subagent to design the test suite. The subagent writes validation.md directly — the coordinator (this thread) only reads the summary back.
 
 ## Instructions
 
 1. **Follow [SETUP.md](../skills/SETUP.md)** — identify PROJECT_NAME.
 
-2. **Read inputs:**
+2. **Read inputs (coordinator reads these to pass to subagent):**
    - `project_plans/<PROJECT_NAME>/implementation/plan.md` — halt if missing, run `/sdd:3-plan` first
    - `project_plans/<PROJECT_NAME>/requirements.md`
 
-3. **For each requirement in requirements.md**, design at minimum:
-   - One unit test (happy path)
-   - One unit test (error/exception path)
-   - One integration test (if data store or external call involved)
+3. **Dispatch a validation subagent using the `Task` tool.**
 
-4. **Write `project_plans/<PROJECT_NAME>/implementation/validation.md`:**
+   The subagent prompt must include:
+   - Full text of `plan.md`
+   - Full text of `requirements.md`
+   - These exact instructions:
 
-```markdown
-# Validation Plan: <PROJECT_NAME>
+   > You are a validation subagent for Stapler-Driven Development. Design the test suite before any code is written.
+   >
+   > **Step 1:** For each requirement, design: 1 unit test (happy path), 1 unit test (error path), 1 integration test (if data store or external call involved).
+   >
+   > **Step 2:** Name tests descriptively: `methodName_should_ExpectedBehavior_When_Condition` (or equivalent for the target language/framework).
+   >
+   > **Step 3:** Write `project_plans/<PROJECT_NAME>/implementation/validation.md` following the template below.
+   >
+   > **Step 4:** Return a summary: test case counts by type, requirements coverage fraction.
 
-**Date**: <YYYY-MM-DD>
+   Validation template:
+   ```markdown
+   # Validation Plan: <PROJECT_NAME>
 
-## Requirement → Test Mapping
+   **Date**: <YYYY-MM-DD>
 
-| Requirement | Test File | Test Name | Type | Scenario |
-|-------------|-----------|-----------|------|----------|
-| REQ-1: <desc> | <TestFile> | <test name> | Unit | Happy path |
-| REQ-1: <desc> | <TestFile> | <test name> | Unit | Error path |
-| REQ-1: <desc> | <TestFile> | <test name> | Integration | <description> |
+   ## Requirement → Test Mapping
 
-## Test Stack
+   | Requirement | Test File | Test Name | Type | Scenario |
+   |-------------|-----------|-----------|------|----------|
+   | REQ-1: <desc> | <TestFile> | <test name> | Unit | Happy path |
+   | REQ-1: <desc> | <TestFile> | <test name> | Unit | Error path |
+   | REQ-1: <desc> | <TestFile> | <test name> | Integration | <description> |
 
-- **Unit**: <framework + assertion library>
-- **Integration**: <framework + test doubles>
-- **API/E2E**: <framework if applicable>
+   ## Test Stack
+   - **Unit**: <framework + assertion library>
+   - **Integration**: <framework + test doubles>
+   - **API/E2E**: <framework if applicable>
 
-## Coverage Targets
+   ## Coverage Targets
+   - Unit test coverage: ≥80% (line)
+   - All public service methods: happy path + error paths
+   - All external integrations: unit mocked + at least one integration test
+   ```
 
-- Unit test coverage: ≥80% (line)
-- All public service methods: happy path + error paths
-- All external integrations: unit mocked + at least one integration test
-```
+4. **Wait for the subagent to complete.** Do not continue until validation.md has been written.
 
-5. Output:
+5. **Output the coordinator summary:**
    ```
    ✅ Phase 4 complete — validation.md written to project_plans/<PROJECT_NAME>/implementation/
 
    Test cases designed: <N> unit, <N> integration
    Requirements covered: <N>/<N>
 
-   ⚠️  OPEN A FRESH SESSION before implementing.
-       Planning context degrades implementation quality.
-
-   Next step: /sdd:5-implement (in a fresh session — bring plan.md + validation.md)
+   Next step: /sdd:5-implement
    ```
+
+   Note: If phases 2–4 all ran as subagents (e.g. via `/sdd:full`), no fresh session is required. If you ran phases 1–4 inline in this thread, open a fresh session before `/sdd:5-implement`.

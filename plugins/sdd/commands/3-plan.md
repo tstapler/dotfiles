@@ -5,74 +5,76 @@ user-invocable: true
 
 # sdd:3-plan
 
-Produce a complete implementation plan grounded in the research.
+Dispatch a planning subagent to produce the implementation plan. The subagent does all the heavy work and writes plan.md directly — the coordinator (this thread) only reads the summary back.
 
 ## Instructions
 
 1. **Follow [SETUP.md](../skills/SETUP.md)** — identify PROJECT_NAME.
 
-2. **Read all inputs:**
+2. **Read all inputs (coordinator reads these to pass to subagent):**
    - `project_plans/<PROJECT_NAME>/requirements.md` — halt if missing
    - `project_plans/<PROJECT_NAME>/research/*.md` — warn if missing, continue with requirements only
 
-3. **Validate technology choices.** Extract proposed technologies from requirements + research.
-   - Flag anything with known stability, licensing, or security concerns
-   - For any non-standard choice, trigger `sdd:adr` before finalising the plan
+3. **Dispatch a planning subagent using the `Task` tool.**
 
-4. **Write `project_plans/<PROJECT_NAME>/implementation/plan.md`:**
+   The subagent prompt must include:
+   - Full text of `requirements.md`
+   - Full text of all `research/*.md` files (if present)
+   - These exact instructions:
 
-```markdown
-# Implementation Plan: <PROJECT_NAME>
+   > You are a planning subagent for Stapler-Driven Development. Produce a complete implementation plan.
+   >
+   > **Step 1:** Review the requirements and research. Identify the type of system being built.
+   >
+   > **Step 2:** Validate technology choices. Flag anything with known stability, licensing, or security concerns. Write an ADR stub for any non-standard choices.
+   >
+   > **Step 3:** Write `project_plans/<PROJECT_NAME>/implementation/plan.md` following the template below. Use exact file paths — no placeholders. Task sizing: 2–5 minutes each, max 3–5 files per task.
+   >
+   > **Step 4:** Write any ADRs to `project_plans/<PROJECT_NAME>/decisions/ADR-NNN-<kebab-title>.md`.
+   >
+   > **Step 5:** Return a summary: epic count, story count, task count, any flagged choices.
 
-**Feature**: <one-line description>
-**Date**: <YYYY-MM-DD>
-**Status**: Ready for implementation
-**ADRs**: <list any ADRs written, or "None">
+   Plan template:
+   ```markdown
+   # Implementation Plan: <PROJECT_NAME>
 
----
+   **Feature**: <one-line description>
+   **Date**: <YYYY-MM-DD>
+   **Status**: Ready for implementation
+   **ADRs**: <list or "None">
 
-## Dependency Visualization
+   ---
 
-[ASCII diagram showing task dependencies]
+   ## Dependency Visualization
+   [ASCII diagram showing task dependencies]
 
----
+   ---
 
-## Phase 1: <name>
+   ## Phase 1: <name>
+   ### Epic 1.1: <name>
+   **Goal**: <what this epic achieves>
 
-### Epic 1.1: <name>
+   #### Story 1.1.1: <name>
+   **As a** <role>, **I want** <capability>, **so that** <value>.
+   **Acceptance Criteria**:
+   - <measurable criterion>
+   **Files**: <exact file paths>
 
-**Goal**: <what this epic achieves>
+   ##### Task 1.1.1a: <name> (~<2-5> min)
+   - <exact steps>
+   - Files: <list>
+   ```
 
-#### Story 1.1.1: <name>
+4. **Wait for the subagent to complete.** Do not continue until plan.md has been written.
 
-**As a** <role>, **I want** <capability>, **so that** <value>.
-
-**Acceptance Criteria**:
-- <measurable criterion>
-- <measurable criterion>
-
-**Files**: <exact file paths — no placeholders>
-
-##### Task 1.1.1a: <name> (~<2-5> min)
-- <exact steps>
-- Files: <list>
-```
-
-   Task sizing rules:
-   - Each task: 2–5 minutes of focused work
-   - Max 3–5 files per task (1 primary + 2–4 supporting)
-   - No placeholders — every task has exact file paths and complete code intent
-
-5. **Write any ADRs** to `project_plans/<PROJECT_NAME>/decisions/ADR-NNN-<kebab-title>.md` for non-standard technology choices.
-
-6. Output:
+5. **Output the coordinator summary:**
    ```
    ✅ Phase 3 complete — plan.md written to project_plans/<PROJECT_NAME>/implementation/
 
    Epics: <N> | Stories: <N> | Tasks: <N>
+   Flagged choices: <N> (ADRs written)
 
-   ⚠️  OPEN A FRESH SESSION before running /sdd:4-validate or /sdd:5-implement.
-       Planning context degrades implementation quality.
-
-   Next step: /sdd:4-validate (in a fresh session)
+   Next step: /sdd:4-validate
    ```
+
+   Note: No fresh session required if proceeding to Phase 4 — all planning work happened in a subagent, not this thread.
