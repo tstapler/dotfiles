@@ -13,6 +13,7 @@ Usage:
 """
 
 import argparse
+import hashlib
 import json
 import subprocess
 import sys
@@ -253,6 +254,10 @@ def main() -> None:
     parser.add_argument("--output", help="Write JSON to file (default: stdout)")
     args = parser.parse_args()
 
+    members_hash = hashlib.sha256(",".join(sorted(args.logins)).encode()).hexdigest()[:8]
+    default_output = f"/tmp/{args.org}-{args.since}-{members_hash}-activity.json"
+    output_path = args.output or default_output
+
     print(f"Fetching activity in {args.org} since {args.since}...", file=sys.stderr)
     results = [
         summarize_person(login, args.org, args.since, include_pr_sizes=not args.no_pr_sizes)
@@ -260,12 +265,10 @@ def main() -> None:
     ]
 
     output = json.dumps(results, indent=2)
-    if args.output:
-        with open(args.output, "w") as f:
-            f.write(output)
-        print(f"Report written to {args.output}", file=sys.stderr)
-    else:
-        print(output)
+    with open(output_path, "w") as f:
+        f.write(output)
+    print(f"Report written to {output_path}", file=sys.stderr)
+    print(output_path)
 
 
 if __name__ == "__main__":
