@@ -84,17 +84,18 @@ python3 ~/.claude/skills/github-org-team-activity/scripts/activity_report.py \
   --output /tmp/activity-report.json
 ```
 
-## Step 3: Summarize Per Person
+## Step 3: Format the Report
+
+Always generate output from the saved JSON using the formatter script — never inline the formatting:
 
 ```bash
-# Repo breakdown
-jq -r 'group_by(.repository.name) | map({repo: .[0].repository.name, count: length, prs: map(.title)})' /tmp/prs-{login}.json
+python3 ~/.claude/skills/github-org-team-activity/scripts/format_report.py /tmp/activity-report.json
 
-# Count by state
-jq '[group_by(.state) | .[] | {state: .[0].state, count: length}]' /tmp/prs-{login}.json
+# Limit repos shown per person
+python3 ~/.claude/skills/github-org-team-activity/scripts/format_report.py /tmp/activity-report.json --top-repos 5
 ```
 
-**Output format — always open with a timeframe header, then one block per person:**
+**Output format — always opens with a timeframe header, then one block per person:**
 ```
 ## Activity Report: {org} · {since} → {until}
 
