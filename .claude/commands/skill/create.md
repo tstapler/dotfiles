@@ -14,13 +14,17 @@ prompt: "# Create Agent Skill\n\nCreate a new Claude Agent Skill following Anthr
   \ **prompt-engineering agent** to design the skill:\n\n<task subagent_type=\"prompt-engineering\"\
   >\nDesign an Agent Skill with the following requirements:\n\n**Skill Name**: ${1:-my-skill}\n\
   **Purpose**: ${2:-Describe what this skill does}\n\n**Design Requirements**:\n\n\
-  1. **Name and Description Optimization**\n   - Validate skill name follows format:\
-  \ lowercase-alphanumeric-with-hyphens (max 64 chars)\n   - Craft description that\
-  \ clearly conveys WHEN to use this skill (max 1024 chars)\n   - Think from Claude's\
-  \ perspective: what helps triggering decisions?\n   - Examples:\n     - ✅ Good:\
-  \ \"analyzing-financial-statements\" + \"Calculate financial ratios from statements\
-  \ and generate analysis reports\"\n     - ❌ Bad: \"finance\" (too generic) or \"\
-  comprehensive-financial-ratio-calculation-and-analysis-tool\" (too long)\n\n2. **Progressive\
+  1. **Name and Description Optimization**\n   - Skill names MUST follow the `{group}-{name}`\
+  \ prefix convention matching the existing library\n   - Standard groups: `code`,\
+  \ `github`, `git`, `infra`, `ui`, `pm`, `meta`, `knowledge`, `db`, `jj` — use a\
+  \ new group only if none fit\n   - Examples from the live library: `code-python`,\
+  \ `github-pr`, `github-org-team-activity`, `infra-homebrew`, `ui-playwright`, `pm-product-management`,\
+  \ `meta-prompt-engineering`\n   - Validate full name follows format: lowercase-alphanumeric-with-hyphens\
+  \ (max 64 chars)\n   - Craft description that clearly conveys WHEN to use this skill\
+  \ (max 1024 chars)\n   - Think from Claude's perspective: what helps triggering decisions?\n\
+  \   - Examples:\n     - ✅ Good: `github-org-team-activity`, `code-python`, `infra-homebrew`\n\
+  \     - ❌ Bad: `activity` (missing group prefix), `github` (no descriptive suffix),\
+  \ `comprehensive-github-org-activity-tracker` (too long)\n\n2. **Progressive\
   \ Disclosure Architecture**\n   - Design 3-level content hierarchy:\n     - **Level\
   \ 1 (Metadata)**: Name + description in YAML frontmatter\n     - **Level 2 (Core\
   \ Instructions)**: Main SKILL.md body (target <5,000 tokens)\n     - **Level 3+\
@@ -210,12 +214,15 @@ Design an Agent Skill with the following requirements:
 **Design Requirements**:
 
 1. **Name and Description Optimization**
-   - Validate skill name follows format: lowercase-alphanumeric-with-hyphens (max 64 chars)
+   - Skill names MUST follow the `{group}-{name}` prefix convention matching the existing library
+   - Standard groups: `code`, `github`, `git`, `infra`, `ui`, `pm`, `meta`, `knowledge`, `db`, `jj` — use a new group only if none fit
+   - Examples from the live library: `code-python`, `github-pr`, `github-org-team-activity`, `infra-homebrew`, `ui-playwright`, `pm-product-management`, `meta-prompt-engineering`
+   - Validate full name follows format: lowercase-alphanumeric-with-hyphens (max 64 chars)
    - Craft description that clearly conveys WHEN to use this skill (max 1024 chars)
    - Think from Claude's perspective: what helps triggering decisions?
    - Examples:
-     - ✅ Good: "analyzing-financial-statements" + "Calculate financial ratios from statements and generate analysis reports"
-     - ❌ Bad: "finance" (too generic) or "comprehensive-financial-ratio-calculation-and-analysis-tool" (too long)
+     - ✅ Good: `github-org-team-activity`, `code-python`, `infra-homebrew`
+     - ❌ Bad: `activity` (missing group prefix), `github` (no descriptive suffix), `comprehensive-github-org-activity-tracker` (too long)
 
 2. **Progressive Disclosure Architecture**
    - Design 3-level content hierarchy:
@@ -587,6 +594,7 @@ After creating the skill, verify:
 
 - [ ] Skill directory created in correct location
 - [ ] SKILL.md exists with proper YAML frontmatter
+- [ ] Name follows `{group}-{name}` prefix convention (e.g., `code-python`, `github-pr`, `infra-homebrew`)
 - [ ] Name is lowercase-alphanumeric-with-hyphens (max 64 chars)
 - [ ] Description is clear and under 1024 chars
 - [ ] Supporting files created as needed
