@@ -8,6 +8,8 @@ description: Systematically address all open GitHub PR review comments — fix c
 
 Load all unresolved review threads for a PR, then for each: decide whether to fix or decline, implement fixes when accepting, reply with a clear response, and resolve the thread. No comment goes unacknowledged.
 
+> **CRITICAL**: Replying to a thread does NOT resolve it on GitHub. You MUST call the `resolveReviewThread` GraphQL mutation explicitly for every thread. A thread that has a reply but is not resolved will still block merges and appear as unresolved to reviewers. Never skip the resolve step.
+
 ## Step 1: Identify the PR
 
 ```bash
@@ -110,14 +112,16 @@ Where `$COMMENT_ID` is the **first comment ID** in the thread (the one that star
 
 ### Resolve the Thread
 
-After replying, resolve the thread via GraphQL mutation:
+After replying, resolve the thread via GraphQL mutation. **This step is mandatory — a reply alone does NOT resolve the thread on GitHub.**
 
 ```bash
 gh api graphql -f query='mutation($id: ID!) { resolveReviewThread(input: {threadId: $id}) { thread { isResolved } } }' \
   -f id="$THREAD_ID"
 ```
 
-**Important**: Only resolve threads where YOU made the comment being addressed (i.e., you are the PR author). If the reviewer opened the thread, resolve only after replying with a fix or clear response. Do NOT resolve threads where the reviewer asked a question you have not fully answered.
+Verify `isResolved: true` in the response. If it returns `false`, the thread is still open and will block merges.
+
+**When to resolve**: After every thread you have replied to with a fix, decline, or deferral. Do NOT resolve threads where the reviewer asked a question you have not fully answered.
 
 ## Step 5: Commit and Push
 
