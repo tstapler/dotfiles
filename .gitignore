@@ -287,7 +287,7 @@ stapler-scripts/litellm-proxy/.claude/settings.local.json
 
 # Node.js dependencies (skills with bundled executors)
 node_modules/
-/.claude/skills/playwright-skill/.temp*
+.claude/skills/**/.temp*
 
 # Claude Code local settings
 .claude/settings.local.json
