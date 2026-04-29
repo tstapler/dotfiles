@@ -7,6 +7,11 @@ description: Plan a bidirectional merge between a personal fork and an upstream 
 
 **Goal**: Produce a rigorous written plan for merging two diverged branches (fork + upstream). No merge is executed — only analysis and a plan.
 
+See also:
+- `/sync-remotes` — execute the plan when both repos are equally canonical (public, bidirectional)
+- `/git-upstream-fork` — execute the plan when contributing from a private context to a different public project
+- `/git-worktrees` — create the merge branch in isolation when you're ready to execute
+
 ---
 
 ## Step 1: Establish Context
@@ -102,6 +107,10 @@ Classify each conflict:
 ## Step 5: Simulate the Merge (Dry Run)
 
 ```bash
+# Set diff3 conflict style so conflict markers show the common ancestor —
+# makes manual resolution in Step 6 much faster
+git config merge.conflictstyle diff3
+
 # Create a temporary branch from fork HEAD (do NOT commit to it)
 # This is only for conflict detection
 git checkout -b merge-simulation HEAD

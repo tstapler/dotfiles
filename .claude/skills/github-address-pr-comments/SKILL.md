@@ -112,6 +112,8 @@ Read the file referenced in `path`. Focus on the lines around `line` (+/- 30 lin
 
 ### Decision Framework
 
+**Default bias: fix it.** If a suggestion is reasonable and can be done correctly in this PR, implement it — even if it adds a bit of extra scope. Doing the work right in one PR is better than a follow-up.
+
 **Accept and fix** when the comment identifies:
 - A bug, logic error, or incorrect behavior
 - A clarity/readability improvement that is straightforward
@@ -119,15 +121,20 @@ Read the file referenced in `path`. Focus on the lines around `line` (+/- 30 lin
 - A missing test case or uncovered edge case
 - A security concern or data leak risk
 - A valid performance concern with a clear fix
+- A "minor" or "nit" suggestion — if it's small and clearly correct, just fix it rather than declining
 
-**Decline with explanation** when:
-- The change is out of scope for this PR — "Valid point. Out of scope here — I will address it in a follow-up."
-- It is an intentional design choice — explain the reasoning and link to relevant code/ADR if applicable.
-- You disagree with the approach — state your reasoning respectfully and specifically, never dismissively.
-- An architectural constraint prevents it — cite the constraint.
+**Also fix** when:
+- The scope is larger than the minimal PR but the change is the right thing to do — take the extra work and do it correctly rather than leaving known-wrong code in place.
+- The reviewer is pointing at a pattern problem — fix the pattern, not just the one instance.
 
-**Defer** when:
-- The suggestion is valid but requires a larger refactor — "Agreed this needs work. Filing as a follow-up to keep this PR focused."
+**Defer** (not decline) when:
+- The suggestion is valid but requires a risky or large refactor — "Agreed this needs work. Deferring to a follow-up to keep this PR focused." File a tracking issue or TODO.
+
+**Decline** only when:
+- The suggestion is factually incorrect or based on a misunderstanding of the code's intent — correct the misunderstanding with specifics.
+- It contradicts an explicit architectural decision documented in an ADR or CLAUDE.md — cite the source.
+- You disagree and have a specific technical reason — state it clearly, never dismissively.
+- An architectural constraint makes it impossible — cite the constraint.
 
 ### Implement Fixes
 

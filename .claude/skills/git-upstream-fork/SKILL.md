@@ -7,6 +7,11 @@ description: Identify commits/changes in a locally-checked-out source repo that 
 
 Both repos are checked out locally. No rsync. Use `git format-patch` / `git am` to move changes between them, with Claude filtering out personal/private content before anything is committed.
 
+See also:
+- `/fork-merge-plan` — run this first when the target has significant divergence; it produces a conflict map and commit classification before you touch any branches
+- `/sync-remotes` — use instead when both repos are equally canonical (public, bidirectional, no filtering needed)
+- `/git-worktrees` — for creating the upstream branch in isolation
+
 ## Step 1: Establish Source and Target
 
 ```bash
@@ -155,6 +160,24 @@ Remove any personal files that were accidentally included:
 git rm --cached path/to/personal/file.md
 echo "path/to/personal/file.md" >> .gitignore
 git commit --amend --no-edit
+```
+
+## Step 6.5: Quality Gate (pre-push)
+
+Before pushing, run the target repo's build and test suite from the upstream branch:
+
+```bash
+cd $WORK   # or the upstream branch directory
+
+make build && make test && make lint
+```
+
+If the quality gate fails, fix the issue before pushing — don't open a PR with a known broken build.
+
+Also set `diff3` conflict style if you had any merge conflicts — it shows the common ancestor alongside both sides, making resolution much faster:
+
+```bash
+git config merge.conflictstyle diff3
 ```
 
 ## Step 7: Create the PR

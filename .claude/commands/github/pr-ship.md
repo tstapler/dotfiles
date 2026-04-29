@@ -53,13 +53,13 @@ prompt: |
   ```
 
   For each unresolved comment:
-  - **Fix** if it identifies a real bug, null-safety issue, logic error, data integrity problem, or security issue → implement the fix
-  - **Decline** if it is a style preference, premature optimization, or out-of-scope suggestion → reply with rationale:
-    ```bash
-    gh api repos/$REPO/pulls/$PR/comments \
-      -X POST -f body="<rationale>" -f in_reply_to=<COMMENT_ID>
-    ```
+  - **Default: Fix it.** If a suggestion is reasonable and can be done correctly within this PR's scope, implement it — even if it adds a little extra work. Doing it right beats a follow-up PR.
+  - **Fix** if it identifies: a bug, logic error, null-safety issue, data integrity problem, security concern, clarity improvement, naming inconsistency, missing test case, or valid performance issue.
+  - **Also fix** style preferences and "minor" suggestions if the fix is small and clearly correct — don't decline just because it's cosmetic.
+  - **Defer** (not decline) if the suggestion is valid but requires a larger refactor that would be risky to do here — reply "Good catch. This needs a broader fix — deferring to a follow-up to keep this PR focused."
+  - **Decline** only if: the suggestion is factually wrong, contradicts an explicit design decision with a documented reason, or the reviewer misunderstood the intent. Always include specific reasoning, never just "won't fix".
   - **CHANGES_REQUESTED reviews**: treat every item as blocking; address each one
+  After addressing comments: commit fixes and `git push origin HEAD`.
   After addressing comments: commit fixes and `git push origin HEAD`.
 
   ### Gate 3 — Merge Conflicts
