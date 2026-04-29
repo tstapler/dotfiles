@@ -74,14 +74,19 @@ gh search prs \
   > /tmp/reviews-{login}.json
 ```
 
-Or use the activity script for multiple people:
+Or use the activity script for multiple people (output path is printed to stdout):
 
 ```bash
+# Default output: /tmp/{org}-{since}-activity.json
 python3 ~/.claude/skills/github-org-team-activity/scripts/activity_report.py \
   --org {org} \
   --logins jsmith-org alexjohnson \
-  --since 2026-03-01 \
-  --output /tmp/activity-report.json
+  --since 2026-03-01
+
+# Pipe directly into formatter
+python3 ~/.claude/skills/github-org-team-activity/scripts/activity_report.py \
+  --org {org} --logins jsmith-org --since 2026-03-01 | \
+  xargs python3 ~/.claude/skills/github-org-team-activity/scripts/format_report.py
 ```
 
 ## Step 3: Format the Report

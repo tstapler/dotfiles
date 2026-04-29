@@ -1,10 +1,5 @@
 {
   "mcpServers": {
-    "developer": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-developer"],
-      "env": {}
-    },
     "memory": {
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-memory"],
@@ -13,6 +8,11 @@
     "context7": {
       "command": "npx",
       "args": ["-y", "@upstash/context7-mcp"],
+      "env": {}
+    },
+    "datadog": {
+      "command": "/Users/tylerstapler/.local/bin/datadog_mcp_cli",
+      "args": [],
       "env": {}
     },
     "sequential-thinking": {
@@ -33,8 +33,43 @@
     "aider": {
       "command": "bash",
       "args": [
-        "-c", 
+        "-c",
         "aws-sso-util login && uvx --from git+https://github.com/TylerStaplerAtFanatics/aider-mcp-server.git aider-mcp-server --editor-model 'bedrock/us.anthropic.claude-3-7-sonnet-20250219-v1:0' --current-working-dir ."
+      ],
+      "env": {}
+    },
+    "brave-search": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-brave-search"],
+      "env": {
+        "BRAVE_API_KEY": "${BRAVE_API_KEY}"
+      }
+    },
+    "read-website-fast": {
+      "command": "npx",
+      "args": ["-y", "@just-every/mcp-read-website-fast"],
+      "env": {}
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"],
+      "env": {}
+    },
+    "serena": {
+      "command": "uvx",
+      "args": [
+        "--from", "git+https://github.com/oraios/serena",
+        "serena",
+        "start-mcp-server",
+        "--enable-web-dashboard", "false"
+      ],
+      "env": {}
+    },
+    "website-downloader": {
+      "command": "uvx",
+      "args": [
+        "--from", "git+https://github.com/TylerStaplerAtFanatics/mcp-website-downloader.git",
+        "mcp-website-downloader"
       ],
       "env": {}
     }

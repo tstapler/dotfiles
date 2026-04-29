@@ -41,7 +41,19 @@ prompt: |
     - **Build errors**: read error, fix source, commit
     - **Go test failures**: `go test ./...` locally, diagnose, fix, commit
     - **Go lint**: `make lint`, fix, commit
-    After fixing: `git push origin HEAD` and restart the loop.
+    - **Kotlin/KMP compile errors**: fix imports/types, then validate with `./gradlew compileTestKotlinJvm` before pushing
+    - **Kotlin/KMP test failures**: fix the test, then validate with `./gradlew jvmTest` before pushing
+
+    **Local validation before push** — always run the cheapest local check that covers the fix:
+    | Stack | Compile check | Full test |
+    |-------|--------------|-----------|
+    | Kotlin/KMP | `./gradlew compileTestKotlinJvm --no-daemon` | `./gradlew jvmTest --no-daemon` |
+    | Go | `go build ./...` | `go test ./...` |
+    | TypeScript | `npx tsc --noEmit` | `npm test` |
+    | JS/lint | `npm run lint -- --fix` | `npm test` |
+
+    Only push if the local check passes. This prevents burning multiple CI rounds on incremental fixes.
+    After validating locally: `git push origin HEAD` and restart the loop.
 
   ### Gate 2 — Review Comments
 
