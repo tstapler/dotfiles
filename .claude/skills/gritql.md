@@ -24,6 +24,56 @@ Use `grit` for structural code rewrites. Unlike text-based find/replace, gritql 
 - Simple text substitution → use `MultiEdit`
 - Code *searching* → use `code-ast-grep` instead
 
+## ⚠️ Kotlin Limitations (v0.1.1)
+
+GritQL's Kotlin support is expression-level only. Know what works before attempting a transform.
+
+### What works ✅
+- Function call rewrites: `` `logger.error($msg)` => `logger.warn($msg)` ``
+- Method chains: `` `$obj.old($$$args)` => `$obj.new($$$args)` ``
+- Import replacements: `` `import old.Pkg` => `import new.Pkg` ``
+
+### What fails ❌
+- **`catch` blocks** — `catch (e: Exception) { $body }` → `code 200: Could not find variable` or 0 matches. Kotlin catch clauses are `catch_block` statement nodes in the tree-sitter grammar; GritQL backtick patterns only reach expression nodes.
+- **Any statement-level pattern** — `if`, `for`, variable declarations, `try` blocks, `return` statements all fail similarly.
+- **`where` clause with `contains`/`not contains`** — parses without error in v0.1.1 but consistently returns 0 matches. Use this as a confirmation guard only after verifying the base pattern matches first.
+
+### No Kotlin stdlib patterns
+The GritQL stdlib has patterns for Go, Java, JS, Python, Rust — but **no Kotlin**. Don't search `grit list` expecting Kotlin helpers.
+
+### For Kotlin statement-level transforms
+Use `ast-grep` with a YAML rule file, or use the `Edit` tool for targeted single-location changes:
+
+```bash
+# ast-grep can match catch blocks:
+sg --pattern 'catch ($e: $T) { $$$body }' --lang kotlin kmp/src/
+
+# YAML rule for structural rewrite (sg --rewrite)
+```
+
+## ⚠️ stdlib Init Fails (SSH auth error)
+
+`grit init` uses libgit2 to clone `getgrit/stdlib` from GitHub. It ignores git `insteadOf` config and attempts SSH, which fails without an agent:
+
+```
+Error: Failed to fetch grit module getgrit/stdlib:
+  authentication required but no callback set; class=Ssh (23)
+```
+
+### Workaround: symlink the bundled stdlib
+
+The stdlib is bundled inside the npm package. Locate it and symlink it into your project's `.grit/` directory:
+
+```bash
+# Find the bundled stdlib (works on macOS + Linux)
+GRIT_STDLIB=$(npm root -g)/@getgrit/cli/node_modules/.grit/.gritmodules
+
+mkdir -p .grit
+ln -sf "$GRIT_STDLIB" .grit/.gritmodules
+```
+
+Run from the project root. This makes `where` clause predicates and named patterns available without SSH.
+
 ## ⚠️ Critical: Go Package Prefix Migrations
 
 When adding package prefixes to Go types (e.g., `FooType` → `pkg.FooType`), two things WILL go wrong without guards:

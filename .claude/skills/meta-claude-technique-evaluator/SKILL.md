@@ -19,7 +19,6 @@ Evaluate new Claude techniques, tools, and workflow changes for adoption value a
 **Don't use for:**
 - Building or implementing the technique (use `meta-prompt-engineering` or `code-python`)
 - General research without an adoption decision (use `meta-research-workflow`)
-- Creating Zettelkasten notes from evaluations (use `knowledge-synthesis` after evaluation)
 
 ## Core Evaluation Workflow
 
@@ -117,6 +116,33 @@ Generate structured output using the evaluation template.
 
 For the output template: see `references/evaluation-template.md`
 
+### Phase 6: Knowledge Synthesis (Always Run — Do Not Wait for User Request)
+
+After producing the evaluation, immediately chain to `knowledge-synthesis` to persist the results. This is mandatory, not optional.
+
+**Create three artifacts**:
+
+1. **Wiki page** at `logseq/pages/<TechniqueName>.md`:
+   - Core Definition, Background/Context, Key Characteristics, Applications/Usage
+   - Comparison table vs. closest existing tools (especially Claude Code built-ins)
+   - Evaluation section: verdict, date, 2-sentence rationale, re-evaluate trigger
+   - Related Concepts with `[[Wiki Links]]`
+   - Tags: 3-7 `#[[Tag]]` entries per knowledge-synthesis guidelines
+
+2. **Daily synthesis entry** appended to `logseq/pages/Knowledge Synthesis - YYYY-MM-DD.md`:
+   - Context: why the evaluation was done
+   - Key Findings: bullet list of the most important discoveries
+   - Condensed Evaluation Dimensions table from Phase 4
+   - Verdict + re-evaluate trigger (if Monitor/Plan)
+   - Related Concepts with `[[Wiki Links]]`
+   - Sources with URLs
+   - Tags
+
+3. **Journal reference** in `logseq/journals/YYYY_MM_DD.md`:
+   - One-line entry: `- Evaluated [[TechniqueName]] — verdict: [Adopt Now/Plan/Monitor/Skip] — see [[Knowledge Synthesis - YYYY-MM-DD]]`
+
+**Check before creating wiki page**: search `logseq/pages/` for existing pages on the same topic to update rather than duplicate.
+
 ## Quick Evaluation Mode
 
 For simple yes/no questions about a technique, skip the full workflow:
@@ -131,7 +157,7 @@ For simple yes/no questions about a technique, skip the full workflow:
 | Situation | Chain To |
 |-----------|----------|
 | Need to research Anthropic docs/blog | `meta-research-workflow` |
-| User wants evaluation saved as wiki note | `knowledge-synthesis` |
+| After every evaluation (automatic) | `knowledge-synthesis` — always run Phase 6 without waiting for user request |
 | Technique is a prompting pattern | `meta-prompt-engineering` |
 | Technique involves model choice | `meta-model-selection` |
 | Adoption requires new skill creation | `meta-prompt-engineering` |

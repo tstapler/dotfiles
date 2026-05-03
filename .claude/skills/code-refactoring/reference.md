@@ -69,6 +69,45 @@ grit apply '<pattern>' --files 'src/main/java/path/File.java' --dry-run
 grit apply '`$obj.oldApi($$$args)` => `$obj.newApi($$$args)`' --dry-run
 ```
 
+## Kotlin-Specific Troubleshooting
+
+### catch block transformation doesn't work in GritQL
+
+GritQL's Kotlin support is expression-level only. `catch (e: Exception) { $body }` produces error 200 ("Could not find variable") or 0 matches because `catch_block` is a statement node in Kotlin's tree-sitter grammar, not an expression node.
+
+**Alternatives:**
+
+1. **Single location** → use `Edit` tool directly
+2. **Many locations** → use `ast-grep` YAML rule:
+
+```bash
+# Find all catch(Exception) blocks missing CancellationException guard
+sg --pattern 'catch ($e: Exception) { $$$body }' --lang kotlin kmp/src/
+```
+
+Write a `.grit/` YAML rule or Python script for bulk structural edits.
+
+3. **Inline patterns** (one-liner try-catch) → also not matchable with GritQL; use grep + Edit.
+
+### `where` clause returns 0 matches
+
+`where { $var <: contains \`pattern\` }` parses without error in v0.1.1 but consistently returns 0 matches. This appears to be a bug in v0.1.1 with or without the stdlib symlink. Omit the `where` clause and verify the base pattern matches first; add guards via a Python post-processing script if needed.
+
+### `grit init` fails with SSH auth error
+
+```
+Failed to clone repo getgrit/stdlib: authentication required but no callback set
+```
+
+The stdlib is already bundled in the npm package. Symlink it:
+
+```bash
+mkdir -p .grit
+ln -sf /home/linuxbrew/.linuxbrew/lib/node_modules/@getgrit/cli/node_modules/.grit/.gritmodules .grit/.gritmodules
+```
+
+No Kotlin-specific patterns exist in the stdlib anyway (only Go, Java, JS, Python, Rust).
+
 ## Troubleshooting
 
 ### gritql not installed

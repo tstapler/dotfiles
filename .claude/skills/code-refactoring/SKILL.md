@@ -93,9 +93,14 @@ Before completing any refactor:
 | Scenario | Tool |
 |----------|------|
 | Find all affected code sites | `ast-grep` (`sg`) |
-| Multi-file structural transformation | `gritql` |
+| Multi-file expression-level Kotlin rewrite | `gritql` |
+| Kotlin catch/if/try block transformation | `Edit` (or `ast-grep --rewrite` YAML) |
+| Multi-file structural transformation (non-Kotlin) | `gritql` |
 | Single file, simple change | `Edit` |
 | Same text change across files | `MultiEdit` |
+
+### Kotlin-specific note
+GritQL only handles expression-level Kotlin patterns (function calls, method chains, imports). For **statement-level changes** — catch blocks, if statements, variable declarations, try/finally — use `Edit` for targeted changes or `ast-grep` with a YAML rule for structural multi-file rewrites. See `code-gritql` skill for the full Kotlin limitations list.
 
 ## Progressive Context
 
