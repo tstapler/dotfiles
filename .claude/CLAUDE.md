@@ -40,7 +40,7 @@ Reserve `Bash` exclusively for: git operations, running tests/commands, and syst
 
 ## Manifest-Driven Development (MDD) Workflow
 
-For non-trivial features, follow these phases in order. Each produces an artifact the next phase requires. Full system documentation: `@~/.claude/STAPLER.md`. Directory conventions: `@project_plans/README.md`.
+For non-trivial features, follow these phases in order. Each produces an artifact the next phase requires. Full system documentation: `@~/.claude/STAPLER.md`. Directory conventions: `@docs/plans/README.md`.
 
 ### Two Artifact Layers
 
@@ -48,19 +48,20 @@ MDD uses two stores. **Do not confuse them:**
 
 | Layer | Location | Phases | Contents |
 |---|---|---|---|
-| **Spec** | `project_plans/<project>/` | 1–4 (pre-code) | requirements.md, research/, plan.md, validation.md, decisions/ADR-NNN-*.md |
+| **Spec** | `docs/plans/<project>/` | 1–4 (pre-code) | requirements.md, research/, plan.md, validation.md |
+| **ADRs** | `docs/adr/` in target repo | 3 (planning) | ADR-NNN-*.md |
 | **Execution** | `docs/tasks/{feature}.md` in target repo | 5–6 (in-code) | Implementation Plan, bug tracking |
 
-`/plan:feature` bridges them — it reads `project_plans/` and writes `docs/tasks/`.
+`/plan:feature` bridges them — it reads `docs/plans/` and writes `docs/tasks/`.
 
 ### Phase Gates
 
 | Phase | Command | Input | Output | Location |
 |---|---|---|---|---|---|
-| **1. Ideation** | `/plan:mdd-start` | User's idea | `requirements.md` | `project_plans/<project>/` |
-| **2. Research** | `/research-workflow` | `requirements.md` | `research/*.md` | `project_plans/<project>/research/` |
-| **3. Planning** | `/plan:feature` or `/handy:plan` | requirements + research | `plan.md` + ADRs (via `/plan:adr`) | `project_plans/<project>/implementation/` + `decisions/` |
-| **4. Validation** | `/quality:test-planner` | `plan.md` | `validation.md` | `project_plans/<project>/implementation/` |
+| **1. Ideation** | `/plan:mdd-start` | User's idea | `requirements.md` | `docs/plans/<project>/` |
+| **2. Research** | `/research-workflow` | `requirements.md` | `research/*.md` | `docs/plans/<project>/research/` |
+| **3. Planning** | `/plan:feature` or `/handy:plan` | requirements + research | `plan.md` + ADRs (via `/plan:adr`) | `docs/plans/<project>/implementation/` + `docs/adr/` (target repo) |
+| **4. Validation** | `/quality:test-planner` | `plan.md` | `validation.md` | `docs/plans/<project>/implementation/` |
 | **5. Implementation** | `/code:implement` | plan + validation | Code + tests | Target repo |
 | **6. QA** | `/quality:does-it-work`, `/code:review` | Implementation | Sign-off | Target repo |
 

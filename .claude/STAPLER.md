@@ -32,7 +32,7 @@ Fowler (2025) defines three levels of spec-driven development:
 | Level | Definition | This System |
 |---|---|---|
 | **Spec-first** | Write a spec before generating code | ✅ Always enforced via phase gate |
-| **Spec-anchored** | Keep specs as living artifacts after the task | ✅ `project_plans/` persists; phases carry forward |
+| **Spec-anchored** | Keep specs as living artifacts after the task | ✅ `docs/plans/` persists; phases carry forward |
 | **Spec-as-source** | Humans only edit specs, never code | ❌ Not this — human stays in the loop at every gate |
 
 The key distinction Fowler makes — between **memory bank** (always-loaded context) and **spec** (task-scoped artifact) — is architecturally resolved here. Most SDD tools conflate them. This system keeps them as separate layers with different lifecycles.
@@ -126,18 +126,20 @@ QA ─────────────────────────�
 ### Artifact Directory
 
 ```
-project_plans/<project>/
+docs/plans/<project>/
 ├── requirements.md          ← ideation output
 ├── research/
 │   ├── stack.md
 │   ├── features.md
 │   ├── architecture.md
 │   └── pitfalls.md
-├── decisions/
-│   └── ADR-NNN-*.md         ← architecture decisions (Phase 3, on demand via /plan:adr)
 └── implementation/
     ├── plan.md              ← planning output
     └── validation.md        ← validation output (before code)
+
+Target repo (ADRs live here, not in docs/plans/):
+docs/adr/
+└── ADR-NNN-*.md             ← architecture decisions (Phase 3, on demand via /plan:adr)
 ```
 
 ---
@@ -156,7 +158,7 @@ Layer 1: Always-Loaded (session context)
 
 Layer 2: Project-Scoped (task context)
 ───────────────────────────────────────
-project_plans/<project>/     spec artifacts (requirements, research, plan, validation)
+docs/plans/<project>/     spec artifacts (requirements, research, plan, validation)
 <repo>/CLAUDE.md             repo-specific rules
 
 Layer 3: Knowledge Graph (long-term memory)
@@ -183,7 +185,7 @@ Gastown (Yegge, 2025) is a multi-agent fleet orchestration system for 20-30 simu
 |---|---|---|
 | **Scale** | Fleet (20-30 agents) | Solo practitioner + subagents |
 | **Optimization target** | Throughput across agents | Quality per artifact |
-| **State persistence** | Dolt (git-backed SQL) ledger | `project_plans/` + Logseq |
+| **State persistence** | Dolt (git-backed SQL) ledger | `docs/plans/` + Logseq |
 | **Memory** | Per-agent JSONL session replay | Cross-session knowledge graph |
 | **Agent lifecycle** | Witness-managed Polecats (persistent identity, ephemeral sessions) | Phase-fresh sessions (no persistent agent identity) |
 | **Work routing** | Capability-based dispatch (planned) | Phase gates (human decides) |
@@ -223,7 +225,7 @@ This system addresses each directly:
 | One-size workflow | Kiro: 3 fixed docs; spec-kit: 8 docs per feature | Scale gates to problem size (2 phases for bugs, 6 for features) |
 | Review overhead | Spec-kit creates many repetitive files | Minimal artifacts; each produces exactly one document |
 | False sense of control | Tools don't enforce anything | Phase gates are enforced by "never skip phases" rule in CLAUDE.md |
-| Memory bank ≠ spec confusion | Most tools conflate them | Architecturally separate (3-layer memory vs task-scoped project_plans/) |
+| Memory bank ≠ spec confusion | Most tools conflate them | Architecturally separate (3-layer memory vs task-scoped docs/plans/) |
 | No iterative approach | Waterfall-like spec phases | Fresh session means you can re-run any phase with new information |
 
 The system is closer to spec-kit's philosophy (constitution-backed, checklist-enforced) than Kiro's (lightweight, 3 docs). But it avoids spec-kit's verbosity by making artifacts minimal and single-purpose.
@@ -234,13 +236,13 @@ The system is closer to spec-kit's philosophy (constitution-backed, checklist-en
 
 **Good state looks like:**
 - MEMORY.md has entries from recent sessions
-- `project_plans/` has active specs in progress
+- `docs/plans/` has active specs in progress
 - Skills inventory is audited (token budget known)
 - Recent Logseq journal entries have been processed
 
 **Warning signs:**
 - MEMORY.md is empty (← current state; session learning loop is broken)
-- `project_plans/` has stale, never-implemented specs
+- `docs/plans/` has stale, never-implemented specs
 - Implementation started without a plan.md
 - Completion claimed without running verification
 

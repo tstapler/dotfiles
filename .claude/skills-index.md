@@ -10,10 +10,10 @@ Use the correct command for each workflow phase. Never skip phases — each arti
 
 | Phase | Command | Produces | Where |
 |---|---|---|---|
-| **1. Ideation** | `/plan:mdd-start` | `requirements.md` | `project_plans/<project>/` |
-| **2. Research** | `/research-workflow` | `research/*.md` (stack, features, architecture, pitfalls) | `project_plans/<project>/research/` |
-| **3. Planning** | `/plan:feature` or `/handy:plan` | `plan.md` + ADRs (via `/plan:adr`) | `project_plans/<project>/implementation/` + `decisions/` |
-| **4. Validation** | `/quality:test-planner` | `validation.md` | `project_plans/<project>/implementation/` |
+| **1. Ideation** | `/plan:mdd-start` | `requirements.md` | `docs/plans/<project>/` |
+| **2. Research** | `/research-workflow` | `research/*.md` (stack, features, architecture, pitfalls) | `docs/plans/<project>/research/` |
+| **3. Planning** | `/plan:feature` or `/handy:plan` | `plan.md` + ADRs (via `/plan:adr`) | `docs/plans/<project>/implementation/` + `docs/adr/` (target repo) |
+| **4. Validation** | `/quality:test-planner` | `validation.md` | `docs/plans/<project>/implementation/` |
 | **5. Implementation** | `/code:implement` | Code + tests | Target repo |
 | **6. QA** | `/quality:does-it-work` + `/code:review` | Sign-off | Target repo |
 
