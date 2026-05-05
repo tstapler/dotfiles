@@ -7,16 +7,24 @@ from rich.console import Console
 # Allow running from src directly or as module
 try:
     from .sources.claude import ClaudeSource
+    from .sources.mcp_config import McpConfigSource
+    from .sources.plugins import PluginSource
     from .targets.gemini import GeminiTarget
     from .targets.opencode import OpenCodeTarget
+    from .targets.claude_settings import ClaudeSettingsTarget
+    from .targets.claude_plugin_installer import ClaudePluginInstaller
     from .core import Agent, Skill, Command
     from .state import SyncStateManager
 except ImportError:
     # Fallback if run as script (hacky but useful during dev)
     sys.path.append(str(Path(__file__).parent))
     from sources.claude import ClaudeSource
+    from sources.mcp_config import McpConfigSource
+    from sources.plugins import PluginSource
     from targets.gemini import GeminiTarget
     from targets.opencode import OpenCodeTarget
+    from targets.claude_settings import ClaudeSettingsTarget
+    from targets.claude_plugin_installer import ClaudePluginInstaller
     from core import Agent, Skill, Command
     from state import SyncStateManager
 
@@ -153,20 +161,69 @@ def sync_from_target(source, target, state_manager: SyncStateManager, dry_run: b
     else:
         console.print(f"[yellow]No modifications detected in {target_name}.[/yellow]")
 
+def sync_plugins(plugin_source: PluginSource, dry_run: bool):
+    plugins = plugin_source.load_plugins()
+    if not plugins:
+        console.print("[yellow]No plugins found.[/yellow]")
+        return
+
+    console.print(f"\n[bold]Installing {len(plugins)} plugin(s)...[/bold]")
+
+    if plugin_source.global_plugins_dir:
+        global_plugins = [
+            p for p in plugins
+            if p.source_dir and str(plugin_source.global_plugins_dir) in (p.source_dir or "")
+        ]
+        if global_plugins:
+            installer = ClaudePluginInstaller(target_dir=Path.home() / ".claude")
+            console.print(f"[dim]Global install -> {installer.target_dir}[/dim]")
+            installer.install_plugins(global_plugins, dry_run=dry_run)
+
+    if plugin_source.local_plugins_dir:
+        local_plugins = [
+            p for p in plugins
+            if p.source_dir and str(plugin_source.local_plugins_dir) in (p.source_dir or "")
+        ]
+        if local_plugins:
+            local_claude = Path.cwd() / ".claude"
+            installer = ClaudePluginInstaller(target_dir=local_claude)
+            console.print(f"[dim]Local install -> {installer.target_dir}[/dim]")
+            installer.install_plugins(local_plugins, dry_run=dry_run)
+
+
+def sync_mcp(mcp_source: McpConfigSource, settings_target: ClaudeSettingsTarget, dry_run: bool):
+    console.print(f"\n[bold]Syncing MCP servers -> {settings_target.settings_file}...[/bold]")
+    servers = mcp_source.load_servers()
+    if not servers:
+        console.print("[yellow]No MCP servers found.[/yellow]")
+        return
+    count = settings_target.save_mcp_servers(servers, dry_run=dry_run)
+    if not dry_run:
+        console.print(f"[green]Wrote {count} MCP servers to {settings_target.settings_file}[/green]")
+
 def main():
     parser = argparse.ArgumentParser(description="Sync LLM agents between Claude, Gemini, and OpenCode")
     parser.add_argument("--dry-run", action="store_true", help="Preview changes")
     parser.add_argument("--force", action="store_true", help="Force sync regardless of content hash")
     parser.add_argument("--cleanup", action="store_true", help="Remove legacy non-namespaced files")
     parser.add_argument("--target", choices=['gemini', 'opencode', 'all'], default='all', help="Target platform(s)")
-    parser.add_argument("--direction", choices=['to-target', 'from-target', 'both'], default='to-target', 
+    parser.add_argument("--direction", choices=['to-target', 'from-target', 'both'], default='to-target',
                         help="Sync direction")
     parser.add_argument("--state-file", type=Path, help="Custom state file path")
-    
+
     # Custom paths
     parser.add_argument("--source-dir", type=Path, help="Override base directory for Claude assets")
     parser.add_argument("--gemini-dir", type=Path, help="Override base directory for Gemini assets")
     parser.add_argument("--opencode-dir", type=Path, help="Override base directory for OpenCode assets")
+    parser.add_argument("--mcp-global-config", type=Path, help="Override global MCP servers JSON file")
+    parser.add_argument("--mcp-local-config", type=Path, help="Override machine-local MCP servers JSON file")
+    parser.add_argument("--claude-settings-file", type=Path, help="Override path to ~/.claude/settings.json")
+
+    # Plugin install
+    parser.add_argument("--plugins-global-dir", type=Path,
+                        help="Directory of plugins to install globally into ~/.claude/")
+    parser.add_argument("--plugins-local-dir", type=Path,
+                        help="Directory of plugins to install locally into ./.claude/")
     
     args = parser.parse_args()
     
@@ -209,10 +266,23 @@ def main():
         for target in targets:
             if args.direction in ['to-target', 'both']:
                 sync_to_target(claude, target, state_manager, args.dry_run, args.force)
-            
+
             if args.direction in ['from-target', 'both']:
                 sync_from_target(claude, target, state_manager, args.dry_run, args.force)
-            
+
+        mcp_source = McpConfigSource(
+            global_config_file=args.mcp_global_config,
+            local_config_file=args.mcp_local_config,
+        )
+        claude_settings = ClaudeSettingsTarget(settings_file=args.claude_settings_file)
+        sync_mcp(mcp_source, claude_settings, args.dry_run)
+
+        plugin_source = PluginSource(
+            global_plugins_dir=args.plugins_global_dir,
+            local_plugins_dir=args.plugins_local_dir,
+        )
+        sync_plugins(plugin_source, args.dry_run)
+
         if not args.dry_run:
             state_manager.save()
             

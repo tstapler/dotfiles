@@ -46,6 +46,32 @@ class Command(SyncItem):
     """Universal representation of a CLI command."""
     content: str  # The command prompt/template
 
+@dataclass
+class MCPServer:
+    """An MCP server configuration entry."""
+    name: str
+    # stdio transport
+    command: str = ""
+    args: List[str] = field(default_factory=list)
+    env: Dict[str, str] = field(default_factory=dict)
+    # http transport
+    type: Optional[str] = None
+    url: Optional[str] = None
+    disabled: bool = False
+
+
+@dataclass
+class Plugin:
+    """A Claude Code plugin loaded from a plugins/ directory."""
+    name: str
+    description: str
+    version: str
+    commands: List["Command"] = field(default_factory=list)
+    skills: List["Skill"] = field(default_factory=list)
+    # hooks: event_type -> list of hook entries (each entry has optional matcher + hooks list)
+    hooks: Dict[str, List[Dict[str, Any]]] = field(default_factory=dict)
+    source_dir: Optional[str] = None
+
 class SyncSource(ABC):
     def load_agents(self) -> List[Agent]:
         """Load agents from the source."""

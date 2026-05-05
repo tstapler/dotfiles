@@ -1,41 +1,13 @@
 {
   "mcpServers": {
-    "memory": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-memory"],
-      "env": {}
-    },
     "context7": {
       "command": "npx",
       "args": ["-y", "@upstash/context7-mcp"],
       "env": {}
     },
-    "datadog": {
-      "command": "/Users/tylerstapler/.local/bin/datadog_mcp_cli",
-      "args": [],
-      "env": {}
-    },
     "sequential-thinking": {
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
-      "env": {}
-    },
-    "fetch": {
-      "command": "uvx",
-      "args": ["mcp-server-fetch"],
-      "env": {}
-    },
-    "filesystem": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-filesystem", "."],
-      "env": {}
-    },
-    "aider": {
-      "command": "bash",
-      "args": [
-        "-c",
-        "aws-sso-util login && uvx --from git+https://github.com/TylerStaplerAtFanatics/aider-mcp-server.git aider-mcp-server --editor-model 'bedrock/us.anthropic.claude-3-7-sonnet-20250219-v1:0' --current-working-dir ."
-      ],
       "env": {}
     },
     "brave-search": {
@@ -50,11 +22,6 @@
       "args": ["-y", "@just-every/mcp-read-website-fast"],
       "env": {}
     },
-    "playwright": {
-      "command": "npx",
-      "args": ["-y", "@playwright/mcp@latest"],
-      "env": {}
-    },
     "serena": {
       "command": "uvx",
       "args": [
@@ -63,7 +30,8 @@
         "start-mcp-server",
         "--enable-web-dashboard", "false"
       ],
-      "env": {}
+      "env": {},
+      "disabled": true
     },
     "website-downloader": {
       "command": "uvx",

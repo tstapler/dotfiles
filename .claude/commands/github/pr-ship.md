@@ -47,6 +47,7 @@ prompt: |
     **Local validation before push** — always run the cheapest local check that covers the fix:
     | Stack | Compile check | Full test |
     |-------|--------------|-----------|
+    | Java/Maven | `./mvnw compile -q` | `./mvnw test -q` |
     | Kotlin/KMP | `./gradlew compileTestKotlinJvm --no-daemon` | `./gradlew jvmTest --no-daemon` |
     | Go | `go build ./...` | `go test ./...` |
     | TypeScript | `npx tsc --noEmit` | `npm test` |
@@ -57,22 +58,17 @@ prompt: |
 
   ### Gate 2 — Review Comments
 
-  ```bash
-  REPO=$(gh repo view --json nameWithOwner --jq '.nameWithOwner')
-  gh api repos/$REPO/pulls/$PR/comments --paginate \
-    | jq '.[] | {id, user: .user.login, path, line, body: .body[:300], resolved: .in_reply_to_id}'
-  gh pr view "$PR" --json reviews --jq '.reviews[] | {state, author: .author.login, body: .body[:200]}'
-  ```
+  Use the `github-address-pr-comments` skill (`~/.claude/skills/github-address-pr-comments/SKILL.md`) to systematically address all unresolved threads:
+  1. Fetch all unresolved threads via GraphQL (single call)
+  2. For each thread: decide fix/decline/defer, implement the fix, reply with the outcome, resolve via GraphQL mutation
+  3. **CHANGES_REQUESTED reviews**: treat every item as blocking; address each one
 
-  For each unresolved comment:
-  - **Default: Fix it.** If a suggestion is reasonable and can be done correctly within this PR's scope, implement it — even if it adds a little extra work. Doing it right beats a follow-up PR.
-  - **Fix** if it identifies: a bug, logic error, null-safety issue, data integrity problem, security concern, clarity improvement, naming inconsistency, missing test case, or valid performance issue.
-  - **Also fix** style preferences and "minor" suggestions if the fix is small and clearly correct — don't decline just because it's cosmetic.
-  - **Defer** (not decline) if the suggestion is valid but requires a larger refactor that would be risky to do here — reply "Good catch. This needs a broader fix — deferring to a follow-up to keep this PR focused."
-  - **Decline** only if: the suggestion is factually wrong, contradicts an explicit design decision with a documented reason, or the reviewer misunderstood the intent. Always include specific reasoning, never just "won't fix".
-  - **CHANGES_REQUESTED reviews**: treat every item as blocking; address each one
-  After addressing comments: commit fixes and `git push origin HEAD`.
-  After addressing comments: commit fixes and `git push origin HEAD`.
+  Key decision rules:
+  - **Default: fix it** — if reasonable and in scope, implement; doing it right now beats a follow-up PR
+  - **Defer** if valid but requires a larger refactor risky in this PR
+  - **Decline** only with specific reasoning — never "won't fix"
+
+  After all threads addressed: commit fixes and `git push origin HEAD`.
 
   ### Gate 3 — Merge Conflicts
 
@@ -136,8 +132,6 @@ prompt: |
   - Close review threads manually (push fixes; GitHub auto-resolves)
 ---
 
-# PR Ship Loop — Make It Ready to Merge
+**Usage**: `/github:pr-ship` (current branch) or `/github:pr-ship 61`
 
-Autonomously drives PR `$1` (or the current branch's open PR) to a mergeable state by iterating through CI failures, review comments, and merge conflicts until every gate is green. Leaves the final merge to you.
-
-**Usage**: `/github:pr-ship` (current branch) or `/github:pr-ship 22`
+Gate 2 delegates to the `github-address-pr-comments` skill for systematic thread resolution.

@@ -7,51 +7,45 @@ description: Systematically address all open GitHub PR review comments — fix c
 
 Load all unresolved review threads for a PR, then for each: decide whether to fix or decline, implement fixes when accepting, reply with a clear response, and resolve the thread. No comment goes unacknowledged.
 
-> **Approval-friendly design**: All `gh api` calls run via Python subprocess — they appear to the approval handler as `python3 /tmp/...py` (auto-allowed), not as individual `gh api` commands. This means the skill runs without triggering repeated manual approval prompts.
+## Step 0: Bootstrap — Install `pr-threads.py`
 
-## Step 1: Identify the PR
+The skill uses a single permanent helper script at `~/.claude/scripts/pr-threads.py`.
+Check if it exists; if not, write it from the embedded source below, then `chmod +x` it.
+Once installed, all subsequent steps call `python3 ~/.claude/scripts/pr-threads.py <subcommand>` —
+pre-approved by `Bash(python3:*)` in settings, no prompts needed.
 
-```python
-import subprocess, json
-
-def run_gh(*args):
-    r = subprocess.run(["gh"] + list(args), capture_output=True, text=True)
-    if r.returncode != 0:
-        raise RuntimeError(r.stderr)
-    return r.stdout.strip()
-
-# Repo info — uses gh CLI (auto-allowed)
-repo_json = run_gh("repo", "view", "--json", "owner,name")
-repo = json.loads(repo_json)
-OWNER = repo["owner"]["login"]
-REPO  = repo["name"]
-
-# PR number from current branch
-pr_json = run_gh("pr", "view", "--json", "number")
-PR_NUMBER = json.loads(pr_json)["number"]
-
-print(f"PR #{PR_NUMBER}  {OWNER}/{REPO}")
+```bash
+[ -f ~/.claude/scripts/pr-threads.py ] && echo "installed" || echo "missing — write it"
 ```
 
-Or the user provides the PR number directly: `PR_NUMBER = 123`.
-
-## Step 2: Fetch All Unresolved Review Threads
-
-Use **PR-specific file names** (e.g. `/tmp/review-threads-{OWNER}-{REPO}-{PR}.json`) to avoid collisions with parallel sessions working on different PRs. Write the script inline with hardcoded values — do NOT use `sys.argv` for OWNER/REPO/PR.
-
-Write to `/tmp/fetch_threads_{OWNER}_{REPO}_{PR}.py` and run it. Include `databaseId` in the comments query — the REST reply API requires the numeric database ID, not the GraphQL node ID.
+If missing, write the file:
 
 ```python
 #!/usr/bin/env python3
-import subprocess, json
+"""
+pr-threads — single CLI for all GitHub PR review thread operations.
 
-OWNER = "REPLACE_WITH_OWNER"
-REPO  = "REPLACE_WITH_REPO"
-PR    = REPLACE_WITH_PR_NUMBER
+  pr-threads.py fetch   --owner ORG --repo REPO --pr N [--out FILE]
+  pr-threads.py reply   --owner ORG --repo REPO --pr N --comment-id DBID --body TEXT
+  pr-threads.py resolve --thread-id ID [ID ...]
+  pr-threads.py check   --owner ORG --repo REPO --pr N
 
-OUTPUT_FILE = f"/tmp/review-threads-{OWNER}-{REPO}-{PR}.json"
+All gh calls use subprocess list args — body text with quotes, newlines,
+or special characters is handled correctly without any shell escaping.
+"""
+import argparse, json, subprocess, sys
 
-QUERY = """
+
+def gh(*args):
+    r = subprocess.run(["gh"] + list(args), capture_output=True, text=True)
+    if r.returncode != 0:
+        print(f"gh error: {r.stderr.strip()}", file=sys.stderr)
+        sys.exit(1)
+    return r.stdout.strip()
+
+
+def fetch(owner, repo, pr, out):
+    query = """
 query($owner: String!, $repo: String!, $pr: Int!) {
   repository(owner: $owner, name: $repo) {
     pullRequest(number: $pr) {
@@ -70,232 +64,238 @@ query($owner: String!, $repo: String!, $pr: Int!) {
   }
 }
 """
+    raw = gh("api", "graphql",
+             "-f", f"query={query}",
+             "-f", f"owner={owner}",
+             "-f", f"repo={repo}",
+             "-F", f"pr={pr}")
+    data = json.loads(raw)
+    threads = data["data"]["repository"]["pullRequest"]["reviewThreads"]["nodes"]
+    open_threads = [t for t in threads if not t["isResolved"]]
 
-result = subprocess.run(
-    ["gh", "api", "graphql",
-     "-f", f"query={QUERY}",
-     "-f", f"owner={OWNER}",
-     "-f", f"repo={REPO}",
-     "-F", f"pr={PR}"],
-    capture_output=True, text=True
-)
-if result.returncode != 0:
-    print("ERROR:", result.stderr, file=sys.stderr)
-    exit(1)
+    output = json.dumps(open_threads, indent=2)
+    if out:
+        with open(out, "w") as f:
+            f.write(output)
+        print(f"Fetched {len(threads)} threads, {len(open_threads)} unresolved → {out}")
+    else:
+        print(output)
 
-data = json.loads(result.stdout)
-threads = data["data"]["repository"]["pullRequest"]["reviewThreads"]["nodes"]
-open_threads = [t for t in threads if not t["isResolved"]]
+    for t in open_threads:
+        first = t["comments"]["nodes"][0]
+        print(f"  [{t['id'][:30]}] {t['path']}:{t.get('line','?')} "
+              f"@{first['author']['login']} (dbId={first['databaseId']}): "
+              f"{first['body'][:80]}", file=sys.stderr)
 
-with open(OUTPUT_FILE, "w") as f:
-    json.dump(open_threads, f, indent=2)
 
-print(f"Fetched {len(threads)} threads, {len(open_threads)} unresolved → {OUTPUT_FILE}")
-for t in open_threads:
-    first = t["comments"]["nodes"][0]
-    print(f"  [{t['id'][:20]}...]  {t['path']}:{t.get('line','?')}  @{first['author']['login']} (dbId={first['databaseId']}): {first['body'][:60]}")
+def reply(owner, repo, pr, comment_id, body):
+    raw = gh("api",
+             f"repos/{owner}/{repo}/pulls/{pr}/comments/{comment_id}/replies",
+             "-f", f"body={body}")
+    resp = json.loads(raw)
+    print(f"Replied (id={resp['id']})")
+
+
+def resolve(thread_ids):
+    mutation = "mutation($id: ID!) { resolveReviewThread(input: {threadId: $id}) { thread { isResolved } } }"
+    for tid in thread_ids:
+        raw = gh("api", "graphql", "-f", f"query={mutation}", "-f", f"id={tid}")
+        data = json.loads(raw)
+        resolved = data["data"]["resolveReviewThread"]["thread"]["isResolved"]
+        print(f"{'✓' if resolved else '✗'} {tid[:30]}  resolved={resolved}")
+
+
+def check(owner, repo, pr):
+    raw = gh("pr", "view", str(pr),
+             "-R", f"{owner}/{repo}",
+             "--json", "mergeable,mergeStateStatus,baseRefName")
+    data = json.loads(raw)
+    print(json.dumps(data, indent=2))
+
+
+def main():
+    p = argparse.ArgumentParser(description="GitHub PR review thread operations")
+    sub = p.add_subparsers(dest="cmd", required=True)
+
+    f = sub.add_parser("fetch")
+    f.add_argument("--owner", required=True)
+    f.add_argument("--repo", required=True)
+    f.add_argument("--pr", required=True, type=int)
+    f.add_argument("--out", help="output file path (default: stdout)")
+
+    r = sub.add_parser("reply")
+    r.add_argument("--owner", required=True)
+    r.add_argument("--repo", required=True)
+    r.add_argument("--pr", required=True)
+    r.add_argument("--comment-id", required=True, dest="comment_id")
+    r.add_argument("--body", required=True)
+
+    res = sub.add_parser("resolve")
+    res.add_argument("--thread-id", nargs="+", required=True, dest="thread_ids")
+
+    c = sub.add_parser("check")
+    c.add_argument("--owner", required=True)
+    c.add_argument("--repo", required=True)
+    c.add_argument("--pr", required=True, type=int)
+
+    args = p.parse_args()
+
+    if args.cmd == "fetch":
+        fetch(args.owner, args.repo, args.pr, args.out)
+    elif args.cmd == "reply":
+        reply(args.owner, args.repo, args.pr, args.comment_id, args.body)
+    elif args.cmd == "resolve":
+        resolve(args.thread_ids)
+    elif args.cmd == "check":
+        check(args.owner, args.repo, args.pr)
+
+
+if __name__ == "__main__":
+    main()
 ```
 
-Parse the output file. Write a summary to `/tmp/review-summary-{OWNER}-{REPO}-{PR}.md` with columns: thread ID, database ID, file path, line, first comment body (truncated), author.
+After writing: `mkdir -p ~/.claude/scripts && chmod +x ~/.claude/scripts/pr-threads.py`
+
+---
+
+## Step 1: Identify the PR
+
+```bash
+OWNER=$(gh repo view --json owner --jq '.owner.login')
+REPO=$(gh repo view --json name --jq '.name')
+PR=$(gh pr view --json number --jq '.number')
+```
+
+Or the user provides the PR number directly.
+
+## Step 2: Fetch All Unresolved Threads
+
+```bash
+OUT="/tmp/review-threads-${OWNER}-${REPO}-${PR}.json"
+python3 ~/.claude/scripts/pr-threads.py fetch \
+  --owner "$OWNER" --repo "$REPO" --pr "$PR" --out "$OUT"
+```
+
+Output file contains thread objects with: `id` (GraphQL node ID for resolving), `path`, `line`, and `comments.nodes[0].databaseId` (numeric ID for replying).
 
 ## Step 3: Group and Prioritize
 
-1. **Group by file path** — process all comments for one file before moving to the next (minimises re-reads).
+1. **Group by file path** — process all comments for one file before the next (minimises re-reads).
 2. **Within each file, sort by line number** ascending.
-3. **Identify related threads** — multiple comments about the same logical issue get addressed together.
+3. **Identify related threads** — multiple comments on the same logical issue get addressed together.
 
 ## Step 4: For Each Thread — Decide, Act, Respond
 
 ### Read Context
 
-Read the file referenced in `path`. Focus on the lines around `line` (+/- 30 lines for context). Do NOT read entire large files upfront.
+Read the file at `path`, focused on lines around `line` (±30 lines). Do NOT pre-read all files upfront.
 
 ### Decision Framework
 
-**Default bias: fix it.** If a suggestion is reasonable and can be done correctly in this PR, implement it — even if it adds a bit of extra scope. Doing the work right in one PR is better than a follow-up.
+**Default bias: fix it.** If a suggestion is reasonable and in scope, implement it — doing it right now beats a follow-up PR.
 
-**Accept and fix** when the comment identifies:
-- A bug, logic error, or incorrect behavior
-- A clarity/readability improvement that is straightforward
-- A style or naming inconsistency with the codebase
-- A missing test case or uncovered edge case
-- A security concern or data leak risk
-- A valid performance concern with a clear fix
-- A "minor" or "nit" suggestion — if it's small and clearly correct, just fix it rather than declining
-
-**Also fix** when:
-- The scope is larger than the minimal PR but the change is the right thing to do — take the extra work and do it correctly rather than leaving known-wrong code in place.
-- The reviewer is pointing at a pattern problem — fix the pattern, not just the one instance.
-
-**Defer** (not decline) when:
-- The suggestion is valid but requires a risky or large refactor — "Agreed this needs work. Deferring to a follow-up to keep this PR focused." File a tracking issue or TODO.
-
-**Decline** only when:
-- The suggestion is factually incorrect or based on a misunderstanding of the code's intent — correct the misunderstanding with specifics.
-- It contradicts an explicit architectural decision documented in an ADR or CLAUDE.md — cite the source.
-- You disagree and have a specific technical reason — state it clearly, never dismissively.
-- An architectural constraint makes it impossible — cite the constraint.
+| Signal | Decision |
+|--------|----------|
+| Bug, logic error, null-safety issue | **Fix** |
+| Clarity, naming, style improvement | **Fix** (even cosmetic if small and obviously correct) |
+| Missing test, uncovered edge case | **Fix** |
+| Valid perf concern with a clear fix | **Fix** |
+| Valid but risky/large refactor | **Defer** — "Good catch. Deferring to follow-up to keep this PR focused." |
+| Factually wrong or misunderstands intent | **Decline** — correct with specifics |
+| Contradicts documented ADR / CLAUDE.md | **Decline** — cite source |
+| Technical disagreement | **Decline** — state reasoning, never dismissively |
 
 ### Implement Fixes
 
-When accepting, make the code change using Edit/Write tools. Group related fixes in the same file together. After all fixes for a file are applied, move to the next file.
+Use Edit/Write tools. Group related fixes in the same file together before moving to the next file.
 
-### Respond to the Thread
+### Reply to the Thread
 
-**Critical**: The REST reply endpoint requires the numeric `databaseId` (e.g. `2966584414`), NOT the GraphQL node ID (e.g. `PRRC_kwDO...`). The `databaseId` is returned by the fetch script above.
+**`--comment-id` must be the numeric `databaseId` from `comments.nodes[0]`** — not the GraphQL node ID.
 
-Write `/tmp/reply_{PR}.py` (PR-specific name) and run with `python3 /tmp/reply_{PR}.py`:
-
-```python
-#!/usr/bin/env python3
-"""Reply to a PR review thread comment via REST API."""
-import subprocess, json, sys
-
-OWNER      = "REPLACE_WITH_OWNER"
-REPO       = "REPLACE_WITH_REPO"
-PR_NUMBER  = "REPLACE_WITH_PR_NUMBER"
-COMMENT_DB_ID = sys.argv[1]   # numeric databaseId of the first comment in the thread
-BODY          = sys.argv[2]   # response text
-
-result = subprocess.run(
-    ["gh", "api",
-     f"repos/{OWNER}/{REPO}/pulls/{PR_NUMBER}/comments/{COMMENT_DB_ID}/replies",
-     "-f", f"body={BODY}"],
-    capture_output=True, text=True
-)
-if result.returncode != 0:
-    print("ERROR:", result.stderr, file=sys.stderr)
-    sys.exit(1)
-
-resp = json.loads(result.stdout)
-print(f"Replied (comment id={resp['id']})")
-```
-
-Run it for each thread, using the `databaseId` from the fetch output:
 ```bash
-python3 /tmp/reply_{PR}.py "2966584414" "Fixed. [description]"
+python3 ~/.claude/scripts/pr-threads.py reply \
+  --owner "$OWNER" --repo "$REPO" --pr "$PR" \
+  --comment-id 3183811072 \
+  --body "Fixed. Added AtomicBoolean guard matching the tryStart pattern in IndexLifecycleCoordinator."
 ```
 
 **Response patterns:**
 
-| Decision | Response template |
-|----------|-------------------|
-| Fixed | "Fixed. [1-sentence description of what changed]" |
-| Deferred | "Good catch. This needs a broader fix — deferring to a follow-up to keep this PR focused." |
-| Declined (design choice) | "This is intentional — [specific reasoning]. [Optional: link to ADR or related code]" |
-| Declined (disagree) | "I see the concern. I prefer the current approach because [specific reasoning]. Happy to discuss further." |
-| Declined (scope) | "Agreed this could be improved. Out of scope for this PR — I will address it separately." |
+| Decision | Template |
+|----------|----------|
+| Fixed | `"Fixed. [one sentence of what changed]"` |
+| Deferred | `"Good catch. Needs a broader fix — deferring to follow-up to keep this PR focused."` |
+| Declined (design) | `"This is intentional — [specific reasoning]. [Optional: ADR / code link]"` |
+| Declined (disagree) | `"I see the concern. I prefer the current approach because [specific reason]. Happy to discuss."` |
+| Declined (scope) | `"Agreed this could be improved. Out of scope for this PR — will address separately."` |
 
-### Resolve the Thread
+### Resolve All Addressed Threads in One Call
 
-After replying, resolve threads in bulk with `/tmp/resolve_threads.py`:
-
-```python
-#!/usr/bin/env python3
-"""Resolve one or more review threads via GraphQL."""
-import subprocess, json, sys
-
-MUTATION = 'mutation($id: ID!) { resolveReviewThread(input: {threadId: $id}) { thread { isResolved } } }'
-
-thread_ids = sys.argv[1:]  # pass all thread node IDs as args
-
-for tid in thread_ids:
-    result = subprocess.run(
-        ["gh", "api", "graphql",
-         "-f", f"query={MUTATION}",
-         "-f", f"id={tid}"],
-        capture_output=True, text=True
-    )
-    data = json.loads(result.stdout)
-    resolved = data["data"]["resolveReviewThread"]["thread"]["isResolved"]
-    print(f"{'✓' if resolved else '✗'} {tid[:20]}...  resolved={resolved}")
-```
-
-Run it:
 ```bash
-python3 /tmp/resolve_threads.py "PRRT_..." "PRRT_..." "PRRT_..."
+python3 ~/.claude/scripts/pr-threads.py resolve \
+  --thread-id "PRRT_abc123" "PRRT_def456" "PRRT_ghi789"
 ```
 
-**Important**: Only resolve threads where YOU addressed the concern (either fixed or gave a clear response). Do NOT resolve threads where the reviewer asked a question you have not fully answered.
+**Only resolve threads where you gave a clear response.** Do not resolve threads where the reviewer asked a question you have not fully answered.
 
 ## Step 5: Commit
-
-After all threads are addressed, commit the fixes. **Do not push automatically** — the user decides when to push.
 
 ```bash
 git add -A
 git commit -m "address review comments
 
-- [bullet summary of each fix made]
+- [bullet per fix]
 - [note any deferred items]"
-```
-
-To push when ready:
-```bash
 git push
 ```
 
 ## Step 6: Check Merge Readiness
 
-After pushing (or at any point during the skill), check whether the PR can be merged:
-
 ```bash
-gh pr view {PR_NUMBER} --json mergeable,mergeStateStatus,baseRefName \
-  -q '{mergeable: .mergeable, state: .mergeStateStatus, base: .baseRefName}'
+python3 ~/.claude/scripts/pr-threads.py check \
+  --owner "$OWNER" --repo "$REPO" --pr "$PR"
 ```
 
-**Interpret the result and act:**
+| `mergeable` | `mergeStateStatus` | Action |
+|-------------|-------------------|--------|
+| `MERGEABLE` | `CLEAN` | Ready — inform user |
+| `MERGEABLE` | `BLOCKED` | Awaiting approval — normal after addressing comments |
+| `MERGEABLE` | `UNSTABLE` | CI failing — investigate before requesting review |
+| `CONFLICTING` | `DIRTY` | Resolve conflicts: `git fetch origin main && git merge origin/main` |
+| `UNKNOWN` | — | Wait 30 s and re-check |
 
-| `mergeable` | `mergeStateStatus` | Meaning | Action |
-|-------------|-------------------|---------|--------|
-| `MERGEABLE` | `CLEAN` | Ready to merge | Nothing to do — inform the user |
-| `MERGEABLE` | `BLOCKED` | Awaiting review approval | Normal after addressing comments — inform the user |
-| `MERGEABLE` | `UNSTABLE` | CI failing | Investigate CI failures before requesting review |
-| `CONFLICTING` | `DIRTY` | Merge conflicts with base branch | **Must resolve before merge** — see below |
-| `UNKNOWN` | — | GitHub still computing | Wait ~30 s and re-check |
+## Step 7: Re-fetch and Verify Zero Unresolved
 
-**Resolving conflicts (`CONFLICTING` / `DIRTY`):**
+```bash
+python3 ~/.claude/scripts/pr-threads.py fetch \
+  --owner "$OWNER" --repo "$REPO" --pr "$PR"
+```
 
-1. Fetch the base branch and attempt a merge:
-   ```bash
-   git fetch origin {base}
-   git merge origin/{base}
-   ```
-2. If merge fails with conflicts, resolve each conflicted file:
-   - Prefer the base branch version for lock files, generated files, and dependency version bumps — then regenerate (e.g. `uv lock`) rather than hand-editing.
-   - For source files, identify whether the conflict is structural (new API vs old API) or additive (two independent changes). Merge both sets of changes if additive; prefer HEAD if our changes supersede the conflicting commit.
-3. Stage resolved files: `git add <files>`
-4. Commit the merge: `git commit -m "Merge origin/{base} — resolve <description>"`
-5. Push and re-check mergeability.
+Confirm output shows `0 unresolved`. If new threads appeared from the bot reviewing the push, loop back to Step 4.
 
-**Note**: Rebase (`git rebase origin/{base}`) is cleaner history but can cause complex conflicts when early commits in the stack are superseded by later review commits. Prefer `git merge` for PRs with multiple review rounds.
+## Step 8: Summarize
 
-## Step 7: Summarize
-
-Print a final summary table:
-
-| Thread | File | Decision | Action Taken |
-|--------|------|----------|-------------|
-| #1 | `src/.../Foo.java` | Fixed | Renamed variable for clarity |
+| Thread | File | Decision | Action |
+|--------|------|----------|--------|
+| #1 | `src/.../Foo.java` | Fixed | Renamed variable |
 | #2 | `src/.../Bar.java` | Declined | Intentional design choice (explained) |
-| #3 | `src/.../Baz.java` | Deferred | Follow-up needed for larger refactor |
+| #3 | `src/.../Baz.java` | Deferred | Larger refactor needed |
 
-Include counts: X fixed, Y declined, Z deferred, total N threads addressed.
+X fixed, Y declined, Z deferred — N total threads addressed.
 
-## Etiquette Rules
+## Etiquette
 
-- **Always acknowledge the reviewer's intent** before disagreeing. They took time to review your code.
-- **Never be dismissive**. "Won't fix" alone is not acceptable. Always include reasoning.
-- **Be specific**, not vague. "I prefer this approach" is weak. "I prefer this because X avoids Y" is strong.
-- **Thank the reviewer** when they catch a real bug. A simple "Good catch" goes a long way.
-- **When uncertain**, ask a clarifying question in the reply instead of guessing what they meant.
-- **Keep responses concise**. One to two sentences for fixes. Three to four sentences max for declines.
+- Acknowledge the reviewer's intent before disagreeing.
+- Never "Won't fix" alone — always include reasoning.
+- "I prefer this because X avoids Y" beats "I prefer this approach."
+- Thank reviewers when they catch a real bug.
+- One to two sentences for fixes; three to four max for declines.
 
 ## Token Optimization
 
-- Fetch all threads in one GraphQL call (Step 2), not per-thread REST calls.
-- Read files only when processing their threads. Do not pre-read all files.
-- Use PR-specific file names (e.g. `/tmp/review-threads-{OWNER}-{REPO}-{PR}.json`) to prevent stale data from parallel sessions on different PRs polluting reads.
-- Process files in order to avoid reading the same file twice for threads on different lines.
-- For files with many threads, read the file once and address all threads before moving on.
-- Batch all thread resolutions into a single `python3 /tmp/resolve_{PR}.py ...` call.
+- One GraphQL fetch call for all threads (not per-thread REST).
+- Read files only when processing their threads.
+- Use PR-specific output file names to prevent stale data across parallel sessions.
+- Batch all thread IDs into a single `resolve` call.
+- Re-fetch after push to catch bot threads before declaring done.
