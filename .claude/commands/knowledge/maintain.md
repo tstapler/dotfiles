@@ -157,6 +157,24 @@ prompt: "# Knowledge Maintenance Orchestrator\n\n**Purpose**: Comprehensive, aut
 
 ---
 
+## Ambient Maintenance with `/loop`
+
+Run this command periodically in the background without per-session prompting:
+
+```
+/loop 30m /knowledge:maintain
+```
+
+This re-runs maintenance every 30 minutes — useful during long work sessions when you want the wiki tended without interrupting focused work. For a lighter touch that self-paces between idle and active periods:
+
+```
+/loop /knowledge:maintain
+```
+
+The bare `/loop` will run more frequently when there's active work and slow down when the wiki is stable.
+
+---
+
 ## Overview
 
 This command orchestrates complete knowledge library maintenance using a hybrid approach:

@@ -177,6 +177,13 @@ For each failure category, apply the appropriate approach:
 - **Benefit**: Maximize throughput and efficiency
 
 ### Phase 4: Validation and Iteration
+
+> **Automate this phase with `/goal`**: Instead of prompting each re-run manually, set a goal before starting Phase 1:
+> ```
+> /goal all tests and linters pass and the build exits 0, or stop after 5 iterations
+> ```
+> The evaluator will check after each turn and keep Claude working until green or stuck.
+
 1. **Re-run tests/linters** after each fix batch
 2. **Track progress** in todo list:
    - Mark resolved failures as completed

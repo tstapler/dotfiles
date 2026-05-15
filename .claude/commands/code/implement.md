@@ -748,7 +748,13 @@ This parallel approach will complete in 3 hours instead of 8-10 hours sequential
 
 ## Final Phase: Automated Quality Gate (REQUIRED)
 
-After all implementation phases complete, **always run `/code:fix-loop`** before declaring the feature done.
+After all implementation phases complete, **always run `/code:fix-loop`** before declaring the feature done. Use `/goal` to run it hands-free:
+
+```
+/goal all build, test, lint, and type checks pass and exit code is 0, or stop after 5 iterations
+```
+
+Or invoke the command directly if you want per-turn control:
 
 ```
 /code:fix-loop

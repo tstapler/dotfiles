@@ -12,6 +12,20 @@ Run checks across all failure dimensions simultaneously using minimal-context ag
 
 ---
 
+## Quick Start with `/goal` (Recommended)
+
+Use `/goal` to run this loop hands-free — no per-turn prompting required:
+
+```
+/goal all build, test, lint, and type checks pass and the exit code is 0, or stop after ${1:-5} iterations
+```
+
+Setting that goal executes Steps 0–4 automatically, with the evaluator (Haiku) checking the condition after each turn. When all checks pass, the goal clears. When stuck or at max iterations, it stops and reports.
+
+The manual loop in Steps 1–5 below is the fallback when you need step-level control or want to inspect intermediate state between iterations.
+
+---
+
 ## When to Use
 
 - After implementing a feature — run until green before opening a PR
