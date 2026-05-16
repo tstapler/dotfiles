@@ -6,11 +6,19 @@ user-invocable: true
 
 # sdd:full
 
-Run the complete SDD workflow with minimal manual steps. Phases 2–5 run in subagents, keeping this thread clean for final verification and shipping.
+Run the complete SDD workflow with minimal manual steps. Phases 2–5 run as parallel Claude Agent calls, keeping this thread clean for final verification and shipping.
 
 ## Why no fresh session required
 
-All planning (research, plan, validation) and implementation run in subagents that write their output to disk. This thread only sees brief summaries. Planning context never accumulates here, so implementation quality is preserved without opening a new session.
+All planning (research, plan, validation) and implementation run in parallel Agent calls that write their output to disk. This thread only sees brief summaries. Planning context never accumulates here, so implementation quality is preserved without opening a new session.
+
+## Parallelization model
+
+**CRITICAL: Use parallel Agent calls, not coordinator subagents.**
+
+At each phase that benefits from concurrency, send a single message containing multiple `Agent` tool calls. Each agent is independent — it reads its input from disk, does its work, and writes its output to disk. The parent thread collects summaries from all agents before proceeding.
+
+Never use a "coordinator agent" that internally spawns further agents — that adds a middleman and wastes context. Dispatch agents directly from this thread in parallel.
 
 ## Instructions
 
@@ -33,36 +41,46 @@ If "No": output path to requirements.md and stop. User resumes with `/sdd:2-rese
 
 ---
 
-### Phase 2 — Research (subagent coordinator)
+### Phase 2 — Research (4 parallel Agent calls)
 
-Dispatch a research coordinator subagent with the full text of requirements.md.
+Read requirements.md, then send a **single message** with 4 parallel `Agent` tool calls — one per research domain. Each agent:
+- Reads `project_plans/<PROJECT_NAME>/requirements.md` independently
+- Performs its research (web fetches, gh CLI, code exploration)
+- Writes its findings to its own file under `project_plans/<PROJECT_NAME>/research/`
+- Returns a 3-bullet summary
 
-Subagent prompt:
-> Run sdd:2-research for the project below. Spawn 4 parallel research agents (stack, features, architecture, pitfalls). Each must write its findings directly to the appropriate file under `project_plans/<PROJECT_NAME>/research/`. Return a 3-bullet summary per agent when done.
->
-> Requirements:
-> <requirements.md content>
+Standard research domains (adapt to project type):
 
-Wait for completion. Read the summary (do not re-read the research files in full).
+| Agent | Focus | Output file |
+|-------|-------|-------------|
+| Stack agent | Language/framework/library choices — alternatives, tradeoffs, community health | `research/stack.md` |
+| Features agent | Comparable products/OSS projects — what they do, what to borrow | `research/features.md` |
+| Architecture agent | Design patterns, data flows, integration points relevant to this problem | `research/architecture.md` |
+| Pitfalls agent | Known failure modes, security issues, performance traps, migration costs | `research/pitfalls.md` |
 
----
-
-### Phase 3 — Plan (subagent)
-
-Dispatch a planning subagent with requirements.md + research file summaries.
-
-Subagent prompt:
-> Run sdd:3-plan. Read project_plans/<PROJECT_NAME>/requirements.md and project_plans/<PROJECT_NAME>/research/*.md. Validate technology choices. Write the implementation plan to project_plans/<PROJECT_NAME>/implementation/plan.md. Then dispatch an adversarial reviewer subagent on the completed plan — it must write project_plans/<PROJECT_NAME>/implementation/adversarial-review.md. If BLOCKED, patch plan.md and re-run the adversarial reviewer. Return: epic/story/task counts, flagged choices, adversarial review verdict (BLOCKED/CONCERNS/CLEAN).
-
-Wait for completion. Use the summary — do not re-read plan.md in full.
+Wait for all 4 to complete. Collect summaries — do not re-read research files in full.
 
 ---
 
-### Phase 4 — Validate (subagent)
+### Phase 3 — Plan (parallel Agent calls)
 
-Dispatch a validation subagent.
+Send a **single message** with Agent calls to parallelize planning work:
 
-Subagent prompt:
+- **Synthesis agent** (required): reads all research files + requirements.md, writes `project_plans/<PROJECT_NAME>/implementation/plan.md` in the standard SDD format (epics → stories → tasks). Returns: epic/story/task counts, flagged choices.
+- **ADR agent** (if technology decisions were flagged): writes decision records to `project_plans/<PROJECT_NAME>/decisions/ADR-NNN-*.md`. Returns: count of ADRs, decisions recorded.
+- **Adversarial reviewer agent** (after synthesis completes — send in a second message once plan.md exists): reads plan.md, writes `project_plans/<PROJECT_NAME>/implementation/adversarial-review.md`. Returns: verdict (BLOCKED/CONCERNS/CLEAN). If BLOCKED, patch plan.md and re-run.
+
+If no technology decisions need recording, omit the ADR agent and use just the synthesis agent.
+
+Wait for completion. Use summaries — do not re-read plan.md in full.
+
+---
+
+### Phase 4 — Validate (single Agent call)
+
+Dispatch one Agent:
+
+Prompt:
 > Run sdd:4-validate. Read project_plans/<PROJECT_NAME>/implementation/plan.md and project_plans/<PROJECT_NAME>/requirements.md. Design the full test suite with requirement-to-test traceability. Write to project_plans/<PROJECT_NAME>/implementation/validation.md. Then run the implementation readiness gate: check all 4 criteria against requirements.md, plan.md, validation.md, and adversarial-review.md. Return: test case counts by type, requirements coverage fraction, readiness gate verdict (PASS/CONCERNS/FAIL).
 
 Wait for completion. If readiness gate returns FAIL, halt and surface the failures to the user.
@@ -71,10 +89,19 @@ Wait for completion. If readiness gate returns FAIL, halt and surface the failur
 
 ### Checkpoint
 
+Commit the planning artifacts before implementation so they are versioned alongside the code:
+
+```bash
+git add project_plans/<PROJECT_NAME>/
+git commit -m "chore(sdd): add planning artifacts for <PROJECT_NAME>"
+```
+
+Then output the checkpoint summary and ask:
+
 ```
 ✅ Planning complete
 
-Artifacts written:
+Artifacts written and committed:
   project_plans/<PROJECT_NAME>/requirements.md
   project_plans/<PROJECT_NAME>/research/ (4 files)
   project_plans/<PROJECT_NAME>/implementation/plan.md
@@ -98,12 +125,16 @@ If not ready: stop here. User resumes with `/sdd:5-implement`.
 
 ---
 
-### Phase 5 — Implement (subagent coordinator)
+### Phase 5 — Implement (parallel Agent calls per epic)
 
-Dispatch an implementation coordinator subagent.
+Read plan.md and group tasks into independent epics. Send a **single message** with one Agent call per epic that can run concurrently (epics with no shared file writes). For each worker agent:
 
-Subagent prompt:
-> Run sdd:5-implement. Read project_plans/<PROJECT_NAME>/implementation/plan.md and project_plans/<PROJECT_NAME>/implementation/validation.md. For each task: dispatch a worker subagent, run spec compliance review and code quality review on the diff, fix violations before proceeding. Return: tasks completed, violations fixed, warnings noted.
+Prompt template:
+> You are implementing Epic N of plan.md for project <PROJECT_NAME>. Read project_plans/<PROJECT_NAME>/implementation/plan.md (Epic N only) and project_plans/<PROJECT_NAME>/implementation/validation.md. Implement all tasks in this epic. After each task: run the associated tests, fix failures. Return: tasks completed, test results, warnings.
+
+After all parallel agents complete, dispatch a second wave for any remaining dependent epics.
+
+Do NOT use a coordinator agent — dispatch workers directly from this thread.
 
 ---
 
@@ -124,6 +155,16 @@ If BLOCKED: fix violations and re-run before proceeding.
 ### Phase 7 — Ship (this thread)
 
 Draft the PR description and use `AskUserQuestion` to confirm ship method (see `sdd:7-ship`).
+
+Commit and push **all** staged/unstaged changes — both implementation files and any remaining `project_plans/` artifacts — before opening the PR:
+
+```bash
+git add <implementation files> project_plans/<PROJECT_NAME>/
+git commit -m "<type>(<scope>): <description>"
+git push -u origin <branch>
+```
+
+Then create the PR:
 
 ```bash
 cat > /tmp/pr-description.md <<'EOF'
