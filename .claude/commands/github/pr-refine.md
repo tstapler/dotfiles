@@ -1,6 +1,7 @@
 ---
 description: Review a pull request and suggest refinement options, then document them
   as a structured feature plan
+disable-model-invocation: true
 prompt: "# Pull Request Refinement & Planning\n\nReview an existing pull request,\
   \ suggest comprehensive refinement options, and create a structured feature plan\
   \ for improvements using industry best practices.\n\n## Prerequisites Check\n\n\

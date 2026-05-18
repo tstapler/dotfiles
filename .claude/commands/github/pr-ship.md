@@ -1,5 +1,6 @@
 ---
 description: Autonomously iterate on a PR — fix CI failures, address review comments, resolve merge conflicts — until it is ready to merge
+disable-model-invocation: true
 prompt: |
   # PR Ship Loop — Make It Ready to Merge
 
@@ -16,6 +17,24 @@ prompt: |
 
   ---
 
+  ## Context discipline — delegate work, don't accumulate it
+
+  **This skill is an orchestrator, not a worker.** Each fix cycle spawns a fresh subagent so this
+  context stays small and fast. Never do the actual code editing inline — always delegate via the
+  Agent tool. Collect the failure/comment details first, then hand them off.
+
+  ```
+  Orchestrator (this context)
+    └─ reads gates, collects info, decides what to fix
+       └─ spawns Agent(prompt="Fix these specific failures: ...") → waits for result
+          └─ fresh agent does all the file reading, editing, compiling, committing
+  ```
+
+  After each Agent call returns, check gates again. Do not accumulate file contents or diffs in
+  this context — the subagent handles that entirely.
+
+  ---
+
   ## The Loop
 
   Repeat the following cycle until **all three gates pass**:
@@ -26,25 +45,20 @@ prompt: |
   gh pr checks "$PR" --watch=false
   ```
 
-  - If any check is **pending/in_progress**: wait 60s (use `ScheduleWakeup` with `delaySeconds: 90` and re-run this skill with the same PR arg) and stop this iteration.
-  - If any check is **failing**: download logs and fix.
+  - If any check is **pending/in_progress**: use `ScheduleWakeup` (`delaySeconds: 90–600`) and stop.
+  - If any check is **failing**: collect the raw log, then **delegate to a fresh agent**:
     ```bash
-    # Get the run ID for the failing check
-    gh run list --branch $(git branch --show-current) --json databaseId,name,status,conclusion --jq '.[] | select(.conclusion == "failure") | .databaseId'
-    # Download failed logs
-    gh run view <RUN_ID> --log-failed
+    gh run list --branch $(git branch --show-current) --json databaseId,name,status,conclusion \
+      --jq '.[] | select(.conclusion == "failure") | .databaseId'
+    gh run view <RUN_ID> --log-failed   # copy the relevant error output
     ```
-    Common fixes by failure type:
-    - **TypeScript errors**: read the file, fix the type, commit
-    - **Jest/test failures**: read the test output, fix or update the test, commit
-    - **ESLint / lint**: `cd web-app && npm run lint -- --fix` or fix manually, commit
-    - **Build errors**: read error, fix source, commit
-    - **Go test failures**: `go test ./...` locally, diagnose, fix, commit
-    - **Go lint**: `make lint`, fix, commit
-    - **Kotlin/KMP compile errors**: fix imports/types, then validate with `./gradlew compileTestKotlinJvm` before pushing
-    - **Kotlin/KMP test failures**: fix the test, then validate with `./gradlew jvmTest` before pushing
+    Spawn an Agent with a self-contained prompt that includes:
+    - The repo path and current branch
+    - The exact error lines from the log
+    - What local validation to run before pushing (see table below)
+    - Instruction to commit and push when fixed
 
-    **Local validation before push** — always run the cheapest local check that covers the fix:
+    **Local validation table** (include in every Gate-1 agent prompt):
     | Stack | Compile check | Full test |
     |-------|--------------|-----------|
     | Java/Maven | `./mvnw compile -q` | `./mvnw test -q` |
@@ -53,8 +67,7 @@ prompt: |
     | TypeScript | `npx tsc --noEmit` | `npm test` |
     | JS/lint | `npm run lint -- --fix` | `npm test` |
 
-    Only push if the local check passes. This prevents burning multiple CI rounds on incremental fixes.
-    After validating locally: `git push origin HEAD` and restart the loop.
+    After the agent returns: restart the loop (check gates again).
 
   ### Gate 2 — Review Comments
 
@@ -63,12 +76,16 @@ prompt: |
   2. For each thread: decide fix/decline/defer, implement the fix, reply with the outcome, resolve via GraphQL mutation
   3. **CHANGES_REQUESTED reviews**: treat every item as blocking; address each one
 
-  Key decision rules:
-  - **Default: fix it** — if reasonable and in scope, implement; doing it right now beats a follow-up PR
-  - **Defer** if valid but requires a larger refactor risky in this PR
-  - **Decline** only with specific reasoning — never "won't fix"
+  Group the comments, then **delegate to a fresh agent** (or multiple in parallel for independent
+  files). Each agent prompt must be self-contained: include the file path, line, comment text, and
+  what to do. Decision rules to encode in the prompt:
+  - **Fix** bugs, logic errors, security concerns, clarity issues, naming, missing tests, valid perf issues.
+  - **Also fix** cosmetic/style suggestions if small and clearly correct.
+  - **Defer** valid-but-large refactors: reply "Deferring to follow-up — too broad for this PR."
+  - **Decline** only if factually wrong or contradicts a documented design decision.
+  - **CHANGES_REQUESTED**: treat every item as blocking.
 
-  After all threads addressed: commit fixes and `git push origin HEAD`.
+  After the agent(s) return: commit + push (the agents should do this), then restart the loop.
 
   ### Gate 3 — Merge Conflicts
 

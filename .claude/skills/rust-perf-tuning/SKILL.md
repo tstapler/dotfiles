@@ -1,6 +1,7 @@
 ---
 name: rust-perf-tuning
 description: Diagnose Rust performance bottlenecks from profiling data and apply targeted optimizations. Covers the full cycle: measure → profile (see rust-profiling skill) → diagnose → fix → verify. Includes pattern-matched fixes for common flamegraph hotspots, allocation elimination, data layout, compiler settings, and parallelism tuning.
+paths: "**/*.rs"
 metadata:
   type: feedback
 ---

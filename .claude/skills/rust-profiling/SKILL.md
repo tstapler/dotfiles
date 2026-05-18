@@ -1,6 +1,7 @@
 ---
 name: rust-profiling
 description: Profile Rust binaries and benchmarks using cargo-flamegraph, samply, perf, and heaptrack. Covers CPU flamegraphs, collapsed stacks for LLM analysis, memory profiling, criterion benchmark profiling, and interactive Firefox Profiler UI.
+paths: "**/*.rs"
 ---
 
 # Rust Profiling

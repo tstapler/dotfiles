@@ -1,6 +1,7 @@
 ---
 name: code-architecture-best-practices
 description: Apply software architecture best practices when designing or reviewing systems, classes, modules, or services. Use when structuring new code, evaluating design decisions, applying SOLID principles, Clean Architecture, Hexagonal Architecture, or Domain-Driven Design patterns. Works across languages — includes specific guidance for Python and Java/Spring Boot.
+effort: high
 ---
 
 # Architecture Best Practices

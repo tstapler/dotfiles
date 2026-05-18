@@ -6,6 +6,7 @@ description: >-
   inline section callouts and "Related Skills" tables using the canonical pattern.
   Use when improving an existing skill, building a new one, or determining which
   skills to activate for a complex multi-domain task.
+when_to_use: "Add cross-references to a skill, audit SKILL.md for missing related-skill links, build a Related Skills table, find which skills apply to a task, map a feature to its skill stack"
 ---
 
 # Cross-Reference Skills

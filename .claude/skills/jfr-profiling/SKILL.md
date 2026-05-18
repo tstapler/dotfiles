@@ -1,6 +1,7 @@
 ---
 name: jfr-profiling
 description: Profile Java/Kotlin processes using JFR (Java Flight Recorder). Covers Gradle task setup, CI integration, collapsed-stacks output for LLM analysis, flamegraph visualization, and bottleneck identification patterns.
+paths: "**/*.java,**/*.kt"
 ---
 
 # JFR Profiling for Java/Kotlin Projects

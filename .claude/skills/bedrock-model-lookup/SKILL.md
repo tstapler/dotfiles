@@ -1,3 +1,9 @@
+---
+name: bedrock-model-lookup
+description: Discover new Claude models available in AWS Bedrock and add them to the claude-proxy configuration.
+model: haiku
+---
+
 # Bedrock Model Lookup
 
 Discover new Claude models available in AWS Bedrock and add them to the claude-proxy configuration.

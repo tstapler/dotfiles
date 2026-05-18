@@ -1,6 +1,7 @@
 ---
 name: code-refactoring
 description: Orchestrate large structural code refactors combining semantic search (ast-grep) with AST-based transformation (gritql). Use for multi-file renames, API migrations, and pattern modernization with mandatory quality gates.
+allowed-tools: "Bash(sg *),Read,Grep,Edit,Write"
 ---
 
 # Code Refactoring

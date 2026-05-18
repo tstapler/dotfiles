@@ -1,6 +1,7 @@
 ---
 name: code-spring-boot
 description: Apply Spring Boot and Java coding standards when writing, reviewing, or designing Java code. Use for Spring Boot project structure, DDD patterns (Entities, Aggregates, Repositories, Domain Services), Clean Code principles in Java, PoEAA patterns (Repository, Data Mapper, Service Layer, Unit of Work), testing with JUnit 5 and Mockito, and Spring-specific best practices. Covers constructor injection, transaction boundaries, layer responsibilities, and common anti-patterns to avoid.
+paths: "**/*.java,**/*.kt"
 ---
 
 # Spring Boot Java Development Standards

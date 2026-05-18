@@ -1,6 +1,7 @@
 ---
 name: code-root-cause-analysis
 description: Systematic investigation of errors, failures, and unexpected behaviors by searching personal-wiki history and external documentation. Use when debugging errors with stack traces, investigating incidents/outages, finding historical context for similar issues, analyzing recurring problems, or searching for past solutions. Combines Logseq knowledge base (journals, pages, incident notes) with web search for external docs. Follows structured methodology to extract error signatures, search historical context, identify patterns, and determine root cause.
+when_to_use: "When investigating a stack trace, incident, error log, or when asked to find root cause"
 ---
 
 # Root Cause Analysis

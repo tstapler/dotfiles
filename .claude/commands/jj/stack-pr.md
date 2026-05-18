@@ -2,6 +2,7 @@
 description: Create granular commits and stacked PRs using Jujutsu (jj) version control.
   ONLY use this skill when the user explicitly mentions jj or Jujutsu. For standard
   git commits, branches, or PRs use the git:commit or git:create-pr skills instead.
+disable-model-invocation: true
 prompt: "# Jujutsu Stacked PR Workflow\n\n> **IMPORTANT**: This skill is for **Jujutsu\
   \ (jj)** workflows only. If the user asked for a commit, branch, or PR without mentioning\
   \ `jj`, stop and use the `git:commit` or `git:create-pr` skill instead.\n\nYou are\

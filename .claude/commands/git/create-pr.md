@@ -1,6 +1,7 @@
 ---
 description: Create a well-structured pull request following best practices for description,
   testing, and review
+disable-model-invocation: true
 prompt: "# Create Pull Request\n\nI'll help you create a high-quality pull request\
   \ following industry best practices from GitHub, Conventional Commits, and software\
   \ engineering research.\n\n## Prerequisites Check\n\nBefore creating a PR, I'll\

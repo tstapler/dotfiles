@@ -1,6 +1,7 @@
 ---
 name: go-development
 description: Apply idiomatic, well-structured Go development practices. Use when writing, reviewing, or refactoring Go code. Covers error handling, interfaces, concurrency, testing, naming, project structure, and anti-patterns based on Effective Go, Go Code Review Comments, and Go Proverbs.
+paths: "**/*.go"
 ---
 
 # Go Development

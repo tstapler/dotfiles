@@ -1,6 +1,7 @@
 ---
 name: jvm-performance
 description: Fix JVM/Kotlin performance bottlenecks identified via profiling. Covers concrete code changes for allocation pressure, GC tuning, lock contention, JIT blockers, and Kotlin-specific patterns. Use after jfr-profiling has identified the hotspot. Invoke when an engineer has a profile and needs to know what to change.
+paths: "**/*.java,**/*.kt"
 ---
 
 # JVM / Kotlin Performance Fix Playbook

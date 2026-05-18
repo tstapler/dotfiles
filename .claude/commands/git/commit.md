@@ -1,5 +1,6 @@
 ---
 description: Create a series of commits using Conventional Commits format
+disable-model-invocation: true
 prompt: "# Conventional Commit Helper\n\nI'll help you create well-structured git\
   \ commits following the Conventional Commits standard (https://www.conventionalcommits.org/en/v1.0.0/).\n\
   \n## Process\n\n1. I'll check for unstaged changes in your repository\n2. Analyze\

@@ -1,6 +1,7 @@
 ---
 description: Analyze working directory and create granular commits for all features/functionality
   implemented
+disable-model-invocation: true
 prompt: "# Jujutsu Granular Commit Creation\n\nYou are being invoked to analyze the\
   \ current working directory and create **as many granular commits as necessary**\
   \ to properly capture all the features/functionality that have been implemented.\n\
