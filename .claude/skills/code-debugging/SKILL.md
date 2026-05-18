@@ -56,3 +56,14 @@ From real debugging sessions:
 - Systematic approach: 15-30 minutes to fix
 - Random fixes approach: 2-3 hours of thrashing
 - First-time fix rate: 95% vs 40%
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `code-root-cause-analysis` | Error has stack trace; search wiki + external docs for historical context |
+| `code-review` | Verify fix is complete and correct before claiming done |
+| `security-review` | Bug involves auth, input handling, or data exposure |
+| `code-ast-grep` | Search codebase structurally to find all related call sites |

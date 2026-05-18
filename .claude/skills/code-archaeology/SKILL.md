@@ -202,6 +202,8 @@ Work through these layers systematically. Read `reference.md` for detailed techn
 | Auth middleware | Security | "All endpoints require authentication" |
 | Audit logging | Compliance | "System must maintain audit trail" |
 
+> For evaluating architectural patterns found, apply the `code-architecture-best-practices` skill.
+
 ### Phase 5: Design Analysis
 
 **Identify architectural patterns:**
@@ -268,3 +270,15 @@ Fill each section with evidence-backed findings. Every claim must reference a sp
 - Confusing infrastructure complexity with business complexity
 - Assuming test coverage means correctness
 - Missing environment variables that indicate hidden external dependencies
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `code-architecture-best-practices` | Evaluate discovered architecture against SOLID/Clean/Hexagonal patterns |
+| `code-ast-grep` | Structural search for patterns (decorators, routes, classes) across the codebase |
+| `code-root-cause-analysis` | Historical context needed when analyzing recurring problems in the codebase |
+| `security-review` | Analyze identified auth gaps, injection vectors, or secret handling issues |
+| `design-patterns` | Identify and name GoF/PoEAA patterns observed during reverse engineering |

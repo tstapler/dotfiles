@@ -13,6 +13,8 @@ source: https://github.com/tstapler/logo-designer-skill (forked from neonwatty/l
 
 Design and iterate on logos using SVG. Generates side-by-side previews and exports to PNG at standard sizes.
 
+> For brand strategy and visual direction that feeds logo design, apply the `pm-brand-strategy` skill.
+
 ## Phase 1: Interview
 
 Before generating anything, gather context and ask the user what they need.
@@ -338,3 +340,14 @@ If the user asks to commit the logo to a project repo or create a PR:
    - `pwa-512x512.png` — 512px
    - Only replace files that already exist in the repo — don't add new ones the project doesn't use
 4. **Commit and PR** — Commit with `chore: replace logo with new [description]`, push, create a PR
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `pm-brand-strategy` | Define brand personality and visual direction before generating logo concepts |
+| `pm-brand-guidelines` | Enforce clear space, color, and usage rules after the logo is finalized |
+| `ui-frontend-design` | Implement the logo in frontend code with proper SVG/CSS integration |
+| `ui-design-system` | Align logo with broader design tokens (colors, typography) |

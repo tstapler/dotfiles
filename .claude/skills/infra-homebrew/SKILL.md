@@ -7,6 +7,8 @@ description: Install, manage, and troubleshoot macOS packages using Homebrew. Us
 
 Use Homebrew for all macOS software installation and management.
 
+> For installing missing tools needed by other skills on macOS, apply this skill before proceeding.
+
 ## When to Use
 
 **Use this skill for:**
@@ -115,3 +117,12 @@ brew link --overwrite <formula>  # Force link
 ```bash
 brew update && brew upgrade
 ```
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `infra-docker-build-test` | After installing Docker via Homebrew, validate image builds |
+| `code-ast-grep` | Install `ast-grep` via Homebrew for structural code search |

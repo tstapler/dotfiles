@@ -125,3 +125,14 @@ javap -cp /path/to/jar com.example.TokenType | grep -E "public static final"
 
 - For helper scripts: see `scripts/discover-api.sh`
 - For detailed patterns: see `reference.md`
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `code-spring-boot` | Apply discovered API signatures within a Spring Boot service layer |
+| `code-debugging` | Compilation errors or runtime failures after using the discovered API |
+| `code-archaeology` | Reverse-engineer broader library structure beyond a single class |
+| `code-ast-grep` | Structurally search existing code for usages of the discovered API |

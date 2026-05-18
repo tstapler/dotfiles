@@ -152,3 +152,13 @@ grit apply '`$obj.oldMethod($$$args)` => `$obj.newMethod($$$args)`' --dry-run
 ## Advanced Patterns Reference
 
 For annotation migration, API migration across versions, multi-step transformations, and Go-specific workarounds, see `reference.md`.
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `code-ast-grep` | Find and scope all affected code sites before applying transformations |
+| `code-refactoring` | Orchestrate full refactor workflow with quality gates around gritql |
+| `code-review` | Verify transformation output before merging to main branch |

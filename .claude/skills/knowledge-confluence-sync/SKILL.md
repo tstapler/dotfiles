@@ -57,6 +57,8 @@ status --env
 | `crawl analyze-adf` | Analyze ADF document structure |
 | `crawl compare` | Compare markdown with generated ADF |
 
+> For authoring Mermaid diagrams that publish correctly to Confluence, apply the `mermaid-diagrams` skill.
+
 ## Workflow 1: Publish Markdown to Confluence
 
 ### Step 1: Create Config File
@@ -249,6 +251,17 @@ uv run python debug_tools/fix_page_format.py \
 - Directory hierarchy: maps to Confluence page hierarchy with `--force-hierarchy`
 - Content hashing: skips unchanged pages for efficient updates
 - Asset handling: images auto-uploaded, paths converted to attachment references
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `mermaid-diagrams` | Author diagrams before publishing; Confluence auto-renders Mermaid |
+| `knowledge-synthesis` | Create Zettelkasten notes locally before syncing to Confluence |
+| `pdf-proof` | Verify published PDF attachments match source documents |
+| `writing-humanize` | Polish documentation voice before publishing |
 
 ## Progressive Context
 

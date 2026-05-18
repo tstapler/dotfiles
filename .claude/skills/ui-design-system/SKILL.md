@@ -513,3 +513,16 @@ Run through **§1–§3** (CRITICAL + HIGH) as a final review before any UI deli
 | Navigation feels confusing | §9: `nav-hierarchy` + `bottom-nav-limit` + `back-behavior` |
 | Layout breaks on small screens | §5: `mobile-first` + `breakpoint-consistency` |
 | Performance / jank | §3: `virtualize-lists` + `main-thread-budget` + `debounce-throttle` |
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `ui-react-best-practices` | Optimize React/Next.js performance after the design system is defined |
+| `ui-web-design-guidelines` | Audit UI code against 100+ web best practices and accessibility rules |
+| `ui-composition-patterns` | Build flexible React component APIs that implement design system tokens |
+| `ui-android-ux-design` | Apply Material Design 3 specifics when the stack targets Android/Compose |
+| `ui-frontend-design` | Create visually distinctive interfaces that embody the design system |
+| `pm-brand-guidelines` | Enforce brand color, typography, and logo rules within the design system |

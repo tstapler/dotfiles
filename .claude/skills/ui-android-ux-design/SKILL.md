@@ -7,6 +7,8 @@ description: Apply Android Material Design 3 (Material You) UX best practices wh
 
 Apply these guidelines when implementing Android UI in Jetpack Compose. They reflect Material Design 3 (Material You), Google's official 2024–2025 guidance, and platform requirements for Android 14+.
 
+> For cross-platform KMP UI design systems, apply the `ui-design-system` skill.
+
 ## Core Measurements (Non-Negotiable)
 
 | Constraint | Value | Notes |
@@ -268,3 +270,14 @@ Load these when deeper guidance is needed:
 | `references/accessibility.md` | TalkBack testing, screen reader order, custom semantic actions |
 | `references/md3-components.md` | Specific Material 3 component specs (buttons, cards, dialogs, chips, FAB) |
 | `references/animation-motion.md` | Transition specs, shared element transitions, spring parameters |
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `ui-design-system` | Generate full design system tokens for cross-platform KMP UI |
+| `ui-composition-patterns` | Architect Compose component APIs without boolean prop proliferation |
+| `ui-react-best-practices` | Optimize React/Next.js counterpart when sharing a KMP web target |
+| `ui-playwright` | Automate browser-based tests for KMP web targets |

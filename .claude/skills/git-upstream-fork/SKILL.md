@@ -180,6 +180,8 @@ Also set `diff3` conflict style if you had any merge conflicts — it shows the 
 git config merge.conflictstyle diff3
 ```
 
+> For creating and reviewing the PR after pushing, apply the `github-pr` skill.
+
 ## Step 7: Create the PR
 
 ```bash
@@ -239,3 +241,13 @@ for p in "${INCLUDE[@]}"; do git am "/tmp/upstream-patches/$p"; done
 git push -u origin HEAD
 gh pr create --title "upstream: ..."
 ```
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `git-worktrees` | Isolate the upstream branch in a separate worktree |
+| `github-pr` | Create and manage the upstream PR after pushing |
+| `sync-remotes` | Bidirectional sync when both repos are equally canonical |

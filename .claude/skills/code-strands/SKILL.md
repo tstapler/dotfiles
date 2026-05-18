@@ -5,6 +5,8 @@ description: Best practices for the AWS Strands Agents SDK — structuring promp
 
 # Strands Agents SDK Best Practices
 
+> For prompt design for Strands system prompts and tool descriptions, apply the `meta-prompt-engineering` skill.
+
 ## Core Philosophy
 
 Strands is **model-driven**: agents decide what to do, tools define what's possible. Keep system prompts focused on a single domain of expertise. Fat prompts become brittle; specialists compose cleanly.
@@ -71,6 +73,8 @@ orchestrator = Agent(
 - `callback_handler=None` on sub-agents — prevents duplicate/noisy output in the orchestrator's stream
 - Each specialist gets only the tools it needs; don't share tool lists
 - The `@tool` docstring IS the routing description — make it unambiguous
+
+> For typing inter-agent contracts with Pydantic models and parse-don't-validate, apply the `type-driven-design` skill.
 
 ## Structured Outputs Between Agents
 
@@ -183,6 +187,8 @@ async def my_specialist(query: str) -> AsyncIterator:
 
 Graph/Swarm emit additional events: `multiagent_node_start`, `multiagent_node_stop`, `multiagent_handoff`, `multiagent_result`.
 
+> For optimizing context windows, compaction, and sub-agent isolation, apply the `meta-context-engineering` skill.
+
 ## Conversation Management (Context Window Control)
 
 Three built-in strategies — pick based on session length and memory needs:
@@ -243,6 +249,8 @@ No SDK-imposed limit — the constraint is the model's context window. Practical
 - **Specialist**: one workflow domain only (~40-80 lines / ~100-500 tokens)
 - **Rule of thumb**: if a prompt has two `---` section separators for unrelated concerns, it should be two agents
 
+> For selecting which Claude model to use for orchestrators vs. specialists, apply the `meta-model-selection` skill.
+
 ## When to Split a Monolithic Agent
 
 Split when **any** of these are true:
@@ -280,6 +288,19 @@ orchestrator = Agent(
 | `invocation_state` not auto-propagated to sub-agents | Sub-agent tools can't see parent state | Pass `tool_context.invocation_state` explicitly to sub-agent `invocation_state=` |
 | `str(AgentResult)` drops `structured_output` | Pydantic models lost across agent-as-tool boundary | Use `.model_dump_json()` / `model_validate_json()` explicitly |
 | Structured output is Python-only | No TypeScript structured output | N/A |
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `meta-prompt-engineering` | Crafting focused system prompts and tool descriptions for Strands agents |
+| `meta-context-engineering` | Optimizing context windows, compaction, and sub-agent isolation |
+| `meta-model-selection` | Choosing the right Claude model for orchestrators vs. specialists |
+| `type-driven-design` | Typing inter-agent Pydantic contracts; parse-don't-validate at boundaries |
+| `code-python` | Python standards (uv, Pydantic, async) for Strands tool implementations |
+| `security-review` | Auditing tool permissions, invocation_state exposure, and agent trust boundaries |
 
 ## Reference
 

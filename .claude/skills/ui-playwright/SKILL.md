@@ -3,6 +3,8 @@ name: ui-playwright
 description: Complete browser automation with Playwright. Auto-detects dev servers, writes clean test scripts to /tmp. Test pages, fill forms, take screenshots, check responsive design, validate UX, test login flows, check links, automate any browser task. Use when user wants to test websites, automate browser interactions, validate web functionality, or perform any browser-based testing.
 ---
 
+> For UX heuristic evaluation of the pages under test, apply the `ui-web-design-guidelines` skill.
+
 **IMPORTANT - Path Resolution:**
 This skill can be installed in different locations (plugin system, manual installation, global, or project-specific). Before executing any commands, determine the skill directory based on where you loaded this SKILL.md file, and use that path in all commands below. Replace `$SKILL_DIR` with the actual discovered path.
 
@@ -451,3 +453,13 @@ User: "Use 3001"
 - Test scripts written to `/tmp` for automatic cleanup (no clutter)
 - Code executes reliably with proper module resolution via `run.js`
 - Progressive disclosure - API_REFERENCE.md loaded only when advanced features needed
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `ui-web-design-guidelines` | Audit pages for UX/accessibility issues discovered during automation |
+| `ui-react-best-practices` | Fix React performance or rendering issues surfaced by Playwright tests |
+| `ui-design-system` | Verify UI matches design system tokens while running automated checks |

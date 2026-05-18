@@ -19,6 +19,8 @@ kubectl config current-context
 # NEVER proceed if context is wrong
 ```
 
+> For validating the Docker images under test before deploying to Kubernetes, apply the `infra-docker-build-test` skill.
+
 ## Pre-Flight Checklist
 
 - [ ] Verified kubectl context matches target environment
@@ -126,3 +128,13 @@ testkube get testworkflowexecution <execution-id>
 ## Web UI
 
 Access: https://testkube.cicd.fanatics.bet/clusters/inf-dev-1/tests
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `infra-docker-build-test` | Build and smoke-test images before deploying to Kubernetes |
+| `github-actions-debugging` | Diagnose TestKube failures surfaced in CI pipelines |
+| `security-review` | Audit Kubernetes manifests and secrets configuration |

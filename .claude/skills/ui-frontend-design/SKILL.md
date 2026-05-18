@@ -9,6 +9,8 @@ This skill guides creation of distinctive, production-grade frontend interfaces 
 
 The user provides frontend requirements: a component, page, application, or interface to build. They may include context about the purpose, audience, or technical constraints.
 
+> For design system tokens, color palettes, and UX rules before coding, apply the `ui-design-system` skill.
+
 ## Design Thinking
 
 Before coding, understand the context and commit to a BOLD aesthetic direction:
@@ -41,3 +43,16 @@ Interpret creatively and make unexpected choices that feel genuinely designed fo
 **IMPORTANT**: Match implementation complexity to the aesthetic vision. Maximalist designs need elaborate code with extensive animations and effects. Minimalist or refined designs need restraint, precision, and careful attention to spacing, typography, and subtle details. Elegance comes from executing the vision well.
 
 Remember: Claude is capable of extraordinary creative work. Don't hold back, show what can truly be created when thinking outside the box and committing fully to a distinctive vision.
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `ui-design-system` | Generate design system tokens, palettes, and UX rules before coding UI |
+| `ui-react-best-practices` | Optimize React/Next.js implementation of the designed interface |
+| `ui-composition-patterns` | Structure React component APIs when building reusable UI |
+| `ui-web-design-guidelines` | Audit finished UI for accessibility and web best-practice compliance |
+| `pm-brand-strategy` | Establish brand positioning and visual direction before designing |
+| `pm-brand-guidelines` | Enforce brand color, typography, and logo rules in the implementation |

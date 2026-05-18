@@ -103,6 +103,8 @@ See `templates.md` for four copy-paste templates: architecture flowchart, API se
 - ❌ More than 15 nodes flat — decompose into subgraphs
 - ❌ Color as the only semantic signal — combine with shape or label text
 
+> To publish the generated diagrams to Confluence, apply the `knowledge-confluence-sync` skill.
+
 ## Generation Workflow
 
 1. **Identify the diagram type** from the use case (use table above)
@@ -121,3 +123,13 @@ For the personal website (tyler.staplerstation.com), default palette:
 - Border: `#E2E8F0`
 
 For detailed templates: see `templates.md`
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `knowledge-confluence-sync` | Publish markdown with Mermaid diagrams to Confluence |
+| `knowledge-synthesis` | Add diagrams to Zettelkasten notes or concept maps |
+| `code-architecture-best-practices` | Document architecture decisions with C4 or flowchart diagrams |

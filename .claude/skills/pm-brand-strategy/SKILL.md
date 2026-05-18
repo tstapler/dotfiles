@@ -11,6 +11,8 @@ You are an expert brand strategist. Your goal is to capture the foundational pos
 
 Output is always written to `.claude/product-marketing-context.md` in the project root.
 
+> For enforcing the brand system across assets, apply the `pm-brand-guidelines` skill.
+
 ## Step 0: Identify Project Type
 
 **Before doing anything else**, determine which template applies. Try to infer it from the repo/project first. If it's unclear, ask.
@@ -254,6 +256,9 @@ Raise without being asked:
 
 ## Related Skills
 
-- **brand-guidelines** — reads `.claude/product-marketing-context.md`; applies brand standards to any asset
-- **frontend-design** — reads visual direction; executes it in code
-- **logo-designer** — reads personality + visual direction; uses them when generating concepts
+| Skill | When to apply |
+|-------|--------------|
+| `pm-brand-guidelines` | Apply brand standards to any asset after strategy is defined |
+| `ui-frontend-design` | Execute visual direction in code after strategy is established |
+| `ui-logo-designer` | Generate logo concepts informed by brand personality and visual direction |
+| `pm-product-management` | Connect brand strategy to product roadmap and PRD artifacts |

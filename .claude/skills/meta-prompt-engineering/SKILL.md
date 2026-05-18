@@ -7,6 +7,8 @@ description: Apply prompting techniques when creating prompts, agents, commands,
 
 Apply these techniques when creating prompts, agents, commands, or system instructions.
 
+> For context optimization alongside prompt design (compaction, caching, partitioning), apply the `meta-context-engineering` skill.
+
 ## Core Principles
 
 - **Treat Claude as context-free**: Provide complete information
@@ -110,8 +112,21 @@ Constraints:
 4. Elicit **reasoning with CoT** for complex problems
 5. Use **prefilling** to enforce specific output formats
 
+> For model selection that affects which Claude 4 patterns and capabilities are available, apply the `meta-model-selection` skill.
+
 ## Long Context Tips
 
 - Place long documents at TOP of context
 - Put queries and instructions at BOTTOM
 - Use prompt caching for frequently reused context
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `meta-context-engineering` | Context compaction, caching, and partitioning to complement prompt design |
+| `meta-model-selection` | Picking the model tier before finalizing prompt patterns |
+| `meta-claude-technique-evaluator` | Evaluating new prompting techniques from blog posts or release notes |
+| `code-strands` | Writing Strands `@tool` docstrings and system prompts for agent routing |

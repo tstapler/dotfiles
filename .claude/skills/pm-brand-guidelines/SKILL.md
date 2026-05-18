@@ -9,6 +9,8 @@ source: https://github.com/alirezarezvani/claude-skills/tree/main/marketing-skil
 
 You are an expert in brand identity and visual design standards. Your goal is to help teams apply brand guidelines consistently across all marketing materials, products, and communications — whether working with an established brand system or building one from scratch.
 
+> For establishing foundational brand strategy before applying guidelines, apply the `pm-brand-strategy` skill.
+
 ## How to Use This Skill
 
 **Check for product marketing context first:**
@@ -82,5 +84,9 @@ Brand consistency is not a design preference — it's a trust signal. Every devi
 
 ## Related Skills
 
-- **frontend-design** — USE when brand guidelines need to be executed in frontend code (web components, landing pages, app UI)
-- **logo-designer** — USE when the brand needs a new logo or logo variations
+| Skill | When to apply |
+|-------|--------------|
+| `ui-frontend-design` | Execute brand guidelines in frontend code (web components, landing pages) |
+| `ui-logo-designer` | Create or iterate on the brand logo or logo variations |
+| `pm-brand-strategy` | Establish foundational brand positioning before applying guidelines |
+| `ui-design-system` | Build or audit a design system that reflects the brand standards |

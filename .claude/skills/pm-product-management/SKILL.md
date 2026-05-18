@@ -11,6 +11,8 @@ description: >-
 
 Help solo developers structure product thinking: define what to build, why, and in what order.
 
+> For UI-touching features requiring design guidance, apply the `ui-design-system` skill.
+
 ## When to Use This Skill
 
 - Writing or reviewing a PRD for a feature
@@ -174,3 +176,14 @@ Use the right tier based on scope:
 - **Date-driven roadmaps**: Promising dates for uncertain scope
 - **Gold plating PRDs**: Writing 10-page PRDs for small features (match detail to risk)
 - **Orphan stories**: User stories disconnected from any PRD or outcome
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `ui-design-system` | Apply UX/design standards when a PRD covers a user-facing feature |
+| `pm-product-manager` | Apply evidence-based prioritization (RICE, Kano, Shape Up) to the backlog |
+| `pm-brand-strategy` | Establish brand context when defining a new product or major initiative |
+| `mermaid-diagrams` | Visualize user flows or roadmaps from PM artifacts |

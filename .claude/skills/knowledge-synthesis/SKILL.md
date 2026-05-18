@@ -20,6 +20,8 @@ Synthesize knowledge from multiple sources into interconnected Zettelkasten note
 
 ## Core Workflow
 
+> For systematic web research before synthesizing, apply the `meta-research-workflow` skill.
+
 ### 1. Research Phase
 
 - Search multiple source types (academic, books, authoritative sites)
@@ -81,6 +83,18 @@ Use 3-7 tags per note:
 
 - **Pages**: `/logseq/pages/*.md`
 - **Journals**: `/logseq/journals/YYYY_MM_DD.md`
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `knowledge-literature-review` | Survey a research area and build a citation graph before synthesizing |
+| `meta-research-workflow` | Systematic multi-source web research before writing notes |
+| `notebooklm` | Query source-grounded answers from uploaded documents |
+| `knowledge-confluence-sync` | Publish synthesized notes to a Confluence wiki |
+| `mermaid-diagrams` | Create concept maps or knowledge-graph diagrams |
 
 ## Book Zettel Template
 

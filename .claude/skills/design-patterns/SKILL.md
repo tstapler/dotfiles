@@ -13,6 +13,8 @@ Apply patterns from two authoritative sources:
 
 ---
 
+> For encoding pattern invariants into the type system (Value Objects, sum types, smart constructors), apply the `type-driven-design` skill.
+
 ## GoF Creational Patterns
 
 ### Factory Method / Abstract Factory
@@ -226,6 +228,8 @@ func (s *Pending) Next(f *FSM) State {
 
 ---
 
+> For Spring Boot Java implementations of PoEAA patterns (Repository, Data Mapper, Service Layer), apply the `code-spring-boot` skill.
+
 ## PoEAA Patterns
 
 ### Repository *(most important PoEAA pattern)*
@@ -410,3 +414,16 @@ func Register(eventType string, h EventHandler) { handlers[eventType] = h }
 - *Design Patterns: Elements of Reusable Object-Oriented Software* — Gamma, Helm, Johnson, Vlissides (GoF)
 - *Patterns of Enterprise Application Architecture* — Martin Fowler
 - PoEAA catalog: martinfowler.com/eaaCatalog
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `type-driven-design` | Encoding pattern invariants (Value Objects, sum types, smart constructors) in the type system |
+| `code-spring-boot` | Spring Boot / Java implementations of PoEAA and GoF patterns |
+| `code-architecture-best-practices` | SOLID principles, Clean Architecture, module boundary enforcement |
+| `go-development` | Go-idiomatic pattern implementations (functional options, channels, interfaces) |
+| `code-refactoring` | Migrating from anti-patterns (Transaction Script → Domain Model) using ast-grep |
+| `code-review` | Reviewing pattern usage and identifying anti-patterns in PRs |

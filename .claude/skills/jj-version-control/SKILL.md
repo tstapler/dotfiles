@@ -186,6 +186,8 @@ jj bookmark set feature-x
 jj git push
 ```
 
+> For creating and managing the GitHub PR after pushing a bookmark, apply the `github-pr` skill.
+
 ### Creating Pull Requests
 
 ```bash
@@ -258,3 +260,13 @@ jj rebase -b @ -d main
 - For advanced revsets and patterns: see `references/revsets.md`
 - For stacked PR workflows: see `references/stacked-prs.md`
 - For common workflow examples: see `examples/workflows.md`
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `github-pr` | Create and manage the PR after pushing a bookmark |
+| `git-worktrees` | Create isolated worktrees for parallel jj-managed branches |
+| `sync-remotes` | Sync bookmarks or commits across multiple remotes |

@@ -7,6 +7,8 @@ description: Debug GitHub Actions workflow failures by analyzing logs, identifyi
 
 Systematically diagnose and fix GitHub Actions failures. Provide precise fixes, not generic troubleshooting.
 
+> For CI failures surfaced on a pull request, apply the `github-pr` skill.
+
 ## Get Logs Fast
 
 Always start here. Use `gh` CLI to fetch failure context before reading workflow files.
@@ -156,3 +158,13 @@ services:
 ---
 
 *For extended error pattern catalog, see `error-patterns.md`. For large log files (>500 lines), use `scripts/parse_workflow_logs.py`.*
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `github-pr` | View PR checks, CI status, and diff context |
+| `github-composite-actions` | Debug failures inside composite action steps |
+| `github-address-pr-comments` | Address review comments after CI is fixed |

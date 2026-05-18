@@ -72,6 +72,8 @@ git check-ignore -q .worktrees 2>/dev/null || git check-ignore -q worktrees 2>/d
 
 No .gitignore verification needed - outside project entirely.
 
+> For upstreaming changes across repos using worktrees as part of a fork workflow, apply the `git-upstream-fork` skill.
+
 ### Phase 3: Worktree Creation
 
 **Step 1: Detect project name**
@@ -289,3 +291,13 @@ test_command: make verify         # Override auto-detected tests
 
 ```
 You: I need to work on authentication feature
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `git-upstream-fork` | Upstream filtered changes from a worktree to a target repo |
+| `github-pr` | Open a PR after work in the worktree is complete |
+| `jj-version-control` | Use jj commits and bookmarks inside the worktree |

@@ -7,6 +7,8 @@ description: Apply Vercel's 70-rule React/Next.js performance optimization guide
 
 Comprehensive performance optimization guide for React and Next.js applications, maintained by Vercel. Contains 70 rules across 8 categories, prioritized by impact to guide automated refactoring and code generation.
 
+> For React component architecture and composition patterns, apply the `ui-composition-patterns` skill.
+
 ## When to Apply
 
 Reference these guidelines when:
@@ -143,3 +145,14 @@ Each rule file contains:
 ## Full Compiled Document
 
 For the complete guide with all rules expanded: `AGENTS.md`
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `ui-composition-patterns` | Refactor component APIs using compound components and context |
+| `ui-web-design-guidelines` | Audit React components for accessibility and UX compliance |
+| `ui-design-system` | Define design tokens and style rules before building React components |
+| `ui-playwright` | Write E2E tests to validate React page behavior end-to-end |

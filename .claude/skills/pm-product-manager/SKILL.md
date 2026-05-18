@@ -18,6 +18,8 @@ business.
 
 ---
 
+> For defining brand positioning and messaging strategy, apply the `pm-brand-strategy` skill.
+
 ## The Four Big Risks (Marty Cagan — *Inspired*)
 
 Every feature must address all four before committing:
@@ -223,3 +225,14 @@ For detailed framework references and scoring worksheets: `frameworks.md`
 For PRD template: `templates/prd-template.md`
 For roadmap item template: `templates/roadmap-item.md`
 For feature brief template: `templates/feature-brief.md`
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `pm-product-management` | Use PM templates, PRD format, and workflow integration guidance |
+| `pm-brand-strategy` | Define brand positioning when launching or rebranding a product |
+| `ui-design-system` | Generate design system for UI features before handing off to engineering |
+| `mermaid-diagrams` | Visualize Opportunity Solution Trees and roadmap flows |

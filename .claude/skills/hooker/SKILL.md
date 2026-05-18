@@ -17,6 +17,7 @@ Design, write, and manage Claude Code hooks with history-driven pattern detectio
 ## Don't Use For
 
 - General settings.json changes → `update-config` skill
+
 - Debugging why a hook is erroring (check stderr output in the JSONL) → `code-debugging` skill
 - Syncing hooks across platforms — hookify rules are intentionally local (`*.local.md`) and cannot sync to Gemini/OpenCode
 
@@ -209,6 +210,16 @@ Read an existing hook script or rule file. Identify which of the three dedup pro
 - [ ] Pattern uses Python regex syntax (hookify's rule engine compiles with `re`)
 - [ ] File is named `hookify.{kebab-name}.local.md` (gitignored by default)
 - [ ] Message body explains the why, not just the what
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `code-debugging` | Debug a hook script that is erroring or misfiring |
+| `security-review` | Audit hooks that intercept file writes or bash commands for safety |
+| `github-actions-debugging` | Debug CI hook integration or settings.json issues in workflows |
 
 ## References (Load On Demand)
 

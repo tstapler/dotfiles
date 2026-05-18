@@ -106,3 +106,15 @@ GritQL only handles expression-level Kotlin patterns (function calls, method cha
 
 - For transformation patterns (rename, import, annotation migration): see `code-gritql` skill and `reference.md`
 - For search patterns (finding callers, usages, class definitions): see `code-ast-grep` skill
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `code-ast-grep` | Discover scope of changes before applying any transformation |
+| `code-gritql` | Apply AST-based multi-file code transformations |
+| `code-architecture-best-practices` | Validate refactored structure against SOLID/Clean Architecture |
+| `code-review` | Verify refactor output before merging to main branch |
+| `code-debugging` | Diagnose test failures or build errors introduced during refactoring |

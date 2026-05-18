@@ -7,6 +7,8 @@ description: Docker build and test workflow with mandatory pre-push validation c
 
 Local Docker testing workflow to prevent CI/CD failures. **CRITICAL**: Always run `make validate` before pushing.
 
+> For running integration tests against the built images on Kubernetes, apply the `infra-testing` skill.
+
 ## Pre-Push Checklist (MANDATORY)
 
 Before pushing ANY Docker-related changes:
@@ -131,3 +133,13 @@ docker history pgbouncer:latest
 - ✅ **No complex tooling** - just Docker + Make (built-in)
 - ✅ **Easy debugging** - familiar Docker commands
 - ✅ **CI/CD compatible** - same commands locally and in pipelines
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `infra-testing` | Run TestKube/Kubernetes integration tests against built images |
+| `github-actions-debugging` | Diagnose Docker-related CI failures in GitHub Actions |
+| `security-review` | Audit Dockerfile for vulnerabilities or secret exposure |

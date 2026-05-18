@@ -142,6 +142,8 @@ public record Id<T>(String value) {
 
 ---
 
+> For Pydantic-based smart constructors and Python type annotations, apply the `code-python` skill.
+
 ## Technique 2: Smart Constructors
 
 Private constructor + public factory function. The factory validates; holding the type proves validity.
@@ -493,6 +495,8 @@ public record ConfirmedOrder(OrderId id, List<Item> items, PaymentId paymentId) 
 
 ---
 
+> For enforcing parse-at-boundary with Spring Boot `@RequestBody` validation, apply the `code-spring-boot` skill.
+
 ## Technique 7: Parse at the Boundary, Trust Internally
 
 Validate and parse **once** at the system boundary (HTTP handler, CLI input, message consumer). Inside the system, pass proven types — no re-validation.
@@ -560,6 +564,19 @@ Order {
 Every field carries a proof. A valid `Order` instance means all these invariants hold — no defensive checks needed anywhere Order is used.
 
 ---
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `design-patterns` | Selecting GoF/PoEAA patterns that type-driven design encodes (Value Object, State) |
+| `code-spring-boot` | Java-specific type techniques: records, sealed interfaces, parse at Spring boundaries |
+| `code-python` | Python newtypes, Pydantic smart constructors, frozen dataclasses |
+| `go-development` | Go newtype, phantom generics, unexported-field Value Objects |
+| `code-refactoring` | Automated refactors to replace primitive obsession across a codebase |
+| `code-review` | Identifying primitive obsession, missing smart constructors, or magic strings in PRs |
 
 ## References
 - *Parse, Don't Validate* — Alexis King (lexi-lambda.github.io/blog/2019/11/05)

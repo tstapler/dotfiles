@@ -282,6 +282,8 @@ gh pr review <number> --approve --body "LGTM"
 gh pr review <number> --request-changes --body "See comments"
 ```
 
+> For detailed CI log parsing and workflow failure diagnosis, apply the `github-actions-debugging` skill.
+
 ### Debug CI Failure
 
 ```bash
@@ -298,6 +300,8 @@ gh run view <run-id> --log > /tmp/ci.log
 # 4. Search for errors
 grep -n "error\|Error\|FAILED" /tmp/ci.log | head -50
 ```
+
+> For systematically addressing all open review threads, apply the `github-address-pr-comments` skill.
 
 ### Respond to Review Comments
 
@@ -328,3 +332,15 @@ gh pr diff <number> -- path/to/file.ts | head -100
 
 - For `gh api` GraphQL queries: see `references/api-patterns.md`
 - For PR analysis scripts: see `scripts/` directory
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `github-actions-debugging` | Diagnose and fix failing CI checks on the PR |
+| `github-address-pr-comments` | Systematically resolve all open review threads |
+| `github-composite-actions` | Write or debug reusable actions in the repo |
+| `git-worktrees` | Isolate PR branch work without switching main checkout |
+| `jj-version-control` | Manage commits and bookmarks before pushing the PR |

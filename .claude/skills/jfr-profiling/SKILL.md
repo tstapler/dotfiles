@@ -186,6 +186,8 @@ jfrconv --diff baseline.jfr current.jfr diff-flamegraph.html
 
 ---
 
+> For applying fixes after identifying hotspots, apply the `jvm-performance` skill.
+
 ## Step 6 — Interpreting Results
 
 ### Hotspot patterns and fixes
@@ -222,6 +224,17 @@ Sample count in infra threads (EPoll, Kryo, JUnit engine) is expected. If they'r
 | Lock profile | `jfrconv --lock -o collapsed graph-load.jfr lock.collapsed` |
 | Top leaf frames | `awk '...' graph-load.collapsed \| sort -rn \| head -20` (see Step 3) |
 | A/B diff | `jfrconv --diff before.jfr after.jfr diff.html` |
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `jvm-performance` | Fix allocation, GC, lock, or JIT bottlenecks found in the profile |
+| `code-spring-boot` | Spring Boot-specific performance patterns and optimizations |
+| `github-actions-debugging` | Debug CI failures in profiling or benchmark jobs |
+| `mermaid-diagrams` | Visualize call graphs or bottleneck flows as diagrams |
 
 ## Common Pitfalls
 

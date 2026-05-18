@@ -7,6 +7,8 @@ description: "Audit UI code against 100+ web best practices - accessibility, foc
 
 Review files for compliance with Web Interface Guidelines.
 
+> For generating a complete design system before auditing, apply the `ui-design-system` skill.
+
 ## How It Works
 
 1. Fetch the latest guidelines from the source URL below
@@ -33,3 +35,14 @@ When a user provides a file or pattern argument:
 4. Output findings using the format specified in the guidelines
 
 If no files specified, ask the user which files to review.
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `ui-design-system` | Generate a design system before auditing new UI for compliance |
+| `ui-react-best-practices` | Fix React-specific issues found during the audit |
+| `ui-composition-patterns` | Refactor component architecture problems surfaced by the audit |
+| `ui-playwright` | Automate regression tests for issues fixed after the audit |

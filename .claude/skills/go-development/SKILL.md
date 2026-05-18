@@ -194,6 +194,8 @@ for _, item := range items { item := item; go func() { process(item) }() }
 
 ---
 
+> For CPU and memory performance analysis, apply the `go-profiling` skill.
+
 ## Tooling (Run Before Every Commit)
 
 ```bash
@@ -249,3 +251,15 @@ Apply techniques from the `type-driven-design` skill to encode invariants direct
 - [ ] Acronyms consistently cased; receiver names consistent across all methods
 - [ ] `go vet`, `staticcheck`, `golangci-lint` pass clean
 - [ ] `go test -race ./...` passes
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `go-profiling` | Profile CPU, memory, goroutines, or benchmark a Go binary |
+| `code-refactoring` | Structural refactors after identifying anti-patterns |
+| `code-debugging` | Systematic investigation of a Go bug or panic |
+| `security-review` | OWASP audit or secrets scan on Go code |
+| `github-actions-debugging` | Debug CI failures for Go tests or linting |

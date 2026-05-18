@@ -36,6 +36,8 @@ Accept input in any form:
 3. What does it change about how Claude is used?
 4. What are the claimed benefits?
 
+> For systematic web research of Anthropic docs and engineering blog, apply the `meta-research-workflow` skill.
+
 ### Phase 2: Research Anthropic Standards
 
 Verify the technique against official Anthropic guidance.
@@ -162,6 +164,8 @@ For simple yes/no questions about a technique, skip the full workflow:
 | Technique involves model choice | `meta-model-selection` |
 | Adoption requires new skill creation | `meta-prompt-engineering` |
 
+> For context-specific agent techniques being evaluated, apply the `meta-context-engineering` skill.
+
 ## Quality Standards
 
 - Never recommend adopting a technique that contradicts official Anthropic guidance without explicit warning
@@ -169,6 +173,19 @@ For simple yes/no questions about a technique, skip the full workflow:
 - Provide specific integration steps, not vague suggestions
 - Cite sources for all Anthropic best practice claims
 - Distinguish between official Anthropic guidance and community practices
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `meta-research-workflow` | Researching Anthropic docs and blog during Phase 2 standards check |
+| `meta-prompt-engineering` | Building or adapting a prompting technique after an Adopt decision |
+| `meta-model-selection` | Evaluating techniques that involve model choice or agent tier decisions |
+| `meta-context-engineering` | Evaluating context optimization techniques for agent systems |
+| `knowledge-synthesis` | Persisting evaluation results as Zettelkasten notes in Logseq |
+| `bedrock-model-lookup` | Verifying new Bedrock model availability when evaluating model-related techniques |
 
 ## Progressive Context
 

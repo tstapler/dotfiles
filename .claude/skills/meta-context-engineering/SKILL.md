@@ -24,6 +24,8 @@ Context engineering curates the smallest high-signal token set for LLM tasks. Th
 - Evaluating agent performance
 - Developing LLM-powered pipelines
 
+> For prompt structure that maximizes signal within context, apply the `meta-prompt-engineering` skill.
+
 ## Core Principles
 
 1. **Context quality > quantity** - High-signal tokens beat exhaustive content
@@ -31,6 +33,8 @@ Context engineering curates the smallest high-signal token set for LLM tasks. Th
 3. **Progressive disclosure** - Load information just-in-time
 4. **Isolation prevents degradation** - Partition work across sub-agents
 5. **Measure before optimizing** - Know your baseline
+
+> For multi-agent Strands patterns and conversation manager configuration, apply the `code-strands` skill.
 
 ## Quick Reference
 
@@ -84,3 +88,14 @@ Context engineering curates the smallest high-signal token set for LLM tasks. Th
 
 - [context_analyzer.py](./scripts/context_analyzer.py) - Context health analysis, degradation detection
 - [compression_evaluator.py](./scripts/compression_evaluator.py) - Compression quality evaluation
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `meta-prompt-engineering` | Designing high-signal prompts that maximize context quality |
+| `meta-model-selection` | Choosing model tiers to balance context cost vs. reasoning depth |
+| `code-strands` | Strands-specific conversation managers, sub-agent isolation, and streaming |
+| `meta-claude-technique-evaluator` | Evaluating new context optimization techniques for adoption |

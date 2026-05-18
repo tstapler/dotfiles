@@ -7,6 +7,8 @@ description: Select appropriate Claude model (Opus 4.5, Sonnet, Haiku) for agent
 
 Select the appropriate Claude model based on task requirements.
 
+> For looking up AWS Bedrock model IDs and inference profiles for chosen models, apply the `bedrock-model-lookup` skill.
+
 ## Quick Decision Matrix
 
 ```
@@ -90,6 +92,8 @@ Is deep reasoning across multiple domains required?
 - Don't use Haiku for tasks requiring nuanced understanding
 - Consider task duration: Opus for one-time planning, Sonnet for iterative work
 
+> For context-window constraints that influence model choice, apply the `meta-context-engineering` skill.
+
 ## When to Upgrade/Downgrade
 
 **Upgrade to Opus when**:
@@ -101,3 +105,15 @@ Is deep reasoning across multiple domains required?
 - Agent does mostly formatting/transformation
 - Reasoning is minimal and pattern-based
 - Speed is critical and quality is consistent
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `bedrock-model-lookup` | Looking up Bedrock model IDs and inference profiles for the chosen model |
+| `meta-context-engineering` | Context-window constraints that influence model tier selection |
+| `meta-prompt-engineering` | Prompt design changes needed when switching model tiers |
+| `meta-claude-technique-evaluator` | Evaluating whether a new model release warrants workflow adoption |
+| `code-strands` | Multi-agent model assignment (cheap router vs. capable specialist) |

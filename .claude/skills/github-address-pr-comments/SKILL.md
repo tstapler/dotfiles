@@ -299,3 +299,13 @@ X fixed, Y declined, Z deferred — N total threads addressed.
 - Use PR-specific output file names to prevent stale data across parallel sessions.
 - Batch all thread IDs into a single `resolve` call.
 - Re-fetch after push to catch bot threads before declaring done.
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `github-pr` | View PR details, diff, and overall check status |
+| `github-actions-debugging` | Investigate CI failures blocking merge |
+| `code-review` | Apply structured review protocols before responding |

@@ -136,6 +136,17 @@ python3 ~/.claude/skills/github-org-team-activity/scripts/format_report.py /tmp/
 | "last sprint" (2 wk)  | `>=$(date -v-14d +%Y-%m-%d)`             |
 | no timeframe specified | Ask the user                              |
 
+> For PR-level detail on a specific contributor, apply the `github-pr` skill.
+
 ## Token Budget
 - SKILL.md: ~700 tokens
 - scripts/: loaded on demand only
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `github-pr` | Drill into a specific PR surfaced in the activity report |
+| `github-actions-debugging` | Investigate CI failures on a team member's PR |

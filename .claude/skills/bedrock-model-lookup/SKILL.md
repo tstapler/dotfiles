@@ -10,6 +10,8 @@ Use this skill when:
 - You need to verify the correct Bedrock model ID for a Claude model
 - You want to update the claude-proxy model mapping with new models
 
+> For selecting the right Claude model for a task based on capability and cost, apply the `meta-model-selection` skill.
+
 ## Discovery Methods
 
 ### Method 1: AWS CLI (Fastest)
@@ -327,6 +329,16 @@ tail -f /tmp/claude-proxy.app.log
 - Beta features: Same file, `BEDROCK_BETA_COMPATIBILITY` dict
 - Service config: `~/dotfiles/stapler-scripts/claude-proxy/com.claude-proxy.plist`
 - Documentation: `~/dotfiles/stapler-scripts/claude-proxy/.claude/CLAUDE.md`
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `meta-model-selection` | Choosing which Claude model tier (Opus/Sonnet/Haiku) to use for a task |
+| `meta-research-workflow` | Researching AWS docs or What's New for newly released model information |
+| `meta-claude-technique-evaluator` | Evaluating whether to adopt a newly available model into the workflow |
 
 ## References
 

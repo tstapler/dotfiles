@@ -14,6 +14,8 @@ See also:
 
 ---
 
+> For executing the merge plan using isolated branches, apply the `git-worktrees` skill.
+
 ## Step 1: Establish Context
 
 Identify which remote is the upstream and which is the personal fork. Infer from existing remotes if not specified:
@@ -191,3 +193,13 @@ Produce a markdown document with these sections:
 - **Conflict count drives complexity** — if >5 logical conflicts, flag the merge as HIGH COMPLEXITY and recommend splitting into multiple steps.
 - **Both sides matter** — the plan must preserve features from the fork AND from upstream. Do not default to "take upstream" — assess each change on its merits.
 - **Private guard** — before including any fork commit in the upstream direction, check: does it contain personal config, credentials, private paths, or work-only references? If so, bucket as `PRIVATE`.
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `git-worktrees` | Execute the merge plan in an isolated branch without disturbing the working tree |
+| `jj-version-control` | Manage diverged commits with jj rebase when the repo uses jj colocated mode |
+| `github-pr` | Create the pull request after the merge branch is clean and tests pass |

@@ -9,6 +9,8 @@ Apply these standards when writing, reviewing, or designing Java/Spring Boot cod
 
 ---
 
+> For structural refactors across this codebase, apply the `code-refactoring` skill.
+
 ## Project Structure (Package by Feature)
 
 Organize by domain concept, not by technical layer. Each feature package is a self-contained vertical slice:
@@ -305,6 +307,8 @@ Already covered above. Key distinction from PoEAA: Repository is a **collection 
 
 ---
 
+> For security concerns in REST controllers, exception handling, and data validation, apply the `security-review` skill.
+
 ## Error Handling
 
 Define a typed exception hierarchy rooted in your domain:
@@ -337,6 +341,8 @@ public class GlobalExceptionHandler {
 ```
 
 ---
+
+> For full test coverage planning before writing code, apply the `infra-testing` skill.
 
 ## Testing
 
@@ -738,3 +744,18 @@ String message = switch (result) {
     case PaymentResult.Pending p -> "Pending: " + p.referenceId();
 };
 ```
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `design-patterns` | Selecting GoF or PoEAA patterns for Java/Spring design problems |
+| `type-driven-design` | Encoding domain invariants with newtypes, sealed interfaces, smart constructors |
+| `code-architecture-best-practices` | SOLID principles, Clean Architecture, module boundary enforcement |
+| `code-refactoring` | Structural refactors across packages using ast-grep or gritql |
+| `security-review` | OWASP audit of REST controllers, auth, input validation, secrets |
+| `infra-testing` | Test coverage planning, Testcontainers, integration test strategies |
+| `code-review` | PR feedback and verification gates for Java code |
+| `jvm-performance` | JVM tuning, GC configuration, heap/thread profiling |

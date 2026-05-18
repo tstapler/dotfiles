@@ -326,3 +326,16 @@ Key integration points:
 | Primitive used where domain type needed | Type-Driven Design (newtype / value object) |
 | Invalid states reachable at runtime | Type-Driven Design (sum types / smart constructors) |
 | Validation repeated across functions | Type-Driven Design (parse at boundary) |
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `type-driven-design` | Make domain invariants compiler-enforced via newtypes and sum types |
+| `design-patterns` | Apply GoF/PoEAA patterns within the architectural layer structure |
+| `code-python` | Python-specific standards: uv, pytest, Pydantic, async, hexagonal layout |
+| `code-spring-boot` | Spring Boot-specific layering, testing, and dependency injection patterns |
+| `code-refactoring` | Restructure existing code toward clean architecture boundaries |
+| `code-review` | Verify architectural decisions meet these principles before merging |

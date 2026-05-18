@@ -27,6 +27,8 @@ MERGE_BRANCH="merge/upstream-$DATE"
 
 ---
 
+> For analyzing divergence and producing a written plan before executing, apply the `fork-merge-plan` skill.
+
 ## Step 1: Fetch Both Remotes
 
 ```bash
@@ -189,6 +191,17 @@ Do not merge either PR until both are green. The two PRs are a matched pair — 
 | tmux/control_mode.go both-sides changes | Fork adds features, upstream adds perf fixes | Both sets of changes are in non-overlapping hunks; verify auto-merge |
 
 ---
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `github-pr` | Create and manage the two sync PRs after pushing the integration branch |
+| `github-actions-debugging` | Debug CI failures on the merge branch before merging |
+| `git-worktrees` | Isolate the merge in a worktree when there are many conflicts |
+| `code-debugging` | Investigate test failures introduced by the merge |
 
 ## Post-Merge Checklist
 

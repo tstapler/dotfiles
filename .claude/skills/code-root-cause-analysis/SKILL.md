@@ -239,3 +239,15 @@ Glob pattern="~/Documents/personal-wiki/logseq/journals/2026_01_{20..28}.md"
 - For technology-specific error patterns: see `references/error-patterns.md`
 - For advanced wiki search strategies: see `references/search-strategies.md`
 - For detailed sanitization rules: see `references/sanitization-rules.md`
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `code-debugging` | Systematic fix once root cause is identified |
+| `code-review` | Verify the fix addresses root cause before merging |
+| `code-ast-grep` | Structurally search codebase for all sites exhibiting the same pattern |
+| `knowledge-synthesis` | Document the root cause and solution as a Zettelkasten note for future reference |
+| `meta-research-workflow` | Search external sources when wiki has no historical context for the error |

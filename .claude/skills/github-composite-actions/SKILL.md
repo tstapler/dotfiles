@@ -7,6 +7,8 @@ description: Use when writing, debugging, or designing GitHub Actions composite 
 
 Reference for writing and debugging composite actions (`action.yml` files with `runs.using: composite`).
 
+> For debugging failures in composite action runs, apply the `github-actions-debugging` skill.
+
 ## Critical Limitations (Know Before You Code)
 
 ### `uses:` Does NOT Support Expressions
@@ -231,3 +233,13 @@ When you need artifacts/reporting to run even after a build failure, capture the
 - [actions/runner #2101: Monorepo composite action path resolution](https://github.com/actions/runner/issues/2101)
 - [actions/runner ADR 1144: Composite actions design (10-level nesting limit)](https://github.com/actions/runner/blob/main/docs/adrs/1144-composite-actions.md)
 - [DEV: Composite Actions vs Reusable Workflows](https://dev.to/n3wt0n/composite-actions-vs-reusable-workflows-what-is-the-difference-github-actions-11kd)
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `github-actions-debugging` | Debug failures in composite action run logs |
+| `github-pr` | Open a PR after authoring or updating an action |
+| `security-review` | Review composite action for secret exposure risks |

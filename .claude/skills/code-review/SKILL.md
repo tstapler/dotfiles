@@ -138,3 +138,15 @@ Using "should"/"probably"/"seems to", expressing satisfaction before verificatio
 3. Evidence before claims - Verification gates always
 
 Verify. Question. Then implement. Evidence. Then claim.
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `code-debugging` | Investigate failures discovered during verification gates |
+| `code-root-cause-analysis` | Trace recurring bugs found in review to their historical origin |
+| `security-review` | Review touches auth, input handling, secrets, or data exposure |
+| `code-architecture-best-practices` | Evaluate structural decisions (layering, SOLID) in the reviewed code |
+| `github-pr` | Create or manage the pull request after review gates pass |

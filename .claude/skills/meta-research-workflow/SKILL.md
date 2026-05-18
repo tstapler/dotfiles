@@ -7,6 +7,8 @@ description: Apply systematic research methodology for multi-step research, fact
 
 Follow this systematic approach for research, fact-finding, or web verification tasks.
 
+> For synthesizing research findings into Zettelkasten notes in Logseq, apply the `knowledge-synthesis` skill.
+
 ## Core Workflow
 
 ### 1. Initial Analysis
@@ -214,6 +216,8 @@ If this list is non-empty, a spike should be scheduled before writing the ADR.
 Links to the findings files this synthesis draws from.
 ```
 
+> For researching an unfamiliar codebase (GitHub/GitLab repo URL), apply the `code-archaeology` skill.
+
 ## Repo Research Protocol
 
 **When the research subject is a GitHub, GitLab, or other hosted repository URL**, use `code-archaeology` instead of web search as the primary research method:
@@ -274,3 +278,14 @@ When spawning research subagents, include this instruction:
 - `[TRAINING_ONLY — verify]` marks make it easy to target parent web searches
 - A findings file without a Recommendation section is not complete — always end with a concrete choice, not a survey
 - Open Questions that require prototyping should block the ADR, not be deferred silently
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `knowledge-synthesis` | Persisting synthesis.md findings as Zettelkasten notes in Logseq |
+| `code-archaeology` | Primary research method when the subject is a hosted repository URL |
+| `meta-claude-technique-evaluator` | Evaluating Claude techniques discovered during research for adoption |
+| `knowledge-literature-review` | Academic literature research via arXiv and Semantic Scholar |

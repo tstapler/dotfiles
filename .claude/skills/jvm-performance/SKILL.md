@@ -11,6 +11,8 @@ description: Fix JVM/Kotlin performance bottlenecks identified via profiling. Co
 
 ---
 
+> To collect the profiling data that identifies these hotspots, apply the `jfr-profiling` skill first.
+
 ## Allocation / GC Pressure
 
 ### What you see in the profile
@@ -455,6 +457,17 @@ When allocation reduction is not enough, tune the GC. Run `jfrconv --gc` (or che
 | Full GC on startup only | Small initial heap forces resize | Set `-Xms` == `-Xmx` |
 
 ---
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `jfr-profiling` | Collect JFR profiles and collapsed stacks to identify what's hot |
+| `code-spring-boot` | Spring Boot-specific configuration and JPA/Hibernate tuning |
+| `code-refactoring` | Structural refactors after eliminating the performance bottleneck |
+| `code-debugging` | Investigate unexpected JVM crashes or OOM errors |
 
 ## Quick Lookup: Stack Frame → Code Fix
 

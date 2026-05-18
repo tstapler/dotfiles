@@ -170,3 +170,13 @@ sg --pattern '<pat>' --lang python --stats
 - **Before refactoring**: use `ast-grep` to find all affected sites first
 - **Pair with `gritql`**: use ast-grep to search, gritql to transform
 - **Replace Grep for code**: whenever the search is about code structure, prefer `sg` over `Grep`
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `code-gritql` | Transform code after finding affected sites with ast-grep |
+| `code-refactoring` | Orchestrate multi-file renames using ast-grep for scope discovery |
+| `code-archaeology` | Understand unfamiliar codebases by searching structure and patterns |

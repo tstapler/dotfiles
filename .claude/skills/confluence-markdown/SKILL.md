@@ -470,8 +470,11 @@ Description of the problem...
 
 ## Related Skills
 
-- `knowledge-confluence-sync`: Publish, crawl, and manage Confluence pages
-- `knowledge-synthesis`: Create Zettelkasten notes for Logseq
+| Skill | When to apply |
+|-------|--------------|
+| `knowledge-confluence-sync` | Publish, crawl, and manage Confluence pages programmatically |
+| `knowledge-synthesis` | Create Zettelkasten notes for Logseq from the same knowledge sources |
+| `mermaid-diagrams` | Author diagrams to embed in Confluence pages as code blocks |
 
 ## Tool Location
 

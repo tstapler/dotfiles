@@ -10,6 +10,8 @@ boolean prop proliferation by using compound components, lifting state, and
 composing internals. These patterns make codebases easier for both humans and AI
 agents to work with as they scale.
 
+> For React/Next.js performance optimization alongside composition, apply the `ui-react-best-practices` skill.
+
 ## When to Apply
 
 Reference these guidelines when:
@@ -78,3 +80,14 @@ Each rule file contains:
 ## Full Compiled Document
 
 For the complete guide with all rules expanded: `AGENTS.md`
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `ui-react-best-practices` | Optimize performance of components built with composition patterns |
+| `ui-design-system` | Define design tokens and component specs before implementing components |
+| `ui-web-design-guidelines` | Audit composed components for accessibility and UX compliance |
+| `ui-playwright` | Write E2E tests for composed component interactions |
