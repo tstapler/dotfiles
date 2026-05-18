@@ -52,7 +52,7 @@ Wait for completion. Read the summary (do not re-read the research files in full
 Dispatch a planning subagent with requirements.md + research file summaries.
 
 Subagent prompt:
-> Run sdd:3-plan. Read project_plans/<PROJECT_NAME>/requirements.md and project_plans/<PROJECT_NAME>/research/*.md. Validate technology choices. Write the implementation plan to project_plans/<PROJECT_NAME>/implementation/plan.md. Return: epic/story/task counts, any flagged choices.
+> Run sdd:3-plan. Read project_plans/<PROJECT_NAME>/requirements.md and project_plans/<PROJECT_NAME>/research/*.md. Validate technology choices. Write the implementation plan to project_plans/<PROJECT_NAME>/implementation/plan.md. Then dispatch an adversarial reviewer subagent on the completed plan — it must write project_plans/<PROJECT_NAME>/implementation/adversarial-review.md. If BLOCKED, patch plan.md and re-run the adversarial reviewer. Return: epic/story/task counts, flagged choices, adversarial review verdict (BLOCKED/CONCERNS/CLEAN).
 
 Wait for completion. Use the summary — do not re-read plan.md in full.
 
@@ -63,9 +63,9 @@ Wait for completion. Use the summary — do not re-read plan.md in full.
 Dispatch a validation subagent.
 
 Subagent prompt:
-> Run sdd:4-validate. Read project_plans/<PROJECT_NAME>/implementation/plan.md and project_plans/<PROJECT_NAME>/requirements.md. Design the full test suite with requirement-to-test traceability. Write to project_plans/<PROJECT_NAME>/implementation/validation.md. Return: test case counts by type, requirements coverage fraction.
+> Run sdd:4-validate. Read project_plans/<PROJECT_NAME>/implementation/plan.md and project_plans/<PROJECT_NAME>/requirements.md. Design the full test suite with requirement-to-test traceability. Write to project_plans/<PROJECT_NAME>/implementation/validation.md. Then run the implementation readiness gate: check all 4 criteria against requirements.md, plan.md, validation.md, and adversarial-review.md. Return: test case counts by type, requirements coverage fraction, readiness gate verdict (PASS/CONCERNS/FAIL).
 
-Wait for completion.
+Wait for completion. If readiness gate returns FAIL, halt and surface the failures to the user.
 
 ---
 
@@ -78,6 +78,7 @@ Artifacts written:
   project_plans/<PROJECT_NAME>/requirements.md
   project_plans/<PROJECT_NAME>/research/ (4 files)
   project_plans/<PROJECT_NAME>/implementation/plan.md
+  project_plans/<PROJECT_NAME>/implementation/adversarial-review.md
   project_plans/<PROJECT_NAME>/implementation/validation.md
 
 <Subagent summaries here>

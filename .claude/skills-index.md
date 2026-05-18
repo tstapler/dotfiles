@@ -103,6 +103,7 @@ Start here when writing any new document from scratch. Each command produces the
 |-------|------------|----------|
 | `knowledge-synthesis` | Synthesizing knowledge from multiple sources into Zettelkasten notes; creating wiki pages with [[links]] and #[[tags]]; integrating academic research | "Synthesize this article into Zettel", "Create wiki page for concept", "Integrate research notes" |
 | `knowledge-confluence-sync` | Publishing markdown to Confluence; crawling/downloading Confluence pages; syncing bidirectionally; checking sync status; resolving conflicts; managing comments; validating links | "Publish docs to Confluence", "Crawl Confluence page", "Download this Confluence page", "Check sync status" |
+| `knowledge:slack-daily-synthesis` | Searching Slack for conversations about a topic, parsing large result files via subagents (never inline), and enriching existing wiki pages with insights. Uses `slack-enrichment-handler.md` pattern: parallel searches → subagent file parsing in 40k-char slices → identify existing pages → write enrichments. **Large files (>30k chars) are always saved to disk — always delegate parsing to a subagent.** | "Find where I talked about X on Slack", "Enrich wiki with my Slack debugging discussions", "Search Slack for my thoughts on grpc performance" |
 
 ### Web Fetching & Browser Automation
 

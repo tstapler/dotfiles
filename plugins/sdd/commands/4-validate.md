@@ -59,12 +59,35 @@ Dispatch a validation subagent to design the test suite. The subagent writes val
 
 4. **Wait for the subagent to complete.** Do not continue until validation.md has been written.
 
-5. **Output the coordinator summary:**
+5. **Run the implementation readiness gate.**
+
+   Inline check — no subagent needed. Read the following files:
+   - `project_plans/<PROJECT_NAME>/requirements.md`
+   - `project_plans/<PROJECT_NAME>/implementation/plan.md`
+   - `project_plans/<PROJECT_NAME>/implementation/validation.md`
+   - `project_plans/<PROJECT_NAME>/implementation/adversarial-review.md` (if present)
+
+   Check each criterion:
+
+   | # | Criterion | Pass? |
+   |---|-----------|-------|
+   | 1 | Every requirement in requirements.md has ≥1 test case in validation.md | |
+   | 2 | plan.md has no TODO/TBD placeholders in architecture or task sections | |
+   | 3 | All ADRs referenced in plan.md exist on disk | |
+   | 4 | No BLOCKER items remain in adversarial-review.md (or file is absent) | |
+
+   Verdict:
+   - **PASS** — all criteria met → output summary and proceed.
+   - **CONCERNS** — criteria 2–3 have minor gaps → ask with `AskUserQuestion`: "Proceed despite gaps, or fix first?" Halt if user chooses to fix.
+   - **FAIL** — criterion 1 or 4 not met → halt with a clear list of what's missing. User must resolve before running `/sdd:5-implement`.
+
+6. **Output the coordinator summary:**
    ```
    ✅ Phase 4 complete — validation.md written to project_plans/<PROJECT_NAME>/implementation/
 
    Test cases designed: <N> unit, <N> integration
    Requirements covered: <N>/<N>
+   Readiness gate: <PASS|CONCERNS|FAIL>
 
    Next step: /sdd:5-implement
    ```

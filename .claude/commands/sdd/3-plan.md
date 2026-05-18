@@ -67,12 +67,59 @@ Dispatch a planning subagent to produce the implementation plan. The subagent do
 
 4. **Wait for the subagent to complete.** Do not continue until plan.md has been written.
 
-5. **Output the coordinator summary:**
+5. **Dispatch an adversarial reviewer subagent using the `Task` tool.**
+
+   The subagent prompt must include:
+   - Full text of `plan.md`
+   - Full text of `requirements.md`
+   - These exact instructions:
+
+   > You are an adversarial architecture reviewer. Your job is to challenge this implementation plan and find weaknesses before any code is written.
+   >
+   > Review for:
+   > 1. **Missing failure modes** — What happens when external dependencies fail? Are error paths, retries, or timeouts absent?
+   > 2. **Architecture risks** — Are there components that will be hard to change, scale, or test in isolation?
+   > 3. **Scope drift** — Are any tasks broader than their stated requirement? Is anything being built that wasn't asked for?
+   > 4. **Technology bets** — Are there non-standard choices that could become liabilities (licensing, abandonment, performance)?
+   > 5. **Missing coverage** — Are there user-facing behaviors implied by requirements that have no corresponding story or task?
+   >
+   > For each concern, classify as:
+   > - **BLOCKER** — Must be resolved before implementation starts
+   > - **CONCERN** — Should be addressed; will degrade quality if skipped
+   > - **MINOR** — Low impact; note it but don't block
+   >
+   > Write your findings to `project_plans/<PROJECT_NAME>/implementation/adversarial-review.md` using this template:
+   >
+   > ```markdown
+   > # Adversarial Review: <PROJECT_NAME>
+   >
+   > **Date**: <YYYY-MM-DD>
+   > **Verdict**: BLOCKED / CONCERNS / CLEAN
+   >
+   > ## Blockers
+   > - [ ] <issue> — <recommendation>
+   >
+   > ## Concerns
+   > - [ ] <issue> — <recommendation>
+   >
+   > ## Minors
+   > - <issue>
+   > ```
+   >
+   > Return a one-line summary: verdict + count of blockers/concerns/minors.
+
+6. **Wait for the adversarial reviewer to complete.** Read the summary.
+
+   - **BLOCKED** → read adversarial-review.md, patch plan.md to resolve each BLOCKER, then re-run the adversarial reviewer on the updated plan (repeat until CONCERNS or CLEAN).
+   - **CONCERNS or CLEAN** → proceed.
+
+7. **Output the coordinator summary:**
    ```
    ✅ Phase 3 complete — plan.md written to project_plans/<PROJECT_NAME>/implementation/
 
    Epics: <N> | Stories: <N> | Tasks: <N>
    Flagged choices: <N> (ADRs written)
+   Adversarial review: <BLOCKED|CONCERNS|CLEAN> — <N> blockers, <N> concerns, <N> minors
 
    Next step: /sdd:4-validate
    ```
