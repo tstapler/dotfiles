@@ -1,204 +1,466 @@
 ---
-description: Comprehensive code review using specialized agents in parallel to identify
-  improvements, then track findings with project-coordinator
-prompt: "# Comprehensive Code Review\n\nPerform a multi-dimensional code review using\
-  \ specialized agents in parallel, then consolidate findings through the project-coordinator\
-  \ agent for systematic remediation.\n\n## Review Dimensions\n\nThis command orchestrates\
-  \ multiple review perspectives simultaneously:\n\n### 1. **Testing Quality Review**\
-  \ (spring-boot-testing agent)\n- Test anti-patterns and smells\n- Test coverage\
-  \ appropriateness (integration vs unit)\n- TestContainers configuration (ADR-0017)\n\
-  - Mocking strategy (ADR-0016)\n- Test confidence and fragility\n\n### 2. **Code\
-  \ Quality Review** (code-refactoring agent)\n- SOLID principles adherence\n- Design\
-  \ patterns usage\n- Code duplication and complexity\n- Clean Code principles\n-\
-  \ Refactoring opportunities\n\n### 3. **Architecture Review** (software-planner\
-  \ agent)\n- Architectural patterns consistency\n- Dependency management\n- Layer\
-  \ separation and boundaries\n- Domain-driven design principles\n- Technical debt\
-  \ identification\n\n### 4. **Database Review** (postgres-optimizer agent)\n- Query\
-  \ optimization opportunities\n- Index usage and performance\n- Schema design and\
-  \ normalization\n- PostgreSQL-specific optimizations\n- Connection pooling configuration\n\
-  \n## Usage\n\nReview a specific directory:\n```\n/code:review src/main/java/com/example/service\n\
-  ```\n\nReview the entire project:\n```\n/code:review .\n```\n\nReview a specific\
-  \ component:\n```\n/code:review src/main/java/com/example/UserService.java\n```\n\
-  \n## Implementation Steps\n\n### Step 1: Parallel Agent Invocation\n\nLaunch specialized\
-  \ agents in parallel to review different aspects:\n\n**Testing Quality Agent**:\n\
-  ```\nTask(\n  subagent_type: \"spring-boot-testing\",\n  description: \"Review test\
-  \ quality in ${1:-.}\",\n  prompt: \"\"\"\n  Review all tests in ${1:-.} for quality\
-  \ issues:\n\n  1. Identify test anti-patterns:\n     - Implementation coupling (mocking\
-  \ TransactionTemplate, ArgumentCaptor)\n     - Inappropriate mocking (over-mocking\
-  \ internal collaborators)\n     - Environment mismatches (H2 instead of PostgreSQL)\n\
-  \     - Coverage theater (high coverage, low confidence)\n     - Fragile tests (breaking\
-  \ on refactoring)\n\n  2. Verify ADR compliance:\n     - ADR-0016: Integration tests\
-  \ for persistence layer\n     - ADR-0017: PostgreSQL TestContainers configuration\n\
-  \     - Proper @AutoConfigureTestDatabase(replace = NONE) usage\n\n  3. Assess test\
-  \ confidence:\n     - Do tests verify behavior or implementation?\n     - Are tests\
-  \ coupled to internal details?\n     - Would these tests catch real production bugs?\n\
-  \n  4. Provide structured findings:\n     - Location (file:line)\n     - Issue description\n\
-  \     - Impact (confidence, fragility, maintainability)\n     - Recommended fix\
-  \ following ADRs\n     - Priority (Critical/High/Medium/Low)\n     - Effort estimate\
-  \ (Small/Medium/Large)\n\n  Return findings in structured format for project-coordinator\
-  \ consolidation.\n  \"\"\"\n)\n```\n\n**Code Quality Agent**:\n```\nTask(\n  subagent_type:\
-  \ \"code-refactoring\",\n  description: \"Review code quality in ${1:-.}\",\n  prompt:\
-  \ \"\"\"\n  Review code in ${1:-.} for quality and refactoring opportunities:\n\n\
-  \  1. SOLID Principles:\n     - Single Responsibility violations\n     - Open/Closed\
-  \ principle issues\n     - Liskov Substitution violations\n     - Interface Segregation\
-  \ opportunities\n     - Dependency Inversion improvements\n\n  2. Clean Code:\n\
-  \     - Method length and complexity\n     - Naming clarity and consistency\n  \
-  \   - Code duplication (DRY violations)\n     - Magic numbers and hardcoded values\n\
-  \     - Comment quality and necessity\n\n  3. Design Patterns:\n     - Appropriate\
-  \ pattern usage\n     - Missing pattern opportunities\n     - Anti-patterns present\n\
-  \n  4. Provide structured findings:\n     - Location (file:line)\n     - Issue description\n\
-  \     - Impact on maintainability\n     - Recommended refactoring\n     - Priority\
-  \ (Critical/High/Medium/Low)\n     - Effort estimate (Small/Medium/Large)\n\n  Return\
-  \ findings in structured format for project-coordinator consolidation.\n  \"\"\"\
-  \n)\n```\n\n**Architecture Review Agent**:\n```\nTask(\n  subagent_type: \"software-planner\"\
-  ,\n  description: \"Review architecture in ${1:-.}\",\n  prompt: \"\"\"\n  Review\
-  \ architecture and design in ${1:-.}:\n\n  1. Architectural Patterns:\n     - Layered\
-  \ architecture consistency\n     - Dependency flow (layers, modules)\n     - Boundary\
-  \ enforcement\n     - Separation of concerns\n\n  2. Domain-Driven Design:\n   \
-  \  - Entity and value object design\n     - Aggregate boundaries\n     - Domain\
-  \ logic placement\n     - Repository patterns\n\n  3. Technical Debt:\n     - Temporary\
-  \ workarounds\n     - TODOs and FIXMEs\n     - Incomplete implementations\n    \
-  \ - Deprecated code usage\n\n  4. Dependency Management:\n     - Circular dependencies\n\
-  \     - Unnecessary coupling\n     - Interface vs implementation dependencies\n\n\
-  \  5. Provide structured findings:\n     - Location (file:line or module)\n    \
-  \ - Issue description\n     - Architectural impact\n     - Recommended approach\n\
-  \     - Priority (Critical/High/Medium/Low)\n     - Effort estimate (Small/Medium/Large)\n\
-  \n  Return findings in structured format for project-coordinator consolidation.\n\
-  \  \"\"\"\n)\n```\n\n**Database Review Agent** (if applicable):\n```\nTask(\n  subagent_type:\
-  \ \"postgres-optimizer\",\n  description: \"Review database code in ${1:-.}\",\n\
-  \  prompt: \"\"\"\n  Review database-related code in ${1:-.}:\n\n  1. Query Performance:\n\
-  \     - N+1 query problems\n     - Missing indexes\n     - Inefficient queries\n\
-  \     - Pagination issues\n\n  2. Schema Design:\n     - Normalization issues\n\
-  \     - Foreign key usage\n     - Index strategy\n     - Data types optimization\n\
-  \n  3. PostgreSQL Usage:\n     - JSONB opportunities\n     - Array types usage\n\
-  \     - Window functions\n     - Native features underutilization\n\n  4. Transaction\
-  \ Management:\n     - Transaction boundary appropriateness\n     - Isolation level\
-  \ issues\n     - Deadlock risks\n\n  5. Provide structured findings:\n     - Location\
-  \ (file:line or query)\n     - Issue description\n     - Performance impact\n  \
-  \   - Recommended optimization\n     - Priority (Critical/High/Medium/Low)\n   \
-  \  - Effort estimate (Small/Medium/Large)\n\n  Return findings in structured format\
-  \ for project-coordinator consolidation.\n  \"\"\"\n)\n```\n\n### Step 2: Consolidate\
-  \ Findings\n\nAfter all parallel agents complete, consolidate their findings:\n\n\
-  **Wait for all agents to complete**, then compile results:\n```markdown\n# Code\
-  \ Review Report\n\n**Review Date**: [Current date]\n**Path Reviewed**: ${1:-.}\n\
-  **Review Dimensions**: Testing, Code Quality, Architecture, Database\n\n---\n\n\
-  ## Executive Summary\n\n- **Total Issues Found**: [count]\n- **Critical**: [count]\
-  \ - Immediate attention required\n- **High**: [count] - Should address soon\n- **Medium**:\
-  \ [count] - Plan for future sprint\n- **Low**: [count] - Nice to have improvements\n\
-  \n---\n\n## Findings by Category\n\n### Testing Quality Issues\n[Findings from spring-boot-testing\
-  \ agent]\n\n#### Critical\n- [Issue 1 with location, description, impact, fix]\n\
-  \n#### High\n- [Issue 2 with location, description, impact, fix]\n\n#### Medium\n\
-  - [Issue 3 with location, description, impact, fix]\n\n---\n\n### Code Quality Issues\n\
-  [Findings from code-refactoring agent]\n\n#### Critical\n- [Issue 4 with location,\
-  \ description, impact, fix]\n\n#### High\n- [Issue 5 with location, description,\
-  \ impact, fix]\n\n---\n\n### Architecture Issues\n[Findings from software-planner\
-  \ agent]\n\n#### Critical\n- [Issue 6 with location, description, impact, fix]\n\
-  \n---\n\n### Database Performance Issues\n[Findings from postgres-optimizer agent]\n\
-  \n#### Critical\n- [Issue 7 with location, description, impact, fix]\n\n---\n\n\
-  ## Recommendations by Priority\n\n### Critical (Fix Immediately)\n1. [Issue] - [Location]\
-  \ - [Estimated effort]\n2. [Issue] - [Location] - [Estimated effort]\n\n### High\
-  \ (Address Soon)\n1. [Issue] - [Location] - [Estimated effort]\n2. [Issue] - [Location]\
-  \ - [Estimated effort]\n\n### Medium (Plan for Next Sprint)\n1. [Issue] - [Location]\
-  \ - [Estimated effort]\n\n### Low (Nice to Have)\n1. [Issue] - [Location] - [Estimated\
-  \ effort]\n\n---\n\n## Effort Summary\n\n- **Total Estimated Effort**: [hours/days]\n\
-  - **Critical Issues**: [hours]\n- **High Issues**: [hours]\n- **Medium Issues**:\
-  \ [hours]\n- **Low Issues**: [hours]\n\n---\n\n## Related ADRs and Standards\n\n\
-  - ADR-0016: Integration Tests Over Mocked Persistence\n- ADR-0017: PostgreSQL TestContainers\
-  \ for Database Tests\n- Clean Code principles\n- SOLID principles\n- Domain-Driven\
-  \ Design patterns\n```\n\n### Step 3: Invoke Project Coordinator\n\nAutomatically\
-  \ delegate consolidated findings to project-coordinator:\n\n```\nTask(\n  subagent_type:\
-  \ \"project-coordinator\",\n  description: \"Track code review findings\",\n  prompt:\
-  \ \"\"\"\n  Document the following code review findings for systematic remediation:\n\
-  \n  [Insert consolidated Code Review Report from Step 2]\n\n  Please use the Implementation\
-  \ Plan format to:\n\n  1. **Create Project Structure**:\n     - Organize findings\
-  \ by category and priority\n     - Create ATOMIC tasks for each issue\n     - Group\
-  \ related issues for batch remediation\n     - Establish dependencies between tasks\n\
-  \n  2. **Prioritization Strategy**:\n     - Critical: Immediate blockers or severe\
-  \ technical debt\n     - High: Significant impact on maintainability or performance\n\
-  \     - Medium: Moderate improvements with good ROI\n     - Low: Nice-to-have refinements\n\
-  \n  3. **Remediation Planning**:\n     - Break down large issues into smaller tasks\n\
-  \     - Estimate effort accurately (Small/Medium/Large)\n     - Identify quick wins\
-  \ vs long-term improvements\n     - Schedule work across sprints\n\n  4. **Progress\
-  \ Tracking**:\n     - Create task hierarchy in TODO.md or tracking system\n    \
-  \ - Define clear success criteria for each task\n     - Enable progress measurement\
-  \ over time\n     - Track technical debt reduction metrics\n\n  5. **Context Preservation**:\n\
-  \     - Link to specific code locations\n     - Reference relevant ADRs and standards\n\
-  \     - Document recommended approaches\n     - Capture rationale for prioritization\n\
-  \n  Expected deliverables:\n  - Structured project plan for code improvements\n\
-  \  - ATOMIC tasks organized by priority and effort\n  - Clear next actions for developers\n\
-  \  - Progress tracking mechanism\n  - Technical debt metrics baseline\n  \"\"\"\n\
-  )\n```\n\n## Expected Output\n\n### 1. Comprehensive Review Report\n- **Multi-dimensional\
-  \ analysis** from specialized agents\n- **Structured findings** with locations,\
-  \ impacts, and fixes\n- **Prioritized recommendations** (Critical → Low)\n- **Effort\
-  \ estimates** for each issue\n- **ADR and standards references**\n\n### 2. Project\
-  \ Tracking Integration\n- **ATOMIC tasks** created via project-coordinator\n- **Organized\
-  \ by priority** and effort\n- **Grouped for efficiency** (batch similar fixes)\n\
-  - **Progress tracking** enabled\n- **Technical debt baseline** established\n\n###\
-  \ 3. Actionable Next Steps\n- Clear priorities for immediate work\n- Batch remediation\
-  \ opportunities identified\n- Long-term improvement roadmap\n- Measurable progress\
-  \ metrics\n\n## Parallel Execution Strategy\n\nThis command uses **parallel agent\
-  \ invocation** for efficiency:\n\n1. **Launch all review agents simultaneously**\
-  \ (Step 1)\n   - Testing agent reviews tests\n   - Quality agent reviews code structure\n\
-  \   - Architecture agent reviews design\n   - Database agent reviews data layer\n\
-  \n2. **Wait for all agents to complete**\n   - Each agent works independently\n\
-  \   - No blocking dependencies between reviews\n   - Maximizes review throughput\n\
-  \n3. **Consolidate and coordinate** (Steps 2-3)\n   - Merge findings from all agents\n\
-  \   - Eliminate duplicates\n   - Prioritize across dimensions\n   - Create unified\
-  \ remediation plan\n\n**Performance**:\n- Sequential review: ~20-40 minutes (4 agents\
-  \ × 5-10 min each)\n- Parallel review: ~5-10 minutes (longest agent)\n- **Time savings**:\
-  \ 75-80% faster reviews\n\n## Success Criteria\n\nThis command is successful when:\n\
-  - ✅ All review dimensions complete (testing, quality, architecture, database)\n\
-  - ✅ Findings are consolidated with clear priorities\n- ✅ Recommendations include\
-  \ locations, impacts, and fixes\n- ✅ Project-coordinator creates tracking structure\n\
-  - ✅ Developers have clear next actions\n\n## Integration with Other Commands\n\n\
-  This command works well with:\n- `/quality:find-test-smells` - Specialized test\
-  \ analysis\n- `/code:refactor` - Execute recommended refactorings\n- `/quality:architecture-review`\
-  \ - Deep architectural analysis\n- `/plan:feature` - Plan improvements as features\n\
-  \n## Notes\n\n- **Comprehensive but efficient**: Parallel execution keeps reviews\
-  \ fast\n- **Multi-dimensional perspective**: Different agents catch different issues\n\
-  - **Actionable output**: Not just problems, but specific solutions\n- **Trackable\
-  \ progress**: Project-coordinator enables systematic improvement\n- **Standards-based**:\
-  \ References ADRs and industry best practices\n- **Effort-aware**: Estimates help\
-  \ prioritize based on ROI\n\nUse this command for:\n- Pre-merge code reviews\n-\
-  \ Technical debt assessment\n- Quality audits\n- Onboarding code walkthroughs\n\
-  - Architecture validation\n"
+description: Comprehensive code review — 5 parallel specialized agents (testing, code quality, architecture, database, security) → adversarial skeptic pass to filter false positives → severity-labeled findings [BLOCKER]/[CRITICAL]/[MAJOR]/[NIT] capped for actionability.
+prompt: |
+  # Comprehensive Code Review
+
+  Perform a multi-dimensional code review using five specialized agents in parallel, filter through an adversarial skeptic pass, then consolidate results with severity labels and code snippets.
+
+  ## Review Dimensions
+
+  1. **Testing Quality** — anti-patterns, ADR compliance, test confidence
+  2. **Code Quality** — SOLID, Clean Code, design patterns, concurrency
+  3. **Architecture** — layering, DDD, technical debt, API compatibility
+  4. **Database** — query performance, schema design, transaction safety
+  5. **Security** *(new)* — OWASP Top 10 per-category checklist
+
+  ## Usage
+
+  ```
+  /code:review src/main/java/com/example/service   # specific directory
+  /code:review .                                    # entire project
+  /code:review src/main/java/com/example/UserService.java  # single file
+  ```
+
+  ## Implementation Steps
+
+  ### Step 0: Generate Diff Summary
+
+  Before launching agents, generate a structured 3-sentence summary of what this diff does and prepend it to every agent's context:
+
+  ```bash
+  git log --oneline -5
+  git diff HEAD~1 --stat
+  git diff HEAD~1 -- ${1:-.} | head -100
+  ```
+
+  Synthesize: *"This change modifies N files. It [main change in one clause]. Key affected areas: [list of modules/services]."*
+
+  Store as `DIFF_SUMMARY`. Inject it at the top of every agent prompt below.
+
+  ---
+
+  ### Step 1: Parallel Agent Invocation
+
+  Launch all five agents simultaneously. Each prompt begins with `DIFF_SUMMARY` from Step 0.
+
+  **Testing Quality Agent**:
+  ```
+  Agent(
+    subagent_type: "spring-boot-testing",
+    description: "Review test quality in ${1:-.}",
+    prompt: """
+    CONTEXT: {DIFF_SUMMARY}
+
+    Review tests in ${1:-.} for quality issues. Use a checklist approach — evaluate each item even if you found something in a prior category.
+
+    Checklist:
+    1. Anti-patterns:
+       - Implementation coupling (mocking TransactionTemplate, ArgumentCaptor overuse)
+       - Over-mocking internal collaborators
+       - Environment mismatches (H2 instead of PostgreSQL)
+       - Coverage theater (high line count, low behavior confidence)
+       - Fragile tests that break on refactoring
+
+    2. ADR compliance:
+       - ADR-0016: Integration tests for persistence layer
+       - ADR-0017: PostgreSQL TestContainers configuration
+       - @AutoConfigureTestDatabase(replace = NONE) usage
+
+    3. Test confidence:
+       - Do tests verify behavior or implementation details?
+       - Would these catch real production bugs?
+       - New logic paths with zero test coverage?
+
+    For each finding provide:
+    - file:line
+    - Issue description
+    - Severity: BLOCKER / CRITICAL / MAJOR / NIT
+    - Category confidence (0-100): how certain are you this is a real issue?
+    - Suggested fix (include code snippet for BLOCKER/CRITICAL)
+    """
+  )
+  ```
+
+  **Code Quality Agent**:
+  ```
+  Agent(
+    subagent_type: "code-refactoring",
+    description: "Review code quality in ${1:-.}",
+    prompt: """
+    CONTEXT: {DIFF_SUMMARY}
+
+    Review code in ${1:-.} for quality issues. Evaluate every checklist category.
+
+    Checklist:
+    1. SOLID principles:
+       - Single Responsibility violations (>1 reason to change)
+       - Open/Closed violations (modification instead of extension)
+       - Liskov Substitution violations
+       - Interface Segregation opportunities
+       - Dependency Inversion improvements
+
+    2. Clean Code:
+       - Method length/complexity (>20 lines or cyclomatic complexity >5 is a signal)
+       - Naming clarity
+       - DRY violations
+       - Magic numbers/strings
+       - Comment quality (only WHY comments needed; WHAT comments are noise)
+
+    3. Design patterns:
+       - Inappropriate pattern usage
+       - Missing pattern opportunities
+       - Anti-patterns present
+
+    4. Concurrency (check only if diff touches shared state or async code):
+       - Shared mutable state accessed from multiple threads without synchronization
+       - Race conditions: check-then-act without atomics
+       - Lock ordering that could deadlock
+       - Immutability violations on shared objects
+
+    For each finding provide:
+    - file:line
+    - Issue description
+    - Severity: BLOCKER / CRITICAL / MAJOR / NIT
+    - Category confidence (0-100)
+    - Suggested fix (code snippet required for BLOCKER/CRITICAL)
+    """
+  )
+  ```
+
+  **Architecture Agent**:
+  ```
+  Agent(
+    subagent_type: "software-planner",
+    description: "Review architecture in ${1:-.}",
+    prompt: """
+    CONTEXT: {DIFF_SUMMARY}
+
+    Review architecture in ${1:-.}. Evaluate every checklist category.
+
+    Checklist:
+    1. Architectural patterns:
+       - Layered architecture consistency (controller → service → repository)
+       - Dependency flow violations
+       - Boundary enforcement
+       - Separation of concerns
+
+    2. Domain-Driven Design:
+       - Entity and value object design
+       - Aggregate boundary violations
+       - Domain logic leaking into infrastructure layer
+       - Repository pattern adherence
+
+    3. Technical debt:
+       - Temporary workarounds without TODO tracking
+       - Incomplete implementations
+       - Deprecated API usage
+
+    4. Dependency management:
+       - Circular dependencies
+       - Unnecessary coupling
+       - Interface vs implementation dependencies
+
+    5. API compatibility (critical — always check this):
+       - Do any public method/function signatures change?
+       - Are shared schemas, DTOs, or event payloads modified in backward-incompatible ways?
+       - Are existing callers of modified functions still satisfied?
+       - Are interface contracts preserved for downstream consumers?
+
+    6. System-level performance (flag only when clearly applicable):
+       - New synchronous calls to remote services in a hot path (should be async or cached)
+       - Missing caching on repeated identical external calls
+       - N+1 service calls (calling downstream service once per item in a loop)
+       - Pagination missing on endpoints or queries that could return unbounded result sets
+
+    For each finding provide:
+    - file:line or module
+    - Issue description and architectural impact
+    - Severity: BLOCKER / CRITICAL / MAJOR / NIT
+    - Category confidence (0-100)
+    - Suggested fix (code snippet required for BLOCKER/CRITICAL)
+    """
+  )
+  ```
+
+  **Database Agent** (if applicable):
+  ```
+  Agent(
+    subagent_type: "postgres-optimizer",
+    description: "Review database code in ${1:-.}",
+    prompt: """
+    CONTEXT: {DIFF_SUMMARY}
+
+    If no SQL, ORM, or migration code is present in this diff, respond: "Not applicable — no database code in diff." Otherwise evaluate:
+
+    Checklist:
+    1. Query performance:
+       - N+1 query problems
+       - Missing indexes for new query patterns
+       - Inefficient joins or subqueries
+       - Missing or broken pagination
+
+    2. Schema design:
+       - Normalization issues
+       - Foreign key usage and referential integrity
+       - Data type optimization
+       - Index strategy
+
+    3. PostgreSQL usage:
+       - JSONB opportunities
+       - Array types
+       - Window functions where applicable
+       - Native features underutilized
+
+    4. Transaction management:
+       - Missing transaction boundaries
+       - Inappropriate isolation level
+       - Potential deadlock patterns
+
+    For each finding provide:
+    - file:line or query location
+    - Issue description and performance impact
+    - Severity: BLOCKER / CRITICAL / MAJOR / NIT
+    - Category confidence (0-100)
+    - Suggested fix (code snippet required for BLOCKER/CRITICAL)
+    """
+  )
+  ```
+
+  **Security Agent** *(new)*:
+  ```
+  Agent(
+    subagent_type: "claude",
+    description: "Security review in ${1:-.}",
+    prompt: """
+    CONTEXT: {DIFF_SUMMARY}
+
+    You are a security reviewer. Review ONLY security issues in this diff. Do not report code quality, style, or architecture concerns.
+
+    OWASP checklist — for each category, first determine if the diff touches code relevant to that category, then check for issues:
+
+    1. Injection: SQL/command/LDAP/XSS injection. Look for string concatenation in queries, unescaped user input in templates, shell command construction from user data.
+
+    2. Broken authentication/authorization: Hardcoded credentials, weak session management, missing authentication checks, missing ownership checks (IDOR), privilege escalation paths.
+
+    3. Sensitive data exposure: PII or credentials in log statements, unencrypted sensitive data storage, overly broad API responses exposing sensitive fields.
+
+    4. Security misconfiguration: Debug endpoints enabled, default credentials, unnecessary permissions or capabilities.
+
+    5. Vulnerable dependencies: New dependencies with known CVEs, major version downgrades.
+
+    6. Cryptographic failures: Weak algorithms (MD5/SHA1 for passwords), insecure random (Math.random() for tokens), hardcoded encryption keys.
+
+    7. Deserialization: Untrusted data passed to deserializers without type constraints.
+
+    8. SSRF: User-controlled URLs passed to internal HTTP clients without allowlist.
+
+    9. Access control: Missing authorization checks on new endpoints, path traversal risks.
+
+    10. Insufficient logging: New security-relevant operations (auth, payments, admin) without audit logging.
+
+    For each finding provide:
+    - file:line
+    - Issue description and exploit scenario
+    - Severity: BLOCKER / CRITICAL / MAJOR / NIT
+    - Category confidence (0-100): be strict; only report ≥75
+    - Suggested fix (code snippet required for all security findings)
+
+    If no security issues found, state clearly: "No security issues found. Categories checked: [list]."
+    """
+  )
+  ```
+
+  ---
+
+  ### Step 2: Skeptic Pass (adversarial filter)
+
+  After all five agents return, run an adversarial review to eliminate false positives before consolidation. This is the most important quality gate.
+
+  ```
+  Agent(
+    subagent_type: "claude",
+    description: "Adversarial skeptic pass on review findings",
+    prompt: """
+    You are a skeptical senior engineer. Your job is to challenge every finding from the parallel review agents below and discard false positives.
+
+    [INSERT ALL FINDINGS FROM STEP 1 HERE]
+
+    For each finding, challenge it on these criteria:
+    1. Pre-existing? Is this issue present in code NOT changed by this diff? (Pre-existing = discard)
+    2. Intentional? Is there a plausible reason a competent engineer would write it this way?
+    3. Actionable? Is the file:line specific enough to act on? Is the suggested fix unambiguous?
+    4. Severity appropriate? Does the stated severity match the actual blast radius?
+
+    Rules:
+    - Discard findings with category confidence < 75
+    - Discard pre-existing issues (not introduced by this diff)
+    - Discard findings without a specific file:line
+    - Downgrade severity if the stated severity is clearly too high
+    - Keep any finding that survives all four challenges
+
+    Output format:
+    For each finding: KEEP / DISCARD / DOWNGRADE (with reason)
+    Then: Final consolidated list of kept findings only.
+    """
+  )
+  ```
+
+  ---
+
+  ### Step 3: Consolidate Findings
+
+  After the skeptic pass, compile the final report using severity labels.
+
+  **Severity definitions:**
+
+  | Label | Definition | Action |
+  |-------|------------|--------|
+  | `[BLOCKER]` | Security exploit, provable crash, breaking API change | Must fix before merge |
+  | `[CRITICAL]` | Logic error, data integrity risk, N+1 in hot path | Should fix in this PR |
+  | `[MAJOR]` | Missing test coverage, design improvement, recoverable error unhandled | Fix soon, can be follow-up |
+  | `[NIT]` | Naming, style beyond linter, optional polish | Author's discretion |
+
+  **Finding cap:** Report max 3 BLOCKER + 8 non-BLOCKER. If more found, report the count and top items, offer to list the rest.
+
+  **Output template:**
+
+  ```markdown
+  # Code Review Report
+
+  **Date**: [date]
+  **Path**: ${1:-.}
+  **Dimensions**: Testing, Code Quality, Architecture, Database, Security
+  **After skeptic pass**: N BLOCKER | N CRITICAL | N MAJOR | N NIT
+
+  ---
+
+  ## [BLOCKER] Must Fix Before Merge (N)
+
+  - `path/file.ext:42` — **[Security]** SQL injection: raw user input concatenated into query string.
+    Fix: `db.query("SELECT * FROM users WHERE id = ?", [userId])`
+
+  - `path/file.ext:88` — **[Correctness]** NPE: `result.getValue()` called without null check.
+    Fix: `if (result != null) { result.getValue() }`
+
+  ---
+
+  ## [CRITICAL] Should Fix in This PR (N)
+
+  - `path/file.ext:120` — **[Architecture]** Payment flow missing transaction boundary (lines 118–135).
+    Fix: Wrap in `@Transactional` or explicit begin/commit block.
+
+  ---
+
+  ## [MAJOR] Fix Soon (N)
+
+  - `path/file.ext:200` — **[Testing]** New `calculateDiscount()` path has no test coverage.
+
+  ---
+
+  ## [NIT] Optional (N)
+
+  - `path/file.ext:15` — **[Code Quality]** Method name `processData()` is vague; rename to reflect intent.
+
+  ---
+
+  ## Dimensions Not Applicable
+
+  - **Database**: No SQL or ORM code in diff — skipped.
+
+  ---
+
+  ## Total Effort Estimate
+
+  - Critical path (BLOCKERs + CRITICALs): ~N hours
+  - Follow-up (MAJORs): ~N hours
+  ```
+
+  ---
+
+  ### Step 4: Track with Project Coordinator
+
+  Delegate findings to project-coordinator for systematic remediation:
+
+  ```
+  Agent(
+    subagent_type: "project-coordinator",
+    description: "Track code review findings",
+    prompt: """
+    Document the following code review findings for systematic remediation:
+
+    [INSERT CONSOLIDATED REPORT FROM STEP 3]
+
+    Using the Implementation Plan format:
+
+    1. Create ATOMIC tasks for each finding grouped by severity
+    2. Prioritization: BLOCKER → CRITICAL → MAJOR → NIT
+    3. Batch related issues for efficiency (same file, same pattern)
+    4. Define clear success criteria per task (what does "fixed" look like?)
+    5. Link each task to specific file:line location
+    6. Track technical debt reduction metrics
+
+    Deliverables:
+    - Structured task list organized by priority and effort
+    - Clear next actions for developers
+    - Progress tracking mechanism
+    """
+  )
+  ```
+
+  ---
+
+  ## Parallel Execution Strategy
+
+  ```
+  Step 0: Diff summary (sequential, fast)
+       ↓
+  Step 1: [Testing] [Code Quality] [Architecture] [Database] [Security]  ← parallel
+       ↓
+  Step 2: Skeptic Pass (sequential, reads Step 1 output)
+       ↓
+  Step 3: Consolidate → Report (sequential)
+       ↓
+  Step 4: Project Coordinator (sequential)
+  ```
+
+  **Performance vs old 4-agent flow:**
+  - Old: 4 agents × 5-10 min = 20-40 min sequential (or 5-10 min parallel)
+  - New: 5 agents parallel + skeptic pass = ~8-12 min total
+  - False positive reduction: adversarial pass targets ~30-40% reduction in noise
+
+  ---
+
+  ## Success Criteria
+
+  - ✅ All 5 dimensions evaluated (or "not applicable" stated with reason)
+  - ✅ Skeptic pass completed — no unfiltered findings in report
+  - ✅ Every BLOCKER/CRITICAL includes a code snippet fix
+  - ✅ Severity labels present on every finding
+  - ✅ Finding count within cap (≤3 BLOCKER + 8 non-BLOCKER reported)
+  - ✅ Project-coordinator creates tracking structure
+
+  ---
+
+  ## Integration
+
+  - `/quality:find-test-smells` — deeper test-only analysis
+  - `/code:refactor` — execute recommended refactorings
+  - `/quality:architecture-review` — deep architectural analysis
+  - `/security-review` — standalone security-only deep dive
+  - `/plan:feature` — plan MAJOR findings as follow-up features
 ---
 
 # Comprehensive Code Review
 
-Perform a multi-dimensional code review using specialized agents in parallel, then consolidate findings through the project-coordinator agent for systematic remediation.
+Perform a multi-dimensional code review using five specialized agents in parallel, filter through an adversarial skeptic pass, then consolidate results with severity labels and code snippets.
 
 ## Review Dimensions
 
-This command orchestrates multiple review perspectives simultaneously:
-
-### 1. **Testing Quality Review** (spring-boot-testing agent)
-- Test anti-patterns and smells
-- Test coverage appropriateness (integration vs unit)
-- TestContainers configuration (ADR-0017)
-- Mocking strategy (ADR-0016)
-- Test confidence and fragility
-
-### 2. **Code Quality Review** (code-refactoring agent)
-- SOLID principles adherence
-- Design patterns usage
-- Code duplication and complexity
-- Clean Code principles
-- Refactoring opportunities
-
-### 3. **Architecture Review** (software-planner agent)
-- Architectural patterns consistency
-- Dependency management
-- Layer separation and boundaries
-- Domain-driven design principles
-- Technical debt identification
-
-### 4. **Database Review** (postgres-optimizer agent)
-- Query optimization opportunities
-- Index usage and performance
-- Schema design and normalization
-- PostgreSQL-specific optimizations
-- Connection pooling configuration
+1. **Testing Quality** — anti-patterns, ADR compliance, test confidence
+2. **Code Quality** — SOLID, Clean Code, design patterns, performance, concurrency
+3. **Architecture** — layering, DDD, technical debt, API compatibility, system-level performance
+4. **Database** — query performance, schema design, transaction safety
+5. **Security** — OWASP Top 10 per-category checklist
 
 ## Usage
 
@@ -219,412 +481,447 @@ Review a specific component:
 
 ## Implementation Steps
 
+### Step 0: Generate Diff Summary
+
+Before launching agents, generate a structured 3-sentence summary of what this diff does and prepend it to every agent's context:
+
+```bash
+git log --oneline -5
+git diff HEAD~1 --stat
+git diff HEAD~1 -- ${1:-.} | head -100
+```
+
+Synthesize: *"This change modifies N files. It [main change in one clause]. Key affected areas: [list of modules/services]."*
+
+Store as `DIFF_SUMMARY`. Inject at the top of every agent prompt in Step 1.
+
+---
+
 ### Step 1: Parallel Agent Invocation
 
-Launch specialized agents in parallel to review different aspects:
+Launch all five agents simultaneously. Each receives `DIFF_SUMMARY` from Step 0.
 
 **Testing Quality Agent**:
 ```
-Task(
+Agent(
   subagent_type: "spring-boot-testing",
   description: "Review test quality in ${1:-.}",
   prompt: """
-  Review all tests in ${1:-.} for quality issues:
+  CONTEXT: {DIFF_SUMMARY}
 
-  1. Identify test anti-patterns:
-     - Implementation coupling (mocking TransactionTemplate, ArgumentCaptor)
-     - Inappropriate mocking (over-mocking internal collaborators)
+  Review tests in ${1:-.} using a checklist approach — evaluate every item even after finding issues in prior categories.
+
+  Checklist:
+  1. Anti-patterns:
+     - Implementation coupling (mocking TransactionTemplate, ArgumentCaptor overuse)
+     - Over-mocking internal collaborators
      - Environment mismatches (H2 instead of PostgreSQL)
-     - Coverage theater (high coverage, low confidence)
-     - Fragile tests (breaking on refactoring)
+     - Coverage theater (high line count, low behavior confidence)
+     - Fragile tests that break on refactoring
 
-  2. Verify ADR compliance:
+  2. ADR compliance:
      - ADR-0016: Integration tests for persistence layer
      - ADR-0017: PostgreSQL TestContainers configuration
-     - Proper @AutoConfigureTestDatabase(replace = NONE) usage
+     - @AutoConfigureTestDatabase(replace = NONE) usage
 
-  3. Assess test confidence:
-     - Do tests verify behavior or implementation?
-     - Are tests coupled to internal details?
-     - Would these tests catch real production bugs?
+  3. Test confidence:
+     - Do tests verify behavior or implementation details?
+     - Would these catch real production bugs?
+     - New logic paths with zero test coverage?
 
-  4. Provide structured findings:
-     - Location (file:line)
-     - Issue description
-     - Impact (confidence, fragility, maintainability)
-     - Recommended fix following ADRs
-     - Priority (Critical/High/Medium/Low)
-     - Effort estimate (Small/Medium/Large)
-
-  Return findings in structured format for project-coordinator consolidation.
+  For each finding provide:
+  - file:line
+  - Issue description
+  - Severity: BLOCKER / CRITICAL / MAJOR / NIT
+  - Category confidence (0-100)
+  - Suggested fix (code snippet required for BLOCKER/CRITICAL)
   """
 )
 ```
 
 **Code Quality Agent**:
 ```
-Task(
+Agent(
   subagent_type: "code-refactoring",
   description: "Review code quality in ${1:-.}",
   prompt: """
-  Review code in ${1:-.} for quality and refactoring opportunities:
+  CONTEXT: {DIFF_SUMMARY}
 
-  1. SOLID Principles:
-     - Single Responsibility violations
-     - Open/Closed principle issues
+  Review code in ${1:-.}. Use a checklist approach.
+
+  Checklist:
+  1. SOLID principles:
+     - Single Responsibility violations (>1 reason to change)
+     - Open/Closed violations (modification instead of extension)
      - Liskov Substitution violations
      - Interface Segregation opportunities
      - Dependency Inversion improvements
 
   2. Clean Code:
-     - Method length and complexity
+     - Method length/complexity (>20 lines or cyclomatic complexity >5)
      - Naming clarity and consistency
-     - Code duplication (DRY violations)
-     - Magic numbers and hardcoded values
-     - Comment quality and necessity
+     - DRY violations
+     - Magic numbers/strings
+     - Comment quality (only WHY is needed; WHAT is noise)
 
-  3. Design Patterns:
-     - Appropriate pattern usage
+  3. Design patterns:
+     - Inappropriate pattern usage
      - Missing pattern opportunities
      - Anti-patterns present
 
-  4. Provide structured findings:
-     - Location (file:line)
-     - Issue description
-     - Impact on maintainability
-     - Recommended refactoring
-     - Priority (Critical/High/Medium/Low)
-     - Effort estimate (Small/Medium/Large)
+  4. Performance (flag obvious patterns only — do not speculate):
+     - Algorithmic complexity: nested loops over unbounded collections (O(n²) or worse)
+     - Unbounded growth: collections that accumulate without eviction or pagination
+     - Resource leaks: connections, file handles, streams not closed
+     - Repeated expensive computations inside loops that could be hoisted
+     - Blocking I/O in async/reactive contexts (sync calls inside coroutines, blocking the event loop)
+     - Unnecessary serialization/deserialization in hot paths
+     If not clearly present: skip this category rather than speculating.
 
-  Return findings in structured format for project-coordinator consolidation.
+  5. Concurrency (check if diff touches shared state or async code):
+     - Shared mutable state accessed from multiple threads without synchronization
+     - Race conditions: check-then-act without atomics
+     - Lock ordering that could deadlock
+     - Immutability violations on shared objects
+
+  For each finding provide:
+  - file:line
+  - Issue description
+  - Severity: BLOCKER / CRITICAL / MAJOR / NIT
+  - Category confidence (0-100)
+  - Suggested fix (code snippet required for BLOCKER/CRITICAL)
   """
 )
 ```
 
-**Architecture Review Agent**:
+**Architecture Agent**:
 ```
-Task(
+Agent(
   subagent_type: "software-planner",
   description: "Review architecture in ${1:-.}",
   prompt: """
-  Review architecture and design in ${1:-.}:
+  CONTEXT: {DIFF_SUMMARY}
 
-  1. Architectural Patterns:
-     - Layered architecture consistency
-     - Dependency flow (layers, modules)
+  Review architecture in ${1:-.}. Evaluate every checklist category.
+
+  Checklist:
+  1. Architectural patterns:
+     - Layered architecture consistency (controller → service → repository)
+     - Dependency flow violations
      - Boundary enforcement
      - Separation of concerns
 
   2. Domain-Driven Design:
      - Entity and value object design
-     - Aggregate boundaries
-     - Domain logic placement
-     - Repository patterns
+     - Aggregate boundary violations
+     - Domain logic leaking into infrastructure layer
+     - Repository pattern adherence
 
-  3. Technical Debt:
-     - Temporary workarounds
-     - TODOs and FIXMEs
+  3. Technical debt:
+     - Temporary workarounds without tracking
      - Incomplete implementations
-     - Deprecated code usage
+     - Deprecated API usage
 
-  4. Dependency Management:
+  4. Dependency management:
      - Circular dependencies
      - Unnecessary coupling
      - Interface vs implementation dependencies
 
-  5. Provide structured findings:
-     - Location (file:line or module)
-     - Issue description
-     - Architectural impact
-     - Recommended approach
-     - Priority (Critical/High/Medium/Low)
-     - Effort estimate (Small/Medium/Large)
+  5. API compatibility (always check this):
+     - Do any public method/function signatures change?
+     - Are shared schemas, DTOs, or event payloads modified in backward-incompatible ways?
+     - Are existing callers of modified functions still satisfied?
+     - Are interface contracts preserved for downstream consumers?
 
-  Return findings in structured format for project-coordinator consolidation.
+  6. System-level performance (flag only when clearly applicable):
+     - New synchronous calls to remote services in a hot path (should be async or cached)
+     - Missing caching on repeated identical external calls
+     - N+1 service calls (calling downstream service once per item in a loop)
+     - Pagination missing on endpoints or queries that could return unbounded result sets
+
+  For each finding provide:
+  - file:line or module
+  - Issue description and architectural impact
+  - Severity: BLOCKER / CRITICAL / MAJOR / NIT
+  - Category confidence (0-100)
+  - Suggested fix (code snippet required for BLOCKER/CRITICAL)
   """
 )
 ```
 
-**Database Review Agent** (if applicable):
+**Database Agent** (if applicable):
 ```
-Task(
+Agent(
   subagent_type: "postgres-optimizer",
   description: "Review database code in ${1:-.}",
   prompt: """
-  Review database-related code in ${1:-.}:
+  CONTEXT: {DIFF_SUMMARY}
 
-  1. Query Performance:
+  If no SQL, ORM, or migration code is present in this diff, respond: "Not applicable — no database code in diff." Otherwise:
+
+  Checklist:
+  1. Query performance:
      - N+1 query problems
-     - Missing indexes
-     - Inefficient queries
-     - Pagination issues
+     - Missing indexes for new query patterns
+     - Inefficient joins or subqueries
+     - Missing or broken pagination
 
-  2. Schema Design:
+  2. Schema design:
      - Normalization issues
-     - Foreign key usage
+     - Foreign key usage and referential integrity
+     - Data type optimization
      - Index strategy
-     - Data types optimization
 
-  3. PostgreSQL Usage:
+  3. PostgreSQL usage:
      - JSONB opportunities
-     - Array types usage
-     - Window functions
-     - Native features underutilization
+     - Array types
+     - Window functions where applicable
+     - Native features underutilized
 
-  4. Transaction Management:
-     - Transaction boundary appropriateness
-     - Isolation level issues
-     - Deadlock risks
+  4. Transaction management:
+     - Missing transaction boundaries
+     - Inappropriate isolation level
+     - Potential deadlock patterns
 
-  5. Provide structured findings:
-     - Location (file:line or query)
-     - Issue description
-     - Performance impact
-     - Recommended optimization
-     - Priority (Critical/High/Medium/Low)
-     - Effort estimate (Small/Medium/Large)
-
-  Return findings in structured format for project-coordinator consolidation.
+  For each finding provide:
+  - file:line or query location
+  - Issue description and performance impact
+  - Severity: BLOCKER / CRITICAL / MAJOR / NIT
+  - Category confidence (0-100)
+  - Suggested fix (code snippet required for BLOCKER/CRITICAL)
   """
 )
 ```
 
-### Step 2: Consolidate Findings
+**Security Agent** *(new)*:
+```
+Agent(
+  subagent_type: "claude",
+  description: "Security review in ${1:-.}",
+  prompt: """
+  CONTEXT: {DIFF_SUMMARY}
 
-After all parallel agents complete, consolidate their findings:
+  You are a security reviewer. Review ONLY security issues. Do not report code quality, style, or architecture concerns.
 
-**Wait for all agents to complete**, then compile results:
+  For each OWASP category below: (1) determine if the diff touches relevant code, (2) if yes, check for issues.
+
+  1. Injection: SQL/command/LDAP/XSS. Look for string concatenation in queries, unescaped user input in templates.
+  2. Broken authentication/authorization: Hardcoded credentials, weak sessions, missing auth checks, IDOR, privilege escalation.
+  3. Sensitive data exposure: PII in logs, unencrypted sensitive storage, overly broad API responses.
+  4. Security misconfiguration: Debug endpoints enabled, default credentials, unnecessary permissions.
+  5. Vulnerable dependencies: New deps with known CVEs, major version downgrades of security libraries.
+  6. Cryptographic failures: Weak algorithms (MD5/SHA1 for passwords), insecure random for tokens, hardcoded keys.
+  7. Deserialization: Untrusted data passed to deserializers without type constraints.
+  8. SSRF: User-controlled URLs passed to internal HTTP clients without allowlist.
+  9. Access control: Missing authorization on new endpoints, path traversal risks.
+  10. Insufficient logging: New security-relevant operations (auth, payments, admin) without audit logging.
+
+  For each finding provide:
+  - file:line
+  - Issue description and exploit scenario
+  - Severity: BLOCKER / CRITICAL / MAJOR / NIT
+  - Category confidence (0-100): only report ≥75
+  - Suggested fix with code snippet (required for all security findings)
+
+  If no security issues found: "No security issues found. Categories checked: [list]."
+  """
+)
+```
+
+---
+
+### Step 2: Skeptic Pass (adversarial filter)
+
+After all five agents return, run an adversarial review to eliminate false positives.
+
+```
+Agent(
+  subagent_type: "claude",
+  description: "Adversarial skeptic pass on review findings",
+  prompt: """
+  You are a skeptical senior engineer. Your job is to challenge every finding from the parallel review agents and discard false positives.
+
+  [INSERT ALL FINDINGS FROM STEP 1 HERE]
+
+  For each finding, challenge on these criteria:
+  1. Pre-existing? Is this issue in code NOT changed by this diff? If so: DISCARD.
+  2. Intentional? Is there a plausible reason a competent engineer would write it this way? If yes: DISCARD or DOWNGRADE.
+  3. Actionable? Is the file:line specific? Is the suggested fix unambiguous? If no: DISCARD.
+  4. Severity correct? Does the stated severity match the actual blast radius? If too high: DOWNGRADE.
+
+  Rules:
+  - DISCARD findings with category confidence < 75
+  - DISCARD pre-existing issues not introduced by this diff
+  - DISCARD findings without a specific file:line
+  - KEEP any finding that survives all four challenges
+
+  Output: For each finding — KEEP / DISCARD / DOWNGRADE with one-line reason.
+  Then: Final consolidated list of kept/downgraded findings only.
+  """
+)
+```
+
+---
+
+### Step 3: Consolidate Findings
+
+Compile the final report after the skeptic pass.
+
+**Severity definitions:**
+
+| Label | Definition | Action |
+|-------|------------|--------|
+| `[BLOCKER]` | Security exploit, provable crash, breaking API change | Must fix before merge |
+| `[CRITICAL]` | Logic error, data integrity risk, N+1 in hot path | Should fix in this PR |
+| `[MAJOR]` | Missing test coverage, design improvement, unhandled recoverable error | Fix soon, can be follow-up |
+| `[NIT]` | Naming, style beyond linter, optional polish | Author's discretion |
+
+**Cap:** Report max 3 BLOCKER + 8 non-BLOCKER. If more found, state count and top items.
+
+**Output template:**
+
 ```markdown
 # Code Review Report
 
-**Review Date**: [Current date]
-**Path Reviewed**: ${1:-.}
-**Review Dimensions**: Testing, Code Quality, Architecture, Database
+**Date**: [date]
+**Path**: ${1:-.}
+**Dimensions**: Testing, Code Quality, Architecture, Database, Security
+**After skeptic pass**: N BLOCKER | N CRITICAL | N MAJOR | N NIT
 
 ---
 
-## Executive Summary
+## [BLOCKER] Must Fix Before Merge (N)
 
-- **Total Issues Found**: [count]
-- **Critical**: [count] - Immediate attention required
-- **High**: [count] - Should address soon
-- **Medium**: [count] - Plan for future sprint
-- **Low**: [count] - Nice to have improvements
+- `path/file.ext:42` — **[Security]** SQL injection: raw user input in query string.
+  Fix: `db.query("SELECT * FROM users WHERE id = ?", [userId])`
 
 ---
 
-## Findings by Category
+## [CRITICAL] Should Fix in This PR (N)
 
-### Testing Quality Issues
-[Findings from spring-boot-testing agent]
-
-#### Critical
-- [Issue 1 with location, description, impact, fix]
-
-#### High
-- [Issue 2 with location, description, impact, fix]
-
-#### Medium
-- [Issue 3 with location, description, impact, fix]
+- `path/file.ext:120` — **[Architecture]** Payment flow missing transaction boundary (lines 118–135).
+  Fix: Wrap in `@Transactional` or explicit begin/commit.
 
 ---
 
-### Code Quality Issues
-[Findings from code-refactoring agent]
+## [MAJOR] Fix Soon (N)
 
-#### Critical
-- [Issue 4 with location, description, impact, fix]
-
-#### High
-- [Issue 5 with location, description, impact, fix]
+- `path/file.ext:200` — **[Testing]** New `calculateDiscount()` path has no test coverage.
 
 ---
 
-### Architecture Issues
-[Findings from software-planner agent]
+## [NIT] Optional (N)
 
-#### Critical
-- [Issue 6 with location, description, impact, fix]
+- `path/file.ext:15` — **[Code Quality]** `processData()` name is vague; rename to reflect behavior.
 
 ---
 
-### Database Performance Issues
-[Findings from postgres-optimizer agent]
+## Dimensions Not Applicable
 
-#### Critical
-- [Issue 7 with location, description, impact, fix]
+- **Database**: No SQL or ORM code in diff — skipped.
 
 ---
 
-## Recommendations by Priority
+## Effort Estimate
 
-### Critical (Fix Immediately)
-1. [Issue] - [Location] - [Estimated effort]
-2. [Issue] - [Location] - [Estimated effort]
-
-### High (Address Soon)
-1. [Issue] - [Location] - [Estimated effort]
-2. [Issue] - [Location] - [Estimated effort]
-
-### Medium (Plan for Next Sprint)
-1. [Issue] - [Location] - [Estimated effort]
-
-### Low (Nice to Have)
-1. [Issue] - [Location] - [Estimated effort]
-
----
-
-## Effort Summary
-
-- **Total Estimated Effort**: [hours/days]
-- **Critical Issues**: [hours]
-- **High Issues**: [hours]
-- **Medium Issues**: [hours]
-- **Low Issues**: [hours]
-
----
-
-## Related ADRs and Standards
-
-- ADR-0016: Integration Tests Over Mocked Persistence
-- ADR-0017: PostgreSQL TestContainers for Database Tests
-- Clean Code principles
-- SOLID principles
-- Domain-Driven Design patterns
+- Critical path (BLOCKERs + CRITICALs): ~N hours
+- Follow-up (MAJORs): ~N hours
 ```
 
-### Step 3: Invoke Project Coordinator
+---
 
-Automatically delegate consolidated findings to project-coordinator:
+### Step 4: Track with Project Coordinator
 
 ```
-Task(
+Agent(
   subagent_type: "project-coordinator",
   description: "Track code review findings",
   prompt: """
   Document the following code review findings for systematic remediation:
 
-  [Insert consolidated Code Review Report from Step 2]
+  [INSERT CONSOLIDATED REPORT FROM STEP 3]
 
-  Please use the Implementation Plan format to:
+  Using the Implementation Plan format:
+  1. Create ATOMIC tasks per finding, grouped by severity
+  2. Prioritization: BLOCKER → CRITICAL → MAJOR → NIT
+  3. Batch related issues (same file, same pattern) for efficiency
+  4. Define clear success criteria per task
+  5. Link each task to specific file:line
+  6. Track technical debt reduction metrics
 
-  1. **Create Project Structure**:
-     - Organize findings by category and priority
-     - Create ATOMIC tasks for each issue
-     - Group related issues for batch remediation
-     - Establish dependencies between tasks
-
-  2. **Prioritization Strategy**:
-     - Critical: Immediate blockers or severe technical debt
-     - High: Significant impact on maintainability or performance
-     - Medium: Moderate improvements with good ROI
-     - Low: Nice-to-have refinements
-
-  3. **Remediation Planning**:
-     - Break down large issues into smaller tasks
-     - Estimate effort accurately (Small/Medium/Large)
-     - Identify quick wins vs long-term improvements
-     - Schedule work across sprints
-
-  4. **Progress Tracking**:
-     - Create task hierarchy in TODO.md or tracking system
-     - Define clear success criteria for each task
-     - Enable progress measurement over time
-     - Track technical debt reduction metrics
-
-  5. **Context Preservation**:
-     - Link to specific code locations
-     - Reference relevant ADRs and standards
-     - Document recommended approaches
-     - Capture rationale for prioritization
-
-  Expected deliverables:
-  - Structured project plan for code improvements
-  - ATOMIC tasks organized by priority and effort
+  Deliverables:
+  - Structured task list organized by priority and effort
   - Clear next actions for developers
   - Progress tracking mechanism
-  - Technical debt metrics baseline
   """
 )
 ```
 
-## Expected Output
-
-### 1. Comprehensive Review Report
-- **Multi-dimensional analysis** from specialized agents
-- **Structured findings** with locations, impacts, and fixes
-- **Prioritized recommendations** (Critical → Low)
-- **Effort estimates** for each issue
-- **ADR and standards references**
-
-### 2. Project Tracking Integration
-- **ATOMIC tasks** created via project-coordinator
-- **Organized by priority** and effort
-- **Grouped for efficiency** (batch similar fixes)
-- **Progress tracking** enabled
-- **Technical debt baseline** established
-
-### 3. Actionable Next Steps
-- Clear priorities for immediate work
-- Batch remediation opportunities identified
-- Long-term improvement roadmap
-- Measurable progress metrics
+---
 
 ## Parallel Execution Strategy
 
-This command uses **parallel agent invocation** for efficiency:
+```
+Step 0: Diff summary (fast, sequential prerequisite)
+     ↓
+Step 1: [Testing] [Code Quality] [Architecture] [Database] [Security]  ← parallel
+     ↓
+Step 2: Skeptic Pass (reads Step 1 output — sequential)
+     ↓
+Step 3: Consolidate → Severity-labeled report
+     ↓
+Step 4: Project Coordinator (optional)
+```
 
-1. **Launch all review agents simultaneously** (Step 1)
-   - Testing agent reviews tests
-   - Quality agent reviews code structure
-   - Architecture agent reviews design
-   - Database agent reviews data layer
+**Performance:**
+- 5 agents in parallel: ~8-12 minutes total
+- Skeptic pass: ~2 minutes additional
+- False positive reduction: ~30-40% fewer noise findings vs unfiltered parallel review
 
-2. **Wait for all agents to complete**
-   - Each agent works independently
-   - No blocking dependencies between reviews
-   - Maximizes review throughput
-
-3. **Consolidate and coordinate** (Steps 2-3)
-   - Merge findings from all agents
-   - Eliminate duplicates
-   - Prioritize across dimensions
-   - Create unified remediation plan
-
-**Performance**:
-- Sequential review: ~20-40 minutes (4 agents × 5-10 min each)
-- Parallel review: ~5-10 minutes (longest agent)
-- **Time savings**: 75-80% faster reviews
+---
 
 ## Success Criteria
 
-This command is successful when:
-- ✅ All review dimensions complete (testing, quality, architecture, database)
-- ✅ Findings are consolidated with clear priorities
-- ✅ Recommendations include locations, impacts, and fixes
-- ✅ Project-coordinator creates tracking structure
-- ✅ Developers have clear next actions
+- ✅ All 5 dimensions evaluated (or "not applicable" stated with reason)
+- ✅ Skeptic pass completed — no unfiltered raw findings in report
+- ✅ Every BLOCKER/CRITICAL includes a code snippet suggested fix
+- ✅ Severity labels on every finding
+- ✅ Finding count within cap (≤3 BLOCKER + 8 non-BLOCKER reported)
+- ✅ Dimensions not applicable to the diff are explicitly noted
 
-## Integration with Other Commands
+---
 
-This command works well with:
-- `/quality:find-test-smells` - Specialized test analysis
-- `/code:refactor` - Execute recommended refactorings
-- `/quality:architecture-review` - Deep architectural analysis
-- `/plan:feature` - Plan improvements as features
+## Review Pipeline — How These Commands Chain
+
+`/code:review` is the diagnostic center of a larger workflow. Use commands before and after it:
+
+```
+[before]  /quality:does-it-work       — build/test/lint sanity check before requesting review
+          /quality:find-test-smells   — deeper test-only analysis before review
+          ↓
+[review]  /code:review                — 5-agent parallel review + skeptic pass
+          ↓
+[after]   fix BLOCKER/CRITICAL findings
+          /quality:reflect-and-fix    — after fixing bugs: make recurrence structurally impossible
+          /quality:test-planner       — when review finds test coverage MAJOR gaps: plan tests
+          /code:fix-loop              — auto-fix loop for remaining build/test/lint failures
+          ↓
+[ship]    /code:is-it-ready           — final shipping gate: 7-reviewer swarm → GO/HOLD/FIX-THEN-SHIP
+```
+
+**For deeper analysis on specific MAJOR findings:**
+- `/quality:architecture-review` — deep architectural analysis (when Architecture agent finds systemic issues)
+- `/quality:find-refactor-candidates` — when Code Quality agent flags many MAJOR refactoring needs
+- `/code:refactor` — execute recommended refactorings
+- `/security-review` — standalone security-only deep dive
+- `/plan:feature` — plan MAJOR findings as tracked follow-up features
+
+---
 
 ## Notes
 
-- **Comprehensive but efficient**: Parallel execution keeps reviews fast
-- **Multi-dimensional perspective**: Different agents catch different issues
-- **Actionable output**: Not just problems, but specific solutions
-- **Trackable progress**: Project-coordinator enables systematic improvement
-- **Standards-based**: References ADRs and industry best practices
-- **Effort-aware**: Estimates help prioritize based on ROI
-
-Use this command for:
-- Pre-merge code reviews
-- Technical debt assessment
-- Quality audits
-- Onboarding code walkthroughs
-- Architecture validation
+- **Diff summary prefix** matters: LLM review accuracy improves significantly when agents know what the PR does before reading the diff
+- **Skeptic pass** targets the largest practical improvement: filtering false positives before they reach the report
+- **Severity caps** prevent review fatigue — a 15-item list is ignored; a 5-item list with fix suggestions gets fixed
+- **Security agent** focuses exclusively on OWASP — a generalist agent misses 2/3 of security issues that a specialist catches
+- **API compat in Architecture** catches the most commonly missed breaking-change bug class

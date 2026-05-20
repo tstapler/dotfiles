@@ -10,6 +10,7 @@ description: "Use this skill when Tyler asks to review the kitchen design, run c
 Reads `design_spec.py` and the current output drawings, then produces a structured
 Markdown compliance report covering:
 
+0. **Layer 0 (MCP)** — Direct FreeCAD model snapshot via `mcp__freecad-mcp__*` (fast, preferred)
 1. **Layer 1** — Programmatic compliance using freecad-review scripts (authoritative)
 2. **CD set comparison** — Rasterize-and-compare against the permit drawing set
 3. **Owner requirements** — Per-item PASS / CANNOT_VERIFY verdict for each entry in `SPEC.owner_requirements`
@@ -29,10 +30,44 @@ Does NOT write to `design_spec.py` or any project source file.
 - `~/.claude/skills/freecad-review/scripts/` contains `extract_clearances.py`,
   `check_compliance.py`, `rasterize_pdf_page.py`, and `add_grid.py`
 - `~/.claude/skills/pdf-proof/.venv` contains ezdxf, Pillow, PyMuPDF (fitz)
+- FreeCAD MCP server connected (optional but preferred — enables Step 0a)
 
 ---
 
-## Step 0: Determine Iteration Number
+## Step 0a: FreeCAD MCP Direct Model Snapshot (preferred, optional)
+
+If the `mcp__freecad-mcp__*` tools are available, use them to get ground-truth model
+state directly instead of inferring from SVG/DXF exports. This is faster and eliminates
+export-lag false positives.
+
+**Load schema first:**
+```
+ToolSearch: select:mcp__freecad-mcp__open_document,mcp__freecad-mcp__list_objects,mcp__freecad-mcp__inspect_object,mcp__freecad-mcp__get_screenshot
+```
+
+**Then run:**
+
+1. Open the model:
+   `mcp__freecad-mcp__open_document(path="/home/tstapler/Documents/711-N60th-Plans/711N60th_Sections.FCStd")`
+
+2. List all kitchen objects to verify layer membership:
+   `mcp__freecad-mcp__list_objects(document="711N60th_Sections")`
+   Look for: `Proposed_Remodel` group contains island, range, sink, fridge, DW, beam.
+
+3. Spot-check key dimensions by inspecting critical objects:
+   `mcp__freecad-mcp__inspect_object(document="711N60th_Sections", object_name="<island_label>")`
+   Verify bounding box matches `design_spec.py` SPEC values (ISLAND_EW=1676.4mm, ISLAND_NS=635mm).
+
+4. Capture a visual confirmation screenshot:
+   `mcp__freecad-mcp__get_screenshot(document="711N60th_Sections")`
+   Note any obvious geometry errors before running the full SVG pipeline.
+
+Record findings as `layer0_mcp` in the review JSON. If MCP is unavailable, skip and
+proceed to Step 0b (iteration tracking) — Layer 1 SVG/DXF checks are still authoritative.
+
+---
+
+## Step 0c: Determine Iteration Number
 
 ```python
 import json, os, pathlib
