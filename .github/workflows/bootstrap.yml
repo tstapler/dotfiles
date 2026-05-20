@@ -1,0 +1,43 @@
+name: Bootstrap
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'bootstrap/**'
+      - 'Brewfile.test'
+      - '.github/workflows/bootstrap.yml'
+  pull_request:
+    paths:
+      - 'bootstrap/**'
+      - 'Brewfile.test'
+      - '.github/workflows/bootstrap.yml'
+
+jobs:
+  test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Ansible
+        run: pip3 install ansible
+
+      - name: Run bootstrap (homebrew + dotfiles + shell only)
+        run: |
+          cd bootstrap
+          ansible-playbook playbook.yml \
+            -e "dotfiles_dir=$GITHUB_WORKSPACE" \
+            -e "brewfile=Brewfile.test" \
+            --skip-tags secrets,nix \
+            --connection=local \
+            -v
+        env:
+          HOME: ${{ runner.temp }}/home
+
+      - name: Verify key tools installed
+        run: |
+          brew list git
+          brew list gh
+          brew list jq

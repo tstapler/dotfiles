@@ -4,12 +4,14 @@
     name: "{{ ansible_env.USER }}"
     shell: /bin/zsh
   become: true
+  tags: [shell]
 
 - name: Clone zplug if missing
   git:
     repo: https://github.com/tstapler/zplug
     dest: "{{ ansible_env.HOME }}/.zplug"
     update: false
+  tags: [shell]
 
 - name: Install asdf tool versions
   command: asdf install
@@ -17,3 +19,4 @@
     chdir: "{{ dotfiles_dir }}"
   when: "'.tool-versions' in lookup('fileglob', dotfiles_dir + '/.tool-versions')"
   ignore_errors: true
+  tags: [shell]

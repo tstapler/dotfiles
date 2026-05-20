@@ -1,0 +1,29 @@
+---
+- name: Check Nix installed
+  stat:
+    path: /nix/var/nix/profiles/default/bin/nix
+  register: nix_bin
+  tags: [nix]
+
+- name: Install Nix (Determinate Systems installer)
+  shell: |
+    curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install --no-confirm
+  when: not nix_bin.stat.exists
+  tags: [nix]
+
+- name: Source Nix daemon in current shell
+  shell: |
+    . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh && nix --version
+  when: not nix_bin.stat.exists
+  tags: [nix]
+
+- name: Verify Nix available
+  command: /nix/var/nix/profiles/default/bin/nix --version
+  register: nix_version
+  changed_when: false
+  tags: [nix]
+
+- name: Show Nix version
+  debug:
+    msg: "{{ nix_version.stdout }}"
+  tags: [nix]

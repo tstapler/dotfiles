@@ -1,0 +1,8 @@
+# Minimal Brewfile for CI testing - validates brew bundle works without 30min installs
+brew "git"
+brew "ansible"
+brew "shellcheck"
+brew "jq"
+brew "zsh"
+brew "tree"
+brew "gh"
