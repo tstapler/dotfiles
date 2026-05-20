@@ -1,0 +1,11 @@
+---
+- name: Bootstrap macOS dev environment
+  hosts: localhost
+  connection: local
+  vars:
+    dotfiles_dir: "{{ ansible_env.HOME }}/dotfiles"
+  roles:
+    - homebrew
+    - dotfiles
+    - shell
+    - secrets

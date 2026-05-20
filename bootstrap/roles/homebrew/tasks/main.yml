@@ -1,0 +1,19 @@
+---
+- name: Check Homebrew is installed
+  stat:
+    path: /opt/homebrew/bin/brew
+  register: brew_bin
+
+- name: Install Homebrew
+  shell: |
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  when: not brew_bin.stat.exists
+
+- name: Update Homebrew
+  homebrew:
+    update_homebrew: true
+
+- name: Install packages from Brewfile
+  command: brew bundle install --file={{ dotfiles_dir }}/Brewfile --no-lock
+  register: brew_bundle
+  changed_when: "'Installing' in brew_bundle.stdout or 'Upgrading' in brew_bundle.stdout"

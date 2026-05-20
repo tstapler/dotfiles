@@ -226,8 +226,9 @@ CS_SESSION
 __pypackages__/
 
 stapler-snips
-local.sh
 nerd-fonts/
+local.sh
+setup_*_1password.sh
 # Celery stuff
 celerybeat-schedule
 celerybeat.pid

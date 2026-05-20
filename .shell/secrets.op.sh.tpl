@@ -70,3 +70,6 @@ export BRAVE_API_KEY="{{ op://FBG/Brave Search/credential }}"
 
 # ── Figma ─────────────────────────────────────────────────────────────────────
 export FIGMA_TOKEN="{{ op://FBG/Figma/credential }}"
+
+# ── Anthropic ─────────────────────────────────────────────────────────────────
+export ANTHROPIC_API_KEY="{{ op://Personal/Anthropic/credential }}"

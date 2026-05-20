@@ -1,0 +1,20 @@
+---
+- name: Check cfgcaddy is installed
+  stat:
+    path: "{{ dotfiles_dir }}/cfgcaddy/cfgcaddy"
+  register: cfgcaddy_bin
+
+- name: Build cfgcaddy if not present
+  command: go build -o cfgcaddy .
+  args:
+    chdir: "{{ dotfiles_dir }}/cfgcaddy"
+  when: not cfgcaddy_bin.stat.exists
+
+- name: Link dotfiles via cfgcaddy
+  command: "{{ dotfiles_dir }}/cfgcaddy/cfgcaddy link --config {{ dotfiles_dir }}/.cfgcaddy.yml"
+  register: cfgcaddy_result
+  changed_when: "'Linked' in cfgcaddy_result.stdout"
+
+- name: Add config.sh to cfgcaddy links (idempotent note)
+  debug:
+    msg: "Ensure .shell/config.sh is in .cfgcaddy.yml links"
