@@ -20,7 +20,6 @@
   command: >
     brew bundle install
     --file={{ dotfiles_dir }}/{{ brewfile | default('Brewfile') }}
-    --no-lock
   register: brew_bundle
   changed_when: "'Installing' in brew_bundle.stdout or 'Upgrading' in brew_bundle.stdout"
   tags: [homebrew]
