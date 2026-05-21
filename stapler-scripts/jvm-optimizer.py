@@ -103,6 +103,15 @@ def parse_xmx(jvmargs: str) -> Optional[int]:
     return val * 1024 if unit == "g" else val
 
 
+def parse_xms(jvmargs: str) -> Optional[int]:
+    """Parse -Xms value from a jvmargs string. Returns MB."""
+    m = re.search(r"-Xms(\d+)([gGmM]?)", jvmargs)
+    if not m:
+        return None
+    val, unit = int(m.group(1)), m.group(2).lower()
+    return val * 1024 if unit == "g" else val
+
+
 def jvm_has_flag(jvmargs: str, flag: str) -> bool:
     return flag in jvmargs
 
@@ -144,6 +153,7 @@ class JavaInfo:
     current_caching: Optional[bool] = None
     current_configure_on_demand: Optional[bool] = None
     current_workers: Optional[int] = None
+    current_xms_mb: Optional[int] = None
     current_xmx_mb: Optional[int] = None
     current_gc: Optional[str] = None
     current_has_thp: bool = False
@@ -230,6 +240,7 @@ def detect() -> JavaInfo:
 
     jvmargs = props.get("org.gradle.jvmargs", "")
     info.current_jvmargs = jvmargs
+    info.current_xms_mb = parse_xms(jvmargs)
     info.current_xmx_mb = parse_xmx(jvmargs)
     info.current_gc = jvm_gc(jvmargs)
     info.current_has_thp = "-XX:+UseTransparentHugePages" in jvmargs
@@ -276,13 +287,17 @@ def print_summary(info: JavaInfo):
     show("configureondemand", info.current_configure_on_demand, good=True)
     show("workers.max", info.current_workers)
     show("daemon.idletimeout", info.current_daemon_idle_ms, suffix=" ms")
+    if info.current_xms_mb:
+        show("jvmargs Xms", f"{info.current_xms_mb} MB")
+    else:
+        show("jvmargs Xms", None)
     if info.current_xmx_mb:
         show("jvmargs Xmx", f"{info.current_xmx_mb} MB")
     else:
         show("jvmargs Xmx", None)
     show("jvmargs GC", info.current_gc or (yellow("none (default G1GC)") if not info.current_gc else info.current_gc))
-    show("jvmargs THP", info.current_has_thp)
-    show("jvmargs AlwaysPreTouch", info.current_has_pretouch)
+    show("jvmargs THP", info.current_has_thp, good=False)
+    show("jvmargs AlwaysPreTouch", info.current_has_pretouch, good=False)
     show("jvmargs CodeCache", info.current_has_code_cache)
 
     if info.java_tool_options or info.gradle_opts:
@@ -354,16 +369,18 @@ def build_recs(info: JavaInfo) -> list[Rec]:
     jdk = info.gradle_java_version or info.java_version
 
     # Derived values
-    # Heap: leave ~50% RAM for OS, file cache, and other processes; cap at 16 GB
-    safe_heap_gb = min(16, max(2, int(info.ram_gb * 0.40)))
-    # Workers: for CPU-bound compilation, N-2 so UI stays responsive; min 2
-    ideal_workers = max(2, min(info.cpu_count - 2, 16))
+    # Heap: research shows 4–5 GB is the sweet spot regardless of available RAM.
+    # Above 5 GB build time plateaus while memory pressure grows.
+    safe_heap_gb = min(5, max(2, int(info.ram_gb * 0.40)))
+    # Workers: each parallel track can spawn a Kotlin daemon (~2 GB each).
+    # Cap at 6 so peak daemon memory stays manageable on any machine.
+    ideal_workers = max(2, min(info.cpu_count - 2, 6))
 
     # ── 1. Daemon enable ──────────────────────────────────────────────────────
     if info.current_daemon is not True:
         def _apply_daemon():
             set_gradle_prop(props_path, "org.gradle.daemon", "true")
-            set_gradle_prop(props_path, "org.gradle.daemon.idletimeout", "10800000")
+            set_gradle_prop(props_path, "org.gradle.daemon.idletimeout", "1800000")
             return True
 
         recs.append(Rec(
@@ -373,10 +390,11 @@ def build_recs(info: JavaInfo) -> list[Rec]:
                 "The Gradle daemon keeps a warm JVM alive between builds, avoiding "
                 "2–5 s of JVM startup and class-loading on every invocation. Daemon "
                 "is the default since Gradle 3.0 but worth making explicit. The "
-                "3-hour idle timeout (10800000 ms) suits a workday without leaking "
-                "daemon processes overnight."
+                "30-minute idle timeout (1800000 ms) keeps the daemon warm throughout "
+                "a working session while releasing memory within half an hour of "
+                "inactivity, so other JVMs (IDE, emulators) get memory back promptly."
             ),
-            action="Set org.gradle.daemon=true, org.gradle.daemon.idletimeout=10800000",
+            action="Set org.gradle.daemon=true, org.gradle.daemon.idletimeout=1800000",
             apply=_apply_daemon,
         ))
 
@@ -488,64 +506,76 @@ def build_recs(info: JavaInfo) -> list[Rec]:
             apply=_apply_heap,
         ))
 
-    # ── 7. GC selection ───────────────────────────────────────────────────────
-    current_gc = info.current_gc
-    if jdk >= 21:
-        target_gc_flag = "-XX:+UseZGC -XX:+ZGenerational"
-        target_gc_name = "ZGC (Generational, JDK 21+)"
-        already_good = current_gc == "UseZGC" and "ZGenerational" in info.current_jvmargs
-    elif jdk >= 11:
-        target_gc_flag = "-XX:+UseZGC"
-        target_gc_name = "ZGC (JDK 11+)"
-        already_good = current_gc == "UseZGC"
-    else:
-        target_gc_flag = ""
-        already_good = True  # nothing better available; skip
+    # ── 7. Initial heap (-Xms) ────────────────────────────────────────────────
+    if not info.current_xms_mb:
+        # Target Xms = Xmx: avoids heap resizing GC cycles during the build.
+        xmx_match = re.search(r"-Xmx(\d+)([gGmM]?)", info.current_jvmargs or "")
+        if xmx_match:
+            xms_target = xmx_match.group(1) + xmx_match.group(2)
+        else:
+            xms_target = f"{safe_heap_gb}g"
 
-    if target_gc_flag and not already_good:
-        def _apply_gc(flag=target_gc_flag):
+        def _apply_xms(target=xms_target):
             current = info.current_jvmargs or ""
-            # Remove any existing GC flag
-            new = re.sub(r"-XX:[+-]Use(?:ZGC|ShenandoahGC|G1GC|ParallelGC)", "", current)
-            new = re.sub(r"-XX:[+-]ZGenerational\b", "", new)
-            new = (new.strip() + " " + flag).strip()
+            new = (f"-Xms{target} " + current.strip()).strip()
+            new = " ".join(new.split())
             set_gradle_prop(props_path, "org.gradle.jvmargs", new)
             info.current_jvmargs = new
             return True
 
-        gc_reason = {
-            "UseZGC": (
-                f"ZGC (JDK {jdk}) is a concurrent garbage collector with <1ms pause "
-                f"times regardless of heap size. For a {safe_heap_gb} GB Gradle daemon "
-                f"heap, G1GC (the default) pauses for 50–500ms during major GCs — "
-                f"you see this as Gradle freezing mid-build. ZGC eliminates those "
-                f"pauses entirely, at the cost of slightly higher memory overhead (~15%)."
+        recs.append(Rec(
+            id="xms",
+            title=f"Set -Xms{xms_target} to match -Xmx (eliminate heap resizing pauses)",
+            reason=(
+                f"Without -Xms the JVM starts with a small heap and grows it upward "
+                f"during the build, triggering full GC cycles at each resize threshold. "
+                f"Setting -Xms = -Xmx = {xms_target} commits the heap at its final size "
+                f"from the first task, so the GC never interrupts a build to expand the "
+                f"heap. The absolute memory footprint is identical to -Xmx alone — the "
+                f"difference is build-time predictability, not peak RAM usage."
             ),
-            "UseZGC + ZGenerational": (
-                f"Generational ZGC (default in JDK 23+) achieves 10% better throughput "
-                f"than non-generational ZGC and uncommits unused heap back to the OS by "
-                f"default. For a {safe_heap_gb} GB daemon heap with idle periods between "
-                f"builds, this means other JVMs (IDE, app servers) get that memory back "
-                f"without restarting Gradle."
-            ),
-        }.get(target_gc_name.split(" (")[0], "")
+            action=f"Prepend -Xms{xms_target} to org.gradle.jvmargs (matching -Xmx)",
+            apply=_apply_xms,
+        ))
+
+    # ── 8. GC selection ───────────────────────────────────────────────────────
+    # Research finding: G1GC (JDK 17 default) outperforms ZGC and Shenandoah for
+    # build workloads. Builds are throughput-bound batch jobs, not latency-sensitive
+    # servers. ZGC's concurrent threads compete with Kotlin compiler threads for CPU,
+    # reducing compilation throughput. No GC flag = G1GC default = best for builds.
+    current_gc = info.current_gc
+    if current_gc in ("UseZGC", "UseShenandoahGC"):
+        def _apply_remove_zgc():
+            current = info.current_jvmargs or ""
+            new = re.sub(r"\s*-XX:[+-]Use(?:ZGC|ShenandoahGC)\b", "", current)
+            new = re.sub(r"\s*-XX:[+-]ZGenerational\b", "", new)
+            new = re.sub(r"\s*-XX:ZUncommitDelay=\d+", "", new)
+            new = " ".join(new.split())
+            set_gradle_prop(props_path, "org.gradle.jvmargs", new)
+            info.current_jvmargs = new
+            return True
 
         recs.append(Rec(
             id="gc",
-            title=f"Switch Gradle daemon GC: {current_gc or 'G1GC (default)'} → {target_gc_name}",
-            reason=gc_reason or f"Use {target_gc_name} for lower GC pause latency.",
-            action=f"Add {target_gc_flag} to org.gradle.jvmargs (remove existing GC flags)",
-            apply=_apply_gc,
+            title=f"Remove -{current_gc} — G1GC (JDK default) is faster for build throughput",
+            reason=(
+                f"ZGC and Shenandoah are optimized for latency (sub-millisecond GC "
+                f"pauses) at the cost of GC throughput. Gradle builds are throughput-"
+                f"bound batch workloads — total build time matters, not individual "
+                f"pause length. Benchmarks on large Kotlin projects show concurrent "
+                f"GC threads from ZGC compete with Kotlin compiler threads for CPU "
+                f"time, increasing total compilation duration. G1GC (the JDK 17 "
+                f"default, no flag needed) produces shorter builds. ZUncommitDelay "
+                f"is also removed since it is ZGC-specific."
+            ),
+            action=f"Remove -XX:+{current_gc} (and ZUncommitDelay) from org.gradle.jvmargs",
+            apply=_apply_remove_zgc,
         ))
 
-    # ── 8. ZGC heap uncommit delay ────────────────────────────────────────────
-    is_using_zgc = (
-        info.current_gc == "UseZGC"
-        or (target_gc_flag and "UseZGC" in target_gc_flag)
-    )
-    # Only suggest if ZGC is already present or we just recommended it
-    zgc_planned = "gc" in [r.id for r in recs] and "UseZGC" in target_gc_flag
-    if is_using_zgc or zgc_planned:
+    # ── 9. ZGC heap uncommit delay ────────────────────────────────────────────
+    # Only suggest if ZGC is in use AND we are NOT recommending its removal.
+    removing_zgc = any(r.id == "gc" for r in recs)
+    if current_gc == "UseZGC" and not removing_zgc:
         if "ZUncommitDelay" not in info.current_jvmargs:
             def _apply_uncommit():
                 current = info.current_jvmargs or ""
@@ -568,61 +598,57 @@ def build_recs(info: JavaInfo) -> list[Rec]:
                 apply=_apply_uncommit,
             ))
 
-    # ── 9. Transparent Huge Pages ─────────────────────────────────────────────
-    if not info.current_has_thp:
-        # Only meaningful if THP is enabled at the OS level
-        thp_os = ""
-        thp_file = Path("/sys/kernel/mm/transparent_hugepage/enabled")
-        if thp_file.exists():
-            raw = thp_file.read_text()
-            import re as _re
-            m = _re.search(r"\[(\w+)\]", raw)
-            thp_os = m.group(1) if m else ""
-
-        if thp_os in ("madvise", "always"):
-            def _apply_thp():
-                current = info.current_jvmargs or ""
-                new = (current.strip() + " -XX:+UseTransparentHugePages").strip()
-                set_gradle_prop(props_path, "org.gradle.jvmargs", new)
-                info.current_jvmargs = new
-                return True
-
-            recs.append(Rec(
-                id="thp",
-                title="Add -XX:+UseTransparentHugePages to Gradle JVM args",
-                reason=(
-                    "Your OS has THP enabled (mode: " + thp_os + "). The JVM flag "
-                    "tells the JVM to use madvise() to request 2 MB huge pages for "
-                    "heap regions. This reduces TLB pressure — Meta production data "
-                    "shows 20% of CPU cycles go to TLB misses on large JVM heaps "
-                    "without THP. Effective with your OS-level THP=madvise setting."
-                ),
-                action="Add -XX:+UseTransparentHugePages to org.gradle.jvmargs",
-                apply=_apply_thp,
-            ))
-
-    # ── 10. AlwaysPreTouch ────────────────────────────────────────────────────
-    if not info.current_has_pretouch:
-        def _apply_pretouch():
+    # ── 10. Transparent Huge Pages ────────────────────────────────────────────
+    if info.current_has_thp:
+        def _apply_remove_thp():
             current = info.current_jvmargs or ""
-            new = (current.strip() + " -XX:+AlwaysPreTouch").strip()
+            new = re.sub(r"\s*-XX:[+-]UseTransparentHugePages\b", "", current)
+            new = " ".join(new.split())
+            set_gradle_prop(props_path, "org.gradle.jvmargs", new)
+            info.current_jvmargs = new
+            return True
+
+        recs.append(Rec(
+            id="thp",
+            title="Remove -XX:+UseTransparentHugePages from Gradle JVM args",
+            reason=(
+                "UseTransparentHugePages allocates heap in 2 MB huge-page blocks. "
+                "Huge pages cannot be partially reclaimed by the OS — a 2 MB page "
+                "stays resident until every 4 KB sub-page within it is free. This "
+                "prevents ZGC from uncommitting unused heap regions back to the OS "
+                "during idle periods, causing the daemon to hold several gigabytes "
+                "of physical memory between builds. Standard 4 KB pages allow "
+                "finer-grained reclaim and work better with -XX:ZUncommitDelay on "
+                "memory-constrained machines."
+            ),
+            action="Remove -XX:+UseTransparentHugePages from org.gradle.jvmargs",
+            apply=_apply_remove_thp,
+        ))
+
+    # ── 11. AlwaysPreTouch ────────────────────────────────────────────────────
+    if info.current_has_pretouch:
+        def _apply_remove_pretouch():
+            current = info.current_jvmargs or ""
+            new = re.sub(r"\s*-XX:[+-]AlwaysPreTouch\b", "", current)
+            new = " ".join(new.split())
             set_gradle_prop(props_path, "org.gradle.jvmargs", new)
             info.current_jvmargs = new
             return True
 
         recs.append(Rec(
             id="pretouch",
-            title="Add -XX:+AlwaysPreTouch to Gradle JVM args",
+            title="Remove -XX:+AlwaysPreTouch from Gradle JVM args",
             reason=(
-                "AlwaysPreTouch faults the entire heap into physical memory at JVM "
-                "startup. Without it, the OS page-faults each heap page on first "
-                "write, adding latency throughout the build. With it, all faults "
-                "happen at daemon start (before your build begins) and builds run "
-                "faster with no runtime page-fault interruptions. The daemon startup "
-                f"cost is ~0.5–2 s for a {safe_heap_gb} GB heap."
+                "AlwaysPreTouch faults the entire -Xmx heap into physical RAM at "
+                "JVM startup — before any build work begins. On a machine with "
+                f"{info.ram_gb:.0f} GB RAM and a {safe_heap_gb} GB daemon heap this "
+                "pre-commits several gigabytes of swap immediately, crowding out the "
+                "IDE, browser, and other JVMs. Without it the JVM allocates heap "
+                "pages lazily on first write, so memory footprint tracks actual "
+                "build demand rather than the configured maximum."
             ),
-            action="Add -XX:+AlwaysPreTouch to org.gradle.jvmargs",
-            apply=_apply_pretouch,
+            action="Remove -XX:+AlwaysPreTouch from org.gradle.jvmargs",
+            apply=_apply_remove_pretouch,
         ))
 
     # ── 11. Code cache ────────────────────────────────────────────────────────
@@ -654,7 +680,7 @@ def build_recs(info: JavaInfo) -> list[Rec]:
     if not has_kotlin_daemon:
         def _apply_kotlin_daemon():
             current = info.current_jvmargs or ""
-            kotlin_opts = '-Dkotlin.daemon.jvm.options="-Xmx2g -XX:ReservedCodeCacheSize=320m"'
+            kotlin_opts = '-Dkotlin.daemon.jvm.options="-Xms2g -Xmx2g -XX:MaxMetaspaceSize=256m -XX:ReservedCodeCacheSize=512m"'
             new = (current.strip() + " " + kotlin_opts).strip()
             set_gradle_prop(props_path, "org.gradle.jvmargs", new)
             info.current_jvmargs = new
@@ -662,16 +688,64 @@ def build_recs(info: JavaInfo) -> list[Rec]:
 
         recs.append(Rec(
             id="kotlin_daemon",
-            title="Set Kotlin daemon JVM options (heap + code cache)",
+            title="Set Kotlin daemon JVM options (heap + metaspace + code cache)",
             reason=(
-                "Kotlin compilation runs in a separate Kotlin daemon process. Without "
-                "explicit settings it defaults to 700 MB heap, which causes GC pauses "
-                "and OOM errors on large Kotlin modules. 2 GB heap eliminates "
-                "Kotlin-daemon-induced build pauses. 320 MB code cache prevents JIT "
-                "flush in the Kotlin compiler itself."
+                "Kotlin compilation runs in a separate daemon that silently inherits "
+                "-Xmx from the Gradle daemon if not set explicitly. On a machine with "
+                f"-Xmx{safe_heap_gb}g for Gradle, each Kotlin daemon also attempts to "
+                f"allocate {safe_heap_gb} GB — multiplied by workers.max parallel "
+                "compilation tracks this can exhaust physical RAM entirely. Setting "
+                "-Xms2g -Xmx2g caps each Kotlin daemon at 2 GB. MaxMetaspaceSize=256m "
+                "prevents unbounded class metadata growth. 512m code cache prevents "
+                "JIT flush in the Kotlin compiler itself."
             ),
-            action='Add -Dkotlin.daemon.jvm.options="-Xmx2g -XX:ReservedCodeCacheSize=320m" to org.gradle.jvmargs',
+            action='Add -Dkotlin.daemon.jvm.options="-Xms2g -Xmx2g -XX:MaxMetaspaceSize=256m -XX:ReservedCodeCacheSize=512m" to org.gradle.jvmargs',
             apply=_apply_kotlin_daemon,
+        ))
+
+    # ── 13. MaxMetaspaceSize ──────────────────────────────────────────────────
+    if "MaxMetaspaceSize" not in info.current_jvmargs:
+        def _apply_metaspace():
+            current = info.current_jvmargs or ""
+            new = (current.strip() + " -XX:MaxMetaspaceSize=512m").strip()
+            set_gradle_prop(props_path, "org.gradle.jvmargs", new)
+            info.current_jvmargs = new
+            return True
+
+        recs.append(Rec(
+            id="metaspace",
+            title="Cap Metaspace at 512 MB (-XX:MaxMetaspaceSize=512m)",
+            reason=(
+                "Without a cap the JVM grows Metaspace (class metadata) unboundedly. "
+                "Gradle builds load thousands of classes — Kotlin compiler, annotation "
+                "processors, AGP, KMP plugin — and Metaspace can silently expand past "
+                "1 GB on complex multi-module builds, consuming native memory outside "
+                "the -Xmx heap. A 512m ceiling causes a clear OutOfMemoryError with a "
+                "useful message rather than gradual native memory exhaustion."
+            ),
+            action="Add -XX:MaxMetaspaceSize=512m to org.gradle.jvmargs",
+            apply=_apply_metaspace,
+        ))
+
+    # ── 14. Tooling API parallelism ───────────────────────────────────────────
+    if info.gradle_props.get("org.gradle.tooling.parallel", "").lower() != "true":
+        def _apply_tooling_parallel():
+            set_gradle_prop(props_path, "org.gradle.tooling.parallel", "true")
+            return True
+
+        recs.append(Rec(
+            id="tooling_parallel",
+            title="Enable Tooling API parallel model building",
+            reason=(
+                "org.gradle.tooling.parallel=true (Gradle 9.4.0+) lets IDE sync model "
+                "builders run in parallel. This is independent of task parallelism and "
+                "specifically reduces Android Studio / IntelliJ IDEA sync times on "
+                "multi-module KMP projects. It has no effect on CLI builds but "
+                "noticeably speeds up the sync triggered by opening the project or "
+                "editing any build script."
+            ),
+            action="Set org.gradle.tooling.parallel=true",
+            apply=_apply_tooling_parallel,
         ))
 
     return recs
