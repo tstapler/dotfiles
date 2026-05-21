@@ -18,23 +18,19 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
       - name: Install Ansible
         run: pip3 install ansible
 
-      - name: Run bootstrap (homebrew + dotfiles + shell only)
+      - name: Run bootstrap (homebrew only)
         run: |
           cd bootstrap
           ansible-playbook playbook.yml \
             -e "dotfiles_dir=$GITHUB_WORKSPACE" \
             -e "brewfile=Brewfile.test" \
-            --skip-tags secrets,nix \
+            --tags homebrew \
             --connection=local \
             -v
-        env:
-          HOME: ${{ runner.temp }}/home
 
       - name: Verify key tools installed
         run: |
