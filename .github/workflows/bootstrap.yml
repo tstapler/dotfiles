@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install Ansible
-        run: pip3 install ansible
+        run: brew install ansible
 
       - name: Run bootstrap (homebrew only)
         run: |
