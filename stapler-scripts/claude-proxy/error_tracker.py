@@ -185,7 +185,15 @@ def normalize_message(message: str) -> str:
         flags=re.IGNORECASE
     )
 
-    # Hexadecimal IDs (often used as request/trace IDs)
+    # Short hexadecimal IDs — 8 chars (request IDs like [b69743ce]) through 15 chars
+    # Must be bounded by non-word chars to avoid matching partial tokens
+    normalized = re.sub(
+        r'(?<!\w)[0-9a-fA-F]{8,15}(?!\w)',
+        '<HEX_ID>',
+        normalized
+    )
+
+    # Long hexadecimal IDs (≥16 chars)
     normalized = re.sub(
         r'\b[0-9a-fA-F]{16,}\b',
         '<HEX_ID>',
@@ -627,6 +635,12 @@ class ErrorTrackingHandler(logging.Handler):
         if match:
             return match.group(1), match.group(2), match.group(3)
 
+        # Pattern 3: [request_id] ✗ provider: message (no model info)
+        pattern3 = r'\[([a-f0-9]{8})\] ✗ (\w+)[:]\s*(.+)'
+        match = re.search(pattern3, message)
+        if match:
+            return match.group(1), match.group(2), None
+
         # No match - return None
         return None, None, None
 
@@ -671,6 +685,12 @@ class ErrorTrackingHandler(logging.Handler):
                 match = re.search(pattern2, message)
                 if match:
                     error_message = match.group(1)
+                else:
+                    # Pattern 3: [request_id] ✗ provider: MESSAGE (no model)
+                    pattern3 = r'\[[a-zA-Z0-9]{8}\] ✗ \w+:\s*(.+)'
+                    match = re.search(pattern3, message)
+                    if match:
+                        error_message = match.group(1)
 
             # Extract signature
             signature = extract_signature(error_message, provider=provider)

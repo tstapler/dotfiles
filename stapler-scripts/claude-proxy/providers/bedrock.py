@@ -124,7 +124,55 @@ class BedrockProvider(Provider):
         self.executor = ThreadPoolExecutor(max_workers=config.BEDROCK_THREAD_POOL_SIZE, thread_name_prefix="bedrock-io")
         # Disk cache for SSO config and credential validity checks
         # Shared across all workers via /tmp directory
-        self.cache = Cache("/tmp/claude-proxy-bedrock-cache")
+        self._cache_dir = "/tmp/claude-proxy-bedrock-cache"
+        self.cache = self._init_cache()
+
+    def _init_cache(self) -> Cache:
+        """Initialize diskcache, resetting if the SQLite schema is corrupt/missing."""
+        import shutil
+        import sqlite3
+        cache = Cache(self._cache_dir)
+        try:
+            cache.get("__schema_check__")
+        except sqlite3.OperationalError as e:
+            if "no such table" in str(e):
+                logger.warning(f"Corrupt diskcache detected ({e}), resetting cache dir")
+                cache.close()
+                shutil.rmtree(self._cache_dir, ignore_errors=True)
+                cache = Cache(self._cache_dir)
+            else:
+                raise
+        return cache
+
+    def _cache_get(self, key: str, default=None):
+        """Cache get with automatic recovery from schema corruption."""
+        import shutil
+        import sqlite3
+        try:
+            return self.cache.get(key, default)
+        except sqlite3.OperationalError as e:
+            if "no such table" in str(e):
+                logger.warning(f"Cache schema error on get ({e}), reinitializing")
+                self.cache.close()
+                shutil.rmtree(self._cache_dir, ignore_errors=True)
+                self.cache = Cache(self._cache_dir)
+                return default
+            raise
+
+    def _cache_set(self, key: str, value, expire=None):
+        """Cache set with automatic recovery from schema corruption."""
+        import shutil
+        import sqlite3
+        try:
+            self.cache.set(key, value, expire=expire)
+        except sqlite3.OperationalError as e:
+            if "no such table" in str(e):
+                logger.warning(f"Cache schema error on set ({e}), reinitializing")
+                self.cache.close()
+                shutil.rmtree(self._cache_dir, ignore_errors=True)
+                self.cache = Cache(self._cache_dir)
+            else:
+                raise
 
     @property
     def name(self) -> str:
@@ -157,7 +205,7 @@ class BedrockProvider(Provider):
         """Check if credentials are expiring soon and refresh proactively."""
         # Check cache first - avoid expensive boto3 calls on every request
         cache_key = f"creds_valid:{config.AWS_PROFILE}"
-        cached_result = self.cache.get(cache_key)
+        cached_result = self._cache_get(cache_key)
         if cached_result:
             is_valid, minutes_remaining = cached_result
             if is_valid and minutes_remaining > 5:
@@ -186,7 +234,7 @@ class BedrockProvider(Provider):
                 self._clear_sso_lock()
                 # Cache successful validation (assume new SSO tokens are valid for 1 hour)
                 cache_key = f"creds_valid:{config.AWS_PROFILE}"
-                self.cache.set(cache_key, (True, 60), expire=30)  # Cache for 30s
+                self._cache_set(cache_key, (True, 60), expire=30)  # Cache for 30s
                 return  # Credentials valid, continue with request
             except Exception as e:
                 # Credentials still not available or invalid
@@ -246,7 +294,7 @@ class BedrockProvider(Provider):
                             # Cache successful refresh
                             cache_key = f"creds_valid:{config.AWS_PROFILE}"
                             minutes = int(new_time_until_expiry.total_seconds() / 60)
-                            self.cache.set(cache_key, (True, minutes), expire=30)
+                            self._cache_set(cache_key, (True, minutes), expire=30)
                         else:
                             logger.warning(f"⚠️  Credentials still expiring soon ({int(new_time_until_expiry.total_seconds() / 60)}m) after refresh")
                 elif time_until_expiry < timedelta(minutes=15):
@@ -254,14 +302,14 @@ class BedrockProvider(Provider):
                     # Cache that credentials are valid
                     cache_key = f"creds_valid:{config.AWS_PROFILE}"
                     minutes = int(time_until_expiry.total_seconds() / 60)
-                    self.cache.set(cache_key, (True, minutes), expire=30)
+                    self._cache_set(cache_key, (True, minutes), expire=30)
                 else:
                     # Credentials valid for >15 minutes
                     logger.debug(f"Credentials valid for {int(time_until_expiry.total_seconds() / 60)} minutes")
                     # Cache that credentials are valid
                     cache_key = f"creds_valid:{config.AWS_PROFILE}"
                     minutes = int(time_until_expiry.total_seconds() / 60)
-                    self.cache.set(cache_key, (True, minutes), expire=30)
+                    self._cache_set(cache_key, (True, minutes), expire=30)
         except Exception as e:
             # Make credential errors visible - these indicate SSO issues
             logger.warning(f"⚠️  Credential check error: {e}")
@@ -367,7 +415,7 @@ class BedrockProvider(Provider):
         cache_key = f"sso_config:{config.AWS_PROFILE}"
 
         # Try to get from cache first (TTL: 1 hour)
-        cached = self.cache.get(cache_key)
+        cached = self._cache_get(cache_key)
         if cached:
             logger.debug(f"Using cached SSO config for profile '{config.AWS_PROFILE}'")
             return cached
@@ -393,7 +441,7 @@ class BedrockProvider(Provider):
 
         # Cache for 1 hour (config rarely changes)
         result = (start_url, sso_region)
-        self.cache.set(cache_key, result, expire=3600)
+        self._cache_set(cache_key, result, expire=3600)
         logger.debug(f"Cached SSO config for profile '{config.AWS_PROFILE}' (TTL: 1h)")
 
         return result
