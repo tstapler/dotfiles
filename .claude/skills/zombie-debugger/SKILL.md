@@ -1,3 +1,7 @@
+---
+description: Diagnosing and resolving zombie process accumulation; measuring leak rate; identifying cmd.Start() without Wait; killing residual zombies; validating a zombie fix
+---
+
 # Zombie Process Debugger
 
 Diagnose and resolve zombie process accumulation for any parent process on macOS/Linux.

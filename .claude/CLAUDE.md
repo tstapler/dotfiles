@@ -71,9 +71,10 @@ MDD uses two stores. **Do not confuse them:**
 - **Never skip phases** — each artifact is the required input for the next
 - **Research in parallel** — spawn agents for: stack, features, architecture, pitfalls
 - **Validation before code** — `validation.md` maps test coverage to requirements before writing a line
+- **Session hygiene** — run `/knowledge:extract-learnings` at session end to capture instincts
+- **Context health** — run `/meta:context-audit` to check token budget
 
 ---
 
-@~/.claude/skills-index.md
 @~/.claude/STAPLER.md
 @RTK.md
