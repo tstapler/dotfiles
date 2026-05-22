@@ -18,6 +18,16 @@ Given a product category and requirements, this skill:
 
 ---
 
+## User Shopping Preferences
+
+**Preferred retailers — always prioritize links from these when available:**
+- **Lowe's** (lowes.com) — first preference
+- **Amazon** (amazon.com) — second preference
+
+When candidates are sold at Lowe's or Amazon, lead with those links in the comparison output. If a product is not available at either, note that explicitly and fall back to other retailers. Both domains block automated WebFetch (see Phase 2 domain table) — use their URLs as human-clickable links only, never for image sourcing or URL validation.
+
+---
+
 ## Phase 0 — Discovery Interview
 
 **Run this phase before any searching.** Use `AskUserQuestion` for each question. Do not batch — ask one at a time, wait for the answer, then adapt follow-up questions based on responses. Do not propose solutions during the interview.
@@ -112,6 +122,8 @@ Run 2–3 parallel WebSearch calls based on requirements gathered in Phase 0.
 
 ### Query Templates
 ```
+"[specific product name] [finish] site:lowes.com"              ← preferred retailer
+"[specific product name] [finish] site:amazon.com"              ← preferred retailer
 "[specific product name] [finish] [brand if constrained] comparison options"
 "[specific product name] [finish] site:[accessible-brand].com"
 "[specific product name] [finish] [brand] site:pinterest.com"   ← for image sourcing
@@ -129,25 +141,35 @@ Find 2–4 candidates across price tiers. For each, record:
 
 ## Phase 2 — Image Sourcing
 
+### Fetch Tool Hierarchy
+
+Use tools in this order when a domain blocks WebFetch:
+
+1. **`WebFetch`** — try first; fast and sufficient for accessible domains
+2. **`mcp__read-website-fast__read_website`** — try when WebFetch returns 403/429; often bypasses bot protection that blocks WebFetch. Save to `/tmp` if page is large.
+3. **Chrome MCP (`mcp__claude-in-chrome__navigate` + `mcp__claude-in-chrome__get_page_text`)** — last resort for pages that require JavaScript rendering or are behind login walls. Use when read-website-fast also fails. Load tools via ToolSearch before calling.
+
+Never give up on a preferred retailer (Lowe's, Amazon) without trying all three tools.
+
 ### Critical Domain Routing
 
-**BLOCKED — Never WebFetch these for images or validation:**
-| Domain | Failure mode |
-|---|---|
-| signaturehardware.com | 403 Forbidden |
-| ferguson.com | Akamai bot (shows Akamai logo only) |
-| fergusonhome.com | 403 Forbidden |
-| homedepot.com | 403 Forbidden |
-| lowes.com | 403 Forbidden |
-| wayfair.com | 429 / 403 |
-| amazon.com | 500 / robot challenge |
-| walmart.com | Robot challenge |
-| ebay.com | Timeout |
-| faucet.com | 404 (stale URL patterns) |
-| faucetdirect.com | 404 (stale URL patterns) |
-| build.com → fergusonhome.com | 403 Forbidden |
+**Try `mcp__read-website-fast__read_website` before giving up — may bypass bot protection:**
+| Domain | WebFetch result | Fallback |
+|---|---|---|
+| lowes.com | 403 Forbidden — **preferred human link** | try read-website-fast, then Chrome MCP |
+| amazon.com | 500 / robot challenge — **preferred human link** | try read-website-fast, then Chrome MCP |
+| homedepot.com | 403 Forbidden | try read-website-fast |
+| wayfair.com | 429 / 403 | try read-website-fast |
+| walmart.com | Robot challenge | try read-website-fast |
+| signaturehardware.com | 403 Forbidden | try read-website-fast |
+| ferguson.com | Akamai bot | try read-website-fast |
+| fergusonhome.com | 403 Forbidden | try read-website-fast |
+| ebay.com | Timeout | try read-website-fast |
+| faucet.com | 404 (stale URL patterns) | re-search for updated URL |
+| faucetdirect.com | 404 (stale URL patterns) | re-search for updated URL |
+| build.com → fergusonhome.com | 403 Forbidden | try read-website-fast |
 
-These still appear in WebSearch results. Use their URLs as human-clickable links only.
+Only mark a domain ⚠ browser only after all three fetch methods have failed.
 
 **ACCESSIBLE — Use for images and validation:**
 | Domain | Notes |
@@ -195,28 +217,36 @@ For each candidate product:
 **Validate every URL before including it — no exceptions.**
 
 ### Image URL Validation
-```python
-WebFetch(url=image_url, prompt="Is this a valid accessible image? Return HTTP status and approximate file size in KB.")
+
+Try tools in order until one succeeds:
 ```
-**Interpreting results** (WebFetch can't render binary images — it will call them "corrupted"):
+1. WebFetch(url=image_url, prompt="Is this a valid accessible image? Return HTTP status and approximate file size in KB.")
+2. mcp__read-website-fast__read_website(url=image_url) — if WebFetch blocked
+3. Chrome MCP navigate + screenshot — if both above fail and domain is a preferred retailer
+```
+**Interpreting results** (WebFetch/read-website-fast can't render binary images — binary saves are valid):
 - Valid signal: Binary JPEG/PNG file saved, size **> 5KB** → confirmed working image
-- Invalid: HTTP 403 or 404 → discard, find alternative
+- Invalid: HTTP 403 or 404 on all three tools → discard, find alternative
 - Ambiguous: File saved but < 3KB → likely a placeholder or error icon → discard
 
 ### Product Page Validation
-```python
-WebFetch(url=product_url, prompt="Return HTTP status and page title.")
+
+Try tools in order:
 ```
-- HTTP 200 + matching page title → confirmed ✓
-- HTTP 404 → URL is stale; search for updated URL on the same domain
-- HTTP 403 → domain is blocked; note "accessible in browser, blocked to automated access"; still usable as human link
+1. WebFetch(url=product_url, prompt="Return HTTP status and page title.")
+2. mcp__read-website-fast__read_website(url=product_url) — if WebFetch blocked
+3. Chrome MCP navigate — if both above fail; navigate and read page text
+```
+- Success + matching page title → confirmed ✓
+- HTTP 404 on all tools → URL is stale; search for updated URL on the same domain
+- All tools blocked → note ⚠ browser only; URL still usable as human link
 
 ### Validation Status Tags
 Use these in the final output:
-- `✓ confirmed` — WebFetch returned 200 + matching content
-- `✓ image confirmed` — image URL returns JPEG/PNG > 5KB
-- `⚠ browser only` — product link accessible in browser but blocked to WebFetch (signaturehardware.com, etc.)
-- `❌ broken` — 404 or 403 with no alternative found
+- `✓ confirmed` — any fetch tool returned 200 + matching content
+- `✓ image confirmed` — image URL returns JPEG/PNG > 5KB via any tool
+- `⚠ browser only` — all three fetch methods blocked; product link confirmed accessible in user's browser
+- `❌ broken` — 404 confirmed across all tools with no working alternative found
 
 ---
 
