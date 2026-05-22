@@ -1,0 +1,482 @@
+#!/usr/bin/env python3
+"""
+session-compare: Compare two Claude Code sessions and generate a markdown report.
+
+Usage:
+  session-compare <session1> <session2> [--output <file>]
+
+Arguments:
+  session1, session2   Either a .jsonl transcript file path, or a session directory
+                       under ~/.claude/projects/. Accepts partial names resolved by
+                       fuzzy matching.
+
+Options:
+  --output <file>      Write report to file instead of stdout
+  --no-summary         Skip AI conversation summary (faster)
+  --label1 <name>      Label for session 1 (default: filename stem)
+  --label2 <name>      Label for session 2 (default: filename stem)
+
+Pricing (claude-sonnet-4-6, as of 2026-05):
+  Input:       $3.00 / MTok
+  Cache read:  $0.30 / MTok
+  Cache write: $3.75 / MTok
+  Output:      $15.00 / MTok
+"""
+
+import argparse
+import json
+import os
+import re
+import sys
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Optional
+
+
+# ── Pricing ($ per million tokens) ───────────────────────────────────────────
+
+PRICING = {
+    "claude-sonnet-4-6": {
+        "input":         3.00,
+        "cache_read":    0.30,
+        "cache_write":   3.75,
+        "output":        15.00,
+    },
+    "claude-opus-4-7": {
+        "input":         15.00,
+        "cache_read":    1.50,
+        "cache_write":   18.75,
+        "output":        75.00,
+    },
+    "claude-haiku-4-5": {
+        "input":         0.80,
+        "cache_read":    0.08,
+        "cache_write":   1.00,
+        "output":        4.00,
+    },
+}
+
+DEFAULT_PRICING = PRICING["claude-sonnet-4-6"]
+
+
+# ── Terminal helpers ──────────────────────────────────────────────────────────
+
+def bold(s): return f"\033[1m{s}\033[0m"
+def green(s): return f"\033[32m{s}\033[0m"
+def dim(s): return f"\033[2m{s}\033[0m"
+def cyan(s): return f"\033[36m{s}\033[0m"
+
+
+# ── Data structures ───────────────────────────────────────────────────────────
+
+@dataclass
+class TokenCounts:
+    input: int = 0
+    cache_read: int = 0
+    cache_write: int = 0
+    output: int = 0
+
+    @property
+    def total(self):
+        return self.input + self.cache_read + self.cache_write + self.output
+
+    def cost(self, pricing: dict) -> float:
+        return (
+            self.input       * pricing["input"]       / 1_000_000 +
+            self.cache_read  * pricing["cache_read"]  / 1_000_000 +
+            self.cache_write * pricing["cache_write"] / 1_000_000 +
+            self.output      * pricing["output"]      / 1_000_000
+        )
+
+
+@dataclass
+class ConversationTurn:
+    role: str           # "user" | "assistant"
+    text: str
+    timestamp: Optional[str] = None
+    tool_uses: list = field(default_factory=list)
+
+
+@dataclass
+class SessionMetrics:
+    label: str
+    path: str
+    model: str = "unknown"
+    tokens: TokenCounts = field(default_factory=TokenCounts)
+    human_turns: int = 0
+    assistant_turns: int = 0
+    tool_use_count: int = 0
+    duration_seconds: Optional[float] = None
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
+    session_id: Optional[str] = None
+    turns: list = field(default_factory=list)  # list[ConversationTurn]
+    files_touched: list = field(default_factory=list)
+
+
+# ── JSONL parsing ─────────────────────────────────────────────────────────────
+
+def _extract_text(content) -> str:
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts = []
+        for c in content:
+            if isinstance(c, dict) and c.get("type") == "text":
+                parts.append(c.get("text", ""))
+        return "\n".join(parts)
+    return ""
+
+
+def _extract_tool_names(content) -> list:
+    names = []
+    if isinstance(content, list):
+        for c in content:
+            if isinstance(c, dict) and c.get("type") == "tool_use":
+                names.append(c.get("name", "unknown"))
+    return names
+
+
+def _parse_timestamp(ts: Optional[str]) -> Optional[datetime]:
+    if not ts:
+        return None
+    try:
+        return datetime.fromisoformat(ts.replace("Z", "+00:00"))
+    except Exception:
+        return None
+
+
+def parse_jsonl(path: Path) -> SessionMetrics:
+    metrics = SessionMetrics(label=path.stem, path=str(path))
+    timestamps = []
+    files_set = set()
+
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                obj = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+
+            obj_type = obj.get("type", "")
+            ts = obj.get("timestamp")
+            if ts:
+                dt = _parse_timestamp(ts)
+                if dt:
+                    timestamps.append(dt)
+
+            # session ID
+            if obj_type == "system" and "sessionId" in obj:
+                metrics.session_id = obj["sessionId"]
+
+            if obj_type not in ("user", "assistant"):
+                continue
+
+            msg = obj.get("message", {})
+            role = msg.get("role", obj_type)
+            content = msg.get("content", "")
+
+            # Token usage (on assistant messages)
+            usage = msg.get("usage", {})
+            if usage:
+                metrics.tokens.input       += usage.get("input_tokens", 0)
+                metrics.tokens.cache_read  += usage.get("cache_read_input_tokens", 0)
+                metrics.tokens.cache_write += usage.get("cache_creation_input_tokens", 0)
+                metrics.tokens.output      += usage.get("output_tokens", 0)
+
+            # Model
+            model = msg.get("model", "")
+            if model:
+                metrics.model = model
+
+            # Turns
+            text = _extract_text(content)
+            tool_names = _extract_tool_names(content)
+            metrics.tool_use_count += len(tool_names)
+
+            # Track files from tool uses
+            if isinstance(content, list):
+                for c in content:
+                    if isinstance(c, dict) and c.get("type") == "tool_use":
+                        inp = c.get("input", {})
+                        fp = inp.get("file_path") or inp.get("path")
+                        if fp:
+                            files_set.add(fp)
+
+            if role == "user":
+                metrics.human_turns += 1
+            elif role == "assistant":
+                metrics.assistant_turns += 1
+
+            if text.strip() or tool_names:
+                metrics.turns.append(ConversationTurn(
+                    role=role,
+                    text=text.strip(),
+                    timestamp=ts,
+                    tool_uses=tool_names,
+                ))
+
+    if timestamps:
+        timestamps.sort()
+        metrics.start_time = timestamps[0].isoformat()
+        metrics.end_time = timestamps[-1].isoformat()
+        delta = (timestamps[-1] - timestamps[0]).total_seconds()
+        metrics.duration_seconds = delta
+
+    metrics.files_touched = sorted(files_set)
+    return metrics
+
+
+# ── Session discovery ─────────────────────────────────────────────────────────
+
+def resolve_session_path(arg: str) -> Path:
+    p = Path(arg).expanduser()
+    if p.exists():
+        if p.is_file():
+            return p
+        # Directory: find newest .jsonl
+        jsonl_files = sorted(p.glob("*.jsonl"), key=lambda x: x.stat().st_mtime, reverse=True)
+        if jsonl_files:
+            return jsonl_files[0]
+        raise FileNotFoundError(f"No .jsonl files found in {p}")
+
+    # Try fuzzy match under ~/.claude/projects/
+    projects_dir = Path.home() / ".claude" / "projects"
+    if projects_dir.exists():
+        candidates = []
+        for proj_dir in projects_dir.iterdir():
+            if not proj_dir.is_dir():
+                continue
+            jsonl_files = sorted(
+                proj_dir.glob("*.jsonl"),
+                key=lambda x: x.stat().st_mtime,
+                reverse=True,
+            )
+            if jsonl_files:
+                candidates.append((proj_dir.name, jsonl_files[0]))
+
+        # Match on directory name or file name
+        needle = arg.lower()
+        for dir_name, jf in candidates:
+            if needle in dir_name.lower() or needle in jf.stem.lower():
+                return jf
+
+        # Substring in path
+        for dir_name, jf in candidates:
+            if needle in str(jf).lower():
+                return jf
+
+    raise FileNotFoundError(
+        f"Cannot resolve '{arg}' to a .jsonl file. "
+        "Provide an absolute path, a project directory, or a partial name "
+        "matching a project under ~/.claude/projects/"
+    )
+
+
+# ── Formatting helpers ────────────────────────────────────────────────────────
+
+def fmt_duration(seconds: Optional[float]) -> str:
+    if seconds is None:
+        return "unknown"
+    m = int(seconds // 60)
+    s = int(seconds % 60)
+    return f"{m}m {s:02d}s"
+
+
+def fmt_tokens(n: int) -> str:
+    if n >= 1_000_000:
+        return f"{n/1_000_000:.2f}M"
+    if n >= 1_000:
+        return f"{n/1_000:.0f}K"
+    return str(n)
+
+
+def fmt_cost(c: float) -> str:
+    return f"${c:.2f}"
+
+
+def get_pricing_for(model: str) -> dict:
+    for key in PRICING:
+        if key in model:
+            return PRICING[key]
+    return DEFAULT_PRICING
+
+
+# ── Conversation summary ──────────────────────────────────────────────────────
+
+def build_conversation_summary(metrics: SessionMetrics, max_chars: int = 600, show_tools: bool = False) -> str:
+    lines = []
+    for turn in metrics.turns:
+        if not turn.text:
+            continue
+        role_label = "**User**" if turn.role == "user" else "**Claude**"
+        text = turn.text
+        if len(text) > max_chars:
+            text = text[:max_chars].rstrip() + "…"
+        tool_note = ""
+        if show_tools and turn.tool_uses:
+            unique = sorted(set(turn.tool_uses))
+            tool_note = f" *(tools: {', '.join(unique[:5])}{'…' if len(unique) > 5 else ''})*"
+        lines.append(f"{role_label}{tool_note}\n{text}\n")
+    return "\n---\n\n".join(lines)
+
+
+# ── Report generation ─────────────────────────────────────────────────────────
+
+def generate_report(s1: SessionMetrics, s2: SessionMetrics, show_tools: bool = False) -> str:
+    p1 = get_pricing_for(s1.model)
+    p2 = get_pricing_for(s2.model)
+    c1 = s1.tokens.cost(p1)
+    c2 = s2.tokens.cost(p2)
+
+    ratio_cost = f"{c2/c1:.1f}x" if c1 > 0 else "N/A"
+    ratio_output = (
+        f"{s2.tokens.output/s1.tokens.output:.1f}x"
+        if s1.tokens.output > 0 else "N/A"
+    )
+
+    lines = [
+        f"# Session Comparison: {s1.label} vs {s2.label}",
+        "",
+        f"Generated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}",
+        "",
+        "---",
+        "",
+        "## Metrics",
+        "",
+        f"| | {s1.label} | {s2.label} |",
+        "|---|---|---|",
+        f"| Duration | {fmt_duration(s1.duration_seconds)} | {fmt_duration(s2.duration_seconds)} |",
+        f"| Model | `{s1.model}` | `{s2.model}` |",
+        f"| Human turns | {s1.human_turns} | {s2.human_turns} |",
+        f"| Tool calls | {s1.tool_use_count} | {s2.tool_use_count} |",
+        f"| Input tokens | {fmt_tokens(s1.tokens.input)} | {fmt_tokens(s2.tokens.input)} |",
+        f"| Cache read tokens | {fmt_tokens(s1.tokens.cache_read)} | {fmt_tokens(s2.tokens.cache_read)} |",
+        f"| Cache write tokens | {fmt_tokens(s1.tokens.cache_write)} | {fmt_tokens(s2.tokens.cache_write)} |",
+        f"| Output tokens | {fmt_tokens(s1.tokens.output)} | {fmt_tokens(s2.tokens.output)} |",
+        f"| Total tokens | {fmt_tokens(s1.tokens.total)} | {fmt_tokens(s2.tokens.total)} |",
+        f"| **Estimated cost** | **{fmt_cost(c1)}** | **{fmt_cost(c2)}** |",
+        f"| Cost ratio | — | {ratio_cost} |",
+        f"| Output token ratio | — | {ratio_output} |",
+    ]
+
+    if s1.session_id or s2.session_id:
+        lines += [
+            "",
+            "## Session IDs",
+            "",
+            f"| | {s1.label} | {s2.label} |",
+            "|---|---|---|",
+            f"| Session ID | `{s1.session_id or 'unknown'}` | `{s2.session_id or 'unknown'}` |",
+            f"| Transcript | `{s1.path}` | `{s2.path}` |",
+        ]
+
+    # Cost breakdown
+    lines += [
+        "",
+        "## Cost Breakdown",
+        "",
+        f"### {s1.label}",
+        "",
+        f"| Component | Tokens | Cost |",
+        "|---|---|---|",
+        f"| Input | {fmt_tokens(s1.tokens.input)} | {fmt_cost(s1.tokens.input * p1['input'] / 1_000_000)} |",
+        f"| Cache read | {fmt_tokens(s1.tokens.cache_read)} | {fmt_cost(s1.tokens.cache_read * p1['cache_read'] / 1_000_000)} |",
+        f"| Cache write | {fmt_tokens(s1.tokens.cache_write)} | {fmt_cost(s1.tokens.cache_write * p1['cache_write'] / 1_000_000)} |",
+        f"| Output | {fmt_tokens(s1.tokens.output)} | {fmt_cost(s1.tokens.output * p1['output'] / 1_000_000)} |",
+        f"| **Total** | **{fmt_tokens(s1.tokens.total)}** | **{fmt_cost(c1)}** |",
+        "",
+        f"### {s2.label}",
+        "",
+        f"| Component | Tokens | Cost |",
+        "|---|---|---|",
+        f"| Input | {fmt_tokens(s2.tokens.input)} | {fmt_cost(s2.tokens.input * p2['input'] / 1_000_000)} |",
+        f"| Cache read | {fmt_tokens(s2.tokens.cache_read)} | {fmt_cost(s2.tokens.cache_read * p2['cache_read'] / 1_000_000)} |",
+        f"| Cache write | {fmt_tokens(s2.tokens.cache_write)} | {fmt_cost(s2.tokens.cache_write * p2['cache_write'] / 1_000_000)} |",
+        f"| Output | {fmt_tokens(s2.tokens.output)} | {fmt_cost(s2.tokens.output * p2['output'] / 1_000_000)} |",
+        f"| **Total** | **{fmt_tokens(s2.tokens.total)}** | **{fmt_cost(c2)}** |",
+    ]
+
+    # Files touched
+    if s1.files_touched or s2.files_touched:
+        all_files = sorted(set(s1.files_touched) | set(s2.files_touched))
+        lines += [
+            "",
+            "## Files Touched",
+            "",
+            f"| File | {s1.label} | {s2.label} |",
+            "|---|---|---|",
+        ]
+        for f in all_files:
+            in1 = "✓" if f in s1.files_touched else ""
+            in2 = "✓" if f in s2.files_touched else ""
+            lines.append(f"| `{f}` | {in1} | {in2} |")
+
+    # Conversation transcripts
+    for session in (s1, s2):
+        lines += [
+            "",
+            f"---",
+            "",
+            f"## Conversation: {session.label}",
+            "",
+            f"*{session.human_turns} user turns · {session.tool_use_count} tool calls · "
+            f"{fmt_duration(session.duration_seconds)} · {fmt_cost(session.tokens.cost(get_pricing_for(session.model)))}*",
+            "",
+        ]
+        lines.append(build_conversation_summary(session, show_tools=show_tools))
+
+    return "\n".join(lines)
+
+
+# ── CLI ───────────────────────────────────────────────────────────────────────
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Compare two Claude Code sessions and generate a markdown report.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=__doc__,
+    )
+    parser.add_argument("session1", help="First session path or name")
+    parser.add_argument("session2", help="Second session path or name")
+    parser.add_argument("--output", "-o", help="Output file (default: stdout)")
+    parser.add_argument("--label1", help="Label for session 1")
+    parser.add_argument("--label2", help="Label for session 2")
+    parser.add_argument("--show-tools", action="store_true",
+                        help="Annotate conversation turns with tool names (hidden by default)")
+    args = parser.parse_args()
+
+    # Resolve paths
+    try:
+        path1 = resolve_session_path(args.session1)
+        path2 = resolve_session_path(args.session2)
+    except FileNotFoundError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"  Parsing {path1} ...", file=sys.stderr)
+    m1 = parse_jsonl(path1)
+    print(f"  Parsing {path2} ...", file=sys.stderr)
+    m2 = parse_jsonl(path2)
+
+    if args.label1:
+        m1.label = args.label1
+    if args.label2:
+        m2.label = args.label2
+
+    report = generate_report(m1, m2, show_tools=args.show_tools)
+
+    if args.output:
+        out = Path(args.output).expanduser()
+        out.write_text(report, encoding="utf-8")
+        print(f"Report written to {out}", file=sys.stderr)
+    else:
+        print(report)
+
+
+if __name__ == "__main__":
+    main()
