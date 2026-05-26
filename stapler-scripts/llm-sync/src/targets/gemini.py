@@ -204,32 +204,45 @@ class GeminiTarget(SyncTarget, SyncSource):
         saved_count = 0
 
         for cmd in commands:
+            # Legacy Gemini CLI: write .toml to commands_dir
             cmd_path = self.commands_dir / f"{cmd.name}.toml"
 
-            if cmd_path.exists() and not force:
-                continue
-
-            content = cmd.content.replace("$ARGUMENTS", "{{args}}")
-            desc_safe = (
-                cmd.description.replace("\\", "\\\\")
-                .replace('"', '\\"')
-                .replace("\n", " ")
-            )
-
-            if "'''" not in content:
-                toml_content = (
-                    f"description = \"{desc_safe}\"\n\nprompt = '''\n{content}\n'''\n"
+            if not cmd_path.exists() or force:
+                content = cmd.content.replace("$ARGUMENTS", "{{args}}")
+                desc_safe = (
+                    cmd.description.replace("\\", "\\\\")
+                    .replace('"', '\\"')
+                    .replace("\n", " ")
                 )
-            else:
-                content_safe = content.replace("\\", "\\\\").replace('"""', '\\"\\"\\"')
-                toml_content = f'description = "{desc_safe}"\n\nprompt = """\n{content_safe}\n"""\n'
 
-            if dry_run:
-                console.print(f"[blue]Would write {cmd_path}[/blue]")
-            else:
-                cmd_path.parent.mkdir(parents=True, exist_ok=True)
-                with open(cmd_path, "w", encoding="utf-8") as f:
-                    f.write(toml_content)
-                saved_count += 1
+                if "'''" not in content:
+                    toml_content = (
+                        f"description = \"{desc_safe}\"\n\nprompt = '''\n{content}\n'''\n"
+                    )
+                else:
+                    content_safe = content.replace("\\", "\\\\").replace('"""', '\\"\\"\\"')
+                    toml_content = f'description = "{desc_safe}"\n\nprompt = """\n{content_safe}\n"""\n'
+
+                if dry_run:
+                    console.print(f"[blue]Would write {cmd_path}[/blue]")
+                else:
+                    cmd_path.parent.mkdir(parents=True, exist_ok=True)
+                    with open(cmd_path, "w", encoding="utf-8") as f:
+                        f.write(toml_content)
+                    saved_count += 1
+
+            # Antigravity CLI: commands are skills — write SKILL.md to skills_dir
+            skill_file = self.skills_dir / cmd.name / "SKILL.md"
+            if not skill_file.exists() or force:
+                frontmatter = {"name": cmd.name, "description": cmd.description}
+                fm_yaml = yaml.dump(frontmatter, sort_keys=False)
+                skill_content = f"---\n{fm_yaml}---\n\n{cmd.content}"
+
+                if dry_run:
+                    console.print(f"[blue]Would write {skill_file} (antigravity)[/blue]")
+                else:
+                    skill_file.parent.mkdir(parents=True, exist_ok=True)
+                    with open(skill_file, "w", encoding="utf-8") as f:
+                        f.write(skill_content)
 
         return saved_count
