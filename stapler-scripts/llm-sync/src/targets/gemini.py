@@ -21,7 +21,7 @@ class GeminiTarget(SyncTarget, SyncSource):
         commands_dir: Optional[Path] = None,
     ):
         self.agents_dir = agents_dir or Path.home() / ".gemini" / "agents"
-        self.skills_dir = skills_dir or Path.home() / ".gemini" / "skills"
+        self.skills_dir = skills_dir or Path.home() / ".gemini" / "antigravity-cli" / "skills"
         self.commands_dir = commands_dir or Path.home() / ".gemini" / "commands"
 
     def load_agents(self) -> List[Agent]:

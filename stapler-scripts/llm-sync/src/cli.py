@@ -13,6 +13,7 @@ try:
     from .targets.opencode import OpenCodeTarget
     from .targets.claude_settings import ClaudeSettingsTarget
     from .targets.claude_plugin_installer import ClaudePluginInstaller
+    from .targets.antigravity_mcp import AntigravityMcpTarget
     from .core import Agent, Skill, Command
     from .state import SyncStateManager
 except ImportError:
@@ -25,6 +26,7 @@ except ImportError:
     from targets.opencode import OpenCodeTarget
     from targets.claude_settings import ClaudeSettingsTarget
     from targets.claude_plugin_installer import ClaudePluginInstaller
+    from targets.antigravity_mcp import AntigravityMcpTarget
     from core import Agent, Skill, Command
     from state import SyncStateManager
 
@@ -276,6 +278,9 @@ def main():
         )
         claude_settings = ClaudeSettingsTarget(settings_file=args.claude_settings_file)
         sync_mcp(mcp_source, claude_settings, args.dry_run)
+
+        antigravity_mcp = AntigravityMcpTarget()
+        sync_mcp(mcp_source, antigravity_mcp, args.dry_run)
 
         plugin_source = PluginSource(
             global_plugins_dir=args.plugins_global_dir,
