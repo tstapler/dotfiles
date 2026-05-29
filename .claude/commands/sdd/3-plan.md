@@ -15,7 +15,7 @@ Dispatch a planning subagent to produce the implementation plan. The subagent do
    - `project_plans/<PROJECT_NAME>/requirements.md` — halt if missing
    - `project_plans/<PROJECT_NAME>/research/*.md` — warn if missing, continue with requirements only
 
-3. **Dispatch a planning subagent using the `Task` tool.**
+3. **Dispatch a planning subagent using the `Agent` tool.**
 
    The subagent prompt must include:
    - Full text of `requirements.md`
@@ -67,7 +67,7 @@ Dispatch a planning subagent to produce the implementation plan. The subagent do
 
 4. **Wait for the subagent to complete.** Do not continue until plan.md has been written.
 
-5. **Dispatch an adversarial reviewer subagent using the `Task` tool.**
+5. **Dispatch an adversarial reviewer subagent using the `Agent` tool.**
 
    The subagent prompt must include:
    - Full text of `plan.md`

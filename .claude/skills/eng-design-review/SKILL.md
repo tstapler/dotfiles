@@ -99,6 +99,12 @@ Write all comments to `/tmp/doc-review-<pageId>-comments.md`.
 | 🟡 Significant | Should discuss; risk if ignored | Design smell, missing operational concern, prior org decision not acknowledged, unquantified risk |
 | 🔵 Note | Lower priority, good or neutral | Clarifying question, minor inconsistency, positive observation worth calling out |
 
+**Comment volume rules:**
+- Target 3–5 new comments total. More is not better — prioritise ruthlessly.
+- 🔴 and 🟡 must raise substantive concerns about correctness, risk, or missing decisions. Do not use these tiers for style or preference.
+- 🔵 Notes should be rare (0–2 max). If a 🔵 is pedantic or stylistic, prefix the title with `nit:` — e.g. `🔵 NOTE 3 — nit: table row ordering`. Nit comments must never outnumber substantive ones.
+- Before drafting each comment, ask: "Would a senior engineer disagree with this, or would they roll their eyes?" If the latter, drop it or demote to nit.
+
 ### Comment Format
 
 Each comment in the review file:
@@ -124,12 +130,16 @@ End with a concrete question or actionable ask, not an open critique.]
 
 ### Comment Writing Guidelines
 
-- Lead with the specific concern, not preamble.
-- Cite evidence first, then the implication.
+- **Tone: curious and constructive.** You are here to help make the design better, not to audit it. Write as a knowledgeable colleague who wants to understand, not a reviewer looking for problems.
+- Acknowledge good work where it's genuine — authors put real effort in and it shows.
+- Lead with the question or observation, not a verdict. "I'm curious whether..." and "Has the team thought through..." land better than "This is missing" or "This needs to be defined."
+- Cite evidence first, then the implication — let the reader draw the conclusion where possible.
 - One clear question per comment. Multi-issue comments get lost.
-- Don't editorialize beyond what the evidence supports.
+- Offer to help where you can ("Happy to help draft...", "Keen to support...").
+- Don't editorialize beyond what the evidence supports. If you're uncertain, say so.
 - Positive observations belong in 🔵 Notes — they help authors understand what worked.
 - Keep it under 150 words unless code examples are needed.
+- Never use imperative language ("this must", "this needs to be", "required before ship") — ask questions instead.
 
 ---
 

@@ -1,0 +1,185 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Reclaim disk space by removing caches and stale data.
+# macOS: fully supported. Linux: partial (no brew/xcode/jetbrains).
+
+DRY_RUN=false
+VERBOSE=false
+
+usage() {
+  echo "Usage: $(basename "$0") [-n] [-v]"
+  echo "  -n  dry run (show what would be removed)"
+  echo "  -v  verbose output"
+  exit 0
+}
+
+while getopts "nvh" opt; do
+  case $opt in
+    n) DRY_RUN=true ;;
+    v) VERBOSE=true ;;
+    h) usage ;;
+  esac
+done
+
+OS="$(uname -s)"
+FREED=0
+
+log() { echo "  $*"; }
+header() { echo; echo "▶ $*"; }
+
+human_size() {
+  local path="$1"
+  du -sh "$path" 2>/dev/null | cut -f1
+}
+
+remove() {
+  local path="$1"
+  local label="$2"
+  if [ ! -e "$path" ]; then return; fi
+  local size
+  size=$(human_size "$path")
+  if $DRY_RUN; then
+    log "[dry-run] would remove $path ($size)"
+  else
+    rm -rf "$path"
+    log "removed $label ($size)"
+  fi
+}
+
+remove_glob() {
+  local pattern="$1"
+  local label="$2"
+  # shellcheck disable=SC2086
+  local matches
+  matches=$(ls -d $pattern 2>/dev/null | head -1)
+  [ -z "$matches" ] && return
+  remove "$matches" "$label"
+}
+
+# ── macOS ────────────────────────────────────────────────────────────────────
+cleanup_macos() {
+  header "Homebrew"
+  if command -v brew &>/dev/null; then
+    if $DRY_RUN; then
+      log "[dry-run] would run: brew cleanup --prune=all"
+    else
+      brew cleanup --prune=all 2>&1 | grep -E "^Removing|freed" || true
+    fi
+  else
+    log "brew not found, skipping"
+  fi
+
+  header "npm cache"
+  remove ~/.npm/_cacache "npm _cacache"
+
+  header "JetBrains caches"
+  remove ~/Library/Caches/JetBrains "JetBrains caches"
+
+  header "Xcode / iOS Simulators"
+  remove ~/Library/Caches/com.apple.dt.Xcode "Xcode DerivedData cache"
+  remove ~/Library/Developer/Xcode/DerivedData "Xcode DerivedData"
+  if command -v xcrun &>/dev/null; then
+    if $DRY_RUN; then
+      log "[dry-run] would run: xcrun simctl delete unavailable"
+    else
+      xcrun simctl delete unavailable 2>&1 | grep -v "^$" || true
+      log "deleted unavailable simulators"
+    fi
+  fi
+
+  header "Playwright browser cache"
+  remove ~/Library/Caches/ms-playwright "Playwright browsers"
+
+  header "Go build cache"
+  if command -v go &>/dev/null; then
+    if $DRY_RUN; then
+      log "[dry-run] would run: go clean -cache"
+    else
+      go clean -cache && log "go build cache cleared"
+    fi
+  fi
+
+  header "Gradle cache"
+  remove ~/.gradle/caches "Gradle caches"
+
+  header "Maven local repo (snapshots only)"
+  remove ~/.m2/repository "Maven snapshots"
+
+  header "pip cache"
+  if command -v pip3 &>/dev/null; then
+    if $DRY_RUN; then
+      log "[dry-run] would run: pip3 cache purge"
+    else
+      pip3 cache purge 2>&1 | tail -1 || true
+    fi
+  fi
+
+  header "Cargo registry cache"
+  remove ~/.cargo/registry/cache "Cargo registry cache"
+  remove ~/.cargo/registry/src   "Cargo registry src"
+}
+
+# ── Linux ────────────────────────────────────────────────────────────────────
+cleanup_linux() {
+  header "npm cache"
+  remove ~/.npm/_cacache "npm _cacache"
+
+  header "Go build cache"
+  if command -v go &>/dev/null; then
+    if $DRY_RUN; then
+      log "[dry-run] would run: go clean -cache"
+    else
+      go clean -cache && log "go build cache cleared"
+    fi
+  fi
+
+  header "Gradle cache"
+  remove ~/.gradle/caches "Gradle caches"
+
+  header "pip cache"
+  if command -v pip3 &>/dev/null; then
+    if $DRY_RUN; then
+      log "[dry-run] would run: pip3 cache purge"
+    else
+      pip3 cache purge 2>&1 | tail -1 || true
+    fi
+  fi
+
+  header "Cargo registry cache"
+  remove ~/.cargo/registry/cache "Cargo registry cache"
+  remove ~/.cargo/registry/src   "Cargo registry src"
+
+  header "apt cache"
+  if command -v apt-get &>/dev/null; then
+    if $DRY_RUN; then
+      log "[dry-run] would run: sudo apt-get clean"
+    else
+      sudo apt-get clean && log "apt cache cleared"
+    fi
+  fi
+
+  header "Docker"
+  if command -v docker &>/dev/null && docker info &>/dev/null 2>&1; then
+    if $DRY_RUN; then
+      log "[dry-run] would run: docker system prune -f"
+    else
+      docker system prune -f 2>&1 | tail -2 || true
+    fi
+  fi
+}
+
+# ── Main ─────────────────────────────────────────────────────────────────────
+echo "=== disk-cleanup ==="
+$DRY_RUN && echo "(dry run — nothing will be deleted)"
+
+df -h / | awk 'NR==2 {printf "Before: %s used of %s (%s free)\n", $3, $2, $4}'
+
+case "$OS" in
+  Darwin) cleanup_macos ;;
+  Linux)  cleanup_linux ;;
+  *)      echo "Unsupported OS: $OS"; exit 1 ;;
+esac
+
+echo
+df -h / | awk 'NR==2 {printf "After:  %s used of %s (%s free)\n", $3, $2, $4}'

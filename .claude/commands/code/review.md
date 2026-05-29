@@ -23,25 +23,39 @@ prompt: |
 
   ## Implementation Steps
 
-  ### Step 0: Generate Diff Summary
+  ### Step 0: Generate Diff Summary + Relevance Detection
 
-  Before launching agents, generate a structured 3-sentence summary of what this diff does and prepend it to every agent's context:
+  Before launching agents, generate a structured 3-sentence summary of what this diff does and determine which review dimensions are relevant:
 
   ```bash
   git log --oneline -5
   git diff HEAD~1 --stat
-  git diff HEAD~1 -- ${1:-.} | head -100
+  git diff HEAD~1 -- ${1:-.} | head -200
   ```
 
   Synthesize: *"This change modifies N files. It [main change in one clause]. Key affected areas: [list of modules/services]."*
 
   Store as `DIFF_SUMMARY`. Inject it at the top of every agent prompt below.
 
+  **Relevance detection** — scan the diff output and set these flags:
+
+  - `HAS_DB_CODE`: true if the diff contains any of: `.sql` files, migration files, ORM annotations (`@Entity`, `@Repository`, `@Table`, `@Column`, `@Query`, `@OneToMany`, etc.), SQL strings (`SELECT`, `INSERT`, `UPDATE`, `DELETE`, `CREATE TABLE`), Prisma schema changes, TypeORM decorators, Hibernate/JPA code, Ent schema files (`ent/schema/`).
+  - `HAS_TESTS`: true if the diff contains test files (files matching `*_test.go`, `*.test.ts`, `*.spec.ts`, `*.spec.java`, `Test*.java`, files in `__tests__/` or `tests/`).
+  - `HAS_SECURITY_SENSITIVE`: true if the diff touches auth/crypto/input-handling code (files/functions with names containing: auth, login, password, token, session, encrypt, decrypt, hash, secret, credential, permission, role, sanitize, validate, csrf; or imports of crypto/jwt/bcrypt libraries).
+
+  These flags determine which agents launch in Step 1.
+
   ---
 
   ### Step 1: Parallel Agent Invocation
 
-  Launch all five agents simultaneously. Each prompt begins with `DIFF_SUMMARY` from Step 0.
+  Launch only the relevant agents simultaneously based on the flags from Step 0. Each prompt begins with `DIFF_SUMMARY` from Step 0.
+
+  - **Testing Quality Agent**: Always launch.
+  - **Code Quality Agent**: Always launch.
+  - **Architecture Agent**: Always launch.
+  - **Database Agent**: Launch only if `HAS_DB_CODE` is true. If false, record "Database: No SQL or ORM code in diff — skipped." and proceed.
+  - **Security Agent**: Always launch (security issues can appear anywhere; OWASP checklist self-gates per category).
 
   **Testing Quality Agent**:
   ```
@@ -432,7 +446,8 @@ prompt: |
 
   ## Success Criteria
 
-  - ✅ All 5 dimensions evaluated (or "not applicable" stated with reason)
+  - ✅ Relevance flags evaluated before launching agents (no wasted agent invocations)
+  - ✅ All applicable dimensions evaluated (skipped dimensions noted with reason)
   - ✅ Skeptic pass completed — no unfiltered findings in report
   - ✅ Every BLOCKER/CRITICAL includes a code snippet fix
   - ✅ Severity labels present on every finding
@@ -481,25 +496,39 @@ Review a specific component:
 
 ## Implementation Steps
 
-### Step 0: Generate Diff Summary
+### Step 0: Generate Diff Summary + Relevance Detection
 
-Before launching agents, generate a structured 3-sentence summary of what this diff does and prepend it to every agent's context:
+Before launching agents, generate a structured 3-sentence summary of what this diff does and determine which review dimensions are relevant:
 
 ```bash
 git log --oneline -5
 git diff HEAD~1 --stat
-git diff HEAD~1 -- ${1:-.} | head -100
+git diff HEAD~1 -- ${1:-.} | head -200
 ```
 
 Synthesize: *"This change modifies N files. It [main change in one clause]. Key affected areas: [list of modules/services]."*
 
 Store as `DIFF_SUMMARY`. Inject at the top of every agent prompt in Step 1.
 
+**Relevance detection** — scan the diff output and set these flags:
+
+- `HAS_DB_CODE`: true if the diff contains any of: `.sql` files, migration files, ORM annotations (`@Entity`, `@Repository`, `@Table`, `@Column`, `@Query`, `@OneToMany`, etc.), SQL strings (`SELECT`, `INSERT`, `UPDATE`, `DELETE`, `CREATE TABLE`), Prisma schema changes, TypeORM decorators, Hibernate/JPA code, Ent schema files (`ent/schema/`).
+- `HAS_TESTS`: true if the diff contains test files (files matching `*_test.go`, `*.test.ts`, `*.spec.ts`, `*.spec.java`, `Test*.java`, files in `__tests__/` or `tests/`).
+- `HAS_SECURITY_SENSITIVE`: true if the diff touches auth/crypto/input-handling code (files/functions with names containing: auth, login, password, token, session, encrypt, decrypt, hash, secret, credential, permission, role, sanitize, validate, csrf; or imports of crypto/jwt/bcrypt libraries).
+
+These flags determine which agents launch in Step 1.
+
 ---
 
 ### Step 1: Parallel Agent Invocation
 
-Launch all five agents simultaneously. Each receives `DIFF_SUMMARY` from Step 0.
+Launch only the relevant agents simultaneously based on the flags from Step 0. Each receives `DIFF_SUMMARY` from Step 0.
+
+- **Testing Quality Agent**: Always launch.
+- **Code Quality Agent**: Always launch.
+- **Architecture Agent**: Always launch.
+- **Database Agent**: Launch only if `HAS_DB_CODE` is true. If false, record "Database: No SQL or ORM code in diff — skipped." and proceed.
+- **Security Agent**: Always launch (security issues can appear anywhere; OWASP checklist self-gates per category).
 
 **Testing Quality Agent**:
 ```

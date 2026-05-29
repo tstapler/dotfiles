@@ -21,13 +21,11 @@ Planning context degrades code generation quality — this is not optional.
    - `project_plans/<PROJECT_NAME>/implementation/plan.md`
    - `project_plans/<PROJECT_NAME>/implementation/validation.md`
 
-3. **Invoke the subagent-driven-development skill** — see `skills/subagent-driven-development/SKILL.md`.
-
-4. **For each task in plan.md**, the subagent pattern is:
+3. **For each task in plan.md**, dispatch subagents using the `Agent` tool:
 
    **Coordinator** reads the full plan, then for each task:
 
-   a. **Worker subagent** receives ONLY:
+   a. **Worker subagent** (`Agent` tool) receives ONLY:
       - The task description + acceptance criteria
       - The exact files to create/modify
 
