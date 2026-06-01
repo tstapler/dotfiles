@@ -1,0 +1,333 @@
+---
+# ── Swap file ─────────────────────────────────────────────────────────────────
+
+- name: Check swapfile filesystem type
+  command: stat -f -c '%T' /
+  register: root_fstype
+  changed_when: false
+
+- name: Check if swapfile exists
+  stat:
+    path: "{{ swap_file }}"
+  register: swapfile_stat
+
+# btrfs requires NoCOW (chattr +C) set before any data is written.
+# If the file exists but was created without it, swapon always fails with
+# EINVAL. Detect that case and remove the file so it can be recreated.
+- name: Check NoCOW attribute on existing swapfile (btrfs only)
+  shell: lsattr {{ swap_file }} | awk '{print $1}' | grep -q 'C'
+  register: nocow_check
+  failed_when: false
+  changed_when: false
+  when: root_fstype.stdout == 'btrfs' and swapfile_stat.stat.exists
+
+- name: Remove swapfile missing NoCOW attribute (btrfs only)
+  file:
+    path: "{{ swap_file }}"
+    state: absent
+  become: yes
+  when: >
+    root_fstype.stdout == 'btrfs' and
+    swapfile_stat.stat.exists and
+    nocow_check.rc != 0
+
+- name: Re-check swapfile existence after possible removal
+  stat:
+    path: "{{ swap_file }}"
+  register: swapfile_stat
+
+- name: Touch swapfile before setting attributes (btrfs only)
+  file:
+    path: "{{ swap_file }}"
+    state: touch
+    mode: '0600'
+    owner: root
+    group: root
+  become: yes
+  when: root_fstype.stdout == 'btrfs' and not swapfile_stat.stat.exists
+
+- name: Set NoCOW attribute on swapfile (btrfs only)
+  command: chattr +C {{ swap_file }}
+  become: yes
+  when: root_fstype.stdout == 'btrfs' and not swapfile_stat.stat.exists
+
+- name: Allocate swapfile
+  command: fallocate -l {{ swap_size_gb }}G {{ swap_file }}
+  become: yes
+  when: not swapfile_stat.stat.exists
+
+- name: Set swapfile permissions
+  file:
+    path: "{{ swap_file }}"
+    mode: '0600'
+    owner: root
+    group: root
+  become: yes
+
+# Use blkid to check for an existing swap signature — avoids reformatting a
+# valid swap header every run (the creates: .uuid hack was wrong).
+- name: Check if swapfile has swap signature
+  command: blkid -t TYPE=swap {{ swap_file }}
+  register: swap_signature
+  failed_when: false
+  changed_when: false
+  become: yes
+
+- name: Format swapfile
+  command: mkswap {{ swap_file }}
+  become: yes
+  when: swap_signature.rc != 0
+
+- name: Check active swap devices
+  command: swapon --show --noheadings
+  register: swapon_show
+  changed_when: false
+
+- name: Activate swap
+  command: swapon {{ swap_file }}
+  when: swap_file not in swapon_show.stdout
+  become: yes
+
+- name: Persist swapfile in fstab
+  lineinfile:
+    path: /etc/fstab
+    regexp: "^{{ swap_file | regex_escape }}\\s"
+    line: "{{ swap_file }}\tnone\tswap\tdefaults\t0\t0"
+    state: present
+  become: yes
+
+# ── zswap ─────────────────────────────────────────────────────────────────────
+
+- name: Check zswap availability
+  stat:
+    path: /sys/module/zswap/parameters
+  register: zswap_stat
+
+- name: Enable zswap at runtime
+  shell: |
+    echo 1    | tee /sys/module/zswap/parameters/enabled        > /dev/null
+    echo {{ zswap_compressor }}   | tee /sys/module/zswap/parameters/compressor     > /dev/null
+    echo {{ zswap_max_pool_percent }} | tee /sys/module/zswap/parameters/max_pool_percent > /dev/null
+  become: yes
+  changed_when: false
+  when: zswap_stat.stat.exists and zswap_enabled
+
+- name: Check if zswap already in GRUB cmdline
+  command: grep -q 'zswap.enabled=1' /etc/default/grub
+  register: zswap_in_grub
+  failed_when: false
+  changed_when: false
+  when: zswap_stat.stat.exists and zswap_enabled
+
+- name: Backup GRUB config
+  copy:
+    src: /etc/default/grub
+    dest: /etc/default/grub.bak
+    remote_src: yes
+    force: no
+  become: yes
+  when: zswap_stat.stat.exists and zswap_enabled and zswap_in_grub.rc != 0
+
+- name: Add zswap params to GRUB cmdline
+  replace:
+    path: /etc/default/grub
+    regexp: '^(GRUB_CMDLINE_LINUX_DEFAULT="[^"]*)"'
+    replace: '\1 zswap.enabled=1 zswap.compressor={{ zswap_compressor }} zswap.max_pool_percent={{ zswap_max_pool_percent }}"'
+  become: yes
+  when: zswap_stat.stat.exists and zswap_enabled and zswap_in_grub.rc != 0
+  notify: Regenerate GRUB config
+
+# ── Disable zram (conflicts with zswap) ──────────────────────────────────────
+
+- name: Check if zram is active
+  stat:
+    path: /sys/block/zram0
+  register: zram_stat
+
+- name: Stop zram service
+  systemd:
+    name: systemd-zram-setup@zram0.service
+    state: stopped
+  become: yes
+  failed_when: false
+  when: zram_stat.stat.exists and zswap_enabled
+
+- name: Remove zram-generator config
+  file:
+    path: /etc/systemd/zram-generator.conf
+    state: absent
+  become: yes
+  when: zram_stat.stat.exists and zswap_enabled
+
+# ── KSM (kernel same-page merging) ───────────────────────────────────────────
+
+- name: Check KSM availability
+  stat:
+    path: /sys/kernel/mm/ksm
+  register: ksm_stat
+
+- name: Deploy KSM systemd service
+  copy:
+    dest: /etc/systemd/system/ksm.service
+    mode: '0644'
+    content: |
+      [Unit]
+      Description=Kernel Samepage Merging (memory deduplication)
+      After=multi-user.target
+
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/bin/bash -c 'echo 1 > /sys/kernel/mm/ksm/run && echo {{ ksm_pages_to_scan }} > /sys/kernel/mm/ksm/pages_to_scan'
+      RemainAfterExit=yes
+
+      [Install]
+      WantedBy=multi-user.target
+  become: yes
+  when: ksm_stat.stat.exists
+  notify: Reload systemd daemon
+
+- name: Enable and start KSM service
+  systemd:
+    name: ksm.service
+    enabled: yes
+    state: started
+    daemon_reload: yes
+  become: yes
+  when: ksm_stat.stat.exists
+
+# ── THP (transparent huge pages) ─────────────────────────────────────────────
+
+- name: Check THP availability
+  stat:
+    path: /sys/kernel/mm/transparent_hugepage
+  register: thp_stat
+
+- name: Deploy THP config systemd service
+  copy:
+    dest: /etc/systemd/system/thp-config.service
+    mode: '0644'
+    content: |
+      [Unit]
+      Description=Transparent Huge Pages configuration
+      After=multi-user.target
+
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/bin/bash -c 'echo madvise > /sys/kernel/mm/transparent_hugepage/enabled && echo defer+madvise > /sys/kernel/mm/transparent_hugepage/defrag'
+      RemainAfterExit=yes
+
+      [Install]
+      WantedBy=multi-user.target
+  become: yes
+  when: thp_stat.stat.exists
+  notify: Reload systemd daemon
+
+- name: Enable and start THP config service
+  systemd:
+    name: thp-config.service
+    enabled: yes
+    state: started
+    daemon_reload: yes
+  become: yes
+  when: thp_stat.stat.exists
+
+# ── vm tunables ───────────────────────────────────────────────────────────────
+
+- name: Deploy compressed-swap sysctl config
+  copy:
+    dest: /etc/sysctl.d/99-compressed-swap.conf
+    mode: '0644'
+    content: |
+      # Tuned for zswap fast compressed swap (ChromeOS/Steam Deck values)
+      vm.swappiness = {{ vm_swappiness }}
+      vm.watermark_boost_factor = {{ vm_watermark_boost_factor }}
+      vm.watermark_scale_factor = {{ vm_watermark_scale_factor }}
+      vm.page-cluster = {{ vm_page_cluster }}
+  become: yes
+  notify: Apply sysctl settings
+
+# ── MGLRU (Linux 6.1+) ───────────────────────────────────────────────────────
+
+- name: Check MGLRU availability
+  stat:
+    path: /sys/kernel/mm/lru_gen/enabled
+  register: mglru_stat
+
+- name: Deploy MGLRU tuning systemd service
+  copy:
+    dest: /etc/systemd/system/mglru-tune.service
+    mode: '0644'
+    content: |
+      [Unit]
+      Description=MGLRU min_ttl_ms tuning
+      After=multi-user.target
+
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/bin/bash -c 'echo {{ mglru_min_ttl_ms }} > /sys/kernel/mm/lru_gen/min_ttl_ms'
+      RemainAfterExit=yes
+
+      [Install]
+      WantedBy=multi-user.target
+  become: yes
+  when: mglru_stat.stat.exists
+  notify: Reload systemd daemon
+
+- name: Enable and start MGLRU tuning service
+  systemd:
+    name: mglru-tune.service
+    enabled: yes
+    state: started
+    daemon_reload: yes
+  become: yes
+  when: mglru_stat.stat.exists
+
+# ── DAMON proactive reclaim ───────────────────────────────────────────────────
+
+- name: Check DAMON availability
+  stat:
+    path: /sys/module/damon_reclaim
+  register: damon_stat
+
+- name: Deploy DAMON modprobe config (all parameters)
+  copy:
+    dest: /etc/modprobe.d/damon_reclaim.conf
+    mode: '0644'
+    content: |
+      options damon_reclaim enabled=Y quota_ms={{ damon_quota_ms }} quota_sz={{ damon_quota_sz }} min_age={{ damon_min_age }}
+  become: yes
+  when: damon_stat.stat.exists
+
+- name: Deploy DAMON reclaim systemd service
+  copy:
+    dest: /etc/systemd/system/damon-reclaim.service
+    mode: '0644'
+    content: |
+      [Unit]
+      Description=DAMON proactive memory reclaim
+      After=multi-user.target
+      ConditionPathExists=/sys/module/damon_reclaim/parameters/enabled
+
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/bin/bash -c '\
+        echo Y > /sys/module/damon_reclaim/parameters/enabled && \
+        echo {{ damon_quota_ms }} > /sys/module/damon_reclaim/parameters/quota_ms && \
+        echo {{ damon_quota_sz }} > /sys/module/damon_reclaim/parameters/quota_sz && \
+        echo {{ damon_min_age }} > /sys/module/damon_reclaim/parameters/min_age'
+      RemainAfterExit=yes
+
+      [Install]
+      WantedBy=multi-user.target
+  become: yes
+  when: damon_stat.stat.exists
+  notify: Reload systemd daemon
+
+- name: Enable and start DAMON reclaim service
+  systemd:
+    name: damon-reclaim.service
+    enabled: yes
+    state: started
+    daemon_reload: yes
+  become: yes
+  when: damon_stat.stat.exists

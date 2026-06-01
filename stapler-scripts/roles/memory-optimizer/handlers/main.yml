@@ -1,0 +1,13 @@
+---
+- name: Regenerate GRUB config
+  command: grub-mkconfig -o /boot/grub/grub.cfg
+  become: yes
+
+- name: Apply sysctl settings
+  command: sysctl --system
+  become: yes
+
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: yes
+  become: yes

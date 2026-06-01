@@ -1,0 +1,6 @@
+---
+- name: Configure Linux memory optimizations
+  hosts: localhost
+  connection: local
+  roles:
+    - memory-optimizer

@@ -1,0 +1,20 @@
+---
+swap_file: /swapfile
+swap_size_gb: 32
+
+zswap_enabled: true
+zswap_compressor: zstd
+zswap_max_pool_percent: 20
+
+vm_swappiness: 180
+vm_watermark_boost_factor: 0
+vm_watermark_scale_factor: 125
+vm_page_cluster: 0
+
+ksm_pages_to_scan: 4000
+
+mglru_min_ttl_ms: 1000
+
+damon_quota_ms: 500
+damon_quota_sz: 134217728    # 128 MB/interval
+damon_min_age: 300000000000  # 5 minutes in nanoseconds

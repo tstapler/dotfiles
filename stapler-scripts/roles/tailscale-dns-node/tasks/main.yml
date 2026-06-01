@@ -1,0 +1,86 @@
+---
+- name: Install dnsmasq
+  package:
+    name: dnsmasq
+    state: present
+  become: yes
+
+- name: Get Tailscale IPv4 address
+  command: tailscale ip --4
+  register: tailscale_ip_result
+  changed_when: false
+  failed_when: tailscale_ip_result.rc != 0
+
+- name: Set tailscale_ip fact
+  set_fact:
+    tailscale_ip: "{{ tailscale_ip_result.stdout | trim }}"
+
+- name: Ensure dnsmasq.d directory exists
+  file:
+    path: /etc/dnsmasq.d
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+  become: yes
+
+- name: Deploy dnsmasq config for {{ local_domain }}
+  copy:
+    dest: /etc/dnsmasq.d/{{ dnsmasq_conf_name }}
+    mode: '0644'
+    owner: root
+    group: root
+    content: |
+      # Listen only on the Tailscale interface
+      listen-address={{ tailscale_ip }}
+      bind-interfaces
+
+      # Forward {{ local_domain }} queries to the local router
+      server=/{{ local_domain }}/{{ local_router }}
+
+      # Return this node's Tailscale IP for its own hostname so remote
+      # clients (connected via Tailscale) get a routable address
+      address=/{{ ansible_hostname }}.{{ local_domain }}/{{ tailscale_ip }}
+
+      # Don't read /etc/resolv.conf for upstream servers
+      no-resolv
+
+      # Don't cache negative results aggressively
+      neg-ttl=30
+  become: yes
+  notify: Restart dnsmasq
+
+- name: Ensure systemd drop-in directory exists for dnsmasq
+  file:
+    path: /etc/systemd/system/dnsmasq.service.d
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+  become: yes
+
+- name: Deploy wait-for-tailscale systemd drop-in
+  copy:
+    dest: /etc/systemd/system/dnsmasq.service.d/wait-for-tailscale.conf
+    mode: '0644'
+    owner: root
+    group: root
+    content: |
+      [Unit]
+      After=tailscaled.service
+      Wants=tailscaled.service
+
+      [Service]
+      ExecStartPre=/bin/sh -c 'for i in $(seq 1 {{ tailscale_wait_seconds | int // 2 }}); do ip addr show tailscale0 2>/dev/null | grep -q {{ tailscale_ip }} && exit 0; sleep 2; done; exit 1'
+  become: yes
+  notify: Reload systemd daemon
+
+- name: Flush handlers so daemon-reload runs before start
+  meta: flush_handlers
+
+- name: Ensure dnsmasq is enabled and started
+  systemd:
+    name: dnsmasq
+    enabled: yes
+    state: started
+  become: yes

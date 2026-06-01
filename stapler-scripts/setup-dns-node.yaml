@@ -1,0 +1,6 @@
+---
+- name: Set up Tailscale-aware DNS on a staplerhome node
+  hosts: localhost
+  connection: local
+  roles:
+    - tailscale-dns-node

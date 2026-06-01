@@ -1,0 +1,9 @@
+---
+local_domain: staplerhome.internal
+local_router: 192.168.1.1
+
+# dnsmasq config file deployed to /etc/dnsmasq.d/
+dnsmasq_conf_name: tailscale-staplerhome.conf
+
+# Seconds to wait for the Tailscale interface before giving up
+tailscale_wait_seconds: 60
