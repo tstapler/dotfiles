@@ -81,13 +81,22 @@ Dispatch a validation subagent to design the test suite. The subagent writes val
    - **CONCERNS** — criteria 2–3 have minor gaps → ask with `AskUserQuestion`: "Proceed despite gaps, or fix first?" Halt if user chooses to fix.
    - **FAIL** — criterion 1 or 4 not met → halt with a clear list of what's missing. User must resolve before running `/sdd:5-implement`.
 
-6. **Output the coordinator summary:**
+6. **Run the Product Triad Review gate.**
+
+   Invoke `/pm:triad-review <PROJECT_NAME>` inline (do not skip — it catches UX and PM gaps that engineering-only review misses).
+
+   - If verdict is **READY TO BUILD** → proceed.
+   - If verdict is **NEEDS WORK** → patch `plan.md` to resolve blockers (one paragraph each), then re-run the triad review. Do not proceed to Phase 5 until the triad is clear.
+   - If verdict is **NOT READY** → halt. Return to the weakest leg: PM gap → re-run `/sdd:1-ideate`; UX gap → run `/ux:design <PROJECT_NAME>`; Engineering gap → patch `plan.md`.
+
+7. **Output the coordinator summary:**
    ```
    ✅ Phase 4 complete — validation.md written to project_plans/<PROJECT_NAME>/implementation/
 
    Test cases designed: <N> unit, <N> integration
    Requirements covered: <N>/<N>
    Readiness gate: <PASS|CONCERNS|FAIL>
+   Triad review: <READY TO BUILD|NEEDS WORK|NOT READY>
 
    Next step: /sdd:5-implement
    ```
