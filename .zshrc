@@ -137,3 +137,7 @@ case $OS in
 		source ~/.shell/osx.sh
 	;;
 esac
+
+
+# Added by Antigravity CLI installer
+export PATH="/home/tstapler/.local/bin:$PATH"
