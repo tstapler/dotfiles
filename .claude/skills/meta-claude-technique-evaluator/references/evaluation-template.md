@@ -31,6 +31,7 @@ Use this template for structured evaluation output. Format is Logseq-compatible.
       | Risk Assessment | [Minimal/Acceptable/Notable/Prohibitive] | [Key concern] |
       | Maturity Level | [Production/Stable/Beta/Experimental] | [Evidence] |
       | Adoption Mode | [As-Is/Minor Tweaks/Fork & Adapt/Build from Scratch] | [What specifically needs changing, if anything] |
+      | Form Factor Fit | [MCP-Native/Either/CLI-First/CLI-Only] | [Why MCP vs CLI+Skill; note startup cost, call frequency, schema need] |
   -
   - ## Anthropic Alignment Details
     - **Official guidance says**: [What Anthropic recommends]

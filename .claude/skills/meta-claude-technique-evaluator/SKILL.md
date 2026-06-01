@@ -77,7 +77,7 @@ For detailed workflow context: see `references/workflow-context.md`
 
 ### Phase 4: Score and Assess
 
-Apply the evaluation framework across six dimensions:
+Apply the evaluation framework across seven dimensions:
 
 | Dimension | Question | Scale |
 |-----------|----------|-------|
@@ -88,12 +88,44 @@ Apply the evaluation framework across six dimensions:
 | **Risk Assessment** | Any downsides, instability, or concerns? | Minimal / Acceptable / Notable / Prohibitive |
 | **Maturity Level** | How stable/proven is the technique? | Production / Stable / Beta / Experimental |
 | **Adoption Mode** | Can it be used as-is, or does it need changes first? | As-Is / Minor Tweaks / Fork & Adapt / Build from Scratch |
+| **Form Factor Fit** | Should this be an MCP server, a CLI+Skill, or either? | MCP-Native / Either / CLI-First / CLI-Only |
+
+**Form Factor Fit guidance** — for MCP servers and tools specifically:
+
+| Rating | When to use | Examples |
+|--------|-------------|---------|
+| **MCP-Native** | High call frequency per session; structured schema critical; no good CLI; stateful across tool calls; capability used by multiple agents | GitHub API, database queries, external service APIs with complex auth |
+| **Either** | Good CLI exists but MCP meaningfully reduces permission-prompt friction; moderate frequency; output benefits from schema | Filesystem ops, git ops (if not using jj) |
+| **CLI-First** | Simple one-liner CLI covers 90% of the use case; low frequency; MCP adds startup cost without real gain; Bash already permitted | `date`/timezone → `TZ=X date`; simple REST APIs → `curl`; single-command lookups |
+| **CLI-Only** | No MCP server exists or MCP would be prohibitively complex; tool is inherently interactive or shell-native | Shell aliases, build systems, jj VCS (jj-specific semantics not expressible as generic git MCP) |
+
+**CLI+Skill vs MCP decision checklist** (apply when Form Factor is ambiguous):
+- Does the operation require >5 calls per session? → MCP
+- Does structured JSON schema output matter to downstream tool calls? → MCP
+- Is there a single bash command that does this? → CLI-First
+- Does the MCP server require `npx`/`uvx` (startup download cost)? → Lean CLI-First
+- Is the Bash permission already allowed in settings.json? → CLI-First
+- Does the skill add guidance/context beyond raw tool output? → CLI-First (skills can do this; MCPs cannot)
+- Is the tool used in non-Claude-Code contexts (claude.ai, API agents)? → MCP
+- **Does the MCP expose the full API surface, or is it a subset?** → If subset, CLI-First (full API via curl/SDK in skill)
+- **Does the task require partial updates, custom payloads, or multi-step logic?** → CLI-First (MCP tools tend to be coarse-grained CRUD; skills can sequence arbitrary operations)
+
+A "CLI-First" rating should push the verdict toward **Skip** for the MCP form — recommend building a lightweight skill instead.
+
+**Known MCP API-coverage anti-pattern**: Many MCP servers wrap only the happy-path subset of a service's API. Example: the Confluence MCP exposes basic page CRUD but lacks partial-page updates (`append`, `replace section`), forcing a full page overwrite that loses formatting. The `knowledge-confluence-sync` skill using the Confluence REST API directly handles partial updates correctly. Always verify MCP tool coverage against the full API before adopting — a thin MCP wrapper is often worse than a skill with direct API/CLI access.
 
 **Adoption Mode guidance:**
 - **As-Is**: Copy the skill's SKILL.md (and any `scripts/`) into `~/.claude/skills/<name>/`, fork the source repo to `tstapler/` on GitHub for update control, and use immediately with no modifications needed
 - **Minor Tweaks**: Fork to `tstapler/`, copy into `~/.claude/skills/<name>/`, then apply small adjustments (fix install commands, adjust paths, update docs) before use
 - **Fork & Adapt**: Fork to `tstapler/`, copy into `~/.claude/skills/<name>/`, then rework significantly — the core concept is sound but the implementation needs changes for this workflow
 - **Build from Scratch**: Concept is valuable but source implementation is not reusable; author a new skill from scratch in `~/.claude/skills/<name>/SKILL.md` using the upstream as inspiration only
+
+**MCP Fork Policy (mandatory for all adopted MCP servers):**
+Always fork every MCP server to `tstapler/<name>` on GitHub before adding it to `mcp-servers.json`, even if using it as-is. Point the config at your fork (`git+https://github.com/tstapler/<name>.git` for uvx, or the forked npm-equivalent). Rationale:
+- Upstream bugs (e.g., nodriver Latin-1 encoding) can be patched immediately without waiting for an unresponsive maintainer
+- Upstream breaking changes or abandonment don't silently break your workflow
+- You own the dependency; you control the release cadence
+- Exception: Official Anthropic/modelcontextprotocol servers (`@modelcontextprotocol/*`) may be used via `npm exec` without forking, since Anthropic is the maintainer and the risk is low
 
 **Priority Score** (derived from dimensions):
 
