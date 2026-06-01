@@ -22,6 +22,8 @@ Each practice has specific triggers and protocols detailed in reference files.
 
 **Technical correctness over social comfort.** Verify before implementing. Ask before assuming. Evidence before claims.
 
+**Fix everything you see — pre-existing or not.** When a review surfaces an issue, fix it regardless of whether the current diff introduced it. "Not my change" is not a reason to leave broken code in place. Every finding gets fixed before the PR merges.
+
 ## When to Use This Skill
 
 ### Receiving Feedback
@@ -153,9 +155,10 @@ Using "should"/"probably"/"seems to", expressing satisfaction before verificatio
 ## Bottom Line
 
 1. Technical rigor over social performance — No performative agreement
-2. Systematic review processes — Use code-reviewer subagent
-3. Evidence before claims — Verification gates always
-4. Security and compat flags — Escalate proactively when diff touches high-risk areas
+2. Fix everything you see — pre-existing issues are not exempt; if you see it, fix it
+3. Systematic review processes — Use code-reviewer subagent
+4. Evidence before claims — Verification gates always
+5. Security and compat flags — Escalate proactively when diff touches high-risk areas
 
 Verify. Question. Then implement. Evidence. Then claim.
 

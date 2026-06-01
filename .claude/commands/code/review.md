@@ -300,16 +300,15 @@ prompt: |
     [INSERT ALL FINDINGS FROM STEP 1 HERE]
 
     For each finding, challenge it on these criteria:
-    1. Pre-existing? Is this issue present in code NOT changed by this diff? (Pre-existing = discard)
-    2. Intentional? Is there a plausible reason a competent engineer would write it this way?
-    3. Actionable? Is the file:line specific enough to act on? Is the suggested fix unambiguous?
-    4. Severity appropriate? Does the stated severity match the actual blast radius?
+    1. Intentional? Is there a plausible reason a competent engineer would write it this way?
+    2. Actionable? Is the file:line specific enough to act on? Is the suggested fix unambiguous?
+    3. Severity appropriate? Does the stated severity match the actual blast radius?
 
     Rules:
     - Discard findings with category confidence < 75
-    - Discard pre-existing issues (not introduced by this diff)
     - Discard findings without a specific file:line
     - Downgrade severity if the stated severity is clearly too high
+    - Keep any finding that survives all challenges — pre-existing issues are NOT discarded; if it is a real problem, fix it regardless of whether this diff introduced it
     - Keep any finding that survives all four challenges
 
     Output format:
@@ -773,16 +772,15 @@ Agent(
   [INSERT ALL FINDINGS FROM STEP 1 HERE]
 
   For each finding, challenge on these criteria:
-  1. Pre-existing? Is this issue in code NOT changed by this diff? If so: DISCARD.
-  2. Intentional? Is there a plausible reason a competent engineer would write it this way? If yes: DISCARD or DOWNGRADE.
-  3. Actionable? Is the file:line specific? Is the suggested fix unambiguous? If no: DISCARD.
-  4. Severity correct? Does the stated severity match the actual blast radius? If too high: DOWNGRADE.
+  1. Intentional? Is there a plausible reason a competent engineer would write it this way? If yes: DISCARD or DOWNGRADE.
+  2. Actionable? Is the file:line specific? Is the suggested fix unambiguous? If no: DISCARD.
+  3. Severity correct? Does the stated severity match the actual blast radius? If too high: DOWNGRADE.
 
   Rules:
   - DISCARD findings with category confidence < 75
-  - DISCARD pre-existing issues not introduced by this diff
   - DISCARD findings without a specific file:line
-  - KEEP any finding that survives all four challenges
+  - KEEP pre-existing issues — "not introduced by this diff" is NOT a reason to discard; if it is a real problem, it gets fixed
+  - KEEP any finding that survives all challenges
 
   Output: For each finding — KEEP / DISCARD / DOWNGRADE with one-line reason.
   Then: Final consolidated list of kept/downgraded findings only.
