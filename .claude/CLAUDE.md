@@ -40,7 +40,7 @@ Reserve `Bash` exclusively for: git operations, running tests/commands, and syst
 
 ## Manifest-Driven Development (MDD) Workflow
 
-For non-trivial features, follow these phases in order. Each produces an artifact the next phase requires. Full system documentation: `@~/.claude/STAPLER.md`. Directory conventions: `@docs/plans/README.md`.
+For non-trivial features, follow these phases in order. Each produces an artifact the next phase requires. Directory conventions: `@docs/plans/README.md`.
 
 ### Two Artifact Layers
 
@@ -76,5 +76,4 @@ MDD uses two stores. **Do not confuse them:**
 
 ---
 
-@~/.claude/STAPLER.md
-@RTK.md
+@~/.claude/RTK.md
