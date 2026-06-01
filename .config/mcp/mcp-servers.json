@@ -3,42 +3,54 @@
     "context7": {
       "command": "npx",
       "args": ["-y", "@upstash/context7-mcp"],
+      "_fork": "https://github.com/tstapler/context7 (monorepo — npm registry used; git URL not supported for subdirectory packages)",
       "env": {}
     },
     "sequential-thinking": {
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "_fork": "exception: official @modelcontextprotocol Anthropic-maintained package",
       "env": {}
     },
     "brave-search": {
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-brave-search"],
+      "_fork": "exception: official @modelcontextprotocol Anthropic-maintained package",
       "env": {
         "BRAVE_API_KEY": "${BRAVE_API_KEY}"
       }
     },
     "read-website-fast": {
-      "command": "npx",
-      "args": ["-y", "@just-every/mcp-read-website-fast"],
+      "command": "npm",
+      "args": ["exec", "--yes", "--", "git+https://github.com/tstapler/mcp-read-website-fast"],
+      "_fork": "https://github.com/tstapler/mcp-read-website-fast",
       "env": {}
     },
     "serena": {
       "command": "uvx",
       "args": [
-        "--from", "git+https://github.com/oraios/serena",
+        "--from", "git+https://github.com/tstapler/serena",
         "serena",
         "start-mcp-server",
         "--enable-web-dashboard", "false"
       ],
+      "_fork": "https://github.com/tstapler/serena",
       "env": {},
       "disabled": true
+    },
+    "time": {
+      "command": "npm",
+      "args": ["exec", "--yes", "--", "@modelcontextprotocol/server-time"],
+      "_fork": "exception: official @modelcontextprotocol Anthropic-maintained package",
+      "env": {}
     },
     "website-downloader": {
       "command": "uvx",
       "args": [
-        "--from", "git+https://github.com/TylerStaplerAtFanatics/mcp-website-downloader.git",
+        "--from", "git+https://github.com/tstapler/mcp-website-downloader.git",
         "mcp-website-downloader"
       ],
+      "_fork": "https://github.com/tstapler/mcp-website-downloader",
       "env": {}
     }
   }
