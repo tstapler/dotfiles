@@ -1,63 +1,107 @@
 ---
-description: Synthesize Slack threads I participated in into the Logseq daily Knowledge Synthesis zettel. Supports backfill from last run.
+description: Synthesize Slack threads I participated in into the Logseq daily journal. Default mode walks backwards until finding a day already synthesized.
 ---
 
 # Slack Daily Synthesis
 
-Synthesize Slack conversations into the Logseq daily Knowledge Synthesis zettel and journal entries.
+Synthesize Slack conversations into the Logseq daily journal entries.
 
 Supports three modes:
-- **Default** (no args): today only
-- **`--yesterday`**: previous calendar day (for 9am cron)
-- **`--backfill`**: find the last synthesis date and fill in all missing days up to today
+- **Default** (no args): walk backwards from today until finding a day already synthesized
+- **`--yesterday`**: previous calendar day only (for 9am cron)
+- **`--backfill`**: find the last synthesis date and fill in all missing days up to today (same as default but explicit)
 
 ## Step 1: Determine Date Range
 
 Use the argument if provided: `{{args}}`
 
-Run this to get dates:
+Run this to get today's date:
 ```bash
-# Today
 date +%Y-%m-%d
-
-# Yesterday
-date -v-1d +%Y-%m-%d
-
-# Last synthesis date (most recent Knowledge Synthesis file in wiki)
-ls /Users/tylerstapler/Documents/personal-wiki/logseq/pages/ | grep "Knowledge Synthesis - 20" | sort | tail -1
 ```
 
-**If `--backfill`**: Parse the last synthesis date from the filename (format `Knowledge Synthesis - YYYY-MM-DD.md`). Generate the list of all calendar dates from the day after that date through today. Process each date in sequence, oldest first. Skip weekends if desired (Slack is quieter on weekends — ask the user if they want to skip them).
+**If `--yesterday`**: Single date = yesterday. Done.
 
-**If `--yesterday`**: Single date = yesterday.
+**Default or `--backfill`**: Walk backwards from today. For each candidate date (today, yesterday, day before, ...):
+1. Check if the journal file exists: `~/Documents/personal-wiki/logseq/journals/YYYY_MM_DD.md`
+2. If it exists, grep for `[[Slack]] conversations` — if found, **stop here** (this day and everything before is already done)
+3. If not found (or file doesn't exist), add this date to the processing queue
+4. Continue backwards up to a maximum of 30 days
 
-**Default**: Single date = today.
+Process the queue oldest-first so the journal entries read chronologically.
+
+```bash
+# Check if a journal day is already synthesized
+grep -l "\[\[Slack\]\] conversations" ~/Documents/personal-wiki/logseq/journals/YYYY_MM_DD.md 2>/dev/null
+```
 
 ## Step 2: For Each Date in Range, Search Slack Threads
 
 Search for threads I participated in during the time window. My Slack user ID is `U03U0MB392B`.
 
-Run these two searches in parallel:
-
 **Note**: Slack search `before:` date filtering does not reliably restrict results when combined with `is:thread`. Use only `after:` with the previous day's date, then filter results by timestamp manually.
 
-**Search 1 - Threads I wrote in:**
+Where `YYYY-MM-DD-1` is the day before the target date (e.g., to get Apr 14 threads, use `after:2026-04-13`). Filter returned messages to only include those with timestamps falling within the target date.
+
+Run all three searches in parallel, paginating each until exhausted:
+
+**Search 1 - Thread replies I wrote** (`is:thread` = reply messages only):
 ```
 from:<@U03U0MB392B> is:thread after:YYYY-MM-DD-1
 ```
 
-**Search 2 - Threads directed at me:**
+**Search 2 - Threads I started** (top-level messages that became threads — no `is:thread` filter):
 ```
-to:<@U03U0MB392B> is:thread after:YYYY-MM-DD-1
+from:<@U03U0MB392B> after:YYYY-MM-DD-1
+```
+Post-filter: keep only messages where `thread_ts == message_ts` (i.e. the message is a thread root with replies), OR where the message has `reply_count > 0`.
+
+**Search 3 - Threads where I was mentioned:**
+```
+<@U03U0MB392B> is:thread after:YYYY-MM-DD-1
 ```
 
-Where `YYYY-MM-DD-1` is the day before the target date (e.g., to get Apr 14 threads, use `after:2026-04-13`). Filter returned messages to only include those with timestamps falling within the target date.
+**Pagination**: For each search, use `slack_search_public_and_private` with `limit=20`. If `pagination_info` indicates more pages, repeat with the returned `cursor` until no more pages. Collect all results before deduplicating.
 
-Use `slack_search_public_and_private` with `sort=timestamp`, `sort_dir=asc` (chronological for context), `limit=20`, `include_context=false`.
+Use `sort=timestamp`, `sort_dir=asc`, `include_context=false` for all searches.
 
-Deduplicate results by `thread_ts` — the same thread may appear in both searches.
+**Deduplication**: After collecting all results from all three searches and all pages, deduplicate by `thread_ts`. Each unique `thread_ts` = one thread to process.
 
-**Note on Slack search limits**: Slack free-tier search only reaches ~90 days back. For very old dates, the search may return empty results — skip those dates silently and note them in the output.
+**Note on Slack search limits**: Slack free-tier search only reaches ~90 days back. For very old dates, searches may return empty results — skip those dates silently and note them in the output.
+
+## Step 2b: Read Threads (Cache-First)
+
+Before reading any thread via the Slack API, check the local cache:
+
+**Cache path**: `/Users/tylerstapler/Documents/personal-wiki/slack-thread-cache/YYYY-MM-DD/{channel_id}__{thread_ts}.md`
+
+For each unique `thread_ts`:
+1. Determine its date bucket (from the message timestamp)
+2. Check if `slack-thread-cache/YYYY-MM-DD/{channel_id}__{thread_ts}.md` exists
+3. If cached: read from file — skip Slack API call
+4. If not cached: call `slack_read_thread` with `channel_id` and `message_ts=thread_ts`, then write content to the cache file
+
+Cache file format:
+```markdown
+# Thread: {channel_name} / {thread_ts}
+channel_id: {channel_id}
+thread_ts: {thread_ts}
+permalink: {permalink_url}
+date: YYYY-MM-DD
+
+---
+
+{raw thread content — messages in order with author, timestamp, text}
+```
+
+Cache directory structure:
+```
+slack-thread-cache/
+└── YYYY-MM-DD/
+    └── {channel_id}__{thread_ts}.md
+```
+
+This ensures future backfills and re-runs never re-fetch threads already retrieved. The cache is permanent — don't expire or delete entries.
 
 ## Step 3: Cluster Threads by Topic
 

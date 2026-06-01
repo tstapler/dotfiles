@@ -36,6 +36,7 @@ Reserve `Bash` exclusively for: git operations, running tests/commands, and syst
 - Prefer `Edit` / `Write` tools for file changes
 - Use the serena MCP server for complex multi-file structural edits when available
 
+
 ---
 
 ## Manifest-Driven Development (MDD) Workflow
