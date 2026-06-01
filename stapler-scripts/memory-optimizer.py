@@ -615,8 +615,23 @@ def build_recs(info: SystemInfo) -> list[Rec]:
     if info.mglru_enabled and info.mglru_min_ttl_ms < 500:
         def _apply_mglru():
             sudo_tee("/sys/kernel/mm/lru_gen/min_ttl_ms", "1000")
-            sudo_tee("/etc/sysctl.d/99-mglru.conf", "vm.lru_gen.min_ttl_ms = 1000\n")
-            sudo_run("sysctl", "--system")
+            # vm.lru_gen.min_ttl_ms is a sysfs path, not a sysctl key — use a
+            # systemd oneshot service (same pattern as KSM/THP) for persistence.
+            service = (
+                "[Unit]\n"
+                "Description=MGLRU min_ttl_ms tuning\n"
+                "After=multi-user.target\n\n"
+                "[Service]\n"
+                "Type=oneshot\n"
+                "ExecStart=/usr/bin/bash -c "
+                "'echo 1000 > /sys/kernel/mm/lru_gen/min_ttl_ms'\n"
+                "RemainAfterExit=yes\n\n"
+                "[Install]\n"
+                "WantedBy=multi-user.target\n"
+            )
+            sudo_tee("/etc/systemd/system/mglru-tune.service", service)
+            sudo_run("systemctl", "daemon-reload")
+            sudo_run("systemctl", "enable", "--now", "mglru-tune.service")
             return True
 
         recs.append(Rec(
@@ -629,22 +644,46 @@ def build_recs(info: SystemInfo) -> list[Rec]:
                 "too aggressively during memory spikes, reducing churn on JVM workloads "
                 "that access memory in bursty patterns."
             ),
-            action="Set /sys/kernel/mm/lru_gen/min_ttl_ms=1000; persist via sysctl",
+            action="Set /sys/kernel/mm/lru_gen/min_ttl_ms=1000; persist via systemd service",
             apply=_apply_mglru,
         ))
 
     # ── 8. DAMON proactive reclaim ────────────────────────────────────────────
     if info.damon_reclaim_available and not info.damon_reclaim_enabled:
         def _apply_damon():
+            quota_sz = 128 * 1024 * 1024        # 128 MB/interval
+            min_age  = 5 * 60 * 1_000_000_000  # 5 min cold threshold (nanoseconds)
             p = Path("/sys/module/damon_reclaim/parameters")
-            sudo_tee(str(p / "enabled"), "Y")
-            sudo_tee(str(p / "quota_ms"), "500")                        # 500 ms CPU/interval
-            sudo_tee(str(p / "quota_sz"), str(128 * 1024 * 1024))       # 128 MB/interval
-            sudo_tee(str(p / "min_age"), str(5 * 60 * 1_000_000_000))   # 5 min cold threshold
+            sudo_tee(str(p / "enabled"),   "Y")
+            sudo_tee(str(p / "quota_ms"),  "500")
+            sudo_tee(str(p / "quota_sz"),  str(quota_sz))
+            sudo_tee(str(p / "min_age"),   str(min_age))
+            # modprobe.d covers the loadable-module case (all 4 params)
             sudo_tee(
                 "/etc/modprobe.d/damon_reclaim.conf",
-                "options damon_reclaim enabled=Y quota_ms=500\n",
+                f"options damon_reclaim enabled=Y quota_ms=500"
+                f" quota_sz={quota_sz} min_age={min_age}\n",
             )
+            # systemd service covers the built-in / already-loaded case
+            service = (
+                "[Unit]\n"
+                "Description=DAMON proactive memory reclaim\n"
+                "After=multi-user.target\n"
+                "ConditionPathExists=/sys/module/damon_reclaim/parameters/enabled\n\n"
+                "[Service]\n"
+                "Type=oneshot\n"
+                "ExecStart=/usr/bin/bash -c '"
+                f"echo Y > /sys/module/damon_reclaim/parameters/enabled && "
+                f"echo 500 > /sys/module/damon_reclaim/parameters/quota_ms && "
+                f"echo {quota_sz} > /sys/module/damon_reclaim/parameters/quota_sz && "
+                f"echo {min_age} > /sys/module/damon_reclaim/parameters/min_age'\n"
+                "RemainAfterExit=yes\n\n"
+                "[Install]\n"
+                "WantedBy=multi-user.target\n"
+            )
+            sudo_tee("/etc/systemd/system/damon-reclaim.service", service)
+            sudo_run("systemctl", "daemon-reload")
+            sudo_run("systemctl", "enable", "--now", "damon-reclaim.service")
             return True
 
         recs.append(Rec(
@@ -657,7 +696,7 @@ def build_recs(info: SystemInfo) -> list[Rec]:
                 "for VM memory reclamation. A conservative quota (128 MB/interval, 5-min "
                 "minimum age) means it only touches pages that are genuinely idle."
             ),
-            action="Enable damon_reclaim via sysfs with conservative quota; persist via modprobe.d",
+            action="Enable damon_reclaim via sysfs; persist via modprobe.d (all params) + systemd service",
             apply=_apply_damon,
         ))
 
