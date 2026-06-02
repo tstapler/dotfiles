@@ -1,4 +1,9 @@
 #!/usr/bin/env sh
+# DEPRECATED: This script is no longer the canonical bootstrap entry point.
+# Use instead: curl -fsSL https://raw.githubusercontent.com/tstapler/dotfiles/master/install.sh | bash
+# Or from the repo root: ./install.sh
+# This file is retained for historical reference only.
+
 REPO_NAME=dotfiles
 CLONE_DIR="$HOME/$REPO_NAME"
 DOTFILES_REPO="tstapler/$REPO_NAME"

@@ -1,0 +1,31 @@
+# Linux-only Brewfile - no casks, GUI apps excluded
+# Maintained manually; update when adding new CLI tools to the main Brewfile.
+# Private taps (fanatics-gaming/tap, tstapler/stelekit) are intentionally excluded
+# because they require SSH key setup which happens after bootstrap.
+
+brew "ansible"
+brew "asdf"          # required by asdf role
+brew "bat"
+brew "coreutils"
+brew "curl"
+brew "fd"
+brew "fzf"
+brew "git"
+brew "git-lfs"
+brew "gh"
+brew "golang"
+brew "htop"
+brew "jq"
+brew "neovim"
+brew "node"
+brew "python@3.12"
+brew "ripgrep"
+brew "shellcheck"
+brew "starship"
+brew "tmux"
+brew "tree"
+brew "unzip"         # required by fonts role (unarchive module)
+brew "uv"
+brew "vim"
+brew "wget"
+brew "zsh"

@@ -1,25 +1,60 @@
 ---
+- name: Install Linux prerequisites (Debian/Ubuntu)
+  apt:
+    name:
+      - build-essential
+      - curl
+      - file
+      - git
+    state: present
+    update_cache: true
+  become: true
+  when: ansible_os_family == "Debian"
+  tags: [homebrew]
+
+- name: Install Linux prerequisites (Arch/Manjaro)
+  pacman:
+    name:
+      - base-devel
+      - curl
+      - file
+      - git
+    state: present
+  become: true
+  when: ansible_os_family == "Archlinux"
+  tags: [homebrew]
+
 - name: Check Homebrew is installed
   stat:
-    path: /opt/homebrew/bin/brew
+    path: "{{ brew_prefix }}/bin/brew"
   register: brew_bin
   tags: [homebrew]
 
 - name: Install Homebrew
   shell: |
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   when: not brew_bin.stat.exists
   tags: [homebrew]
 
 - name: Update Homebrew
-  homebrew:
-    update_homebrew: true
+  command: "{{ brew_prefix }}/bin/brew update"
+  changed_when: false
+  environment:
+    PATH: "{{ brew_prefix }}/bin:{{ ansible_env.PATH }}"
+  tags: [homebrew]
+
+- name: Set brewfile path
+  set_fact:
+    brewfile_path: "{{ dotfiles_dir }}/{{ 'Brewfile' if ansible_os_family == 'Darwin' else 'Brewfile.linux' }}"
   tags: [homebrew]
 
 - name: Install packages from Brewfile
   command: >
-    brew bundle install
-    --file={{ dotfiles_dir }}/{{ brewfile | default('Brewfile') }}
+    {{ brew_prefix }}/bin/brew bundle install
+    --file={{ brewfile_path }}
+    --no-lock
   register: brew_bundle
   changed_when: "'Installing' in brew_bundle.stdout or 'Upgrading' in brew_bundle.stdout"
+  environment:
+    PATH: "{{ brew_prefix }}/bin:{{ ansible_env.PATH }}"
   tags: [homebrew]

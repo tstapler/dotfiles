@@ -12,11 +12,3 @@
     dest: "{{ ansible_env.HOME }}/.zplug"
     update: false
   tags: [shell]
-
-- name: Install asdf tool versions
-  command: asdf install
-  args:
-    chdir: "{{ dotfiles_dir }}"
-  when: "'.tool-versions' in lookup('fileglob', dotfiles_dir + '/.tool-versions')"
-  ignore_errors: true
-  tags: [shell]

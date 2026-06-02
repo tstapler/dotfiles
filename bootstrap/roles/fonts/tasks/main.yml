@@ -1,0 +1,54 @@
+---
+- name: Skip fonts on WSL2
+  debug:
+    msg: "Skipping fonts role on WSL2 — install Nerd Fonts on Windows side manually."
+  when: is_wsl | default(false)
+  tags: [fonts]
+
+- name: Install Meslo Nerd Font (macOS via Homebrew cask)
+  community.general.homebrew_cask:
+    name: font-meslo-lg-nerd-font
+    state: present
+  when: ansible_os_family == "Darwin" and not (is_wsl | default(false))
+  environment:
+    PATH: "{{ brew_prefix }}/bin:{{ ansible_env.PATH }}"
+  tags: [fonts]
+
+- name: Ensure fonts directory exists (Linux)
+  file:
+    path: "{{ ansible_env.HOME }}/.local/share/fonts"
+    state: directory
+    mode: '0755'
+  when: ansible_os_family != "Darwin" and not (is_wsl | default(false))
+  tags: [fonts]
+
+- name: Check if Meslo Nerd Font is already installed (Linux)
+  find:
+    paths: "{{ ansible_env.HOME }}/.local/share/fonts/"
+    patterns: "MesloLG*"
+  register: meslo_font_files
+  when: ansible_os_family != "Darwin" and not (is_wsl | default(false))
+  tags: [fonts]
+
+- name: Download Meslo Nerd Font zip (Linux)
+  get_url:
+    url: "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Meslo.zip"
+    dest: "/tmp/Meslo.zip"
+    force: false
+    mode: '0644'
+  when: ansible_os_family != "Darwin" and not (is_wsl | default(false)) and meslo_font_files.matched == 0
+  tags: [fonts]
+
+- name: Unzip Meslo Nerd Font (Linux)
+  unarchive:
+    src: "/tmp/Meslo.zip"
+    dest: "{{ ansible_env.HOME }}/.local/share/fonts/"
+    remote_src: true
+  when: ansible_os_family != "Darwin" and not (is_wsl | default(false)) and meslo_font_files.matched == 0
+  tags: [fonts]
+
+- name: Refresh font cache (Linux)
+  command: fc-cache -fv
+  changed_when: false
+  when: ansible_os_family != "Darwin" and not (is_wsl | default(false))
+  tags: [fonts]

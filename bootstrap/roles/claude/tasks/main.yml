@@ -1,0 +1,29 @@
+---
+- name: Check if claude CLI is installed
+  command: claude --version
+  register: claude_check
+  failed_when: false
+  changed_when: false
+  environment:
+    PATH: "{{ brew_prefix }}/bin:{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.PATH }}"
+  tags: [claude]
+
+- name: Install Claude Code CLI via npm
+  command: npm install -g @anthropic-ai/claude-code
+  when: claude_check.rc != 0
+  environment:
+    PATH: "{{ brew_prefix }}/bin:{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.PATH }}"
+  tags: [claude]
+
+- name: Verify Claude Code CLI installed
+  command: claude --version
+  register: claude_version
+  changed_when: false
+  environment:
+    PATH: "{{ brew_prefix }}/bin:{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.PATH }}"
+  tags: [claude]
+
+- name: Show Claude Code version
+  debug:
+    msg: "Claude Code installed: {{ claude_version.stdout }}"
+  tags: [claude]

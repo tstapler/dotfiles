@@ -1,12 +1,34 @@
 ---
-- name: Bootstrap macOS dev environment
+- name: Bootstrap development environment
   hosts: localhost
   connection: local
+  gather_facts: true
   vars:
     dotfiles_dir: "{{ ansible_env.HOME }}/dotfiles"
+
+  pre_tasks:
+    - name: Detect WSL2
+      shell: grep -qi microsoft /proc/version 2>/dev/null && echo yes || echo no
+      register: wsl2_check
+      changed_when: false
+
+    - name: Set is_wsl fact
+      set_fact:
+        is_wsl: "{{ wsl2_check.stdout == 'yes' }}"
+
+    - name: Set brew_prefix fact
+      set_fact:
+        brew_prefix: >-
+          {{ '/opt/homebrew' if ansible_os_family == 'Darwin' and ansible_architecture == 'arm64'
+             else '/usr/local' if ansible_os_family == 'Darwin'
+             else '/home/linuxbrew/.linuxbrew' }}
+
   roles:
     - homebrew
     - dotfiles
     - shell
+    - asdf
     - nix
     - secrets
+    - fonts
+    - claude

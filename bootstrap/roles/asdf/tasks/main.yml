@@ -1,0 +1,44 @@
+---
+- name: Check .tool-versions exists
+  stat:
+    path: "{{ dotfiles_dir }}/.tool-versions"
+  register: tool_versions_file
+  tags: [asdf]
+
+- name: Read tool names from .tool-versions
+  shell: "awk '{print $1}' {{ dotfiles_dir }}/.tool-versions"
+  register: asdf_tool_names
+  changed_when: false
+  when: tool_versions_file.stat.exists
+  tags: [asdf]
+
+- name: Add asdf plugins
+  shell: |
+    ASDF_SH="{{ brew_prefix }}/opt/asdf/libexec/asdf.sh"
+    [ -f "$ASDF_SH" ] || ASDF_SH="{{ ansible_env.HOME }}/.asdf/asdf.sh"
+    . "$ASDF_SH"
+    asdf plugin add {{ item }}
+  args:
+    executable: /bin/bash
+  register: plugin_result
+  failed_when: plugin_result.rc != 0 and 'already added' not in plugin_result.stderr
+  changed_when: plugin_result.rc == 0
+  loop: "{{ asdf_tool_names.stdout_lines | default([]) }}"
+  when: tool_versions_file.stat.exists
+  environment:
+    PATH: "{{ ansible_env.HOME }}/.asdf/bin:{{ ansible_env.HOME }}/.asdf/shims:{{ brew_prefix }}/bin:{{ ansible_env.PATH }}"
+  tags: [asdf]
+
+- name: Install asdf tool versions
+  shell: |
+    ASDF_SH="{{ brew_prefix }}/opt/asdf/libexec/asdf.sh"
+    [ -f "$ASDF_SH" ] || ASDF_SH="{{ ansible_env.HOME }}/.asdf/asdf.sh"
+    . "$ASDF_SH"
+    asdf install
+  args:
+    chdir: "{{ dotfiles_dir }}"
+    executable: /bin/bash
+  when: tool_versions_file.stat.exists
+  environment:
+    PATH: "{{ ansible_env.HOME }}/.asdf/bin:{{ ansible_env.HOME }}/.asdf/shims:{{ brew_prefix }}/bin:{{ ansible_env.PATH }}"
+  tags: [asdf]
