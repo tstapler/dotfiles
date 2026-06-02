@@ -9,7 +9,7 @@ DOTFILES_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 # Ensure Homebrew exists and is on PATH
 if ! command -v brew &>/dev/null; then
   echo "Installing Homebrew..."
-  NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 fi
 
 # Add brew to PATH for this session — handle Apple Silicon, Intel macOS, and Linux

@@ -53,8 +53,7 @@ fi
 install_homebrew() {
   if ! command -v brew &>/dev/null; then
     echo "Installing Homebrew..."
-    # Scope NONINTERACTIVE to the brew installer only — exporting it leaks into Ansible and blocks sudo prompts
-    NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   fi
 
   # Add brew to PATH for this session — handle Apple Silicon, Intel macOS, and Linux
