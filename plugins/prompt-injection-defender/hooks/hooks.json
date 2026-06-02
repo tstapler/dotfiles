@@ -1,0 +1,54 @@
+{
+  "PostToolUse": [
+    {
+      "matcher": "Read",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "uv run \"$HOME/dotfiles/plugins/prompt-injection-defender/hooks/post-tool-defender.py\"",
+          "timeout": 5
+        }
+      ]
+    },
+    {
+      "matcher": "WebFetch",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "uv run \"$HOME/dotfiles/plugins/prompt-injection-defender/hooks/post-tool-defender.py\"",
+          "timeout": 5
+        }
+      ]
+    },
+    {
+      "matcher": "Bash",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "uv run \"$HOME/dotfiles/plugins/prompt-injection-defender/hooks/post-tool-defender.py\"",
+          "timeout": 5
+        }
+      ]
+    },
+    {
+      "matcher": "Grep",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "uv run \"$HOME/dotfiles/plugins/prompt-injection-defender/hooks/post-tool-defender.py\"",
+          "timeout": 5
+        }
+      ]
+    },
+    {
+      "matcher": "Task",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "uv run \"$HOME/dotfiles/plugins/prompt-injection-defender/hooks/post-tool-defender.py\"",
+          "timeout": 5
+        }
+      ]
+    }
+  ]
+}

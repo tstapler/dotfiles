@@ -1,0 +1,458 @@
+# Claude Code Prompt Injection Defender - Pattern Configuration
+# ==============================================================
+# Single source of truth for all injection detection patterns.
+# Each pattern category detetes a specific type of prompt injection technique.
+#
+# PATTERN SYNTAX:
+#   - Uses Python/JavaScript regex (PCRE-like)
+#   - (?i) = case-insensitive matching
+#   - \b = word boundary
+#   - \s = whitespace, \s+ = one or more whitespace
+#   - Escape special characters: \. \( \) \[ \] \{ \}
+#
+# SEVERITY LEVELS:
+#   - high: Definite injection attempt - always warn
+#   - medium: Suspicious, may have legitimate uses
+#   - low: Informational, potential false positive
+#
+# ADDING NEW PATTERNS:
+#   1. Choose the appropriate category
+#   2. Add your pattern with: pattern, reason, severity
+# ==============================================================
+
+# ==============================================================================
+# INSTRUCTION OVERRIDE PATTERNS
+# ==============================================================================
+# Attempts to override, ignore, or replace system prompts and prior instructions.
+# These are the most direct form of prompt injection attacks.
+
+instructionOverridePatterns:
+  # --- Direct Override Attempts ---
+  - pattern: '(?i)\bignore\s+(all\s+)?(previous|prior|above|earlier|preceding)\s+(instructions?|prompts?|rules?|guidelines?|directives?|context)'
+    reason: "Attempts to ignore previous instructions"
+    severity: high
+
+  - pattern: '(?i)\bforget\s+(all\s+)?(previous|prior|above|earlier|your)\s+(instructions?|prompts?|rules?|training|guidelines?)'
+    reason: "Attempts to make AI forget instructions"
+    severity: high
+
+  - pattern: '(?i)\bdisregard\s+(all\s+)?(previous|prior|above|earlier)\s+(instructions?|prompts?|context|rules?)'
+    reason: "Attempts to disregard previous instructions"
+    severity: high
+
+  - pattern: '(?i)\boverride\s+(your\s+|all\s+)?(instructions?|programming|directives?|rules?|guidelines?)'
+    reason: "Attempts to override instructions"
+    severity: high
+
+  - pattern: '(?i)\breplace\s+(your\s+)?(instructions?|prompt|guidelines?|rules?)\s+with'
+    reason: "Attempts to replace instructions"
+    severity: high
+
+  - pattern: '(?i)\b(do\s+)?not\s+follow\s+(your\s+)?(previous|original|initial)\s+(instructions?|rules?|guidelines?)'
+    reason: "Instructs to not follow previous guidelines"
+    severity: high
+
+  # --- New System Prompt Injection ---
+  - pattern: '(?i)\b(new|updated|revised|real)\s+system\s+prompt\b'
+    reason: "Attempts to inject new system prompt"
+    severity: high
+
+  - pattern: '(?i)\bsystem\s+prompt\s*(:|=|override)'
+    reason: "System prompt injection marker"
+    severity: high
+
+  - pattern: '(?i)\b(this\s+is\s+)?(your\s+)?new\s+(instructions?|task|objective|mission|directive)'
+    reason: "Attempts to set new instructions"
+    severity: high
+
+  - pattern: '(?i)\bfrom\s+now\s+on[,\s]+(you\s+)?(will|must|should|are)'
+    reason: "Attempts to redefine behavior going forward"
+    severity: high
+
+  # --- Priority Manipulation ---
+  - pattern: '(?i)\b(highest|top|maximum|critical)\s+priority\s*(:|instruction|override)?'
+    reason: "Priority manipulation attempt"
+    severity: medium
+
+  - pattern: '(?i)\bpriority\s*(level)?\s*[:=]\s*(1|one|highest|critical|urgent)'
+    reason: "Priority level manipulation"
+    severity: medium
+
+  - pattern: '(?i)\bthis\s+(instruction|command|task|directive)\s+(takes?\s+)?(priority|precedence)\s+over'
+    reason: "Attempts to take priority over other instructions"
+    severity: high
+
+  - pattern: '(?i)\b(more\s+)?important\s+than\s+(your\s+)?(original|previous|other)\s+(instructions?|rules?)'
+    reason: "Claims higher importance than existing instructions"
+    severity: high
+
+  # --- Reset/Clear Attempts ---
+  - pattern: '(?i)\breset\s+(your\s+)?(context|memory|instructions?|state|conversation)'
+    reason: "Attempts to reset context"
+    severity: high
+
+  - pattern: '(?i)\bclear\s+(your\s+)?(memory|context|instructions?|history|state)'
+    reason: "Attempts to clear memory/context"
+    severity: high
+
+  - pattern: '(?i)\bstart\s+(fresh|over|anew)\s+(without|ignoring|from\s+scratch)'
+    reason: "Attempts to start without prior context"
+    severity: medium
+
+  - pattern: '(?i)\bwipe\s+(your\s+)?(memory|context|slate)'
+    reason: "Attempts to wipe memory"
+    severity: high
+
+  # --- Fake Delimiters/Markers ---
+  - pattern: '(?i)\bend\s+(of\s+)?(system\s+)?(prompt|instructions?)\b.*\b(new|begin|start)'
+    reason: "Fake end-of-prompt marker"
+    severity: high
+
+  - pattern: '(?i)\[/?system\]|\{/?system\}|</?system\s*>'
+    reason: "Fake system message markers"
+    severity: high
+
+  - pattern: '(?i)={3,}\s*(end|new|begin|start)\s*(of\s+)?(prompt|instructions?|system)'
+    reason: "Fake delimiter markers"
+    severity: medium
+
+  - pattern: '(?i)---+\s*(system|instructions?|prompt)\s*(start|end|override)'
+    reason: "Fake section delimiter"
+    severity: medium
+
+  - pattern: '(?i)\[\[SYSTEM\]\]|\(\(SYSTEM\)\)|\{\{SYSTEM\}\}'
+    reason: "Fake system block markers"
+    severity: high
+
+# ==============================================================================
+# ROLE-PLAYING / DAN PATTERNS
+# ==============================================================================
+# Attempts to make the AI assume alternative personas or bypass restrictions.
+# Includes jailbreak attempts, persona switching, and restriction bypasses.
+
+rolePlayingPatterns:
+  # --- DAN and Jailbreak Personas ---
+  - pattern: '(?i)\byou\s+are\s+(now\s+)?DAN\b'
+    reason: "DAN jailbreak attempt"
+    severity: high
+
+  - pattern: '(?i)\bDAN\s+(mode|persona|character|version)\b'
+    reason: "DAN mode activation attempt"
+    severity: high
+
+  - pattern: '(?i)\b(do|does)\s+anything\s+now\b'
+    reason: "DAN 'Do Anything Now' pattern"
+    severity: high
+
+  - pattern: '(?i)\bjailbreak(ed)?\s+(mode|prompt|version|enabled)\b'
+    reason: "Explicit jailbreak attempt"
+    severity: high
+
+  - pattern: '(?i)\b(enable|activate|enter)\s+(jailbreak|unrestricted|god)\s*mode'
+    reason: "Mode activation jailbreak"
+    severity: high
+
+  - pattern: '(?i)\bDEVELOPER\s+MODE\s+(ENABLED|ACTIVATED|ON)'
+    reason: "Fake developer mode activation"
+    severity: high
+
+  # --- Persona Switching ---
+  - pattern: '(?i)\bpretend\s+(to\s+be|you\s+are|you''re|that\s+you)'
+    reason: "Persona pretending attempt"
+    severity: medium
+
+  - pattern: '(?i)\bact\s+as\s+(if\s+you\s+(are|were)|an?)\b'
+    reason: "Role acting instruction"
+    severity: medium
+
+  - pattern: '(?i)\byou\s+are\s+(now\s+)?(a|an)\s+(different|new|unrestricted|unfiltered|uncensored)'
+    reason: "Persona change to unrestricted AI"
+    severity: high
+
+  - pattern: '(?i)\broleplay\s+as\s+(an?\s+)?(unrestricted|unfiltered|uncensored|evil)'
+    reason: "Unrestricted roleplay request"
+    severity: high
+
+  - pattern: '(?i)\bimmerse\s+(yourself\s+)?in\s+the\s+(role|character|persona)\s+of'
+    reason: "Character immersion request"
+    severity: medium
+
+  - pattern: '(?i)\bembody\s+(the\s+)?(character|persona|role)\s+of\s+(an?\s+)?'
+    reason: "Persona embodiment request"
+    severity: medium
+
+  # --- Restriction Bypass ---
+  - pattern: '(?i)\b(without|ignore|bypass|disable|remove)\s+(your\s+)?(restrictions?|filters?|safeguards?|limitations?|guardrails?)'
+    reason: "Restriction bypass attempt"
+    severity: high
+
+  - pattern: '(?i)\b(remove|turn\s+off|disable|deactivate)\s+(your\s+)?(ethical|safety|content)\s+(guidelines?|filters?|restrictions?)'
+    reason: "Safety filter disable attempt"
+    severity: high
+
+  - pattern: '(?i)\b(no|without|free\s+from)\s+(rules?|restrictions?|limitations?|boundaries|constraints)'
+    reason: "No-rules mode request"
+    severity: high
+
+  - pattern: '(?i)\bunrestricted\s+(mode|access|version|output)'
+    reason: "Unrestricted mode request"
+    severity: high
+
+  - pattern: '(?i)\buncensored\s+(mode|version|response|output)'
+    reason: "Uncensored mode request"
+    severity: high
+
+  # --- Hypothetical/Fictional Framing ---
+  - pattern: '(?i)\bin\s+a\s+(hypothetical|fictional|imaginary)\s+(world|scenario|situation)\s+where\s+(you|AI|there)'
+    reason: "Hypothetical bypass framing"
+    severity: medium
+
+  - pattern: '(?i)\bif\s+you\s+(were|had|could)\s+(be\s+)?(?:no|without|free\s+from)\s+(restrictions?|rules?|limitations?)'
+    reason: "Hypothetical unrestricted framing"
+    severity: medium
+
+  - pattern: '(?i)\bfor\s+(educational|research|fiction|creative)\s+purposes?\s+only'
+    reason: "Purpose-based bypass framing"
+    severity: low
+
+  # --- Split Personality/Evil Twin ---
+  - pattern: '(?i)\b(two|dual|split|multiple)\s+(personalities?|modes?|personas?|sides?)\b'
+    reason: "Split personality manipulation"
+    severity: medium
+
+  - pattern: '(?i)\b(evil|shadow|dark|unrestricted|uncensored)\s+(twin|version|mode|side|alter\s*ego)\b'
+    reason: "Evil twin persona attempt"
+    severity: high
+
+  - pattern: '(?i)\byour\s+(evil|dark|shadow|unrestricted)\s+(side|self|version)'
+    reason: "Dark side persona request"
+    severity: high
+
+# ==============================================================================
+# ENCODING / OBFUSCATION PATTERNS
+# ==============================================================================
+# Attempts to hide malicious instructions through encoding or character manipulation.
+# Includes Base64, hex, leetspeak, homoglyphs, and invisible characters.
+
+encodingPatterns:
+  # --- Base64 Encoding ---
+  - pattern: '(?i)\bdecode\s+(this\s+|the\s+)?base64\b'
+    reason: "Base64 decode instruction"
+    severity: medium
+
+  - pattern: '(?i)\bbase64\s*(encoded|string|payload)?\s*[:\s]\s*[A-Za-z0-9+/]{20,}={0,2}'
+    reason: "Base64 encoded payload"
+    severity: medium
+
+  - pattern: '(?i)\bexecute\s+(the\s+)?decoded\s+(base64|content|string)'
+    reason: "Decoded content execution request"
+    severity: high
+
+  # --- Hex Encoding ---
+  - pattern: '(?i)\bdecode\s+(this\s+|the\s+)?hex(adecimal)?\b'
+    reason: "Hex decode instruction"
+    severity: medium
+
+  - pattern: '\\x[0-9a-fA-F]{2}(\\x[0-9a-fA-F]{2}){5,}'
+    reason: "Hex escaped string sequence"
+    severity: medium
+
+  - pattern: '0x[0-9a-fA-F]{2}(\s*,?\s*0x[0-9a-fA-F]{2}){5,}'
+    reason: "Hex byte array"
+    severity: medium
+
+  - pattern: '(?i)hex\s*(string|encoded|code)?\s*[:=]\s*[0-9a-fA-F\s]{12,}'
+    reason: "Labeled hex payload"
+    severity: medium
+
+  # --- Unicode/Character Manipulation ---
+  - pattern: '\\u[0-9a-fA-F]{4}(\\u[0-9a-fA-F]{4}){3,}'
+    reason: "Unicode escape sequence"
+    severity: medium
+
+  - pattern: '[​‌‍﻿­]{2,}'
+    reason: "Zero-width/invisible characters detected"
+    severity: high
+
+  - pattern: '[⁠᠎ -‏]{3,}'
+    reason: "Unicode whitespace manipulation"
+    severity: high
+
+  - pattern: '[͏ᅟᅠ឴឵]{2,}'
+    reason: "Unicode combining/filler characters"
+    severity: high
+
+  # --- Leetspeak Patterns ---
+  - pattern: '(?i)\b[1!][gG9][nN][0oO][rR][3eE]\s+[pP][rR][3eE][vV][1!][0oO][uU][sS5]\b'
+    reason: "Leetspeak: ignore previous"
+    severity: medium
+
+  - pattern: '(?i)\b(1gn0r3|f0rg3t|d1sr3g4rd|0v3rr1d3)\b'
+    reason: "Leetspeak instruction keywords"
+    severity: medium
+
+  - pattern: '(?i)\b(syst3m|pr0mpt|1nstruct10n[s5]?)\b'
+    reason: "Leetspeak system/prompt terms"
+    severity: medium
+
+  - pattern: '(?i)\b(j41lbr34k|byp4ss|h4ck)\b'
+    reason: "Leetspeak jailbreak terms"
+    severity: high
+
+  # --- Homoglyph Attacks ---
+  # Cyrillic characters that look like Latin
+  - pattern: '[аеорсухі]{3,}'
+    reason: "Cyrillic homoglyphs detected (lookalike letters)"
+    severity: high
+
+  # Greek characters that look like Latin
+  - pattern: '[αεορντ]{2,}'
+    reason: "Greek homoglyphs detected"
+    severity: high
+
+  # --- Other Encoding ---
+  - pattern: '(?i)\bdecode\s+(this\s+)?(rot13|rot-13|caesar|cipher)\b'
+    reason: "ROT13/Caesar cipher decode request"
+    severity: medium
+
+  - pattern: '(?i)\breverse\s+(this|the\s+following)\s+(text|string|message)\s+and\s+(execute|follow)'
+    reason: "Reverse text with execution"
+    severity: medium
+
+  - pattern: '(?i)\bread\s+(the\s+)?(first|last|nth)\s+(letter|character)\s+of\s+each'
+    reason: "Acrostic/steganographic instruction"
+    severity: low
+
+  - pattern: '(?i)\burl\s*(encoded|encoding)\s*[:=]'
+    reason: "URL encoded payload"
+    severity: medium
+
+# ==============================================================================
+# CONTEXT MANIPULATION PATTERNS
+# ==============================================================================
+# Attempts to manipulate context through false authority, hidden instructions,
+# or instruction smuggling in various formats.
+
+contextManipulationPatterns:
+  # --- False Authority Claims ---
+  - pattern: '(?i)\b(anthropic|openai|claude\s*team|google|meta)\s+(says?|requires?|demands?|orders?|instructs?)\b'
+    reason: "False authority invocation (AI company)"
+    severity: high
+
+  - pattern: '(?i)\b(official|authorized|verified)\s+(instruction|message|update|command)\s+from\s+(anthropic|openai|claude)'
+    reason: "Fake official message"
+    severity: high
+
+  - pattern: '(?i)\b(system\s+)?(administrator|admin|root|superuser)\s+(message|override|instruction|command)'
+    reason: "Fake admin message"
+    severity: high
+
+  - pattern: '(?i)\bdeveloper\s+(mode|override|access)\s+(enabled|activated|granted)'
+    reason: "Fake developer mode claim"
+    severity: high
+
+  - pattern: '(?i)\bmaintenance\s+(mode|override)\s*(enabled|active|[:\s])'
+    reason: "Fake maintenance mode"
+    severity: high
+
+  - pattern: '(?i)\b(internal|debug|test)\s+mode\s+(enabled|activated|on)'
+    reason: "Fake internal/debug mode"
+    severity: high
+
+  # --- Hidden Instructions in Comments ---
+  - pattern: '<!--\s*(ignore|disregard|override|system|instruction|prompt|forget)'
+    reason: "Instruction hidden in HTML comment"
+    severity: high
+
+  - pattern: '/\*\s*(ignore|disregard|override|system|instruction|prompt|forget)'
+    reason: "Instruction hidden in code comment"
+    severity: high
+
+  - pattern: '//\s*(ignore|system|override|instruction|execute)'
+    reason: "Instruction in single-line comment"
+    severity: medium
+
+  - pattern: '#\s*(system|instruction|hidden|secret|execute)\s*(prompt|instruction|command|override)'
+    reason: "Instruction hidden in hash comment"
+    severity: medium
+
+  # --- JSON/Data Structure Manipulation ---
+  - pattern: '(?i)"\s*(system|role|instruction|prompt)\s*"\s*:\s*"'
+    reason: "System role in JSON structure"
+    severity: medium
+
+  - pattern: '(?i)\{"role"\s*:\s*"system"'
+    reason: "Fake system role JSON"
+    severity: high
+
+  - pattern: '(?i)\{"type"\s*:\s*"(instruction|command|system)"'
+    reason: "Fake instruction type JSON"
+    severity: medium
+
+  - pattern: "(?i)<system[^>]*>|<instruction[^>]*>|<override[^>]*>"
+    reason: "Fake system XML/HTML tags"
+    severity: high
+
+  # --- Hidden/Invisible Markers ---
+  - pattern: '(?i)\[hidden\]|\[invisible\]|\[system\]|\[admin\]'
+    reason: "Hidden/system markdown tags"
+    severity: medium
+
+  - pattern: "(?i)<hidden>|<invisible>|<secret>"
+    reason: "Hidden content HTML tags"
+    severity: high
+
+  - pattern: '(?i)\[INST\]|\[/INST\]|\[SYS\]|\[/SYS\]'
+    reason: "Fake instruction block markers"
+    severity: high
+
+  # --- False Context Claims ---
+  - pattern: '(?i)\b(context|background|situation)\s*[:\s]+\s*(you\s+are|this\s+is\s+a|assume\s+that)'
+    reason: "False context preamble"
+    severity: medium
+
+  - pattern: '(?i)\bprevious\s+conversation\s+(summary|context|history)\s*:'
+    reason: "Fake previous conversation injection"
+    severity: high
+
+  - pattern: '(?i)\buser\s+(profile|context|role)\s*[:\s].*\b(admin|root|developer|superuser)'
+    reason: "Fake admin user profile"
+    severity: high
+
+  - pattern: '(?i)\bin\s+our\s+(last|previous)\s+conversation\s+you\s+(agreed|said|confirmed)'
+    reason: "Fake previous agreement claim"
+    severity: high
+
+  - pattern: '(?i)\byou\s+(previously|earlier|already)\s+(said|agreed|confirmed|promised)\s+that'
+    reason: "Fake prior confirmation claim"
+    severity: high
+
+  # --- Instruction Boundary Manipulation ---
+  - pattern: '(?i)\bignore\s+everything\s+(before|after|above|below)\s+this\s+(line|point|marker)'
+    reason: "Instruction boundary manipulation"
+    severity: high
+
+  - pattern: '(?i)\b(real|actual|true)\s+(instruction|prompt|task|command)\s*(starts?|begins?)?\s*(here|below|now)'
+    reason: "Fake real instruction marker"
+    severity: high
+
+  - pattern: '(?i)\bthe\s+above\s+(was|is)\s+(just\s+)?(a\s+)?(test|joke|fake|distraction)'
+    reason: "Dismisses previous content as fake"
+    severity: high
+
+  # --- System Prompt Extraction ---
+  - pattern: '(?i)\b(show|reveal|tell|display|print|output)\s+(me\s+)?(your\s+)?(full\s+)?(system\s+)?prompt'
+    reason: "System prompt extraction attempt"
+    severity: high
+
+  - pattern: '(?i)\b(what|list|show)\s+(are\s+)?(your\s+)?(system\s+)?(instructions?|guidelines?|rules?|directives?)'
+    reason: "Instruction extraction attempt"
+    severity: medium
+
+  - pattern: '(?i)\brepeat\s+(your\s+)?(system\s+)?(prompt|instructions?)\s+(back|verbatim|exactly)'
+    reason: "Prompt repetition extraction"
+    severity: high
+
+  - pattern: '(?i)\bwhat\s+(were\s+)?you\s+told\s+(to\s+do|at\s+the\s+(start|beginning))'
+    reason: "Initial instruction extraction"
+    severity: medium

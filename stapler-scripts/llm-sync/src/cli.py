@@ -226,67 +226,69 @@ def main():
                         help="Directory of plugins to install globally into ~/.claude/")
     parser.add_argument("--plugins-local-dir", type=Path,
                         help="Directory of plugins to install locally into ./.claude/")
-    
+    parser.add_argument("--plugins-only", action="store_true",
+                        help="Only sync plugins (skip agents, skills, commands, MCP)")
+
     args = parser.parse_args()
-    
+
     console.print("[bold]LLM Agent Sync (Hash-based)[/bold]")
-    
+
     state_manager = SyncStateManager(args.state_file)
-    
+
     try:
-        source_params = {}
-        if args.source_dir:
-            source_params['agents_dir'] = args.source_dir / "agents"
-            source_params['skills_dir'] = args.source_dir / "skills"
-            source_params['commands_dir'] = args.source_dir / "commands"
-        claude = ClaudeSource(**source_params)
-
-        targets = []
-        if args.target in ['gemini', 'all']:
-            gemini_params = {}
-            if args.gemini_dir:
-                gemini_params['agents_dir'] = args.gemini_dir / "agents"
-                gemini_params['skills_dir'] = args.gemini_dir / "skills"
-                gemini_params['commands_dir'] = args.gemini_dir / "commands"
-            targets.append(GeminiTarget(**gemini_params))
-            
-        if args.target in ['opencode', 'all']:
-            opencode_params = {}
-            if args.opencode_dir:
-                opencode_params['agents_dir'] = args.opencode_dir / "agents"
-                opencode_params['commands_dir'] = args.opencode_dir / "commands"
-            targets.append(OpenCodeTarget(**opencode_params))
-
-        if args.cleanup:
-            console.print("\n[bold]Cleaning up legacy files...[/bold]")
-            agents = claude.load_agents()
-            commands = claude.load_commands()
-            for t in targets:
-                cleanup_legacy_files(t, agents + commands, dry_run=args.dry_run)
-
-        # Execution
-        for target in targets:
-            if args.direction in ['to-target', 'both']:
-                sync_to_target(claude, target, state_manager, args.dry_run, args.force)
-
-            if args.direction in ['from-target', 'both']:
-                sync_from_target(claude, target, state_manager, args.dry_run, args.force)
-
-        mcp_source = McpConfigSource(
-            global_config_file=args.mcp_global_config,
-            local_config_file=args.mcp_local_config,
-        )
-        claude_settings = ClaudeSettingsTarget(settings_file=args.claude_settings_file)
-        sync_mcp(mcp_source, claude_settings, args.dry_run)
-
-        antigravity_mcp = AntigravityMcpTarget()
-        sync_mcp(mcp_source, antigravity_mcp, args.dry_run)
-
         plugin_source = PluginSource(
             global_plugins_dir=args.plugins_global_dir,
             local_plugins_dir=args.plugins_local_dir,
         )
         sync_plugins(plugin_source, args.dry_run)
+
+        if not args.plugins_only:
+            source_params = {}
+            if args.source_dir:
+                source_params['agents_dir'] = args.source_dir / "agents"
+                source_params['skills_dir'] = args.source_dir / "skills"
+                source_params['commands_dir'] = args.source_dir / "commands"
+            claude = ClaudeSource(**source_params)
+
+            targets = []
+            if args.target in ['gemini', 'all']:
+                gemini_params = {}
+                if args.gemini_dir:
+                    gemini_params['agents_dir'] = args.gemini_dir / "agents"
+                    gemini_params['skills_dir'] = args.gemini_dir / "skills"
+                    gemini_params['commands_dir'] = args.gemini_dir / "commands"
+                targets.append(GeminiTarget(**gemini_params))
+
+            if args.target in ['opencode', 'all']:
+                opencode_params = {}
+                if args.opencode_dir:
+                    opencode_params['agents_dir'] = args.opencode_dir / "agents"
+                    opencode_params['commands_dir'] = args.opencode_dir / "commands"
+                targets.append(OpenCodeTarget(**opencode_params))
+
+            if args.cleanup:
+                console.print("\n[bold]Cleaning up legacy files...[/bold]")
+                agents = claude.load_agents()
+                commands = claude.load_commands()
+                for t in targets:
+                    cleanup_legacy_files(t, agents + commands, dry_run=args.dry_run)
+
+            for target in targets:
+                if args.direction in ['to-target', 'both']:
+                    sync_to_target(claude, target, state_manager, args.dry_run, args.force)
+
+                if args.direction in ['from-target', 'both']:
+                    sync_from_target(claude, target, state_manager, args.dry_run, args.force)
+
+            mcp_source = McpConfigSource(
+                global_config_file=args.mcp_global_config,
+                local_config_file=args.mcp_local_config,
+            )
+            claude_settings = ClaudeSettingsTarget(settings_file=args.claude_settings_file)
+            sync_mcp(mcp_source, claude_settings, args.dry_run)
+
+            antigravity_mcp = AntigravityMcpTarget()
+            sync_mcp(mcp_source, antigravity_mcp, args.dry_run)
 
         if not args.dry_run:
             state_manager.save()

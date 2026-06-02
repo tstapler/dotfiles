@@ -15,7 +15,7 @@ Dispatch a validation subagent to design the test suite. The subagent writes val
    - `project_plans/<PROJECT_NAME>/implementation/plan.md` — halt if missing, run `/sdd:3-plan` first
    - `project_plans/<PROJECT_NAME>/requirements.md`
 
-3. **Dispatch a validation subagent using the `Agent` tool.**
+3. **Dispatch a validation subagent using the `Task` tool.**
 
    The subagent prompt must include:
    - Full text of `plan.md`

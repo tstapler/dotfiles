@@ -13,7 +13,7 @@ Spawn 4 parallel subagents to research the problem. All research happens in suba
 
 2. **Read `project_plans/<PROJECT_NAME>/requirements.md`.** Halt if missing — run `/sdd:1-ideate` first.
 
-3. **Dispatch 4 research agents in parallel using the `Agent` tool** (all 4 in a single message — do not run sequentially):
+3. **Dispatch 4 research agents in parallel using the `Task` tool** (all 4 in a single message — do not run sequentially):
 
    Each agent prompt must include:
    - The full text of `requirements.md`

@@ -1,0 +1,8 @@
+{
+    "name": "prompt-injection-defender",
+    "description": "PostToolUse hook that scans all tool outputs (Read, WebFetch, Bash, Grep, Task, mcp__*) for prompt injection attempts. Warns Claude without blocking. Adapted from lasso-security/claude-hooks.",
+    "version": "0.1.0",
+    "author": {
+        "name": "Tyler Stapler"
+    }
+}
