@@ -48,6 +48,7 @@ brew "libssh"
 brew "tree"
 # Automate deployment, configuration, and upgrading
 brew "ansible"
+brew "ansible-lint"
 # Code searching, linting, rewriting
 brew "ast-grep"
 # Python frame stack sampler for CPython

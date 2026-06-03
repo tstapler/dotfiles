@@ -1,0 +1,20 @@
+---
+profile: basic
+
+# Paths to lint
+lint_paths:
+  - playbook.yml
+  - roles/
+
+# Warn on deprecated bare variables, fqcn, etc.
+warn_list:
+  - experimental
+  - yaml[line-length]
+
+# Skip rules that don't apply to a local-only dotfiles bootstrap
+skip_list:
+  - no-changed-when  # some tasks legitimately don't track changes (e.g. brew update)
+  - role-name        # role names intentionally short
+
+exclude_paths:
+  - .cache/

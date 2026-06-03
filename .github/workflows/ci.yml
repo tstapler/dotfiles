@@ -7,6 +7,8 @@ on:
       - '**/pyproject.toml'
       - '**/requirements.txt'
       - '**/uv.lock'
+      - 'bootstrap/**'
+      - 'install.sh'
       - '.github/workflows/ci.yml'
   pull_request:
     paths:
@@ -14,9 +16,33 @@ on:
       - '**/pyproject.toml'
       - '**/requirements.txt'
       - '**/uv.lock'
+      - 'bootstrap/**'
+      - 'install.sh'
       - '.github/workflows/ci.yml'
 
 jobs:
+  ansible-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ansible-lint
+        run: pip install ansible-lint
+      - name: Install community.general collection
+        run: ansible-galaxy collection install community.general
+      - name: Run ansible-lint
+        run: ansible-lint
+        working-directory: bootstrap
+
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run shellcheck on install.sh
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: '.'
+          additional_files: 'install.sh bootstrap/run.sh'
+
   test:
     runs-on: ubuntu-latest
     steps:
