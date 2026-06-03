@@ -26,7 +26,7 @@
   find:
     paths: "{{ ansible_env.HOME }}/.local/share/fonts/"
     patterns: "MesloLG*"
-  register: meslo_font_files
+  register: fonts_meslo_font_files
   when: ansible_os_family != "Darwin" and not (is_wsl | default(false))
   tags: [fonts]
 
@@ -36,7 +36,7 @@
     dest: "/tmp/Meslo.zip"
     force: false
     mode: '0644'
-  when: ansible_os_family != "Darwin" and not (is_wsl | default(false)) and meslo_font_files.matched == 0
+  when: ansible_os_family != "Darwin" and not (is_wsl | default(false)) and fonts_meslo_font_files.matched == 0
   tags: [fonts]
 
 - name: Unzip Meslo Nerd Font (Linux)
@@ -44,7 +44,7 @@
     src: "/tmp/Meslo.zip"
     dest: "{{ ansible_env.HOME }}/.local/share/fonts/"
     remote_src: true
-  when: ansible_os_family != "Darwin" and not (is_wsl | default(false)) and meslo_font_files.matched == 0
+  when: ansible_os_family != "Darwin" and not (is_wsl | default(false)) and fonts_meslo_font_files.matched == 0
   tags: [fonts]
 
 - name: Refresh font cache (Linux)

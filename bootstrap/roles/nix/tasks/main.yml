@@ -5,15 +5,54 @@
   register: nix_bin
   tags: [nix]
 
-- name: Install Nix (Determinate Systems installer)
-  shell: |
-    curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install --no-confirm
+- name: Set Nix platform and checksums  # noqa: jinja[spacing]
+  set_fact:
+    nix_version_str: "2.34.7"
+    nix_system: >-
+      {%- if ansible_system == 'Darwin' and ansible_architecture in ['arm64', 'aarch64'] -%}
+      aarch64-darwin{%- elif ansible_system == 'Darwin' -%}
+      x86_64-darwin{%- elif ansible_architecture == 'aarch64' -%}
+      aarch64-linux{%- elif ansible_architecture == 'armv7l' -%}
+      armv7l-linux{%- elif ansible_architecture == 'armv6l' -%}
+      armv6l-linux{%- elif ansible_architecture in ['i386', 'i686'] -%}
+      i686-linux{%- elif ansible_architecture == 'riscv64' -%}
+      riscv64-linux{%- else -%}
+      x86_64-linux
+      {%- endif -%}
+    nix_checksums:
+      aarch64-darwin: sha256:71e18301c4ea78c667f2753159156b5bdb899993720e8aa7bcca97e8312d3d6b
+      x86_64-darwin: sha256:8bf3dadfd65be182ad3141b1224bbc82e0f2a61d4f36781938b5e6ede029c2a3
+      x86_64-linux: sha256:eafe5042404e818505e28c5ca3d0885f3ec45c31f955489a25bb38258f87560e
+      aarch64-linux: sha256:f1cee64ae7a02330c6421924c28f597c41813f2214ff108622087d8056378b08
+      armv7l-linux: sha256:758e8fb802fb83b571c1cbac906d77dff67e6724cf09110f87d1f84dde432685
+      armv6l-linux: sha256:a7152bcc4489eae2e688895a6d070362d03c46720649a9418ca423e200ef0f5f
+      i686-linux: sha256:0695f4b7b289c3f66c1a76447db164a2f96492a0d1cf8f2a7b2caaa8bfab08fb
+      riscv64-linux: sha256:562290f2753ecb9e25e53a5b814473e80dd8f1ab504427f422cb455287084c18
   when: not nix_bin.stat.exists
   tags: [nix]
 
-- name: Source Nix daemon in current shell
-  shell: |
-    . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh && nix --version
+- name: Download Nix binary tarball
+  get_url:
+    url: "https://releases.nixos.org/nix/nix-{{ nix_version_str }}/nix-{{ nix_version_str }}-{{ nix_system | trim }}.tar.xz"
+    dest: "/tmp/nix-{{ nix_version_str }}-{{ nix_system | trim }}.tar.xz"
+    checksum: "{{ nix_checksums[nix_system | trim] }}"
+    mode: '0644'
+  when: not nix_bin.stat.exists
+  tags: [nix]
+
+- name: Extract Nix tarball
+  unarchive:
+    src: "/tmp/nix-{{ nix_version_str }}-{{ nix_system | trim }}.tar.xz"
+    dest: /tmp/
+    remote_src: true
+    creates: "/tmp/nix-{{ nix_version_str }}-{{ nix_system | trim }}"
+  when: not nix_bin.stat.exists
+  tags: [nix]
+
+- name: Run Nix installer
+  command: "/tmp/nix-{{ nix_version_str }}-{{ nix_system | trim }}/install --no-daemon"
+  environment:
+    INVOKED_FROM_INSTALL_IN: "1"
   when: not nix_bin.stat.exists
   tags: [nix]
 

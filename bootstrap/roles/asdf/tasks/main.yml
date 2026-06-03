@@ -2,14 +2,14 @@
 - name: Check .tool-versions exists
   stat:
     path: "{{ dotfiles_dir }}/.tool-versions"
-  register: tool_versions_file
+  register: asdf_tool_versions_file
   tags: [asdf]
 
 - name: Read tool names from .tool-versions
   shell: "awk '{print $1}' {{ dotfiles_dir }}/.tool-versions"
   register: asdf_tool_names
   changed_when: false
-  when: tool_versions_file.stat.exists
+  when: asdf_tool_versions_file.stat.exists
   tags: [asdf]
 
 - name: Add asdf plugins
@@ -20,11 +20,11 @@
     asdf plugin add {{ item }}
   args:
     executable: /bin/bash
-  register: plugin_result
-  failed_when: plugin_result.rc != 0 and 'already added' not in plugin_result.stderr
-  changed_when: plugin_result.rc == 0
+  register: asdf_plugin_result
+  failed_when: asdf_plugin_result.rc != 0 and 'already added' not in asdf_plugin_result.stderr
+  changed_when: asdf_plugin_result.rc == 0
   loop: "{{ asdf_tool_names.stdout_lines | default([]) }}"
-  when: tool_versions_file.stat.exists
+  when: asdf_tool_versions_file.stat.exists
   environment:
     PATH: "{{ ansible_env.HOME }}/.asdf/bin:{{ ansible_env.HOME }}/.asdf/shims:{{ brew_prefix }}/bin:{{ ansible_env.PATH }}"
   tags: [asdf]
@@ -38,7 +38,7 @@
   args:
     chdir: "{{ dotfiles_dir }}"
     executable: /bin/bash
-  when: tool_versions_file.stat.exists
+  when: asdf_tool_versions_file.stat.exists
   environment:
     PATH: "{{ ansible_env.HOME }}/.asdf/bin:{{ ansible_env.HOME }}/.asdf/shims:{{ brew_prefix }}/bin:{{ ansible_env.PATH }}"
   tags: [asdf]

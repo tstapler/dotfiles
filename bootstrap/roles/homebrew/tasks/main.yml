@@ -27,12 +27,12 @@
 - name: Check Homebrew is installed
   stat:
     path: "{{ brew_prefix }}/bin/brew"
-  register: brew_bin
+  register: homebrew_brew_bin
   tags: [homebrew]
 
 - name: Install Homebrew
   shell: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-  when: not brew_bin.stat.exists
+  when: not homebrew_brew_bin.stat.exists
   tags: [homebrew]
 
 - name: Update Homebrew
@@ -44,15 +44,15 @@
 
 - name: Set brewfile path
   set_fact:
-    brewfile_path: "{{ dotfiles_dir }}/{{ 'Brewfile' if ansible_os_family == 'Darwin' else 'Brewfile.linux' }}"
+    homebrew_brewfile_path: "{{ dotfiles_dir }}/{{ 'Brewfile' if ansible_os_family == 'Darwin' else 'Brewfile.linux' }}"
   tags: [homebrew]
 
 - name: Install packages from Brewfile
   command: >
     {{ brew_prefix }}/bin/brew bundle install
-    --file={{ brewfile_path }}
-  register: brew_bundle
-  changed_when: "'Installing' in brew_bundle.stdout or 'Upgrading' in brew_bundle.stdout"
+    --file={{ homebrew_brewfile_path }}
+  register: homebrew_brew_bundle
+  changed_when: "'Installing' in homebrew_brew_bundle.stdout or 'Upgrading' in homebrew_brew_bundle.stdout"
   environment:
     PATH: "{{ brew_prefix }}/bin:{{ ansible_env.PATH }}"
   tags: [homebrew]
