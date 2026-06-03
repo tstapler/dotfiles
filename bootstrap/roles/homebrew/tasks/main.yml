@@ -31,8 +31,7 @@
   tags: [homebrew]
 
 - name: Install Homebrew
-  shell: |
-    NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  shell: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   when: not brew_bin.stat.exists
   tags: [homebrew]
 
