@@ -52,7 +52,6 @@
   command: >
     {{ brew_prefix }}/bin/brew bundle install
     --file={{ brewfile_path }}
-    --no-lock
   register: brew_bundle
   changed_when: "'Installing' in brew_bundle.stdout or 'Upgrading' in brew_bundle.stdout"
   environment:
