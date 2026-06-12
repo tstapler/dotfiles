@@ -99,3 +99,4 @@ Context engineering curates the smallest high-signal token set for LLM tasks. Th
 | `meta-model-selection` | Choosing model tiers to balance context cost vs. reasoning depth |
 | `code-strands` | Strands-specific conversation managers, sub-agent isolation, and streaming |
 | `meta-claude-technique-evaluator` | Evaluating new context optimization techniques for adoption |
+| `lean-agent-loop` | Implementation of the minimal-context sub-agent pattern: temp-file outputs + structured summaries keep coordinator context constant across N iterations |

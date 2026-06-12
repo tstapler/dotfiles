@@ -67,3 +67,4 @@ From real debugging sessions:
 | `code-review` | Verify fix is complete and correct before claiming done |
 | `security-review` | Bug involves auth, input handling, or data exposure |
 | `code-ast-grep` | Search codebase structurally to find all related call sites |
+| `lean-agent-loop` | Run iterative hypothesis-test-fix cycles with minimal-context agents per verification pass |

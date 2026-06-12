@@ -143,3 +143,4 @@ docker history pgbouncer:latest
 | `infra-testing` | Run TestKube/Kubernetes integration tests against built images |
 | `github-actions-debugging` | Diagnose Docker-related CI failures in GitHub Actions |
 | `security-review` | Audit Dockerfile for vulnerabilities or secret exposure |
+| `lean-agent-loop` | Iterate build/validate failures across categories with parallel agents until `make validate` is clean |

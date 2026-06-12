@@ -175,3 +175,12 @@ git checkout -- <file>
 ```
 
 Then re-run CI locally (`make lint-custom`, `make lint-css-tokens`) to confirm your commits are clean before pushing.
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `github-actions-debugging` | Diagnose failures inside specific workflow steps or composite actions |
+| `lean-agent-loop` | Parallelize multiple failing job categories and iterate fix cycles until all checks pass |

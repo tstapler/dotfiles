@@ -264,3 +264,4 @@ Apply techniques from the `type-driven-design` skill to encode invariants direct
 | `code-debugging` | Systematic investigation of a Go bug or panic |
 | `security-review` | OWASP audit or secrets scan on Go code |
 | `github-actions-debugging` | Debug CI failures for Go tests or linting |
+| `lean-agent-loop` | Parallelize pre-commit tool passes (vet, staticcheck, golangci-lint, test -race) and iterate until all green |

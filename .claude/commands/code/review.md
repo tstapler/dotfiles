@@ -932,6 +932,7 @@ Step 4: Project Coordinator (optional)
           /quality:reflect-and-fix    — after fixing bugs: make recurrence structurally impossible
           /quality:test-planner       — when review finds test coverage MAJOR gaps: plan tests
           /code:fix-loop              — auto-fix loop for remaining build/test/lint failures
+          lean-agent-loop skill       — custom iterative check loops when categories differ from build/test/lint
           ↓
 [ship]    /code:is-it-ready           — final shipping gate: 7-reviewer swarm → GO/HOLD/FIX-THEN-SHIP
 ```

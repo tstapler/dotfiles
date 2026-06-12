@@ -165,3 +165,11 @@ go func() {
 - [ ] TimeoutExecutor (or equivalent) used for polling loops — has both `context.WithTimeout` AND `WaitDelay`
 - [ ] Service restarted to clear residual zombies from before fix
 - [ ] Post-restart: re-run rate monitoring to confirm clean slate
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `lean-agent-loop` | Run repeated rate-monitoring iterations with minimal-context agents to confirm fix convergence |

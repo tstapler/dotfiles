@@ -216,7 +216,7 @@ Verdicts:
    | NITPICK findings | Note only; do not block |
 
    If REFACTOR verdict: stop here. Return to `/sdd:5-implement` with a list of what to fix.
-   Re-run `/sdd:6-verify` after the refactor.
+   Re-run `/sdd:6-verify` after the refactor. This REFACTOR → re-verify cycle follows the `lean-agent-loop` skill pattern — apply that skill if the cycle needs to be automated across multiple iterations.
 
 7. **Layer 3 — Correctness & Tests** (only if Layers 1 + 2 did not trigger REFACTOR)
 

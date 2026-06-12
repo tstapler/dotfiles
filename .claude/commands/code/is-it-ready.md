@@ -374,6 +374,8 @@ Everything else is auto-fixable. When in doubt, fix it.
 
 ### Loop mechanics
 
+> This fix loop embodies the `lean-agent-loop` skill pattern: parallel minimal-context fix agents, structured summaries back to the coordinator, max-iteration guard. For custom check categories beyond the 7 reviewer dimensions, see that skill.
+
 ```
 while verdict != 🚀 SHIP IT:
   1. Group blocking issues by dimension

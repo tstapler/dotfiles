@@ -168,3 +168,4 @@ services:
 | `github-pr` | View PR checks, CI status, and diff context |
 | `github-composite-actions` | Debug failures inside composite action steps |
 | `github-address-pr-comments` | Address review comments after CI is fixed |
+| `lean-agent-loop` | Parallelize multiple failing job checks and iterate fix cycles until all pass |

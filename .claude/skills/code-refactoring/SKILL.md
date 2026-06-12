@@ -119,3 +119,4 @@ GritQL only handles expression-level Kotlin patterns (function calls, method cha
 | `code-architecture-best-practices` | Validate refactored structure against SOLID/Clean Architecture |
 | `code-review` | Verify refactor output before merging to main branch |
 | `code-debugging` | Diagnose test failures or build errors introduced during refactoring |
+| `lean-agent-loop` | Iterate quality gate failures (format, compile, test) with parallel agents until all pass |

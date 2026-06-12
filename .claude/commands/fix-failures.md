@@ -175,6 +175,7 @@ For each failure category, apply the appropriate approach:
 - **Launch multiple agents in parallel** for independent failures
 - **Example**: Different test classes failing independently → parallel test-debugger agents
 - **Benefit**: Maximize throughput and efficiency
+- **For context efficiency**: apply the `lean-agent-loop` skill — agents write full output to `/tmp/`, return only structured summaries to the coordinator, keeping context constant across iterations
 
 ### Phase 4: Validation and Iteration
 

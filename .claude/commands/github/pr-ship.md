@@ -63,7 +63,7 @@ prompt: |
 
   ## Context Discipline — Orchestrator Only
 
-  **This skill is an orchestrator, not a worker.** Delegate all file editing, compiling, and committing to fresh subagents. Never accumulate file contents or diffs in this context — only gate status and state file updates.
+  **This skill is an orchestrator, not a worker.** Delegate all file editing, compiling, and committing to fresh subagents. Never accumulate file contents or diffs in this context — only gate status and state file updates. This is the `lean-agent-loop` skill pattern: the state file is the coordinator's memory, each fresh subagent is a Ralph Wiggum agent, and the five gates are the loop condition.
 
   ```
   Orchestrator (this context)

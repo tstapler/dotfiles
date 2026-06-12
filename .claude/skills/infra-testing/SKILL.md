@@ -138,3 +138,4 @@ Access: https://testkube.cicd.fanatics.bet/clusters/inf-dev-1/tests
 | `infra-docker-build-test` | Build and smoke-test images before deploying to Kubernetes |
 | `github-actions-debugging` | Diagnose TestKube failures surfaced in CI pipelines |
 | `security-review` | Audit Kubernetes manifests and secrets configuration |
+| `lean-agent-loop` | Run repeated test passes with minimal-context agents until all TestKube checks converge to passing |
