@@ -8,7 +8,7 @@ prompt: |
 
   ## State File
 
-  All progress is tracked in `/tmp/pr-ship-${PR}.md`. Read it at the start of every iteration to understand what's already done. Update it after every action. This is your working memory across ScheduleWakeup wakeups.
+  All progress is tracked in `/tmp/pr-ship-${REPO}-${PR}.md`. Read it at the start of every iteration to understand what's already done. Update it after every action. This is your working memory across ScheduleWakeup wakeups.
 
   **State file format** (initialize if missing):
   ```markdown
@@ -47,7 +47,8 @@ prompt: |
 
   ```bash
   PR="${1:-$(gh pr list --head $(git branch --show-current) --json number --jq '.[0].number')}"
-  STATE="/tmp/pr-ship-${PR}.md"
+  REPO="$(gh repo view --json nameWithOwner --jq '.nameWithOwner' | tr '/' '-')"
+  STATE="/tmp/pr-ship-${REPO}-${PR}.md"
   gh pr view "$PR" --json number,title,state,mergeable,mergeStateStatus,headRefName,baseRefName
   ```
 
@@ -246,4 +247,4 @@ prompt: |
 
 **Usage**: `/github:pr-ship` (current branch) or `/github:pr-ship 61`
 
-Gates run in order: local compile → local tests (scoped) → code review → **PR comments** → remote CI → merge conflicts. Push only happens at Gate 4, after all local work and reviewer feedback is incorporated. After CI passes, re-check for new comments before marking done. State tracked in `/tmp/pr-ship-{PR}.md`.
+Gates run in order: local compile → local tests (scoped) → code review → **PR comments** → remote CI → merge conflicts. Push only happens at Gate 4, after all local work and reviewer feedback is incorporated. After CI passes, re-check for new comments before marking done. State tracked in `/tmp/pr-ship-{repo}-{PR}.md`.

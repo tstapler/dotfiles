@@ -239,14 +239,17 @@ test:ci --test_output=all
 
 ## CI (GitHub Actions)
 
+See `/bazel-github-actions-ci` for the full CI setup guide (caching strategy,
+Compose Desktop X11, KMP test aggregation, security). Quick reference:
+
 ```yaml
-- uses: bazelbuild/setup-bazelisk@v3
-
-- uses: actions/cache@v4
+- uses: bazel-contrib/setup-bazel@0.19.0
   with:
-    path: ~/.cache/bazel
-    key: ${{ runner.os }}-bazel-${{ hashFiles('MODULE.bazel', 'BUILD.bazel') }}
+    bazelisk-version: "1.x"
+    disk-cache: jvm               # unique per job
+    repository-cache: true
+    external-cache: true
+    cache-save: ${{ github.event_name != 'pull_request' }}
 
-- run: bazel build --config=ci //:my_app_deploy.jar
-- run: bazel test --config=ci //...
+- run: bazel test //...
 ```
