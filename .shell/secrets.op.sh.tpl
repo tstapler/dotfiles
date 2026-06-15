@@ -6,8 +6,8 @@
 
 
 # ── GitHub ────────────────────────────────────────────────────────────────────
-export GITHUB_TOKEN="{{ op://FBG/GitHub PAT/credential }}"
-export GITHUB_PERSONAL_ACCESS_TOKEN="{{ op://FBG/GitHub PAT/credential }}"
+export GITHUB_TOKEN="{{ op://FBG/FBG Github PAT/credential }}"
+export GITHUB_PERSONAL_ACCESS_TOKEN="{{ op://FBG/FBG Github PAT/credential }}"
 
 # ── Terraform Cloud ───────────────────────────────────────────────────────────
 export TF_CLOUD_TOKEN="{{ op://FBG/Terraform Cloud/credential }}"
