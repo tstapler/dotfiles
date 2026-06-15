@@ -10,7 +10,7 @@ metadata:
 
 End-to-end workflow: baseline benchmark → profile → diagnose hotspot pattern → apply fix → verify improvement.
 
-**Companion skill:** [[rust-profiling]] for collecting CPU flamegraphs, heaptrack reports, and collapsed stacks. This skill starts where that one ends — you have data, now fix it.
+**Companion skills:** [[rust-profiling]] for collecting CPU flamegraphs, heaptrack reports, and collapsed stacks. This skill starts where that one ends — you have data, now fix it. [[rust-memory-optimization]] for heap/allocation-specific fixes. [[rust-parallel-processing]] for adding parallelism once single-core is tuned. [[rust-development]] for the full workflow map.
 
 ---
 

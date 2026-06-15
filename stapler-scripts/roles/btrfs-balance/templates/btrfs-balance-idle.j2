@@ -1,0 +1,90 @@
+#!/bin/bash
+# Runs btrfs balance when: (a) user has been idle for {{ btrfs_balance_idle_threshold_sec }}s and
+# (b) at least {{ btrfs_balance_interval_days }} days have passed since the last successful run.
+# Called by btrfs-balance.service — not intended for direct invocation.
+set -euo pipefail
+
+IDLE_THRESHOLD_SEC={{ btrfs_balance_idle_threshold_sec }}
+INTERVAL_DAYS={{ btrfs_balance_interval_days }}
+STAMP_FILE=/var/lib/btrfs-balance/last-run
+METADATA_USAGE={{ btrfs_balance_metadata_usage }}
+DATA_USAGE_TRIGGER={{ btrfs_balance_data_usage_trigger }}
+DATA_USAGE={{ btrfs_balance_data_usage }}
+
+# ── Interval guard ────────────────────────────────────────────────────────────
+# The timer fires Mon–Fri to catch up missed windows, but we only want to
+# actually run once per INTERVAL_DAYS. The stamp file tracks the last success.
+LAST_RUN=$(stat -c %Y "$STAMP_FILE" 2>/dev/null || echo 0)
+NOW=$(date +%s)
+SECONDS_SINCE=$(( NOW - LAST_RUN ))
+
+if [ "$SECONDS_SINCE" -lt $(( INTERVAL_DAYS * 86400 )) ]; then
+    echo "btrfs-balance: last ran $(( SECONDS_SINCE / 86400 ))d ago (< ${INTERVAL_DAYS}d interval) — skipping" >&2
+    exit 0
+fi
+
+# ── Idle guard ────────────────────────────────────────────────────────────────
+# Query systemd-logind — works with X11, Wayland (KDE/GNOME/Sway), and TTY.
+check_idle() {
+    local session
+    session=$(loginctl list-sessions --no-legend 2>/dev/null | awk 'NR==1{print $1}')
+
+    [ -z "$session" ] && return 0   # no active session = definitely idle
+
+    local idle_hint
+    idle_hint=$(loginctl show-session "$session" -p IdleHint --value 2>/dev/null || echo "")
+
+    if [ "$idle_hint" != "yes" ]; then
+        echo "btrfs-balance: session $session not idle per logind — skipping" >&2
+        return 1
+    fi
+
+    local idle_since idle_sec
+    idle_since=$(loginctl show-session "$session" -p IdleSinceHint --value 2>/dev/null || echo "0")
+    idle_sec=$(( ($(date +%s%6N) - idle_since) / 1000000 ))
+
+    if [ "$idle_sec" -lt "$IDLE_THRESHOLD_SEC" ]; then
+        echo "btrfs-balance: idle for only ${idle_sec}s (< ${IDLE_THRESHOLD_SEC}s required) — skipping" >&2
+        return 1
+    fi
+
+    echo "btrfs-balance: idle for ${idle_sec}s — proceeding"
+    return 0
+}
+
+if ! check_idle; then
+    exit 0
+fi
+
+# ── Balance ───────────────────────────────────────────────────────────────────
+# De-duplicate: multiple btrfs subvolumes may share the same block device.
+# Balance applies to the whole filesystem; one invocation per device is enough.
+mapfile -t MOUNTS < <(
+    findmnt -t btrfs -n -o SOURCE,TARGET \
+        | awk '!seen[$1]++ {print $2}'
+)
+
+if [ ${#MOUNTS[@]} -eq 0 ]; then
+    echo "btrfs-balance: no btrfs filesystems found" >&2
+    exit 0
+fi
+
+for mount in "${MOUNTS[@]}"; do
+    echo "btrfs-balance: balancing metadata on $mount (musage<${METADATA_USAGE}%)"
+    btrfs balance start -musage="${METADATA_USAGE}" "$mount"
+
+    # Data balance is much slower; only run when the filesystem is getting full.
+    used_pct=$(btrfs filesystem usage -b "$mount" \
+        | awk '/Used:/ {used=$2} /Device size:/ {total=$3} END {printf "%d", (used/total)*100}')
+    if [ "${used_pct:-0}" -ge "$DATA_USAGE_TRIGGER" ]; then
+        echo "btrfs-balance: $mount is ${used_pct}% full — also balancing data (dusage<${DATA_USAGE}%)"
+        btrfs balance start -dusage="${DATA_USAGE}" "$mount"
+    else
+        echo "btrfs-balance: $mount is ${used_pct}% full — skipping data balance"
+    fi
+done
+
+# Record successful run so the interval guard works correctly.
+mkdir -p "$(dirname "$STAMP_FILE")"
+touch "$STAMP_FILE"
+echo "btrfs-balance: done"

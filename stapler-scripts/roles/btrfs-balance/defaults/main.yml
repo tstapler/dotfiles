@@ -1,0 +1,8 @@
+---
+btrfs_balance_idle_threshold_sec: 1800   # seconds of idle required before running
+btrfs_balance_interval_days: 7           # minimum days between successful runs
+btrfs_balance_calendar: "Mon,Tue,Wed,Thu,Fri *-*-* 03:00:00"
+btrfs_balance_randomized_delay: "30min"
+btrfs_balance_metadata_usage: 50         # rebalance metadata chunks below this % full
+btrfs_balance_data_usage_trigger: 80     # only run data balance when fs is this % full
+btrfs_balance_data_usage: 85             # rebalance data chunks below this % full

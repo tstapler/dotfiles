@@ -1,0 +1,6 @@
+---
+- name: Install btrfs balance maintenance timer
+  hosts: localhost
+  connection: local
+  roles:
+    - btrfs-balance

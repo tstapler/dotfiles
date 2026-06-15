@@ -33,7 +33,7 @@ prompt: "# Knowledge Synthesis and Integration Process\n\nI'll help you systemat
   \ - Which existing pages should be cross-referenced?\n   - What's the one-sentence\
   \ \"why this matters\" summary?\n</sequential_thinking>\n\n## Process Execution\n\
   \n### Pre-Synthesis Quality Check\n\n**Before creating new content, check if topic\
-  \ already exists and its quality**:\n\n```bash\ncd /Users/tylerstapler/Documents/personal-wiki\n\
+  \ already exists and its quality**:\n\n```bash\ncd ${PERSONAL_WIKI}\n\
   \n# Check if page exists and get quality metrics\nuv run logseq-analyze quality\
   \ \"logseq/pages/${1}.md\" 2>/dev/null\n\n# If page exists, check its quality score\n\
   # If quality_score > 0.7 and word_count > 500:\n#   - Page already comprehensive\n\
@@ -48,7 +48,7 @@ prompt: "# Knowledge Synthesis and Integration Process\n\nI'll help you systemat
   **Agent Task Template:**\n\n```\nTask for knowledge-synthesis agent:\n\nSynthesize\
   \ knowledge from: ${1:-[topic/URL]}\nFocus area: ${2:-[specified topic area]}\n\n\
   **CRITICAL WORKFLOW - Daily Zettel Pattern:**\n\n1. **Create or Append to Daily\
-  \ Zettel**:\n   - File: `/Users/tylerstapler/Documents/personal-wiki/logseq/pages/Knowledge\
+  \ Zettel**:\n   - File: `${PERSONAL_WIKI}/logseq/pages/Knowledge\
   \ Synthesis - $(date +%Y-%m-%d).md`\n   - Format: `Knowledge Synthesis - 2025-10-30.md`\
   \ (use hyphens, not underscores)\n   - If file doesn't exist, create it with header:\n\
   \     ```markdown\n     # Knowledge Synthesis - 2025-10-30\n\n     Daily consolidation\
@@ -70,7 +70,7 @@ prompt: "# Knowledge Synthesis and Integration Process\n\nI'll help you systemat
   \ - 2025-10-30]] - [what was learned]`\n   - Ensure bidirectional links: daily Zettel\
   \ links to topics, topics link back to daily synthesis\n   - Topic Zettels are evergreen\
   \ pages that accumulate knowledge over time\n\n4. **Update Today's Journal Entry**:\n\
-  \   - File: `/Users/tylerstapler/Documents/personal-wiki/logseq/journals/$(date\
+  \   - File: `${PERSONAL_WIKI}/logseq/journals/$(date\
   \ +%Y_%m_%d).md`\n   - Add: `- Synthesized knowledge from [[Source/Topic]]. See\
   \ [[Knowledge Synthesis - 2025-10-30]]`\n   - Keep journal entry brief - details\
   \ live in daily Zettel\n\n4. **Research and Attribution**:\n   - Find supporting\
@@ -85,7 +85,7 @@ prompt: "# Knowledge Synthesis and Integration Process\n\nI'll help you systemat
   \ Zettels for all major concepts\n- Updated journal entry linking to daily Zettel\n\
   - Bidirectional links between daily synthesis and topic pages\n```\n\n### Phase\
   \ 2: Quality Assurance\n\nI'll verify synthesis quality using analysis tools:\n\n\
-  **Run Post-Synthesis Quality Check**:\n```bash\ncd /Users/tylerstapler/Documents/personal-wiki\n\
+  **Run Post-Synthesis Quality Check**:\n```bash\ncd ${PERSONAL_WIKI}\n\
   \n# Check quality of newly created/updated pages\nuv run logseq-analyze quality\
   \ \"logseq/pages/Knowledge Synthesis - $(date +%Y-%m-%d).md\"\n\n# For any new topic\
   \ Zettels created\nuv run logseq-analyze quality \"logseq/pages/${topic_name}.md\"\
@@ -109,7 +109,7 @@ prompt: "# Knowledge Synthesis and Integration Process\n\nI'll help you systemat
   \ ready for copy-paste\n\n3. **User Guidance**: Clear instructions for manual actions\n\
   \   - Exact file paths where content should be saved\n   - Commands to run for validation\n\
   \   - Integration steps for journal entries\n   - Verification checklist\n\n## Example\
-  \ Daily Zettel Structure\n\n**File**: `/Users/tylerstapler/Documents/personal-wiki/logseq/pages/Knowledge\
+  \ Daily Zettel Structure\n\n**File**: `${PERSONAL_WIKI}/logseq/pages/Knowledge\
   \ Synthesis - 2025-10-30.md`\n\n```markdown\n# Knowledge Synthesis - 2025-10-30\n\
   \nDaily consolidation of synthesized knowledge from external sources.\n\n---\n\n\
   ## Prompt Engineering Best Practices\n\n**Context**: Article on effective LLM prompt\
@@ -136,7 +136,7 @@ prompt: "# Knowledge Synthesis and Integration Process\n\nI'll help you systemat
   \ pooling achieves 100:1 connection multiplexing safely for stateless apps.\n\n\
   **Source**: [PgBouncer Documentation](https://www.pgbouncer.org/usage.html)\n\n\
   **Tags**: #[[PostgreSQL]] #[[Database]] #[[Performance]]\n```\n\n**Corresponding\
-  \ Journal Entry** (`/Users/tylerstapler/Documents/personal-wiki/logseq/journals/2025_10_30.md`):\n\
+  \ Journal Entry** (`${PERSONAL_WIKI}/logseq/journals/2025_10_30.md`):\n\
   \n```markdown\n- Synthesized knowledge from prompt engineering, Docker optimization,\
   \ and PostgreSQL pooling. See [[Knowledge Synthesis - 2025-10-30]]\n```\n\n## Output\
   \ Deliverables\n\nThis workflow produces:\n- **Daily Zettel** (`Knowledge Synthesis\
@@ -153,15 +153,21 @@ prompt: "# Knowledge Synthesis and Integration Process\n\nI'll help you systemat
   \ of each source\n- **Consolidated**: One file per day instead of scattered individual\
   \ files\n- **Connected**: Links to existing knowledge base pages for context\n-\
   \ **Discoverable**: Journal entries point to daily consolidation\n\n## File Handling\
-  \ Strategy\n\n**Daily Zettel Location**: `/Users/tylerstapler/Documents/personal-wiki/logseq/pages/Knowledge\
-  \ Synthesis - YYYY-MM-DD.md`\n**Journal Location**: `/Users/tylerstapler/Documents/personal-wiki/logseq/journals/YYYY_MM_DD.md`\n\
-  **Full Pages** (if needed): `/Users/tylerstapler/Documents/personal-wiki/logseq/pages/[Topic\
+  \ Strategy\n\n**Daily Zettel Location**: `${PERSONAL_WIKI}/logseq/pages/Knowledge\
+  \ Synthesis - YYYY-MM-DD.md`\n**Journal Location**: `${PERSONAL_WIKI}/logseq/journals/YYYY_MM_DD.md`\n\
+  **Full Pages** (if needed): `${PERSONAL_WIKI}/logseq/pages/[Topic\
   \ Name].md`\n\nThe goal is to transform external information into a **reviewable\
   \ daily learning log** where each synthesis is comprehensive, well-linked, and consolidated\
   \ into a single daily file.\n\nUsage: `/synthesize_knowledge [source_url] [optional_topic_focus]`\n"
 ---
 
 # Knowledge Synthesis and Integration Process
+
+> **Setup**: Set `PERSONAL_WIKI` to your wiki root before using this command:
+> ```bash
+> export PERSONAL_WIKI="$HOME/Documents/personal-wiki"
+> ```
+> Add this to your shell profile (`~/.zshrc`, `~/.bashrc`) to persist it.
 
 I'll help you systematically analyze external content and integrate it into your knowledge base using a **daily Zettel consolidation approach** that creates comprehensive synthesis in a single daily file.
 
@@ -220,7 +226,7 @@ Let me break down the information synthesis process:
 **Before creating new content, check if topic already exists and its quality**:
 
 ```bash
-cd /Users/tylerstapler/Documents/personal-wiki
+cd ${PERSONAL_WIKI}
 
 # Check if page exists and get quality metrics
 uv run logseq-analyze quality "logseq/pages/${1}.md" 2>/dev/null
@@ -257,7 +263,7 @@ Focus area: ${2:-[specified topic area]}
 **CRITICAL WORKFLOW - Daily Zettel Pattern:**
 
 1. **Create or Append to Daily Zettel**:
-   - File: `/Users/tylerstapler/Documents/personal-wiki/logseq/pages/Knowledge Synthesis - $(date +%Y-%m-%d).md`
+   - File: `${PERSONAL_WIKI}/logseq/pages/Knowledge Synthesis - $(date +%Y-%m-%d).md`
    - Format: `Knowledge Synthesis - 2025-10-30.md` (use hyphens, not underscores)
    - If file doesn't exist, create it with header:
      ```markdown
@@ -292,7 +298,7 @@ Focus area: ${2:-[specified topic area]}
    - Topic Zettels are evergreen pages that accumulate knowledge over time
 
 4. **Update Today's Journal Entry**:
-   - File: `/Users/tylerstapler/Documents/personal-wiki/logseq/journals/$(date +%Y_%m_%d).md`
+   - File: `${PERSONAL_WIKI}/logseq/journals/$(date +%Y_%m_%d).md`
    - Add: `- Synthesized knowledge from [[Source/Topic]]. See [[Knowledge Synthesis - 2025-10-30]]`
    - Keep journal entry brief - details live in daily Zettel
 
@@ -321,7 +327,7 @@ I'll verify synthesis quality using analysis tools:
 
 **Run Post-Synthesis Quality Check**:
 ```bash
-cd /Users/tylerstapler/Documents/personal-wiki
+cd ${PERSONAL_WIKI}
 
 # Check quality of newly created/updated pages
 uv run logseq-analyze quality "logseq/pages/Knowledge Synthesis - $(date +%Y-%m-%d).md"
@@ -374,7 +380,7 @@ If Write permissions are not available:
 
 ## Example Daily Zettel Structure
 
-**File**: `/Users/tylerstapler/Documents/personal-wiki/logseq/pages/Knowledge Synthesis - 2025-10-30.md`
+**File**: `${PERSONAL_WIKI}/logseq/pages/Knowledge Synthesis - 2025-10-30.md`
 
 ```markdown
 # Knowledge Synthesis - 2025-10-30
@@ -432,7 +438,7 @@ Daily consolidation of synthesized knowledge from external sources.
 **Tags**: #[[PostgreSQL]] #[[Database]] #[[Performance]]
 ```
 
-**Corresponding Journal Entry** (`/Users/tylerstapler/Documents/personal-wiki/logseq/journals/2025_10_30.md`):
+**Corresponding Journal Entry** (`${PERSONAL_WIKI}/logseq/journals/2025_10_30.md`):
 
 ```markdown
 - Synthesized knowledge from prompt engineering, Docker optimization, and PostgreSQL pooling. See [[Knowledge Synthesis - 2025-10-30]]
@@ -461,9 +467,9 @@ This workflow produces:
 
 ## File Handling Strategy
 
-**Daily Zettel Location**: `/Users/tylerstapler/Documents/personal-wiki/logseq/pages/Knowledge Synthesis - YYYY-MM-DD.md`
-**Journal Location**: `/Users/tylerstapler/Documents/personal-wiki/logseq/journals/YYYY_MM_DD.md`
-**Full Pages** (if needed): `/Users/tylerstapler/Documents/personal-wiki/logseq/pages/[Topic Name].md`
+**Daily Zettel Location**: `${PERSONAL_WIKI}/logseq/pages/Knowledge Synthesis - YYYY-MM-DD.md`
+**Journal Location**: `${PERSONAL_WIKI}/logseq/journals/YYYY_MM_DD.md`
+**Full Pages** (if needed): `${PERSONAL_WIKI}/logseq/pages/[Topic Name].md`
 
 The goal is to transform external information into a **reviewable daily learning log** where each synthesis is comprehensive, well-linked, and consolidated into a single daily file.
 

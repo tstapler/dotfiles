@@ -1,0 +1,75 @@
+---
+- name: Create btrfs-balance state directory
+  file:
+    path: /var/lib/btrfs-balance
+    state: directory
+    mode: '0700'
+    owner: root
+    group: root
+  become: yes
+
+- name: Deploy btrfs-balance-idle script
+  template:
+    src: btrfs-balance-idle.j2
+    dest: /usr/local/lib/btrfs-balance-idle
+    mode: '0755'
+    owner: root
+    group: root
+  become: yes
+  notify: Reload systemd daemon
+
+- name: Deploy btrfs-balance systemd service
+  copy:
+    dest: /etc/systemd/system/btrfs-balance.service
+    mode: '0644'
+    owner: root
+    group: root
+    content: |
+      [Unit]
+      Description=btrfs balance — reclaim fragmented metadata and data chunks
+      Documentation=https://btrfs.readthedocs.io/en/latest/Balance.html
+      After=local-fs.target
+      # Skip silently on systems without btrfs loaded
+      ConditionPathIsDirectory=/sys/fs/btrfs
+
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/local/lib/btrfs-balance-idle
+      # Absolute lowest I/O and CPU priority — cannot starve foreground work.
+      # Cancel manually with: btrfs balance cancel /
+      Nice=19
+      IOSchedulingClass=idle
+      CPUSchedulingPolicy=idle
+  become: yes
+  notify: Reload systemd daemon
+
+- name: Deploy btrfs-balance systemd timer
+  copy:
+    dest: /etc/systemd/system/btrfs-balance.timer
+    mode: '0644'
+    owner: root
+    group: root
+    content: |
+      [Unit]
+      Description=btrfs balance — idle-guarded nightly maintenance (Mon–Fri)
+
+      [Timer]
+      # Try every weekday night so missed windows (machine off) are caught up.
+      # The script's stamp file ensures it only actually runs once per {{ btrfs_balance_interval_days }} days.
+      OnCalendar={{ btrfs_balance_calendar }}
+      RandomizedDelaySec={{ btrfs_balance_randomized_delay }}
+      # Persistent=true: fire at next boot if the scheduled window was missed.
+      Persistent=true
+
+      [Install]
+      WantedBy=timers.target
+  become: yes
+  notify: Reload systemd daemon
+
+- name: Enable and start btrfs-balance timer
+  systemd:
+    name: btrfs-balance.timer
+    enabled: yes
+    state: started
+    daemon_reload: yes
+  become: yes

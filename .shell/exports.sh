@@ -137,5 +137,8 @@ pathadd "$HOME/.yarn/bin"
 pathadd "$HOME/.config/yarn/global/node_modules/.bin"
 pathadd "$HOME/.poetry/bin"
 
+# Personal wiki root (used by knowledge synthesis commands)
+export PERSONAL_WIKI="$HOME/Documents/personal-wiki"
+
 # Export the path that we have updated via pathadd
 export PATH="$PATH"

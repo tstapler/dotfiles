@@ -8,6 +8,8 @@ paths: "**/*.rs"
 
 End-to-end workflow: build with debug info → collect profile → collapsed stacks (primary analysis format) → flamegraph (visualization).
 
+**Companion skills:** [[rust-perf-tuning]] for applying CPU fixes after profiling. [[rust-memory-optimization]] for heap/allocation fixes. [[rust-parallel-processing]] for parallelism. [[rust-development]] for the full workflow map.
+
 ## Format Strategy
 
 | Format | Best for | Tool |
