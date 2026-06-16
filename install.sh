@@ -87,7 +87,8 @@ if [ ! -d "$DOTFILES_DIR" ]; then
   echo "Cloning dotfiles to $DOTFILES_DIR..."
   git clone "$DOTFILES_REPO" "$DOTFILES_DIR"
 else
-  echo "Dotfiles directory already exists at $DOTFILES_DIR, skipping clone."
+  echo "Dotfiles already cloned — pulling latest..."
+  git -C "$DOTFILES_DIR" pull --ff-only || echo "WARNING: git pull failed (local changes?), continuing with current state."
 fi
 
 # ── Git submodules ─────────────────────────────────────────────────────────────

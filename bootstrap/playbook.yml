@@ -32,3 +32,5 @@
     - secrets
     - fonts
     - claude
+    - role: fbg
+      tags: [fbg]

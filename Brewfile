@@ -7,7 +7,6 @@ tap "carvel-dev/carvel"
 tap "chroju/tap"
 tap "codekitchen/pipeline"
 tap "deviceinsight/packages"
-tap "fanatics-gaming/tap", "git@github.com:fanatics-gaming/homebrew-tap"
 tap "fluxcd/tap"
 tap "getgrit/tap"
 tap "harelba/q"
@@ -26,8 +25,7 @@ tap "test/claudia"
 tap "tilt-dev/tap"
 tap "tstapler/agrapha"
 tap "tstapler/stapler-squad", "https://github.com/tstapler/stapler-squad"
-tap "tstapler/stelekit", "git@github-personal:tstapler/stelekit.git"
-tap "tylerstapleratfanatics/stapler-squad", "https://github.com/TylerStaplerAtFanatics/stapler-squad"
+tap "tstapler/stelekit", "https://github.com/tstapler/stelekit"
 tap "vectordotdev/brew"
 tap "xo/xo"
 # Run your GitHub Actions locally
@@ -135,6 +133,8 @@ brew "git-delta"
 brew "git-filter-repo"
 # Git extension for versioning large files
 brew "git-lfs"
+# Stacked PR workflow manager — keeps .git/machete layout, drives cascade rebases and PR base retargeting
+brew "git-machete"
 # Declarative configuration for Gmail filters
 brew "gmailctl"
 # GNU implementation of the famous stream editor
@@ -337,10 +337,6 @@ brew "carvel-dev/carvel/ytt"
 brew "chroju/tap/tfcloud"
 # Interactive prompt for building up a pipeline of shell commands
 brew "codekitchen/pipeline/pipeline"
-# Tools from the FBG platform team
-brew "fanatics-gaming/tap/fbg-platform-tools"
-# Fanatics AI developer toolchain
-brew "fanatics-gaming/tap/nitro"
 # Flux CLI
 brew "fluxcd/tap/flux", link: false
 # Flux CLI
@@ -363,10 +359,10 @@ brew "saulpw/vd/visidata"
 brew "stefanprodan/tap/timoni"
 # A dev environment as code for microservice apps
 brew "tilt-dev/tap/tilt"
+# Manage multiple AI terminal agents like Claude Code, Aider, Codex, OpenCode, and Amp.
+brew "tstapler/stapler-squad/stapler-squad"
 # Markdown-based outliner and note-taking app (Kotlin Multiplatform)
 brew "tstapler/stelekit/stelekit", link: false
-# Manage multiple AI terminal agents like Claude Code, Aider, Codex, OpenCode, and Amp.
-brew "tylerstapleratfanatics/stapler-squad/stapler-squad"
 # A High-Performance Log, Metrics, and Events Router
 brew "vectordotdev/brew/vector"
 # universal command-line SQL client interface
