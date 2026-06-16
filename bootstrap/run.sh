@@ -43,7 +43,7 @@ ansible-galaxy collection install -r requirements.yml --timeout 30
 # Auto-detect FBG work machine by hostname prefix; skip if tags already specified
 FBG_ARGS=()
 if [[ "$*" != *"--tags"* && "$*" != *"--skip-tags"* ]]; then
-  if [[ "$(hostname)" == FBG-* ]]; then
+  if [[ "$(hostname)" == [Ff][Bb][Gg]-* ]]; then
     echo "FBG machine detected ($(hostname)) — enabling work tools."
   else
     echo "Non-FBG machine ($(hostname)) — skipping FBG-specific setup."
