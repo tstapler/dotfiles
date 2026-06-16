@@ -8,6 +8,7 @@ Claude Code plugins managed and installed by `llm-sync`. Each plugin lives in it
 |--------|---------|--------------|
 | `prompt-injection-defender` | 0.1.0 | PostToolUse hook — scans every tool output (Read, WebFetch, Bash, Grep, Task, mcp__*) for prompt injection patterns. Warns Claude without blocking. Adapted from [lasso-security/claude-hooks](https://github.com/lasso-security/claude-hooks). |
 | `sdd` | 0.1.0 | Stapler-Driven Development workflow. 7 numbered phase commands + skills. Enforces spec-before-code. Run `/sdd:status` to find your current phase. |
+| `git-stacked-prs` | 0.1.0 | Stacked PR workflow using git-machete. Evaluate → Plan → Execute → Ship. Requires `brew install git-machete`. |
 
 ## Plugin Structure
 

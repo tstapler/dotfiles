@@ -1,6 +1,5 @@
 ---
 description: Autonomously iterate on a PR — local CI, code review, remote CI, review comments, merge conflicts — until ready to merge
-disable-model-invocation: true
 prompt: |
   # PR Ship Loop — Make It Ready to Merge
 
@@ -8,7 +7,7 @@ prompt: |
 
   ## State File
 
-  All progress is tracked in `/tmp/pr-ship-${REPO}-${PR}.md`. Read it at the start of every iteration to understand what's already done. Update it after every action. This is your working memory across ScheduleWakeup wakeups.
+  All progress is tracked in `/tmp/pr-ship-${REPO_SLUG}-${BRANCH_SLUG}-${PR}.md`. Read it at the start of every iteration to understand what's already done. Update it after every action. This is your working memory across ScheduleWakeup wakeups.
 
   **State file format** (initialize if missing):
   ```markdown
@@ -47,8 +46,9 @@ prompt: |
 
   ```bash
   PR="${1:-$(gh pr list --head $(git branch --show-current) --json number --jq '.[0].number')}"
-  REPO="$(gh repo view --json nameWithOwner --jq '.nameWithOwner' | tr '/' '-')"
-  STATE="/tmp/pr-ship-${REPO}-${PR}.md"
+  REPO=$(gh repo view --json nameWithOwner --jq '.nameWithOwner' | tr '/' '-')
+  BRANCH=$(gh pr view "$PR" --json headRefName --jq '.headRefName' | tr '/' '-' | tr '_' '-' | cut -c1-40)
+  STATE="/tmp/pr-ship-${REPO}-${BRANCH}-${PR}.md"
   gh pr view "$PR" --json number,title,state,mergeable,mergeStateStatus,headRefName,baseRefName
   ```
 
@@ -230,7 +230,7 @@ prompt: |
   - Pending 2–10 min → `delaySeconds: 270`
   - Pending > 10 min → `delaySeconds: 600`
 
-  Always pass `prompt: "/github:pr-ship <PR_NUMBER>"` so the loop re-enters and reads the state file.
+  Always pass `prompt: "/github:pr-ship <PR_NUMBER>"` so the loop re-enters and reads the state file (the repo/branch slug is re-derived from the live PR on each entry).
 
   ---
 
@@ -247,4 +247,4 @@ prompt: |
 
 **Usage**: `/github:pr-ship` (current branch) or `/github:pr-ship 61`
 
-Gates run in order: local compile → local tests (scoped) → code review → **PR comments** → remote CI → merge conflicts. Push only happens at Gate 4, after all local work and reviewer feedback is incorporated. After CI passes, re-check for new comments before marking done. State tracked in `/tmp/pr-ship-{repo}-{PR}.md`.
+Gates run in order: local compile → local tests (scoped) → code review → **PR comments** → remote CI → merge conflicts. Push only happens at Gate 4, after all local work and reviewer feedback is incorporated. After CI passes, re-check for new comments before marking done. State tracked in `/tmp/pr-ship-{repo}-{branch}-{PR}.md`.

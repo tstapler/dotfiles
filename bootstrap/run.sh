@@ -39,6 +39,21 @@ fi
 
 cd "$DOTFILES_DIR/bootstrap"
 ansible-galaxy collection install -r requirements.yml --timeout 30
+
+# Detect if --tags or --skip-tags already provided (user knows what they want)
+FBG_ARGS=()
+if [[ "$*" != *"--tags"* && "$*" != *"--skip-tags"* ]]; then
+  printf "Is this a Fanatics Gaming work machine? [y/N] "
+  read -r fbg_answer </dev/tty
+  if [[ "$fbg_answer" =~ ^[Yy]$ ]]; then
+    echo "FBG mode enabled — will install work tools."
+  else
+    echo "Skipping FBG-specific setup."
+    FBG_ARGS=(--skip-tags fbg)
+  fi
+fi
+
 ansible-playbook playbook.yml \
   -e "dotfiles_dir=$DOTFILES_DIR" \
+  "${FBG_ARGS[@]}" \
   "$@"
