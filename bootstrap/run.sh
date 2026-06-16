@@ -40,15 +40,13 @@ fi
 cd "$DOTFILES_DIR/bootstrap"
 ansible-galaxy collection install -r requirements.yml --timeout 30
 
-# Detect if --tags or --skip-tags already provided (user knows what they want)
+# Auto-detect FBG work machine by hostname prefix; skip if tags already specified
 FBG_ARGS=()
 if [[ "$*" != *"--tags"* && "$*" != *"--skip-tags"* ]]; then
-  printf "Is this a Fanatics Gaming work machine? [y/N] "
-  read -r fbg_answer </dev/tty
-  if [[ "$fbg_answer" =~ ^[Yy]$ ]]; then
-    echo "FBG mode enabled — will install work tools."
+  if [[ "$(hostname)" == FBG-* ]]; then
+    echo "FBG machine detected ($(hostname)) — enabling work tools."
   else
-    echo "Skipping FBG-specific setup."
+    echo "Non-FBG machine ($(hostname)) — skipping FBG-specific setup."
     FBG_ARGS=(--skip-tags fbg)
   fi
 fi
