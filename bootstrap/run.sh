@@ -27,6 +27,16 @@ if ! command -v ansible-playbook &>/dev/null; then
   brew install ansible
 fi
 
+cd "$DOTFILES_DIR"
+git submodule update --init cfgcaddy 2>/dev/null || true
+
+# Install Nix if not present (requires root; handled here outside Ansible)
+if [ ! -f /nix/var/nix/profiles/default/bin/nix ]; then
+  echo "Installing Nix..."
+  curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix \
+    | sh -s -- install --no-confirm
+fi
+
 cd "$DOTFILES_DIR/bootstrap"
 ansible-galaxy collection install -r requirements.yml --timeout 30
 ansible-playbook playbook.yml \

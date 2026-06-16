@@ -21,7 +21,10 @@
   args:
     executable: /bin/bash
   register: asdf_plugin_result
-  failed_when: asdf_plugin_result.rc != 0 and 'already added' not in asdf_plugin_result.stderr
+  failed_when: >
+    asdf_plugin_result.rc != 0 and
+    'already added' not in asdf_plugin_result.stderr and
+    'not found in repository' not in asdf_plugin_result.stderr
   changed_when: asdf_plugin_result.rc == 0
   loop: "{{ asdf_tool_names.stdout_lines | default([]) }}"
   when: asdf_tool_versions_file.stat.exists

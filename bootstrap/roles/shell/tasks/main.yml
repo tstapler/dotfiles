@@ -4,6 +4,7 @@
     name: "{{ ansible_env.USER }}"
     shell: /bin/zsh
   become: true
+  when: ansible_env.SHELL != '/bin/zsh'
   tags: [shell]
 
 - name: Clone zplug if missing

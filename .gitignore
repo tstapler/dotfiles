@@ -228,6 +228,7 @@ __pypackages__/
 stapler-snips
 nerd-fonts/
 local.sh
+secrets.op.sh.tpl
 setup_*_1password.sh
 # Celery stuff
 celerybeat-schedule

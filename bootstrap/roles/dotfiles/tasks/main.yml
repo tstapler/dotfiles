@@ -15,12 +15,20 @@
     PATH: "{{ brew_prefix }}/bin:{{ ansible_env.PATH }}"
   tags: [dotfiles]
 
+- name: Check if cfgcaddy is installed
+  command: cfgcaddy --help
+  register: dotfiles_cfgcaddy_check
+  failed_when: false
+  changed_when: false
+  environment:
+    PATH: "{{ ansible_env.HOME }}/.local/bin:{{ brew_prefix }}/bin:{{ ansible_env.HOME }}/.asdf/bin:{{ ansible_env.HOME }}/.asdf/shims:/opt/homebrew/bin:/home/linuxbrew/.linuxbrew/bin:{{ ansible_env.PATH }}"
+  tags: [dotfiles]
+
 - name: Install cfgcaddy via uv tool install
-  command: "{{ brew_prefix }}/bin/uv tool install cfgcaddy"
+  command: "{{ brew_prefix }}/bin/uv tool install --force {{ dotfiles_dir }}/cfgcaddy"
+  when: dotfiles_cfgcaddy_check.rc != 0
   register: dotfiles_cfgcaddy_install
-  changed_when: "'Installed' in dotfiles_cfgcaddy_install.stdout"
-  # uv outputs "cfgcaddy is already installed" to stdout (not stderr) when already present
-  failed_when: dotfiles_cfgcaddy_install.rc != 0 and 'already installed' not in dotfiles_cfgcaddy_install.stdout
+  changed_when: dotfiles_cfgcaddy_check.rc != 0
   environment:
     PATH: "{{ ansible_env.HOME }}/.local/bin:{{ brew_prefix }}/bin:{{ ansible_env.HOME }}/.asdf/bin:{{ ansible_env.HOME }}/.asdf/shims:/opt/homebrew/bin:/home/linuxbrew/.linuxbrew/bin:{{ ansible_env.PATH }}"
   tags: [dotfiles]
@@ -39,7 +47,7 @@
   tags: [dotfiles]
 
 - name: Link dotfiles via cfgcaddy
-  command: cfgcaddy link --no-interactive
+  command: cfgcaddy link -y
   register: dotfiles_cfgcaddy_result
   changed_when: "'Linked' in dotfiles_cfgcaddy_result.stdout"
   environment:
