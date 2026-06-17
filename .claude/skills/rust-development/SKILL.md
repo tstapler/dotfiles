@@ -107,6 +107,31 @@ cargo bench -- --profile-time=5
 cargo install tokio-console && tokio-console
 ```
 
+## Dependency Version Hygiene
+
+Check for outdated dependencies with:
+```bash
+cargo install cargo-outdated   # one-time install
+cargo outdated                 # show all deps behind latest
+cargo outdated --root-deps-only  # only direct deps (less noise)
+```
+
+When `cargo build` resolves a lower version than available, it prints:
+```
+Adding tokio-tungstenite v0.24.0 (available: v0.29.0)
+```
+**Always use the latest available version** — update Cargo.toml to the version shown in parentheses.
+
+### Known breaking changes between major versions
+
+| Crate | Old version | New version | Breaking change |
+|---|---|---|---|
+| `reqwest` | `0.12` | `0.13` | Feature `rustls-tls` renamed to `rustls` |
+| `tokio-tungstenite` | `0.24` | `0.29` | `Message::Text(String)` → `Message::Text(Utf8Bytes)`, `Message::Binary(Vec<u8>)` → `Message::Binary(Bytes)` — both accept `.into()` from the old types |
+| `chrono` | any | `0.4` | `local-offset` feature doesn't exist on older pinned versions; use `serde` feature instead and call `Local::now()` directly |
+
+---
+
 ## Essential Crate Quick Reference
 
 | Crate | Layer | Use for |
