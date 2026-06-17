@@ -428,5 +428,7 @@ uv "cookiecutter"
 uv "litellm[prisma-client,proxy]"
 uv "wt-cli"
 krew "sniff"
-npm "@anthropic-ai/claude-code"
+# claude-code is installed as a native binary by the `claude` Ansible role.
+# The npm wrapper shadows it on PATH and ships a broken native shim, so it is
+# intentionally not installed here.
 npm "corepack"
