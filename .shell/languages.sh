@@ -1,49 +1,15 @@
-export ASDF_DIR="$HOME/.asdf"
-
-if [ ! -d "$ASDF_DIR" ]; then
-  git clone "https://github.com/asdf-vm/asdf.git" "$ASDF_DIR"
-  cd ~/.asdf
-  git checkout "$(git describe --abbrev=0 --tags)"
+# asdf (Go version, 0.16+) — installed as a binary via Homebrew. No git clone
+# and no asdf.sh sourcing; just put the shims on PATH. Plugins and tool
+# versions are managed by the asdf Ansible role / .tool-versions.
+export ASDF_DATA_DIR="$HOME/.asdf"
+if hash asdf 2>/dev/null; then
+  export PATH="$ASDF_DATA_DIR/shims:$PATH"
 fi
 
-if [ -d "$ASDF_DIR" ]; then
-  . "$ASDF_DIR/asdf.sh"
-fi
-
-# This will cause the dev headers to work for python when it is built by asdf
+# Dev headers so python builds under asdf produce a shared libpython
 export PYTHON_CONFIGURE_OPTS="--enable-shared"
 
-if hash asdf 2>/dev/null; then
-export ASDF_PLUGIN_DIR="$ASDF_DIR/plugins"
-export ASDF_DATA_DIR="$ASDF_DIR"
-export PATH="$ASDF_DATA_DIR/shims:$PATH"
-
-
-# Declare an associative array for plugins with URLs
-declare -A plugin_map
-plugin_map=(
-  ["terraform"]="https://github.com/asdf-community/asdf-hashicorp.git"
-  ["cdk"]="https://github.com/damianoneill/cdk"
-  )
-
-# Add ASDF plugins if they don't exist
-for plug in nodejs python java golang clojure terraform cdk nim buf; do
-    if [ ! -d "$ASDF_PLUGIN_DIR/$plug" ]; then
-      if [[ ${plugin_map[$plug]} ]]; then
-        # Add plugins with URLs
-        asdf plugin-add $plug ${plugin_map[$plug]}
-      else
-        # Add plugins without URLs
-        asdf plugin-add $plug
-      fi
-      asdf install $plug
-    fi
-done
-
-fi
-
-
-SET_JAVA_HOME="$HOME/.asdf/plugins/java/set-java-home.zsh"
+SET_JAVA_HOME="$ASDF_DATA_DIR/plugins/java/set-java-home.zsh"
 if [ -f "$SET_JAVA_HOME" ]; then
   . "$SET_JAVA_HOME"
 fi
@@ -82,12 +48,4 @@ if hash nim 2>/dev/null; then
 
   # Nim compiler options for development
   export NIM_OPTS="--hints:off --warnings:off"
-fi
-
-# Set global Nim version via asdf
-if [ -d "$ASDF_DIR" ] && hash asdf 2>/dev/null; then
-  # Global Nim version
-  if [ ! -f "$HOME/.tool-versions" ] || ! grep -q "^nim" "$HOME/.tool-versions"; then
-    asdf global nim 2.0.8
-  fi
 fi

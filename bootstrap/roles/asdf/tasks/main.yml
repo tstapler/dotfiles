@@ -1,4 +1,8 @@
 ---
+# asdf 0.16+ (the Go rewrite). Installed as a Homebrew binary — no git clone
+# and no asdf.sh sourcing. ~/.asdf is used purely as ASDF_DATA_DIR, so a
+# legacy (shell-based) install's plugins/installs/shims/downloads are reused.
+
 - name: Check .tool-versions exists
   stat:
     path: "{{ dotfiles_dir }}/.tool-versions"
@@ -12,36 +16,72 @@
   when: asdf_tool_versions_file.stat.exists
   tags: [asdf]
 
+- name: Install asdf (Go version) via Homebrew
+  community.general.homebrew:
+    name: asdf
+    state: present
+  environment:
+    PATH: "{{ brew_prefix }}/bin:{{ ansible_facts['env']['PATH'] }}"
+  tags: [asdf]
+
+# --- Migrate a legacy shell-based asdf (git clone living in ~/.asdf) ---------
+# asdf 0.16 reuses ~/.asdf as the data dir, so the data subdirectories are
+# kept; only the old repo files would shadow/conflict with the brew binary.
+- name: Detect legacy git-based asdf install
+  stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/.asdf/asdf.sh"
+  register: asdf_legacy
+  tags: [asdf]
+
+- name: Remove obsolete legacy asdf files (data dirs are preserved)
+  file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.asdf/{{ item }}"
+    state: absent
+  loop:
+    - asdf.sh
+    - asdf.fish
+    - asdf.elv
+    - bin
+    - lib
+    - completions
+    - .git
+  when: asdf_legacy.stat.exists
+  tags: [asdf]
+
+- name: Regenerate shims with the new asdf binary after migration
+  command: asdf reshim
+  changed_when: true
+  when: asdf_legacy.stat.exists
+  environment:
+    PATH: "{{ brew_prefix }}/bin:{{ ansible_facts['env']['HOME'] }}/.asdf/shims:{{ ansible_facts['env']['PATH'] }}"
+    ASDF_DATA_DIR: "{{ ansible_facts['env']['HOME'] }}/.asdf"
+  tags: [asdf]
+# -----------------------------------------------------------------------------
+
 - name: Add asdf plugins
-  shell: |
-    ASDF_SH="{{ brew_prefix }}/opt/asdf/libexec/asdf.sh"
-    [ -f "$ASDF_SH" ] || ASDF_SH="{{ ansible_facts['env']['HOME'] }}/.asdf/asdf.sh"
-    . "$ASDF_SH"
-    asdf plugin add {{ item }}
-  args:
-    executable: /bin/bash
+  command: "asdf plugin add {{ item }}"
   register: asdf_plugin_result
   failed_when: >
     asdf_plugin_result.rc != 0 and
     'already added' not in asdf_plugin_result.stderr and
+    'already installed' not in asdf_plugin_result.stderr and
     'not found in repository' not in asdf_plugin_result.stderr
   changed_when: asdf_plugin_result.rc == 0
   loop: "{{ asdf_tool_names.stdout_lines | default([]) }}"
   when: asdf_tool_versions_file.stat.exists
   environment:
-    PATH: "{{ ansible_facts['env']['HOME'] }}/.asdf/bin:{{ ansible_facts['env']['HOME'] }}/.asdf/shims:{{ brew_prefix }}/bin:{{ ansible_facts['env']['PATH'] }}"
+    PATH: "{{ brew_prefix }}/bin:{{ ansible_facts['env']['HOME'] }}/.asdf/shims:{{ ansible_facts['env']['PATH'] }}"
+    ASDF_DATA_DIR: "{{ ansible_facts['env']['HOME'] }}/.asdf"
   tags: [asdf]
 
 - name: Install asdf tool versions
-  shell: |
-    ASDF_SH="{{ brew_prefix }}/opt/asdf/libexec/asdf.sh"
-    [ -f "$ASDF_SH" ] || ASDF_SH="{{ ansible_facts['env']['HOME'] }}/.asdf/asdf.sh"
-    . "$ASDF_SH"
-    asdf install
+  command: asdf install
   args:
     chdir: "{{ dotfiles_dir }}"
-    executable: /bin/bash
+  register: asdf_install_result
+  changed_when: asdf_install_result.rc == 0
   when: asdf_tool_versions_file.stat.exists
   environment:
-    PATH: "{{ ansible_facts['env']['HOME'] }}/.asdf/bin:{{ ansible_facts['env']['HOME'] }}/.asdf/shims:{{ brew_prefix }}/bin:{{ ansible_facts['env']['PATH'] }}"
+    PATH: "{{ brew_prefix }}/bin:{{ ansible_facts['env']['HOME'] }}/.asdf/shims:{{ ansible_facts['env']['PATH'] }}"
+    ASDF_DATA_DIR: "{{ ansible_facts['env']['HOME'] }}/.asdf"
   tags: [asdf]
