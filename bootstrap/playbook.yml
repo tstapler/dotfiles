@@ -30,6 +30,7 @@
     - claude
     - homebrew
     - dotfiles
+    - llm-sync
     - shell
     - asdf
     - nix

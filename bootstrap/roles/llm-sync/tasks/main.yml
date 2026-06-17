@@ -1,0 +1,28 @@
+---
+# Sync Claude agents/skills/commands and MCP config out to Gemini, OpenCode,
+# and Antigravity via the in-repo llm-sync tool (stapler-scripts/llm-sync).
+# Run via `uv run`, which provisions the pinned Python and dependencies.
+# The tool is hash-based and idempotent — it only writes changed items.
+
+- name: Check llm-sync tool exists
+  stat:
+    path: "{{ dotfiles_dir }}/stapler-scripts/llm-sync/main.py"
+  register: llm_sync_main
+  tags: [llm-sync]
+
+- name: Sync LLM integrations with llm-sync
+  command: "{{ brew_prefix }}/bin/uv run main.py"
+  args:
+    chdir: "{{ dotfiles_dir }}/stapler-scripts/llm-sync"
+  register: llm_sync_result
+  changed_when: "'Saved' in llm_sync_result.stdout or 'Wrote' in llm_sync_result.stdout"
+  when: llm_sync_main.stat.exists
+  environment:
+    PATH: "{{ brew_prefix }}/bin:{{ ansible_facts['env']['HOME'] }}/.local/bin:{{ ansible_facts['env']['PATH'] }}"
+  tags: [llm-sync]
+
+- name: Show llm-sync summary
+  debug:
+    var: llm_sync_result.stdout_lines
+  when: llm_sync_main.stat.exists
+  tags: [llm-sync]
