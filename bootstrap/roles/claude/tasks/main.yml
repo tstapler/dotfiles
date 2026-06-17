@@ -5,7 +5,7 @@
   failed_when: false
   changed_when: false
   environment:
-    PATH: "{{ brew_prefix }}/bin:{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.PATH }}"
+    PATH: "{{ brew_prefix }}/bin:{{ ansible_facts['env']['HOME'] }}/.local/bin:{{ ansible_facts['env']['PATH'] }}"
   tags: [claude]
 
 - name: Install Claude Code via binary installer
@@ -14,8 +14,8 @@
   block:
     - name: Set OS and arch facts
       set_fact:
-        _claude_os: "{{ 'darwin' if ansible_os_family == 'Darwin' else 'linux' }}"
-        _claude_arch: "{{ 'arm64' if ansible_architecture in ['arm64', 'aarch64'] else 'x64' }}"
+        _claude_os: "{{ 'darwin' if ansible_facts['os_family'] == 'Darwin' else 'linux' }}"
+        _claude_arch: "{{ 'arm64' if ansible_facts['architecture'] in ['arm64', 'aarch64'] else 'x64' }}"
 
     - name: Set platform string
       set_fact:
@@ -43,25 +43,25 @@
 
     - name: Ensure download directory exists
       file:
-        path: "{{ ansible_env.HOME }}/.claude/downloads"
+        path: "{{ ansible_facts['env']['HOME'] }}/.claude/downloads"
         state: directory
         mode: '0755'
 
     - name: Download installer binary
       get_url:
         url: "https://downloads.claude.ai/claude-code-releases/{{ _claude_version }}/{{ _claude_platform }}/claude"
-        dest: "{{ ansible_env.HOME }}/.claude/downloads/claude-installer"
+        dest: "{{ ansible_facts['env']['HOME'] }}/.claude/downloads/claude-installer"
         checksum: "sha256:{{ _claude_checksum }}"
         mode: '0755'
 
     - name: Run installer
-      command: "{{ ansible_env.HOME }}/.claude/downloads/claude-installer install"
+      command: "{{ ansible_facts['env']['HOME'] }}/.claude/downloads/claude-installer install"
       environment:
-        PATH: "{{ brew_prefix }}/bin:{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.PATH }}"
+        PATH: "{{ brew_prefix }}/bin:{{ ansible_facts['env']['HOME'] }}/.local/bin:{{ ansible_facts['env']['PATH'] }}"
 
     - name: Remove installer binary
       file:
-        path: "{{ ansible_env.HOME }}/.claude/downloads/claude-installer"
+        path: "{{ ansible_facts['env']['HOME'] }}/.claude/downloads/claude-installer"
         state: absent
 
 - name: Verify claude is installed
@@ -69,7 +69,7 @@
   register: _claude_installed
   changed_when: false
   environment:
-    PATH: "{{ brew_prefix }}/bin:{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.PATH }}"
+    PATH: "{{ brew_prefix }}/bin:{{ ansible_facts['env']['HOME'] }}/.local/bin:{{ ansible_facts['env']['PATH'] }}"
   tags: [claude]
 
 - name: Show installed version

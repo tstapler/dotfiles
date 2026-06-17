@@ -9,7 +9,7 @@
     state: present
     update_cache: true
   become: true
-  when: ansible_os_family == "Debian"
+  when: ansible_facts['os_family'] == "Debian"
   tags: [homebrew]
 
 - name: Install Linux prerequisites (Arch/Manjaro)
@@ -21,7 +21,7 @@
       - git
     state: present
   become: true
-  when: ansible_os_family == "Archlinux"
+  when: ansible_facts['os_family'] == "Archlinux"
   tags: [homebrew]
 
 - name: Check Homebrew is installed
@@ -39,12 +39,12 @@
   command: "{{ brew_prefix }}/bin/brew update"
   changed_when: false
   environment:
-    PATH: "{{ brew_prefix }}/bin:{{ ansible_env.PATH }}"
+    PATH: "{{ brew_prefix }}/bin:{{ ansible_facts['env']['PATH'] }}"
   tags: [homebrew]
 
 - name: Set brewfile path
   set_fact:
-    homebrew_brewfile_path: "{{ dotfiles_dir }}/{{ 'Brewfile' if ansible_os_family == 'Darwin' else 'Brewfile.linux' }}"
+    homebrew_brewfile_path: "{{ dotfiles_dir }}/{{ 'Brewfile' if ansible_facts['os_family'] == 'Darwin' else 'Brewfile.linux' }}"
   tags: [homebrew]
 
 - name: Trust all taps in Brewfile (Homebrew 4.x security model)
@@ -58,7 +58,7 @@
     done
   changed_when: false
   environment:
-    PATH: "{{ brew_prefix }}/bin:{{ ansible_env.PATH }}"
+    PATH: "{{ brew_prefix }}/bin:{{ ansible_facts['env']['PATH'] }}"
   tags: [homebrew]
 
 - name: Add all taps from Brewfile
@@ -69,7 +69,7 @@
     done
   changed_when: false
   environment:
-    PATH: "{{ brew_prefix }}/bin:{{ ansible_env.PATH }}"
+    PATH: "{{ brew_prefix }}/bin:{{ ansible_facts['env']['PATH'] }}"
     GIT_TERMINAL_PROMPT: "0"
     GIT_CONFIG_COUNT: "1"
     GIT_CONFIG_KEY_0: "credential.helper"
@@ -84,7 +84,7 @@
   failed_when: false
   changed_when: false
   environment:
-    PATH: "{{ brew_prefix }}/bin:{{ ansible_env.PATH }}"
+    PATH: "{{ brew_prefix }}/bin:{{ ansible_facts['env']['PATH'] }}"
   tags: [homebrew]
 
 - name: Install packages from Brewfile
@@ -96,7 +96,7 @@
   changed_when: "'Installing' in homebrew_brew_bundle.stdout"
   when: homebrew_bundle_check.rc != 0
   environment:
-    PATH: "{{ brew_prefix }}/bin:{{ ansible_env.PATH }}"
+    PATH: "{{ brew_prefix }}/bin:{{ ansible_facts['env']['PATH'] }}"
     GIT_TERMINAL_PROMPT: "0"
     GIT_CONFIG_COUNT: "1"
     GIT_CONFIG_KEY_0: "credential.helper"

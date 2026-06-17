@@ -1,15 +1,15 @@
 ---
 - name: Set zsh as default shell
   user:
-    name: "{{ ansible_env.USER }}"
+    name: "{{ ansible_facts['env']['USER'] }}"
     shell: /bin/zsh
   become: true
-  when: ansible_env.SHELL != '/bin/zsh'
+  when: ansible_facts['env']['SHELL'] != '/bin/zsh'
   tags: [shell]
 
 - name: Clone zplug if missing
   git:
     repo: https://github.com/tstapler/zplug
-    dest: "{{ ansible_env.HOME }}/.zplug"
+    dest: "{{ ansible_facts['env']['HOME'] }}/.zplug"
     update: false
   tags: [shell]

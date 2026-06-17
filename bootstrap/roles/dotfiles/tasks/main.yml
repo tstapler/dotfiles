@@ -5,14 +5,14 @@
   failed_when: false
   changed_when: false
   environment:
-    PATH: "{{ brew_prefix }}/bin:{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.PATH }}"
+    PATH: "{{ brew_prefix }}/bin:{{ ansible_facts['env']['HOME'] }}/.local/bin:{{ ansible_facts['env']['PATH'] }}"
   tags: [dotfiles]
 
 - name: Install uv via Homebrew if not found
   command: "{{ brew_prefix }}/bin/brew install uv"
   when: dotfiles_uv_check.rc != 0
   environment:
-    PATH: "{{ brew_prefix }}/bin:{{ ansible_env.PATH }}"
+    PATH: "{{ brew_prefix }}/bin:{{ ansible_facts['env']['PATH'] }}"
   tags: [dotfiles]
 
 - name: Check if cfgcaddy is installed
@@ -21,7 +21,7 @@
   failed_when: false
   changed_when: false
   environment:
-    PATH: "{{ ansible_env.HOME }}/.local/bin:{{ brew_prefix }}/bin:{{ ansible_env.HOME }}/.asdf/bin:{{ ansible_env.HOME }}/.asdf/shims:/opt/homebrew/bin:/home/linuxbrew/.linuxbrew/bin:{{ ansible_env.PATH }}"
+    PATH: "{{ ansible_facts['env']['HOME'] }}/.local/bin:{{ brew_prefix }}/bin:{{ ansible_facts['env']['HOME'] }}/.asdf/bin:{{ ansible_facts['env']['HOME'] }}/.asdf/shims:/opt/homebrew/bin:/home/linuxbrew/.linuxbrew/bin:{{ ansible_facts['env']['PATH'] }}"
   tags: [dotfiles]
 
 - name: Install cfgcaddy via uv tool install
@@ -30,20 +30,20 @@
   register: dotfiles_cfgcaddy_install
   changed_when: dotfiles_cfgcaddy_check.rc != 0
   environment:
-    PATH: "{{ ansible_env.HOME }}/.local/bin:{{ brew_prefix }}/bin:{{ ansible_env.HOME }}/.asdf/bin:{{ ansible_env.HOME }}/.asdf/shims:/opt/homebrew/bin:/home/linuxbrew/.linuxbrew/bin:{{ ansible_env.PATH }}"
+    PATH: "{{ ansible_facts['env']['HOME'] }}/.local/bin:{{ brew_prefix }}/bin:{{ ansible_facts['env']['HOME'] }}/.asdf/bin:{{ ansible_facts['env']['HOME'] }}/.asdf/shims:/opt/homebrew/bin:/home/linuxbrew/.linuxbrew/bin:{{ ansible_facts['env']['PATH'] }}"
   tags: [dotfiles]
 
 - name: Check if ~/.cfgcaddy.yml exists (init already done)
   stat:
-    path: "{{ ansible_env.HOME }}/.cfgcaddy.yml"
+    path: "{{ ansible_facts['env']['HOME'] }}/.cfgcaddy.yml"
   register: dotfiles_cfgcaddy_yml
   tags: [dotfiles]
 
 - name: Init cfgcaddy (symlinks .cfgcaddy.yml to ~/.cfgcaddy.yml)
-  command: "cfgcaddy init {{ dotfiles_dir }} {{ ansible_env.HOME }}"
+  command: "cfgcaddy init {{ dotfiles_dir }} {{ ansible_facts['env']['HOME'] }}"
   when: not dotfiles_cfgcaddy_yml.stat.exists
   environment:
-    PATH: "{{ ansible_env.HOME }}/.local/bin:{{ brew_prefix }}/bin:{{ ansible_env.HOME }}/.asdf/bin:{{ ansible_env.HOME }}/.asdf/shims:/opt/homebrew/bin:/home/linuxbrew/.linuxbrew/bin:{{ ansible_env.PATH }}"
+    PATH: "{{ ansible_facts['env']['HOME'] }}/.local/bin:{{ brew_prefix }}/bin:{{ ansible_facts['env']['HOME'] }}/.asdf/bin:{{ ansible_facts['env']['HOME'] }}/.asdf/shims:/opt/homebrew/bin:/home/linuxbrew/.linuxbrew/bin:{{ ansible_facts['env']['PATH'] }}"
   tags: [dotfiles]
 
 - name: Link dotfiles via cfgcaddy
@@ -51,5 +51,5 @@
   register: dotfiles_cfgcaddy_result
   changed_when: "'Linked' in dotfiles_cfgcaddy_result.stdout"
   environment:
-    PATH: "{{ ansible_env.HOME }}/.local/bin:{{ brew_prefix }}/bin:{{ ansible_env.HOME }}/.asdf/bin:{{ ansible_env.HOME }}/.asdf/shims:/opt/homebrew/bin:/home/linuxbrew/.linuxbrew/bin:{{ ansible_env.PATH }}"
+    PATH: "{{ ansible_facts['env']['HOME'] }}/.local/bin:{{ brew_prefix }}/bin:{{ ansible_facts['env']['HOME'] }}/.asdf/bin:{{ ansible_facts['env']['HOME'] }}/.asdf/shims:/opt/homebrew/bin:/home/linuxbrew/.linuxbrew/bin:{{ ansible_facts['env']['PATH'] }}"
   tags: [dotfiles]

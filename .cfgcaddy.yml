@@ -76,3 +76,4 @@ ignore:
   - "tags"
   - "nerd-fonts"
   - ".gittemplates"
+  - "project_plans"

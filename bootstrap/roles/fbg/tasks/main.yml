@@ -9,13 +9,13 @@
     state: directory
     mode: '0700'
   loop:
-    - "{{ ansible_env.HOME }}/.ssh"
-    - "{{ ansible_env.HOME }}/.ssh/config.d"
+    - "{{ ansible_facts['env']['HOME'] }}/.ssh"
+    - "{{ ansible_facts['env']['HOME'] }}/.ssh/config.d"
   tags: [fbg]
 
 - name: Write github-personal SSH host alias
   copy:
-    dest: "{{ ansible_env.HOME }}/.ssh/config.d/github-personal"
+    dest: "{{ ansible_facts['env']['HOME'] }}/.ssh/config.d/github-personal"
     mode: '0600'
     content: |
       Host github-personal
@@ -24,12 +24,12 @@
         IdentityFile {{ fbg_personal_ssh_key }}
         IdentitiesOnly yes
   vars:
-    fbg_personal_ssh_key: "{{ ansible_env.HOME }}/.ssh/id_ed25519_personal"
+    fbg_personal_ssh_key: "{{ ansible_facts['env']['HOME'] }}/.ssh/id_ed25519_personal"
   tags: [fbg]
 
 - name: Ensure ~/.ssh/config includes config.d
   blockinfile:
-    path: "{{ ansible_env.HOME }}/.ssh/config"
+    path: "{{ ansible_facts['env']['HOME'] }}/.ssh/config"
     create: true
     mode: '0600'
     marker: "# {mark} ANSIBLE MANAGED — config.d include"
@@ -40,14 +40,14 @@
 
 - name: Ensure github.com key present in known_hosts
   shell: |
-    ssh-keygen -F github.com -f "{{ ansible_env.HOME }}/.ssh/known_hosts" > /dev/null 2>&1 || \
-    ssh-keyscan -H github.com >> "{{ ansible_env.HOME }}/.ssh/known_hosts"
+    ssh-keygen -F github.com -f "{{ ansible_facts['env']['HOME'] }}/.ssh/known_hosts" > /dev/null 2>&1 || \
+    ssh-keyscan -H github.com >> "{{ ansible_facts['env']['HOME'] }}/.ssh/known_hosts"
   changed_when: false
   tags: [fbg]
 
 - name: Ensure ~/IdeaProjects exists
   file:
-    path: "{{ ansible_env.HOME }}/IdeaProjects"
+    path: "{{ ansible_facts['env']['HOME'] }}/IdeaProjects"
     state: directory
     mode: '0755'
   tags: [fbg]
@@ -55,14 +55,14 @@
 - name: Clone private FBG dotfiles
   git:
     repo: git@github.com:TylerStaplerAtFanatics/dotfiles-fbg.git
-    dest: "{{ ansible_env.HOME }}/IdeaProjects/dotfiles-fbg"
+    dest: "{{ ansible_facts['env']['HOME'] }}/IdeaProjects/dotfiles-fbg"
     update: true
   environment:
     GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=accept-new"
   tags: [fbg]
 
 - name: Run FBG-specific tasks
-  include_tasks: "{{ ansible_env.HOME }}/IdeaProjects/dotfiles-fbg/tasks/main.yml"
+  include_tasks: "{{ ansible_facts['env']['HOME'] }}/IdeaProjects/dotfiles-fbg/tasks/main.yml"
   vars:
-    fbg_dotfiles_dir: "{{ ansible_env.HOME }}/IdeaProjects/dotfiles-fbg"
+    fbg_dotfiles_dir: "{{ ansible_facts['env']['HOME'] }}/IdeaProjects/dotfiles-fbg"
   tags: [fbg]

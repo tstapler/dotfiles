@@ -11,8 +11,8 @@
   block:
     - name: Set OS and arch facts
       set_fact:
-        _nix_os: "{{ 'darwin' if ansible_system == 'Darwin' else 'linux' }}"
-        _nix_arch: "{{ 'aarch64' if ansible_architecture in ['arm64', 'aarch64'] else ansible_architecture }}"
+        _nix_os: "{{ 'darwin' if ansible_facts['system'] == 'Darwin' else 'linux' }}"
+        _nix_arch: "{{ 'aarch64' if ansible_facts['architecture'] in ['arm64', 'aarch64'] else ansible_facts['architecture'] }}"
 
     - name: Resolve installer version from channel
       uri:
