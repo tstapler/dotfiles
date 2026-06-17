@@ -284,6 +284,23 @@ def get_source_info(tool_name: str, tool_input: Dict[str, Any]) -> str:
         return f"{tool_name} output"
 
 
+def _is_trusted_path(file_path: str) -> bool:
+    """Return True for paths that are known-safe and should not be scanned.
+
+    These paths produce structural false positives because their content
+    intentionally contains patterns that resemble injection (e.g. the plugin's
+    own rule definitions, or Claude Code's internal JSON task logs).
+    """
+    trusted_substrings = [
+        # This plugin's own files — patterns.yaml contains attack strings by design
+        "prompt-injection-defender/",
+        # Claude Code background-agent task output files — serialized JSON
+        # conversation logs that contain "role": "user"/"assistant" fields
+        "/tasks/",  # /tmp/claude-<pid>/tasks/<agent-id>.output
+    ]
+    return any(s in file_path for s in trusted_substrings)
+
+
 def main() -> None:
     """Main entry point for the PostToolUse hook."""
     config = load_config()
@@ -319,6 +336,12 @@ def main() -> None:
     if tool_name not in monitored_tools and not is_mcp_tool:
         # Not a monitored tool, allow without scanning
         sys.exit(0)
+
+    # Skip known-safe paths that produce false positives
+    if tool_name == "Read":
+        file_path = tool_input.get("file_path", "")
+        if _is_trusted_path(file_path):
+            sys.exit(0)
 
     # Extract text content from tool result
     text = extract_text_content(tool_name, tool_result)

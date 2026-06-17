@@ -377,8 +377,8 @@ contextManipulationPatterns:
     severity: medium
 
   # --- JSON/Data Structure Manipulation ---
-  - pattern: '(?i)"\s*(system|role|instruction|prompt)\s*"\s*:\s*"'
-    reason: "System role in JSON structure"
+  - pattern: '(?i)"\s*(instruction|prompt)\s*"\s*:\s*"'
+    reason: "Instruction/prompt key in JSON structure"
     severity: medium
 
   - pattern: '(?i)\{"role"\s*:\s*"system"'
