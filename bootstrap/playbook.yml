@@ -23,6 +23,11 @@
              else '/usr/local' if ansible_os_family == 'Darwin'
              else '/home/linuxbrew/.linuxbrew' }}
 
+    - name: Set github_personal_user on FBG machines
+      set_fact:
+        github_personal_user: tstapler
+      when: ansible_hostname | lower is match('^fbg-.*')
+
   roles:
     - claude
     - homebrew
@@ -32,5 +37,6 @@
     - nix
     - secrets
     - fonts
+    - github
     - role: fbg
       tags: [fbg]
