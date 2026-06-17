@@ -20,6 +20,9 @@
     fbg_personal_email: "tystapler@gmail.com"
     fbg_work_ssh_key: "{{ ansible_facts['env']['HOME'] }}/.ssh/id_ed25519_fbg"
     fbg_personal_ssh_key: "{{ ansible_facts['env']['HOME'] }}/.ssh/id_ed25519_personal"
+    fbg_key_title: "dotfiles-{{ ansible_facts['hostname'] }}"
+    fbg_gh_env:
+      PATH: "{{ brew_prefix }}/bin:{{ ansible_facts['env']['HOME'] }}/.local/bin:{{ ansible_facts['env']['PATH'] }}"
   tags: [fbg]
 
 - name: Ensure ~/.ssh and ~/.ssh/config.d exist
@@ -110,6 +113,36 @@
     - "{{ fbg_personal_ssh_key }}"
   register: fbg_pubkeys
   tags: [fbg]
+
+# --- Register the keys with GitHub via gh (one account each) ----------------
+- name: Get authenticated gh accounts
+  command: gh auth status --hostname github.com
+  register: fbg_gh_auth_status
+  failed_when: false
+  changed_when: false
+  environment: "{{ fbg_gh_env }}"
+  tags: [fbg]
+
+- name: Build combined gh auth status text
+  set_fact:
+    fbg_gh_auth_text: "{{ fbg_gh_auth_status.stdout }}{{ fbg_gh_auth_status.stderr }}"
+  tags: [fbg]
+
+# Personal first, work last, so the active gh account ends on the work account
+# (the default for this machine).
+- name: Register SSH keys with GitHub per account
+  include_tasks: register_key.yml
+  loop:
+    - account: tstapler
+      pubkey: "{{ fbg_personal_ssh_key }}.pub"
+      label: personal
+    - account: TylerStaplerAtFanatics
+      pubkey: "{{ fbg_work_ssh_key }}.pub"
+      label: work
+  loop_control:
+    loop_var: reg
+  tags: [fbg]
+# ----------------------------------------------------------------------------
 
 - name: Check work SSH access to github.com
   command: ssh -T -o BatchMode=yes -o StrictHostKeyChecking=accept-new git@github.com

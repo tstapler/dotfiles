@@ -1,0 +1,45 @@
+---
+# Register one SSH public key with GitHub via gh for a specific account.
+# Expects loop var `reg` with: account, pubkey, label.
+# Skips gracefully (with instructions) when the account is not authenticated
+# in gh or the token lacks the admin:public_key scope.
+
+- name: "Print gh login instructions for {{ reg.account }} ({{ reg.label }} key)"
+  debug:
+    msg: |
+      GitHub account '{{ reg.account }}' is not logged in to gh, so its {{ reg.label }}
+      SSH key was not registered. Authenticate it (with key-admin scope):
+
+        gh auth login --hostname github.com --git-protocol https --scopes admin:public_key
+
+      Pick the {{ reg.account }} account, then re-run: ansible-playbook playbook.yml --tags fbg
+  when: reg.account not in fbg_gh_auth_text
+  tags: [fbg]
+
+- name: "Register {{ reg.label }} key for {{ reg.account }}"
+  when: reg.account in fbg_gh_auth_text
+  tags: [fbg]
+  block:
+    - name: "Switch active gh account to {{ reg.account }}"
+      command: "gh auth switch --hostname github.com --user {{ reg.account }}"
+      changed_when: false
+      environment: "{{ fbg_gh_env }}"
+
+    - name: "Add {{ reg.label }} SSH key to {{ reg.account }}"
+      command: "gh ssh-key add {{ reg.pubkey }} --title {{ fbg_key_title }}"
+      register: fbg_key_add
+      changed_when: fbg_key_add.rc == 0
+      failed_when: >
+        fbg_key_add.rc != 0
+        and 'already' not in (fbg_key_add.stderr | lower)
+        and 'admin:public_key' not in fbg_key_add.stderr
+      environment: "{{ fbg_gh_env }}"
+
+    - name: "Scope upgrade needed for {{ reg.account }}"
+      debug:
+        msg: |
+          gh for '{{ reg.account }}' lacks the admin:public_key scope required to add
+          SSH keys. Grant it, then re-run --tags fbg:
+
+            gh auth refresh --hostname github.com --scopes admin:public_key
+      when: fbg_key_add.rc != 0 and 'admin:public_key' in fbg_key_add.stderr
