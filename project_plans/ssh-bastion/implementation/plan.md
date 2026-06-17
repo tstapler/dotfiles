@@ -34,7 +34,7 @@ Tasks:
 - Create `bootstrap/roles/ssh-bastion/handlers/main.yml` with `restart sshd`, `reload ufw`, `restart knockd` handlers
 - Create `bootstrap/roles/ssh-bastion/templates/` directory
 - Create `bootstrap/roles/ssh-bastion/vars/` directory (for OS-specific vars)
-- Create `bootstrap/roles/ssh-bastion/meta/main.yml` (platforms: Ubuntu, Debian; no dependencies)
+- Create `bootstrap/roles/ssh-bastion/meta/main.yml` (platforms: Ubuntu, Debian, RHEL/Fedora, macOS; no dependencies)
 
 **Story A.1.2** — Define all role variables in `defaults/main.yml`
 
@@ -55,12 +55,10 @@ ssh_bastion_knock_seq_timeout: 15       # seconds to complete sequence
 ssh_bastion_knock_cmd_timeout: 30       # seconds port stays open (auto-close)
 ssh_bastion_knock_interface: ""         # e.g. "eth0"; empty = auto-detect
 
-# Firewall
-# REQUIRED (non-empty) when ssh_bastion_use_tailscale is false — the emergency IP is the
-# operator's current public IP or a trusted management CIDR (e.g. a VPN range).
-# This is the ONLY permanently-open path to the server if knockd fails to start.
-# Example: "203.0.113.42" or "10.0.0.0/8"
-ssh_bastion_emergency_ip: ""            # REQUIRED — operator's IP or management CIDR
+# Firewall backend
+# Supported: ufw (Ubuntu/Debian default), firewalld (RHEL/Fedora/CentOS),
+#            pf (macOS, FreeBSD), iptables (raw Linux), nftables (Linux 5.2+), none (manual)
+ssh_bastion_firewall: "ufw"
 
 # Tailscale variant (home server)
 ssh_bastion_use_tailscale: false        # true = skip knockd, rely on Tailscale for reachability
@@ -102,62 +100,94 @@ ssh_bastion_kex_algorithms:
 
 Tasks:
 - Create `bootstrap/roles/ssh-bastion/tasks/packages.yml`
-- Task: `apt update` cache if stale (cache_valid_time: 3600)
-- Task: install `openssh-server`, `ufw` via `ansible.builtin.apt`
-- Task: conditional install `knockd` when `ssh_bastion_knock_daemon == 'knockd' and not ssh_bastion_use_tailscale`
-- Task: conditional install `fwknop-server` when `ssh_bastion_knock_daemon == 'fwknop' and not ssh_bastion_use_tailscale`
+- Detect package manager: `ansible_pkg_mgr` fact (`apt`, `dnf`, `homebrew`, `pkgng`, etc.)
+- **apt block** (Ubuntu/Debian — `when: ansible_pkg_mgr == 'apt'`):
+  - `apt update` cache if stale (cache_valid_time: 3600)
+  - install `openssh-server`
+  - install `ufw` when `ssh_bastion_firewall == 'ufw'`
+  - install `firewalld` when `ssh_bastion_firewall == 'firewalld'`
+  - install `nftables` when `ssh_bastion_firewall == 'nftables'`
+  - install `knockd` when `not ssh_bastion_use_tailscale and ssh_bastion_knock_daemon == 'knockd'`
+  - install `fwknop-server` when `not ssh_bastion_use_tailscale and ssh_bastion_knock_daemon == 'fwknop'`
+- **dnf/yum block** (RHEL/Fedora — `when: ansible_pkg_mgr in ['dnf', 'yum']`):
+  - install `openssh-server`, `firewalld` (if selected)
+  - install `knockd` from EPEL when applicable
+- **homebrew block** (macOS — `when: ansible_pkg_mgr == 'homebrew'`):
+  - `openssh` is built-in; no install needed
+  - install `knockd` via `community.general.homebrew` when applicable
+  - Note: pf is built-in to macOS; no package install needed
+  - Note: use `ansible.builtin.launchctl` (not `ansible.builtin.service`) for managing sshd on macOS
 - Tag all tasks: `ssh-bastion`, `packages`
 
 ---
 
 ### A.3 UFW Firewall Configuration
 
-**Story A.3.0** — Pre-flight safety assertion (FATAL-1 fix)
+**Story A.3.0** — ~~Pre-flight safety assertion~~ REMOVED
+
+The emergency IP requirement has been dropped. This role is supplemental — the server is always reachable via an existing primary access method (existing SSH on port 22, cloud console, Tailscale, etc.). knockd failure does not mean total lockout.
+
+**Story A.3.1** — Configure firewall baseline policy (multi-backend)
+
+Variable: `ssh_bastion_firewall` selects the backend. Supported values:
+
+| Value | Platform | Notes |
+|-------|----------|-------|
+| `ufw` | Ubuntu/Debian | Default |
+| `firewalld` | RHEL/Fedora/CentOS | requires `ansible.posix.firewalld` |
+| `pf` | macOS, FreeBSD | table-based; requires pf anchor setup (Story A.3.3) |
+| `iptables` | Any Linux | raw iptables rules |
+| `nftables` | Linux 5.2+ | set-based |
+| `none` | Any | skip firewall config entirely (external firewall, security group, etc.) |
 
 Tasks:
-- Add to `bootstrap/roles/ssh-bastion/tasks/firewall.yml` as the **first** task (before any UFW changes):
-  ```yaml
-  - name: Assert emergency IP is defined before applying UFW deny rule
-    ansible.builtin.assert:
-      that:
-        - ssh_bastion_emergency_ip is defined
-        - ssh_bastion_emergency_ip != ''
-      fail_msg: >
-        ABORT: ssh_bastion_emergency_ip is empty.
-        Set it to your current public IP or management CIDR (e.g. "203.0.113.42").
-        Without this, a knockd failure will permanently lock you out with no console access.
-    when: not ssh_bastion_use_tailscale
+- Create `bootstrap/roles/ssh-bastion/tasks/firewall.yml` with `when` guards on each block
+- **UFW block** (`when: ssh_bastion_firewall == 'ufw'`):
+  - set default allow outgoing
+  - set default deny incoming
+  - enable ufw (logging: on)
+- **firewalld block** (`when: ssh_bastion_firewall == 'firewalld'`):
+  - ensure firewalld is running (`ansible.builtin.service`)
+  - set default zone to drop (`firewall-cmd --set-default-zone=drop`)
+  - enable firewalld at boot
+- **iptables block** (`when: ssh_bastion_firewall == 'iptables'`):
+  - flush INPUT chain; set default DROP policy
+  - allow established/related connections
+  - allow loopback
+  - save rules with `iptables-save`
+- **nftables block** (`when: ssh_bastion_firewall == 'nftables'`):
+  - template `/etc/nftables.conf` with base table + chain + default drop policy + ssh_allowed named set
+  - enable and start nftables service
+- **pf block** (`when: ssh_bastion_firewall == 'pf'`): see Story A.3.3
+- **none block**: no tasks; log a debug message that firewall config is skipped
+- Note: Port 22 is NOT opened — the role does not touch any existing SSH port; only `ssh_bastion_port` is managed
+- Note: knockd/fwknop `start_command`/`stop_command` must match the chosen firewall backend (see Story A.6.1)
+- Tag: `ssh-bastion`, `firewall`
+
+**Story A.3.2** — knockd firewall ports — DO NOT OPEN IN ANY FIREWALL BACKEND
+
+(Same rationale as before — libpcap reads before iptables/pf/nftables. Applies to all backends.)
+
+**Story A.3.3** — pf anchor setup (macOS / FreeBSD)
+
+Tasks:
+- Create `bootstrap/roles/ssh-bastion/templates/pf-knock-ssh.anchor.j2`:
   ```
-- Guard: `when: not ssh_bastion_use_tailscale`
-- Tag: `ssh-bastion`, `firewall`, `preflight`
-
-**Story A.3.1** — Configure ufw baseline policy
-
-**Task ordering is critical (C-4 fix)**: On a host where UFW is already enabled, changing the default policy to deny BEFORE adding the emergency IP allow rule will immediately drop the current Ansible connection. The required task order is:
-1. Add emergency IP allow rule
-2. Set default-deny incoming
-3. Enable UFW (idempotent if already enabled)
-
-Tasks (in required order):
-- Create `bootstrap/roles/ssh-bastion/tasks/firewall.yml`
-- **Task 1**: Allow emergency IP on SSH port **FIRST** — before any policy or enable changes:
-  ```yaml
-  - name: Allow emergency management IP on SSH port
-    community.general.ufw:
-      rule: allow
-      from_ip: "{{ ssh_bastion_emergency_ip }}"
-      to_any: true
-      port: "{{ ssh_bastion_port }}"
-      proto: tcp
-    when: not ssh_bastion_use_tailscale
+  # /etc/pf.anchors/knock-ssh — managed by Ansible
+  table <ssh_allowed> persist
+  pass in proto tcp from <ssh_allowed> to any port {{ ssh_bastion_port }}
   ```
-  - Note: `ssh_bastion_emergency_ip` is the operator's current IP or trusted management CIDR. This is the permanent recovery path if knockd fails to start. Document as required (not optional) in role README.
-- **Task 2**: set ufw default allow outgoing
-- **Task 3**: set ufw default deny incoming (`community.general.ufw` module, direction: incoming, policy: deny) — applied AFTER emergency IP rule is in place
-- **Task 4**: enable ufw (state: enabled, logging: on) — idempotent if already enabled; the allow rule from Task 1 is already present in UFW tables before this activates the policy
-- Note: SSH port is NOT permanently opened for the general public; knockd controls per-IP access; only `ssh_bastion_emergency_ip` is permanently allowed
-- Note: Port 22 must NOT be opened — this is how the role hardens the server
-- Tag all tasks: `ssh-bastion`, `firewall`
+- Deploy template to `/etc/pf.anchors/knock-ssh`
+- Ensure `/etc/pf.conf` loads the anchor (idempotent lineinfile):
+  ```
+  anchor "knock-ssh"
+  load anchor "knock-ssh" from "/etc/pf.anchors/knock-ssh"
+  ```
+- Reload pf: `pfctl -f /etc/pf.conf`
+- Note: knockd `start_command` uses `pfctl -t ssh_allowed -T add %IP%`; `stop_command` uses `pfctl -t ssh_allowed -T delete %IP%`
+- Note: On macOS, pf must be enabled in System Settings → Firewall or via `pfctl -e`
+- Guard: `when: ssh_bastion_firewall == 'pf'`
+- Tag: `ssh-bastion`, `firewall`, `pf`
 
 **Story A.3.2** — knockd firewall ports — DO NOT OPEN IN UFW
 
@@ -268,7 +298,7 @@ Tasks:
 Tasks:
 - Create `bootstrap/roles/ssh-bastion/templates/knockd.conf.j2`
 
-  Template structure:
+  Template structure (firewall backend determines open/close commands):
   ```ini
   [options]
       UseSyslog
@@ -281,16 +311,40 @@ Tasks:
       sequence    = {{ ssh_bastion_knock_sequence | join(',') }}
       seq_timeout = {{ ssh_bastion_knock_seq_timeout }}
       tcpflags    = syn
+      {% if ssh_bastion_firewall == 'ufw' %}
       start_command = /usr/sbin/ufw allow from %IP% to any port {{ ssh_bastion_port }}
-      cmd_timeout = {{ ssh_bastion_knock_cmd_timeout }}
       stop_command  = /usr/sbin/ufw delete allow from %IP% to any port {{ ssh_bastion_port }}
+      {% elif ssh_bastion_firewall == 'firewalld' %}
+      start_command = firewall-cmd --add-rich-rule='rule family="ipv4" source address="%IP%" port port="{{ ssh_bastion_port }}" protocol="tcp" accept'
+      stop_command  = firewall-cmd --remove-rich-rule='rule family="ipv4" source address="%IP%" port port="{{ ssh_bastion_port }}" protocol="tcp" accept'
+      {% elif ssh_bastion_firewall == 'pf' %}
+      start_command = pfctl -t ssh_allowed -T add %IP%
+      stop_command  = pfctl -t ssh_allowed -T delete %IP%
+      {% elif ssh_bastion_firewall == 'iptables' %}
+      start_command = iptables -I INPUT 1 -s %IP% -p tcp --dport {{ ssh_bastion_port }} -j ACCEPT
+      stop_command  = iptables -D INPUT -s %IP% -p tcp --dport {{ ssh_bastion_port }} -j ACCEPT
+      {% elif ssh_bastion_firewall == 'nftables' %}
+      start_command = nft add element inet filter ssh_allowed { %IP% }
+      stop_command  = nft delete element inet filter ssh_allowed { %IP% }
+      {% endif %}
+      cmd_timeout = {{ ssh_bastion_knock_cmd_timeout }}
 
   {% if ssh_bastion_knock_close_sequence | length > 0 %}
   [closeSSH]
       sequence    = {{ ssh_bastion_knock_close_sequence | join(',') }}
       seq_timeout = {{ ssh_bastion_knock_seq_timeout }}
       tcpflags    = syn
-      command     = /usr/sbin/ufw delete allow from %IP% to any port {{ ssh_bastion_port }}
+      {% if ssh_bastion_firewall == 'ufw' %}
+      command = /usr/sbin/ufw delete allow from %IP% to any port {{ ssh_bastion_port }}
+      {% elif ssh_bastion_firewall == 'firewalld' %}
+      command = firewall-cmd --remove-rich-rule='rule family="ipv4" source address="%IP%" port port="{{ ssh_bastion_port }}" protocol="tcp" accept'
+      {% elif ssh_bastion_firewall == 'pf' %}
+      command = pfctl -t ssh_allowed -T delete %IP%
+      {% elif ssh_bastion_firewall == 'iptables' %}
+      command = iptables -D INPUT -s %IP% -p tcp --dport {{ ssh_bastion_port }} -j ACCEPT
+      {% elif ssh_bastion_firewall == 'nftables' %}
+      command = nft delete element inet filter ssh_allowed { %IP% }
+      {% endif %}
   {% endif %}
   ```
 
@@ -325,12 +379,12 @@ Tasks:
       that:
         - "'knockd' in knockd_pid.stdout or knockd_pid.rc == 0"
       fail_msg: >
-        knockd failed to start. The SSH port is locked by UFW but knockd is not running.
-        Connect using the emergency management IP (ssh_bastion_emergency_ip={{ ssh_bastion_emergency_ip }})
-        to diagnose the issue. Check: journalctl -u knockd, /var/log/knockd.log,
+        knockd failed to start. The SSH port is blocked by the firewall but knockd is not running.
+        Use your primary access method (existing SSH port 22, cloud console, Tailscale, etc.) to
+        diagnose. Check: journalctl -u knockd, /var/log/knockd.log,
         and /etc/default/knockd for incorrect interface name.
   ```
-  - Note: this health check runs synchronously before the play ends. If knockd has not started, Ansible aborts with a clear error and the `ssh_bastion_emergency_ip` rule from Story A.3.1 guarantees the operator can still SSH in to diagnose.
+  - Note: this health check runs synchronously before the play ends. If knockd has not started, Ansible aborts with a clear error; the server remains accessible via the primary SSH path.
 - Handler: `restart knockd` → notified by knockd.conf template change
 - Guard: `when: not ssh_bastion_use_tailscale and ssh_bastion_knock_daemon == 'knockd'`
 - Tag: `ssh-bastion`, `knockd`
@@ -933,7 +987,7 @@ Runtime paths (gitignored):
 5. `~/.config/knock-ssh/config.toml` (Story B.4.1 / B.3.2) must be populated before the `knock-ssh` binary can knock. Story B.5.4 automates this from vault variables.
 6. Epic D (Rust binary) must be complete and the Homebrew formula published (Story D.7) before any Ansible run targeting the bastion, as `ansible_ssh_executable: knock-ssh` requires the binary to be on `$PATH`.
 7. Brewfile entry `brew "tstapler/stelekit/knock-ssh"` (Story B.1.1 / D.8) must be applied (`brew bundle`) before `knock-ssh` is available on a new machine.
-8. **FATAL-1 fix — required variable**: `ssh_bastion_emergency_ip` must be set to a non-empty value (operator's current public IP or management CIDR) before running the server role. The pre-flight assert in Story A.3.0 will fail fast if this is missing, before any UFW changes are applied. This ensures a recovery path if knockd fails to start.
+8. **No emergency IP required**: this role is supplemental — the server is always reachable via a primary access method (existing SSH on port 22, cloud console, Tailscale, etc.). Set `ssh_bastion_firewall` to match the host's firewall (`ufw`, `firewalld`, `pf`, `iptables`, `nftables`, or `none`).
 
 ---
 
