@@ -37,7 +37,7 @@
     creates: "{{ ansible_env.HOME }}/.ssh/id_ed25519_personal"
   tags: [github, fbg]
 
-# ── gh CLI authentication ─────────────────────────────────────────────────
+# ── gh CLI authentication — primary account ───────────────────────────────
 
 - name: Check primary GitHub authentication
   command: gh auth status
@@ -48,16 +48,31 @@
     PATH: "{{ brew_prefix }}/bin:{{ ansible_env.PATH }}"
   tags: [github]
 
+- name: Authenticate primary account via 1Password
+  shell: op read "{{ github_op_token_path }}" | gh auth login --with-token
+  when:
+    - github_auth.rc != 0
+    - github_op_token_path != ""
+  environment:
+    PATH: "{{ brew_prefix }}/bin:{{ ansible_env.PATH }}"
+  tags: [github]
+
 - name: Require primary gh authentication
   fail:
     msg: |
-      GitHub CLI is not authenticated. Run:
+      GitHub CLI is not authenticated and github_op_token_path is not set.
+      Either run:
         gh auth login
-      Then re-run the playbook.
-  when: github_auth.rc != 0
+      or set github_op_token_path to your 1Password token path (e.g. op://Personal/GitHub/token)
+      then re-run the playbook.
+  when:
+    - github_auth.rc != 0
+    - github_op_token_path == ""
   tags: [github]
 
-- name: Get personal GitHub account token
+# ── gh CLI authentication — personal account (FBG) ───────────────────────
+
+- name: Check personal GitHub account token
   command: gh auth token --user {{ github_personal_user }}
   register: github_personal_token
   failed_when: false
@@ -67,15 +82,29 @@
     PATH: "{{ brew_prefix }}/bin:{{ ansible_env.PATH }}"
   tags: [github, fbg]
 
-- name: Require personal gh authentication
-  fail:
-    msg: |
-      Personal GitHub account '{{ github_personal_user }}' is not authenticated. Run:
-        gh auth login
-      Sign in with your personal account, then re-run the playbook.
+- name: Authenticate personal account via 1Password
+  shell: op read "{{ github_personal_op_token_path }}" | gh auth login --with-token
   when:
     - github_personal_user != ""
     - github_personal_token.rc != 0
+    - github_personal_op_token_path != ""
+  environment:
+    PATH: "{{ brew_prefix }}/bin:{{ ansible_env.PATH }}"
+  tags: [github, fbg]
+
+- name: Require personal gh authentication
+  fail:
+    msg: |
+      Personal GitHub account '{{ github_personal_user }}' is not authenticated
+      and github_personal_op_token_path is not set.
+      Either run:
+        gh auth login
+      and sign in with your personal account, or set github_personal_op_token_path
+      (e.g. op://Personal/GitHub Personal/token) then re-run the playbook.
+  when:
+    - github_personal_user != ""
+    - github_personal_token.rc != 0
+    - github_personal_op_token_path == ""
   tags: [github, fbg]
 
 # ── SSH key registration ───────────────────────────────────────────────────
@@ -93,6 +122,15 @@
   environment:
     PATH: "{{ brew_prefix }}/bin:{{ ansible_env.PATH }}"
   tags: [github]
+
+- name: Re-fetch personal token after authentication
+  command: gh auth token --user {{ github_personal_user }}
+  register: github_personal_token
+  changed_when: false
+  when: github_personal_user != ""
+  environment:
+    PATH: "{{ brew_prefix }}/bin:{{ ansible_env.PATH }}"
+  tags: [github, fbg]
 
 - name: Register personal ed25519 key with personal GitHub account
   command: >
