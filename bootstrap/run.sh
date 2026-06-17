@@ -31,7 +31,7 @@ cd "$DOTFILES_DIR"
 git submodule update --init cfgcaddy 2>/dev/null || true
 
 # Install Nix if not present (requires root; handled here outside Ansible)
-if [ ! -f /nix/var/nix/profiles/default/bin/nix ]; then
+if ! command -v nix &>/dev/null && [ ! -f /nix/var/nix/profiles/default/bin/nix ]; then
   echo "Installing Nix..."
   curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix \
     | sh -s -- install --no-confirm
@@ -53,5 +53,5 @@ fi
 
 ansible-playbook playbook.yml \
   -e "dotfiles_dir=$DOTFILES_DIR" \
-  "${FBG_ARGS[@]}" \
+  "${FBG_ARGS[@]+"${FBG_ARGS[@]}"}" \
   "$@"
