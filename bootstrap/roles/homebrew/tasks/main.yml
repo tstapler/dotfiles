@@ -70,6 +70,10 @@
   changed_when: false
   environment:
     PATH: "{{ brew_prefix }}/bin:{{ ansible_env.PATH }}"
+    GIT_TERMINAL_PROMPT: "0"
+    GIT_CONFIG_COUNT: "1"
+    GIT_CONFIG_KEY_0: "credential.helper"
+    GIT_CONFIG_VALUE_0: ""
   tags: [homebrew]
 
 - name: Check if all Brewfile packages are already installed
@@ -93,4 +97,8 @@
   when: homebrew_bundle_check.rc != 0
   environment:
     PATH: "{{ brew_prefix }}/bin:{{ ansible_env.PATH }}"
+    GIT_TERMINAL_PROMPT: "0"
+    GIT_CONFIG_COUNT: "1"
+    GIT_CONFIG_KEY_0: "credential.helper"
+    GIT_CONFIG_VALUE_0: ""
   tags: [homebrew]

@@ -8,22 +8,71 @@
     PATH: "{{ brew_prefix }}/bin:{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.PATH }}"
   tags: [claude]
 
-- name: Install Claude Code CLI via npm
-  command: npm install -g @anthropic-ai/claude-code
+- name: Install Claude Code via binary installer
   when: claude_check.rc != 0
-  environment:
-    PATH: "{{ brew_prefix }}/bin:{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.PATH }}"
   tags: [claude]
+  block:
+    - name: Set OS and arch facts
+      set_fact:
+        _claude_os: "{{ 'darwin' if ansible_os_family == 'Darwin' else 'linux' }}"
+        _claude_arch: "{{ 'arm64' if ansible_architecture in ['arm64', 'aarch64'] else 'x64' }}"
 
-- name: Verify Claude Code CLI installed
+    - name: Set platform string
+      set_fact:
+        _claude_platform: "{{ _claude_os }}-{{ _claude_arch }}"
+
+    - name: Fetch latest release version
+      uri:
+        url: "https://downloads.claude.ai/claude-code-releases/latest"
+        return_content: true
+      register: _claude_ver_resp
+
+    - name: Set version fact
+      set_fact:
+        _claude_version: "{{ _claude_ver_resp.content | trim }}"
+
+    - name: Fetch release manifest
+      uri:
+        url: "https://downloads.claude.ai/claude-code-releases/{{ _claude_version }}/manifest.json"
+        return_content: true
+      register: _claude_manifest_resp
+
+    - name: Set checksum fact
+      set_fact:
+        _claude_checksum: "{{ (_claude_manifest_resp.content | from_json).platforms[_claude_platform].checksum }}"
+
+    - name: Ensure download directory exists
+      file:
+        path: "{{ ansible_env.HOME }}/.claude/downloads"
+        state: directory
+        mode: '0755'
+
+    - name: Download installer binary
+      get_url:
+        url: "https://downloads.claude.ai/claude-code-releases/{{ _claude_version }}/{{ _claude_platform }}/claude"
+        dest: "{{ ansible_env.HOME }}/.claude/downloads/claude-installer"
+        checksum: "sha256:{{ _claude_checksum }}"
+        mode: '0755'
+
+    - name: Run installer
+      command: "{{ ansible_env.HOME }}/.claude/downloads/claude-installer install"
+      environment:
+        PATH: "{{ brew_prefix }}/bin:{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.PATH }}"
+
+    - name: Remove installer binary
+      file:
+        path: "{{ ansible_env.HOME }}/.claude/downloads/claude-installer"
+        state: absent
+
+- name: Verify claude is installed
   command: claude --version
-  register: claude_version
+  register: _claude_installed
   changed_when: false
   environment:
     PATH: "{{ brew_prefix }}/bin:{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.PATH }}"
   tags: [claude]
 
-- name: Show Claude Code version
+- name: Show installed version
   debug:
-    msg: "Claude Code installed: {{ claude_version.stdout }}"
+    msg: "Claude Code installed: {{ _claude_installed.stdout }}"
   tags: [claude]
