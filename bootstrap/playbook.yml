@@ -11,10 +11,12 @@
       shell: grep -qi microsoft /proc/version 2>/dev/null && echo yes || echo no
       register: wsl2_check
       changed_when: false
+      tags: [always]
 
     - name: Set is_wsl fact
       set_fact:
         is_wsl: "{{ wsl2_check.stdout == 'yes' }}"
+      tags: [always]
 
     - name: Set brew_prefix fact
       set_fact:
@@ -22,6 +24,7 @@
           {{ '/opt/homebrew' if ansible_facts['os_family'] == 'Darwin' and ansible_facts['architecture'] == 'arm64'
              else '/usr/local' if ansible_facts['os_family'] == 'Darwin'
              else '/home/linuxbrew/.linuxbrew' }}
+      tags: [always]
 
   roles:
     - claude

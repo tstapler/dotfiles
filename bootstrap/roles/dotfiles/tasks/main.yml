@@ -15,20 +15,12 @@
     PATH: "{{ brew_prefix }}/bin:{{ ansible_facts['env']['PATH'] }}"
   tags: [dotfiles]
 
-- name: Check if cfgcaddy is installed
-  command: cfgcaddy --help
-  register: dotfiles_cfgcaddy_check
-  failed_when: false
-  changed_when: false
-  environment:
-    PATH: "{{ ansible_facts['env']['HOME'] }}/.local/bin:{{ brew_prefix }}/bin:{{ ansible_facts['env']['HOME'] }}/.asdf/bin:{{ ansible_facts['env']['HOME'] }}/.asdf/shims:/opt/homebrew/bin:/home/linuxbrew/.linuxbrew/bin:{{ ansible_facts['env']['PATH'] }}"
-  tags: [dotfiles]
-
-- name: Install cfgcaddy via uv tool install
+- name: Install/upgrade cfgcaddy via uv tool install
+  # --force is idempotent and ensures version bumps in cfgcaddy/ are picked
+  # up even when an older copy is already installed.
   command: "{{ brew_prefix }}/bin/uv tool install --force {{ dotfiles_dir }}/cfgcaddy"
-  when: dotfiles_cfgcaddy_check.rc != 0
   register: dotfiles_cfgcaddy_install
-  changed_when: dotfiles_cfgcaddy_check.rc != 0
+  changed_when: "'Installed' in dotfiles_cfgcaddy_install.stderr or 'Installed' in dotfiles_cfgcaddy_install.stdout"
   environment:
     PATH: "{{ ansible_facts['env']['HOME'] }}/.local/bin:{{ brew_prefix }}/bin:{{ ansible_facts['env']['HOME'] }}/.asdf/bin:{{ ansible_facts['env']['HOME'] }}/.asdf/shims:/opt/homebrew/bin:/home/linuxbrew/.linuxbrew/bin:{{ ansible_facts['env']['PATH'] }}"
   tags: [dotfiles]
