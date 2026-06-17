@@ -21,9 +21,9 @@
       set_fact:
         _claude_platform: "{{ _claude_os }}-{{ _claude_arch }}"
 
-    - name: Fetch latest release version
+    - name: Fetch release version for channel {{ claude_release_channel }}
       uri:
-        url: "https://downloads.claude.ai/claude-code-releases/latest"
+        url: "https://downloads.claude.ai/claude-code-releases/{{ claude_release_channel }}"
         return_content: true
       register: _claude_ver_resp
 

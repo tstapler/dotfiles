@@ -24,6 +24,7 @@
              else '/home/linuxbrew/.linuxbrew' }}
 
   roles:
+    - claude
     - homebrew
     - dotfiles
     - shell
@@ -31,6 +32,5 @@
     - nix
     - secrets
     - fonts
-    - claude
     - role: fbg
       tags: [fbg]
