@@ -1,7 +1,26 @@
 ---
-# FBG-specific bootstrap: SSH config, host keys, then delegates to private repo.
+# FBG-specific bootstrap. Sets up SSH keys + git identity, then delegates to
+# the private dotfiles-fbg repo.
+#
+# Key / identity model:
+#   - github.com       -> work key (id_ed25519_fbg), work GitHub account.
+#                         This is the DEFAULT, so `git@github.com:...` uses work.
+#   - github-personal  -> personal key (id_ed25519_personal), personal account.
+#                         Personal repos use `git@github-personal:...` (SSH) or
+#                         HTTPS+gh; selection is by the host in the remote URL.
+#   - repos under ~/WorkProjects use the work email via ~/.gitconfig.fbg, which
+#     the public .gitconfig pulls in with an includeIf.
+#
 # Run with: ansible-playbook playbook.yml --tags fbg
-# Requires: personal SSH key at {{ fbg_personal_ssh_key }} with github.com access.
+
+- name: Define FBG identity and key facts
+  set_fact:
+    fbg_git_name: "Tyler Stapler"
+    fbg_work_email: "Tyler.Stapler@betfanatics.com"
+    fbg_personal_email: "tystapler@gmail.com"
+    fbg_work_ssh_key: "{{ ansible_facts['env']['HOME'] }}/.ssh/id_ed25519_fbg"
+    fbg_personal_ssh_key: "{{ ansible_facts['env']['HOME'] }}/.ssh/id_ed25519_personal"
+  tags: [fbg]
 
 - name: Ensure ~/.ssh and ~/.ssh/config.d exist
   file:
@@ -13,18 +32,44 @@
     - "{{ ansible_facts['env']['HOME'] }}/.ssh/config.d"
   tags: [fbg]
 
-- name: Write github-personal SSH host alias
+- name: Generate work SSH key if missing
+  command: >
+    ssh-keygen -t ed25519 -f {{ fbg_work_ssh_key }} -N "" -C "{{ fbg_work_email }}"
+  args:
+    creates: "{{ fbg_work_ssh_key }}"
+  tags: [fbg]
+
+- name: Generate personal SSH key if missing
+  command: >
+    ssh-keygen -t ed25519 -f {{ fbg_personal_ssh_key }} -N "" -C "{{ fbg_personal_email }}"
+  args:
+    creates: "{{ fbg_personal_ssh_key }}"
+  tags: [fbg]
+
+- name: Write SSH host aliases (github.com = work, github-personal = personal)
   copy:
-    dest: "{{ ansible_facts['env']['HOME'] }}/.ssh/config.d/github-personal"
+    dest: "{{ ansible_facts['env']['HOME'] }}/.ssh/config.d/github"
     mode: '0600'
     content: |
+      # Work account is the default for github.com.
+      Host github.com
+        HostName github.com
+        User git
+        IdentityFile {{ fbg_work_ssh_key }}
+        IdentitiesOnly yes
+
+      # Personal account, selected by using github-personal in the remote URL.
       Host github-personal
         HostName github.com
         User git
         IdentityFile {{ fbg_personal_ssh_key }}
         IdentitiesOnly yes
-  vars:
-    fbg_personal_ssh_key: "{{ ansible_facts['env']['HOME'] }}/.ssh/id_ed25519_personal"
+  tags: [fbg]
+
+- name: Remove superseded github-personal alias file
+  file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.ssh/config.d/github-personal"
+    state: absent
   tags: [fbg]
 
 - name: Ensure ~/.ssh/config includes config.d
@@ -45,9 +90,51 @@
   changed_when: false
   tags: [fbg]
 
-- name: Ensure ~/IdeaProjects exists
+- name: Write work git identity (included for repos under ~/WorkProjects)
+  copy:
+    dest: "{{ ansible_facts['env']['HOME'] }}/.gitconfig.fbg"
+    mode: '0644'
+    content: |
+      # Managed by the fbg Ansible role. Applied to ~/WorkProjects/* via the
+      # includeIf in the main ~/.gitconfig.
+      [user]
+          name = {{ fbg_git_name }}
+          email = {{ fbg_work_email }}
+  tags: [fbg]
+
+- name: Read public keys for display
+  slurp:
+    src: "{{ item }}.pub"
+  loop:
+    - "{{ fbg_work_ssh_key }}"
+    - "{{ fbg_personal_ssh_key }}"
+  register: fbg_pubkeys
+  tags: [fbg]
+
+- name: Check work SSH access to github.com
+  command: ssh -T -o BatchMode=yes -o StrictHostKeyChecking=accept-new git@github.com
+  register: fbg_work_ssh_auth
+  failed_when: false
+  changed_when: false
+  tags: [fbg]
+
+- name: Show public keys and next steps if work SSH access is not yet set up
+  debug:
+    msg: |
+      Work SSH access to github.com is not active yet. Add the public keys below
+      to the matching GitHub accounts, then re-run: ansible-playbook playbook.yml --tags fbg
+
+        Work key    -> {{ fbg_work_ssh_key }}.pub  (add to the work account, TylerStaplerAtFanatics)
+        {{ fbg_pubkeys.results[0].content | b64decode | trim }}
+
+        Personal key -> {{ fbg_personal_ssh_key }}.pub  (add to the personal account, tstapler)
+        {{ fbg_pubkeys.results[1].content | b64decode | trim }}
+  when: "'successfully authenticated' not in fbg_work_ssh_auth.stderr"
+  tags: [fbg]
+
+- name: Ensure ~/WorkProjects exists
   file:
-    path: "{{ ansible_facts['env']['HOME'] }}/IdeaProjects"
+    path: "{{ ansible_facts['env']['HOME'] }}/WorkProjects"
     state: directory
     mode: '0755'
   tags: [fbg]
@@ -55,14 +142,16 @@
 - name: Clone private FBG dotfiles
   git:
     repo: git@github.com:TylerStaplerAtFanatics/dotfiles-fbg.git
-    dest: "{{ ansible_facts['env']['HOME'] }}/IdeaProjects/dotfiles-fbg"
+    dest: "{{ ansible_facts['env']['HOME'] }}/WorkProjects/dotfiles-fbg"
     update: true
   environment:
     GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=accept-new"
+  when: "'successfully authenticated' in fbg_work_ssh_auth.stderr"
   tags: [fbg]
 
 - name: Run FBG-specific tasks
-  include_tasks: "{{ ansible_facts['env']['HOME'] }}/IdeaProjects/dotfiles-fbg/tasks/main.yml"
+  include_tasks: "{{ ansible_facts['env']['HOME'] }}/WorkProjects/dotfiles-fbg/tasks/main.yml"
   vars:
-    fbg_dotfiles_dir: "{{ ansible_facts['env']['HOME'] }}/IdeaProjects/dotfiles-fbg"
+    fbg_dotfiles_dir: "{{ ansible_facts['env']['HOME'] }}/WorkProjects/dotfiles-fbg"
+  when: "'successfully authenticated' in fbg_work_ssh_auth.stderr"
   tags: [fbg]

@@ -33,9 +33,6 @@
 [mergetool "meld"]
     cmd = meld "$LOCAL" "$MERGED" "$REMOTE" --output "$MERGED"
 
-[url "git@github.com:"]
-	insteadOf = https://github.com/
-
 [rebase]
 	instructionFormat = (%an <%ae>) %s
 
@@ -56,9 +53,12 @@ git-fetch-with-cli = true
 	enabled = true
 [credential "https://github.com"]
 	helper = 
-	helper = !/home/linuxbrew/.linuxbrew/bin/gh auth git-credential
+	helper = !gh auth git-credential
 [credential "https://gist.github.com"]
 	helper = 
-	helper = !/home/linuxbrew/.linuxbrew/bin/gh auth git-credential
-[url "https://github.com/"]
-	insteadOf = git@github.com:
+	helper = !gh auth git-credential
+# Work identity (name/email) is applied to repos under the work projects
+# directory via this include. The fbg role writes ~/.gitconfig.fbg on work
+# machines; on personal machines the file is absent and this is a no-op.
+[includeIf "gitdir:~/WorkProjects/"]
+	path = ~/.gitconfig.fbg
