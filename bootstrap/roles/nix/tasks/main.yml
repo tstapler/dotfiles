@@ -1,15 +1,50 @@
 ---
-- name: Check Nix installed
+- name: Check if Nix is installed
   stat:
     path: /nix/var/nix/profiles/default/bin/nix
   register: nix_bin
   tags: [nix]
 
-- name: Warn if Nix not installed
-  debug:
-    msg: "Nix not installed — run bootstrap/run.sh to install it (requires sudo)"
+- name: Install Nix
   when: not nix_bin.stat.exists
   tags: [nix]
+  block:
+    - name: Set OS and arch facts
+      set_fact:
+        _nix_os: "{{ 'darwin' if ansible_system == 'Darwin' else 'linux' }}"
+        _nix_arch: "{{ 'aarch64' if ansible_architecture in ['arm64', 'aarch64'] else ansible_architecture }}"
+
+    - name: Resolve installer version from channel
+      uri:
+        url: "https://install.determinate.systems/nix/{{ nix_install_channel }}"
+        follow_redirects: none
+        status_code: [200, 301, 302, 307, 308]
+      register: _nix_channel_resp
+
+    - name: Extract version tag from redirect
+      set_fact:
+        _nix_tag: "{{ _nix_channel_resp.location | regex_search('v[0-9]+\\.[0-9]+\\.[0-9]+') }}"
+      when: _nix_channel_resp.status in [301, 302, 307, 308]
+
+    - name: Use channel directly as tag (non-redirect)
+      set_fact:
+        _nix_tag: "{{ nix_install_channel }}"
+      when: _nix_channel_resp.status == 200
+
+    - name: Download nix-installer binary
+      get_url:
+        url: "https://install.determinate.systems/nix/tag/{{ _nix_tag }}/nix-installer-{{ _nix_arch }}-{{ _nix_os }}"
+        dest: /tmp/nix-installer
+        mode: '0755'
+
+    - name: Run nix-installer
+      command: /tmp/nix-installer install --no-confirm
+      become: true
+
+    - name: Remove installer binary
+      file:
+        path: /tmp/nix-installer
+        state: absent
 
 - name: Verify Nix version
   command: /nix/var/nix/profiles/default/bin/nix --version
