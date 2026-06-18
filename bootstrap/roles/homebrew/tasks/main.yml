@@ -102,3 +102,10 @@
     GIT_CONFIG_KEY_0: "credential.helper"
     GIT_CONFIG_VALUE_0: ""
   tags: [homebrew]
+
+- name: Symlink gdu-go to gdu (Homebrew renames it to avoid coreutils conflict)
+  file:
+    src: "{{ brew_prefix }}/bin/gdu-go"
+    dest: "{{ brew_prefix }}/bin/gdu"
+    state: link
+  tags: [homebrew]

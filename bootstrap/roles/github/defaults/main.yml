@@ -1,0 +1,5 @@
+---
+github_key_comment: "{{ ansible_env.USER }}@{{ ansible_hostname }}"
+github_personal_user: ""
+github_op_token_path: ""          # e.g. op://Personal/GitHub/token
+github_personal_op_token_path: "" # e.g. op://Personal/GitHub Personal/token
