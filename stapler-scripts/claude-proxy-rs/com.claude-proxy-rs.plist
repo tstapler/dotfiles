@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.claude-proxy-rs</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/local/bin/claude-proxy-rs</string>
+    </array>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>CLAUDE_CODE_OAUTH_TOKEN</key>
+        <string>INSERT_OAUTH_TOKEN_HERE</string>
+        <key>AWS_PROFILE</key>
+        <string>Sandbox.AdministratorAccess</string>
+        <key>AWS_REGION</key>
+        <string>us-west-2</string>
+        <key>PROXY_PORT</key>
+        <string>47000</string>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+    <key>StandardOutPath</key>
+    <string>/tmp/claude-proxy-rs.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/claude-proxy-rs.error.log</string>
+    <key>KeepAlive</key>
+    <true/>
+    <key>RunAtLoad</key>
+    <true/>
+</dict>
+</plist>
