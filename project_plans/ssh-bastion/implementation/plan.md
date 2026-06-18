@@ -107,14 +107,11 @@ Tasks:
   - install `ufw` when `ssh_bastion_firewall == 'ufw'`
   - install `firewalld` when `ssh_bastion_firewall == 'firewalld'`
   - install `nftables` when `ssh_bastion_firewall == 'nftables'`
-  - install `knockd` when `not ssh_bastion_use_tailscale and ssh_bastion_knock_daemon == 'knockd'`
-  - install `fwknop-server` when `not ssh_bastion_use_tailscale and ssh_bastion_knock_daemon == 'fwknop'`
+  - Note: no knockd, no fwknop-server, no libpcap-dev — knock-sshd is our own Rust binary (Epic D) using raw sockets via `pnet`; it needs no C library dependencies
 - **dnf/yum block** (RHEL/Fedora — `when: ansible_pkg_mgr in ['dnf', 'yum']`):
   - install `openssh-server`, `firewalld` (if selected)
-  - install `knockd` from EPEL when applicable
 - **homebrew block** (macOS — `when: ansible_pkg_mgr == 'homebrew'`):
   - `openssh` is built-in; no install needed
-  - install `knockd` via `community.general.homebrew` when applicable
   - Note: pf is built-in to macOS; no package install needed
   - Note: use `ansible.builtin.launchctl` (not `ansible.builtin.service`) for managing sshd on macOS
 - Tag all tasks: `ssh-bastion`, `packages`
@@ -291,112 +288,84 @@ Tasks:
 
 ---
 
-### A.6 knockd Configuration
+### A.6 knock-sshd Server Deployment
 
-**Story A.6.1** — Configure knockd (when `not ssh_bastion_use_tailscale and ssh_bastion_knock_daemon == 'knockd'`)
+Port knocking is handled by our own `knock-sshd` Rust binary (Epic D, Story D.9). No knockd or fwknop package required.
+
+**Story A.6.1** — Deploy knock-sshd binary and config (when `not ssh_bastion_use_tailscale`)
 
 Tasks:
-- Create `bootstrap/roles/ssh-bastion/templates/knockd.conf.j2`
+- Create `bootstrap/roles/ssh-bastion/tasks/knock_sshd.yml`
+- Task: copy `knock-sshd` binary to `/usr/local/bin/knock-sshd` (owner: root, mode: 0755)
+  - Source: pre-built binary from GitHub release artifact, or built locally and pushed via Ansible `copy` module
+  - Alternative: install via package manager if/when published to a system package repo
+- Create `bootstrap/roles/ssh-bastion/templates/knock-sshd.toml.j2`:
+  ```toml
+  # /etc/knock-sshd/config.toml — managed by Ansible
+  interface = "{{ ssh_bastion_knock_interface | default('') }}"
+  firewall   = "{{ ssh_bastion_firewall }}"
+  port       = {{ ssh_bastion_port }}
 
-  Template structure (firewall backend determines open/close commands):
-  ```ini
-  [options]
-      UseSyslog
-      logfile = /var/log/knockd.log
-      {% if ssh_bastion_knock_interface %}
-      Interface = {{ ssh_bastion_knock_interface }}
-      {% endif %}
-
-  [openSSH]
-      sequence    = {{ ssh_bastion_knock_sequence | join(',') }}
-      seq_timeout = {{ ssh_bastion_knock_seq_timeout }}
-      tcpflags    = syn
-      {% if ssh_bastion_firewall == 'ufw' %}
-      start_command = /usr/sbin/ufw allow from %IP% to any port {{ ssh_bastion_port }}
-      stop_command  = /usr/sbin/ufw delete allow from %IP% to any port {{ ssh_bastion_port }}
-      {% elif ssh_bastion_firewall == 'firewalld' %}
-      start_command = firewall-cmd --add-rich-rule='rule family="ipv4" source address="%IP%" port port="{{ ssh_bastion_port }}" protocol="tcp" accept'
-      stop_command  = firewall-cmd --remove-rich-rule='rule family="ipv4" source address="%IP%" port port="{{ ssh_bastion_port }}" protocol="tcp" accept'
-      {% elif ssh_bastion_firewall == 'pf' %}
-      start_command = pfctl -t ssh_allowed -T add %IP%
-      stop_command  = pfctl -t ssh_allowed -T delete %IP%
-      {% elif ssh_bastion_firewall == 'iptables' %}
-      start_command = iptables -I INPUT 1 -s %IP% -p tcp --dport {{ ssh_bastion_port }} -j ACCEPT
-      stop_command  = iptables -D INPUT -s %IP% -p tcp --dport {{ ssh_bastion_port }} -j ACCEPT
-      {% elif ssh_bastion_firewall == 'nftables' %}
-      start_command = nft add element inet filter ssh_allowed { %IP% }
-      stop_command  = nft delete element inet filter ssh_allowed { %IP% }
-      {% endif %}
-      cmd_timeout = {{ ssh_bastion_knock_cmd_timeout }}
+  [sequence]
+  ports       = {{ ssh_bastion_knock_sequence | tojson }}
+  timeout_secs = {{ ssh_bastion_knock_seq_timeout }}
+  cmd_timeout_secs = {{ ssh_bastion_knock_cmd_timeout }}
 
   {% if ssh_bastion_knock_close_sequence | length > 0 %}
-  [closeSSH]
-      sequence    = {{ ssh_bastion_knock_close_sequence | join(',') }}
-      seq_timeout = {{ ssh_bastion_knock_seq_timeout }}
-      tcpflags    = syn
-      {% if ssh_bastion_firewall == 'ufw' %}
-      command = /usr/sbin/ufw delete allow from %IP% to any port {{ ssh_bastion_port }}
-      {% elif ssh_bastion_firewall == 'firewalld' %}
-      command = firewall-cmd --remove-rich-rule='rule family="ipv4" source address="%IP%" port port="{{ ssh_bastion_port }}" protocol="tcp" accept'
-      {% elif ssh_bastion_firewall == 'pf' %}
-      command = pfctl -t ssh_allowed -T delete %IP%
-      {% elif ssh_bastion_firewall == 'iptables' %}
-      command = iptables -D INPUT -s %IP% -p tcp --dport {{ ssh_bastion_port }} -j ACCEPT
-      {% elif ssh_bastion_firewall == 'nftables' %}
-      command = nft delete element inet filter ssh_allowed { %IP% }
-      {% endif %}
+  [close_sequence]
+  ports        = {{ ssh_bastion_knock_close_sequence | tojson }}
+  timeout_secs = {{ ssh_bastion_knock_seq_timeout }}
   {% endif %}
   ```
-
-- Create `bootstrap/roles/ssh-bastion/templates/knockd_default.j2` for `/etc/default/knockd`:
-  ```
-  START_KNOCKD=1
-  KNOCKD_OPTS="-i {{ ssh_bastion_knock_interface | default(ansible_default_ipv4.interface) }}"
-  ```
-
-- Create `bootstrap/roles/ssh-bastion/tasks/knockd.yml`
-- Task: deploy knockd.conf template to `/etc/knockd.conf` (owner: root, mode: 0600)
-- Task: deploy knockd_default template to `/etc/default/knockd`
-- Task: enable and start knockd service (`ansible.builtin.service: name=knockd enabled=true state=started`)
-- Task (FATAL-1 fix): **verify knockd is running and listening on the correct interface immediately after start** — this must run before the play ends so a misconfigured knockd is caught while the emergency IP rule still guarantees access:
+- Task: deploy template to `/etc/knock-sshd/config.toml` (owner: root, mode: 0600); notify handler
+- **Capabilities (Linux)**: grant `CAP_NET_RAW` on the binary so it can open raw sockets without running as root:
   ```yaml
-  - name: Verify knockd process is running
-    ansible.builtin.command: pgrep -x knockd
-    register: knockd_pid
-    changed_when: false
-    failed_when: knockd_pid.rc != 0
-    retries: 3
-    delay: 2
-
-  - name: Verify knockd is listening on the correct interface
-    ansible.builtin.command: >
-      ss -lnp
-    register: knockd_socket_check
-    changed_when: false
-
-  - name: Assert knockd is capturing on expected interface
-    ansible.builtin.assert:
-      that:
-        - "'knockd' in knockd_pid.stdout or knockd_pid.rc == 0"
-      fail_msg: >
-        knockd failed to start. The SSH port is blocked by the firewall but knockd is not running.
-        Use your primary access method (existing SSH port 22, cloud console, Tailscale, etc.) to
-        diagnose. Check: journalctl -u knockd, /var/log/knockd.log,
-        and /etc/default/knockd for incorrect interface name.
+  - name: Grant CAP_NET_RAW to knock-sshd
+    ansible.builtin.command: setcap cap_net_raw+ep /usr/local/bin/knock-sshd
+    when: ansible_system == 'Linux'
   ```
-  - Note: this health check runs synchronously before the play ends. If knockd has not started, Ansible aborts with a clear error; the server remains accessible via the primary SSH path.
-- Handler: `restart knockd` → notified by knockd.conf template change
-- Guard: `when: not ssh_bastion_use_tailscale and ssh_bastion_knock_daemon == 'knockd'`
-- Tag: `ssh-bastion`, `knockd`
+  - No libpcap required — `pnet` uses `AF_PACKET` raw sockets directly; `CAP_NET_RAW` is the only privilege needed
+- **Capabilities (macOS)**: add the service user to the `access_bpf` group so knock-sshd can open BPF devices:
+  ```yaml
+  - name: Add knock-sshd user to access_bpf group (macOS)
+    ansible.builtin.command: dseditgroup -o edit -a {{ ssh_bastion_user }} -t user access_bpf
+    when: ansible_system == 'Darwin'
+  ```
+- Create `bootstrap/roles/ssh-bastion/templates/knock-sshd.service.j2` (Linux systemd):
+  ```ini
+  [Unit]
+  Description=knock-sshd port knock daemon
+  After=network.target
 
-**Story A.6.2** — fwknop configuration (when `ssh_bastion_knock_daemon == 'fwknop'`)
+  [Service]
+  ExecStart=/usr/local/bin/knock-sshd --config /etc/knock-sshd/config.toml
+  Restart=on-failure
+  RestartSec=5
 
-Note: fwknop requires additional role variables (pre-shared key, allowed source networks). Placeholder tasks only for initial implementation; full fwknop support tracked as a follow-up enhancement.
-
-Tasks:
-- Task: assert that `ssh_bastion_fwknop_key` is defined (fail with message: "fwknop requires ssh_bastion_fwknop_key")
-- Task: template `/etc/fwknop/fwknopd.conf` (stub for now, full template in follow-up)
-- Tag: `ssh-bastion`, `fwknop`
+  [Install]
+  WantedBy=multi-user.target
+  ```
+- Create `bootstrap/roles/ssh-bastion/templates/knock-sshd.plist.j2` (macOS launchd):
+  ```xml
+  <?xml version="1.0" encoding="UTF-8"?>
+  <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+  <plist version="1.0"><dict>
+    <key>Label</key><string>com.tstapler.knock-sshd</string>
+    <key>ProgramArguments</key>
+    <array>
+      <string>/usr/local/bin/knock-sshd</string>
+      <string>--config</string>
+      <string>/etc/knock-sshd/config.toml</string>
+    </array>
+    <key>RunAtLoad</key><true/>
+    <key>KeepAlive</key><true/>
+  </dict></plist>
+  ```
+- Task: deploy service unit (systemd or launchd based on `ansible_system`); enable and start
+- Task: verify knock-sshd process is running after start (same pgrep health check pattern)
+- Handler: `restart knock-sshd` → notified by config template change
+- Guard: `when: not ssh_bastion_use_tailscale`
+- Tag: `ssh-bastion`, `knock-sshd`
 
 ---
 
@@ -742,15 +711,30 @@ Standalone Rust crate that acts as a transparent SSH wrapper. When invoked as `a
 
 Tasks:
 - Create public GitHub repo `tstapler/knock-ssh`
-- `cargo init --name knock-ssh` with binary target
+- Initialize as a workspace with two binary targets:
+  ```toml
+  # Cargo.toml (workspace root)
+  [[bin]]
+  name = "knock-ssh"    # client: SSH wrapper + knock sender
+  path = "src/bin/knock-ssh/main.rs"
+
+  [[bin]]
+  name = "knock-sshd"   # server: raw packet listener + firewall commander
+  path = "src/bin/knock-sshd/main.rs"
+  ```
 - Add dependencies to `Cargo.toml`:
-  - `clap` (derive feature) — argv parsing
-  - `serde` + `serde_derive` — struct deserialization
-  - `toml` — config file parsing
-  - `dirs` — XDG-compliant home/config/data directory resolution
-- Set `edition = "2021"`, Rust MSRV ≥ 1.70
-- Add `.github/workflows/release.yml` stub for future Homebrew formula automation
-- Add `LICENSE` (MIT) and minimal `README.md` explaining purpose
+  - `clap` (derive feature) — argv parsing (both binaries)
+  - `serde` + `serde_derive` — struct deserialization (both binaries)
+  - `toml` — config file parsing (both binaries)
+  - `dirs` — XDG-compliant home/config/data directory resolution (client only)
+  - `pnet` — raw packet capture via `AF_PACKET` (Linux) / BPF (macOS); no libpcap dependency (server only)
+  - `pnet_datalink`, `pnet_packet` — pnet sub-crates for datalink and packet parsing (server only)
+  - `tokio` (features: rt-multi-thread, time, sync) — async runtime for server daemon: timer management, per-IP sequence timeout, concurrent state access (server only)
+  - `dashmap` — concurrent `HashMap<IpAddr, KnockState>` for server IP state (server only)
+  - `tracing` + `tracing-subscriber` — structured logging for server daemon (server only)
+- Set `edition = "2021"`, Rust MSRV ≥ 1.75
+- Add `.github/workflows/release.yml` stub — builds both binaries, uploads to GitHub release
+- Add `LICENSE` (MIT) and minimal `README.md` explaining both binaries
 
 ---
 
@@ -853,11 +837,58 @@ Tasks:
 - Formula should:
   - Fetch source tarball from GitHub releases (`tstapler/knock-ssh`)
   - Build with `cargo build --release`
-  - Install `target/release/knock-ssh` to `bin/`
+  - Install both `target/release/knock-ssh` and `target/release/knock-sshd` to `bin/`
   - Include `sha256` checksum (updated per release)
+  - Note: no libpcap dependency in formula — `pnet` links only against system libc
 - Verify `brew install tstapler/stelekit/knock-ssh` succeeds on macOS (arm64 and x86_64)
 - Verify `brew audit --strict Formula/knock-ssh.rb` passes
 - Document release process: tag → GitHub release → update formula sha256
+
+---
+
+### D.9 knock-sshd Server Daemon
+
+**Story D.9** — Implement raw packet listener and per-IP state machine
+
+The server daemon listens on a raw socket for TCP SYN packets matching the configured knock sequence, then executes the appropriate firewall command when a source IP completes the full sequence in order within the timeout.
+
+Tasks:
+- Implement `KnockState` struct:
+  ```rust
+  struct KnockState {
+      next_index: usize,      // which port in the sequence we're waiting for
+      started_at: Instant,    // when the first knock in this sequence arrived
+  }
+  ```
+- Implement `DaemonState`: `DashMap<IpAddr, KnockState>` shared across tasks
+- **Packet capture loop** (using `pnet_datalink::channel` on the configured interface):
+  - Open datalink channel on interface (uses `AF_PACKET` on Linux, BPF on macOS — both need `CAP_NET_RAW` / `access_bpf`)
+  - BPF/pcap-style filter string for pnet: accept only TCP SYN packets (no ACK) to reduce processing
+  - Parse: Ethernet → IPv4 → TCP; extract `src_ip` and `dst_port`
+  - Skip non-SYN packets and packets not destined for the knock sequence ports
+- **Sequence state machine** per source IP:
+  - On SYN to `sequence[state.next_index]`:
+    - Advance `next_index`
+    - If `next_index == sequence.len()`: sequence complete → run `open_command(src_ip)` → schedule `close_command(src_ip)` after `cmd_timeout_secs` via `tokio::time::sleep`
+    - Else: update state
+  - On SYN to wrong port (not next in sequence): reset state for that IP
+  - Stale sequence cleanup: `tokio::time::interval` task runs every second; removes entries where `started_at.elapsed() > seq_timeout_secs`
+- **Firewall command execution**: `std::process::Command` (sync, short-lived):
+  ```rust
+  fn open_command(firewall: &Firewall, ip: IpAddr, port: u16) -> Command { ... }
+  fn close_command(firewall: &Firewall, ip: IpAddr, port: u16) -> Command { ... }
+  ```
+  - `Firewall` enum: `Ufw`, `Firewalld`, `Pf`, `Iptables`, `Nftables`, `None`
+  - Commands match the per-backend strings from Story A.6.1 template
+- **CLI** (`clap` derive):
+  - `knock-sshd --config <path>` — run daemon (default: `/etc/knock-sshd/config.toml`)
+  - `knock-sshd --version`
+- **Logging**: `tracing` with JSON output to syslog/journald; log each completed sequence at `INFO`, each partial knock at `DEBUG`, firewall command errors at `ERROR`
+- **Graceful shutdown**: handle `SIGTERM`/`SIGINT` via `tokio::signal`; log shutdown, drop state
+- Unit tests:
+  - State machine: correct advance, wrong-port reset, stale cleanup, full sequence completion
+  - Firewall command strings: assert correct `iptables`, `ufw`, `pf`, `nftables`, `firewalld` commands per backend
+  - Config loading: valid TOML, missing file, malformed file
 
 ---
 
@@ -911,21 +942,23 @@ bootstrap/
         ├── defaults/
         │   └── main.yml              # All role variables with defaults
         ├── handlers/
-        │   └── main.yml              # restart sshd, reload ufw, restart knockd
+        │   └── main.yml              # restart sshd, reload ufw/firewalld/pf, restart knock-sshd
         ├── meta/
         │   └── main.yml              # Galaxy metadata, platform support
         ├── tasks/
         │   ├── main.yml              # Orchestrates includes
-        │   ├── packages.yml          # apt install
-        │   ├── firewall.yml          # ufw configuration
+        │   ├── packages.yml          # apt/dnf/homebrew install
+        │   ├── firewall.yml          # multi-backend firewall config
         │   ├── sshd.yml              # sshd_config template + validation
         │   ├── authorized_keys.yml   # pubkey deployment
-        │   ├── knockd.yml            # knockd config (conditional)
+        │   ├── knock_sshd.yml        # knock-sshd binary deploy + capabilities
         │   └── tailscale_variant.yml # tailscale path (conditional)
         ├── templates/
-        │   ├── sshd_config.j2        # sshd_config template
-        │   ├── knockd.conf.j2        # knockd configuration template
-        │   └── knockd_default.j2     # /etc/default/knockd template
+        │   ├── sshd_config.j2           # sshd_config template
+        │   ├── knock-sshd.toml.j2       # knock-sshd config template
+        │   ├── knock-sshd.service.j2    # systemd unit (Linux)
+        │   ├── knock-sshd.plist.j2      # launchd plist (macOS)
+        │   └── pf-knock-ssh.anchor.j2   # pf anchor (macOS/BSD firewall)
         └── vars/                     # (empty initially; add OS-specific overrides if needed)
 ```
 
@@ -960,8 +993,11 @@ bootstrap/
 ```
 tstapler/knock-ssh (GitHub, public)
 ├── src/
-│   └── main.rs                       # binary entry point
-├── Cargo.toml                        # clap, serde, toml, dirs
+│   ├── bin/
+│   │   ├── knock-ssh/main.rs         # client: SSH wrapper + knock sender
+│   │   └── knock-sshd/main.rs        # server: raw packet listener + state machine
+│   └── lib.rs                        # shared: config types, firewall enum, sequence logic
+├── Cargo.toml                        # clap, serde, toml, dirs, pnet, tokio, dashmap, tracing
 ├── Cargo.lock
 └── .github/
     └── workflows/
@@ -994,6 +1030,7 @@ Runtime paths (gitignored):
 ## Counts
 
 - **Epics**: 4 (A: Server Role, B: Client Setup, C: Integration and Testing, D: knock-ssh Rust Binary)
-- **Stories**: 28 (20 original + 8 in Epic D; B.3.1 revised, B.3.2 revised, B.4.1 revised, B.5.4 revised)
-- **Tasks**: ~90 (estimated discrete task items across all stories)
-- **ADRs flagged**: 5 (ADR-001 through ADR-005; ADR-005 resolved: Rust binary selected over bash wrapper)
+- **Stories**: 29 (added D.9: knock-sshd server daemon; A.6 replaced knockd with knock-sshd deployment)
+- **Tasks**: ~100 (estimated discrete task items across all stories)
+- **ADRs flagged**: 5 (ADR-001 through ADR-005; ADR-001 resolved: own Rust daemon replaces knockd/fwknop; ADR-005 resolved: Rust binary selected over bash wrapper)
+- **Zero external daemon dependencies**: no knockd, no fwknop, no libpcap — knock-sshd uses `pnet` raw sockets with `CAP_NET_RAW` (Linux) or `access_bpf` group (macOS)
