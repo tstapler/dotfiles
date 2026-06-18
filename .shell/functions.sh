@@ -67,7 +67,7 @@ function gpg_agent_fix {
 				echo 'the GPG_AGENT_INFO env var is not set and gpg agent info has not been'
 				echo 'written to any expected location. Cannot continue. Please report this'
 				echo 'issue for investigation.'
-				exit 5
+				return 5
 			fi
 		else
 			mkdir /tmp/.gpg-agent-$USER

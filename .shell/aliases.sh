@@ -15,7 +15,8 @@ alias zln="noglob zmv -L"
 alias zsy="noglob zmv -Ls"
 
 # Add npm-exec to execute from local node_modules
-alias npm-exec='PATH=$(npm bin):$PATH'
+# (`npm bin` was removed in npm 9+; derive the path from the package root)
+alias npm-exec='PATH="$(npm prefix)/node_modules/.bin:$PATH"'
 
 # Use hub which gives git github integration
 if hash hub 2>/dev/null; then
