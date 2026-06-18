@@ -3,7 +3,7 @@
 ## Overview
 
 This plan covers two parallel subsystems:
-- **A) SERVER ROLE** — `bootstrap/roles/ssh-bastion/` in public dotfiles repo
+- **A) SERVER ROLE** — `tstapler/escutcheon` repo under `ansible/roles/ssh-bastion/`; dotfiles references via `bootstrap/requirements.yml` (git source) and `roles_path`
 - **B) CLIENT SETUP** — dotfiles side, deployed by `cfgcaddy/cfgcaddy` role
 
 ---
@@ -18,7 +18,7 @@ The following decisions have non-trivial tradeoffs and must be resolved before i
 | ADR-002 | Ansible knock integration | `ansible_ssh_executable` wrapper vs `pre_tasks` | Hybrid: `ansible_ssh_executable` for ad-hoc, `pre_tasks` for playbooks |
 | ADR-003 | knockd firewall backend | UFW commands vs raw iptables in knockd config | UFW commands (`ufw allow from %IP%`) to survive `ufw reload` |
 | ADR-004 | Role dependency | Write own SSH hardening vs depend on `devsec.hardening` | Write own, borrowing cipher/MAC/KEX list; avoid external dependency in public dotfiles |
-| ADR-005 | knock-ssh implementation | Bash wrapper script vs standalone Rust binary | Rust binary (`tstapler/knock-ssh`): zero runtime deps, silent output (Ansible-safe), process exec handoff via `CommandExt::exec`, XDG-compliant config/state paths, Homebrew-installable |
+| ADR-005 | knock-ssh implementation | Bash wrapper script vs standalone Rust binary | Rust binary (`tstapler/escutcheon`): zero runtime deps, silent output (Ansible-safe), process exec handoff via `CommandExt::exec`, XDG-compliant config/state paths, Homebrew-installable |
 
 ---
 
@@ -26,15 +26,34 @@ The following decisions have non-trivial tradeoffs and must be resolved before i
 
 ### A.1 Role Scaffold and Defaults
 
-**Story A.1.1** — Create role directory structure
+**Story A.1.0** — Wire dotfiles to consume role from `tstapler/escutcheon`
+
+The role lives in `tstapler/escutcheon` under `ansible/roles/ssh-bastion/`. Dotfiles installs it via `ansible-galaxy`.
 
 Tasks:
-- Create `bootstrap/roles/ssh-bastion/tasks/main.yml` with include guards for subsystems
-- Create `bootstrap/roles/ssh-bastion/defaults/main.yml` with all role variables
-- Create `bootstrap/roles/ssh-bastion/handlers/main.yml` with `restart sshd`, `reload ufw`, `restart knockd` handlers
-- Create `bootstrap/roles/ssh-bastion/templates/` directory
-- Create `bootstrap/roles/ssh-bastion/vars/` directory (for OS-specific vars)
-- Create `bootstrap/roles/ssh-bastion/meta/main.yml` (platforms: Ubuntu, Debian, RHEL/Fedora, macOS; no dependencies)
+- Create `bootstrap/requirements.yml` in dotfiles:
+  ```yaml
+  roles:
+    - name: tstapler.ssh_bastion
+      src: https://github.com/tstapler/escutcheon
+      scm: git
+      version: main
+  ```
+  Note: `ansible-galaxy install -r requirements.yml` clones the entire repo into `~/.ansible/roles/tstapler.ssh_bastion/`. The role files are expected at the repo root by Galaxy; since they live in `ansible/roles/ssh-bastion/`, add `roles_path = ~/.ansible/roles:../escutcheon/ansible/roles` to `bootstrap/ansible.cfg` as an alternative for local development (direct clone).
+- Document two install paths in README:
+  1. Production: `ansible-galaxy install -r bootstrap/requirements.yml` (clones to `~/.ansible/roles/`)
+  2. Local dev: clone `tstapler/escutcheon` alongside dotfiles; `roles_path` picks it up automatically
+- Tag tasks: `ssh-bastion`, `setup`
+
+**Story A.1.1** — Create role directory structure in `tstapler/escutcheon`
+
+Tasks:
+- Create `ansible/roles/ssh-bastion/tasks/main.yml` with include guards for subsystems
+- Create `ansible/roles/ssh-bastion/defaults/main.yml` with all role variables
+- Create `ansible/roles/ssh-bastion/handlers/main.yml` with `restart sshd`, `reload ufw`, `restart knock-sshd` handlers
+- Create `ansible/roles/ssh-bastion/templates/` directory
+- Create `ansible/roles/ssh-bastion/vars/` directory (for OS-specific vars)
+- Create `ansible/roles/ssh-bastion/meta/main.yml` (platforms: Ubuntu, Debian, RHEL/Fedora, macOS; no dependencies)
 
 **Story A.1.2** — Define all role variables in `defaults/main.yml`
 
@@ -99,7 +118,7 @@ ssh_bastion_kex_algorithms:
 **Story A.2.1** — Install openssh-server and firewall packages
 
 Tasks:
-- Create `bootstrap/roles/ssh-bastion/tasks/packages.yml`
+- Create `ansible/roles/ssh-bastion/tasks/packages.yml`
 - Detect package manager: `ansible_pkg_mgr` fact (`apt`, `dnf`, `homebrew`, `pkgng`, etc.)
 - **apt block** (Ubuntu/Debian — `when: ansible_pkg_mgr == 'apt'`):
   - `apt update` cache if stale (cache_valid_time: 3600)
@@ -138,7 +157,7 @@ Variable: `ssh_bastion_firewall` selects the backend. Supported values:
 | `none` | Any | skip firewall config entirely (external firewall, security group, etc.) |
 
 Tasks:
-- Create `bootstrap/roles/ssh-bastion/tasks/firewall.yml` with `when` guards on each block
+- Create `ansible/roles/ssh-bastion/tasks/firewall.yml` with `when` guards on each block
 - **UFW block** (`when: ssh_bastion_firewall == 'ufw'`):
   - set default allow outgoing
   - set default deny incoming
@@ -168,7 +187,7 @@ Tasks:
 **Story A.3.3** — pf anchor setup (macOS / FreeBSD)
 
 Tasks:
-- Create `bootstrap/roles/ssh-bastion/templates/pf-knock-ssh.anchor.j2`:
+- Create `ansible/roles/ssh-bastion/templates/pf-knock-ssh.anchor.j2`:
   ```
   # /etc/pf.anchors/knock-ssh — managed by Ansible
   table <ssh_allowed> persist
@@ -205,7 +224,7 @@ Tasks:
 **Story A.4.1** — Template sshd_config
 
 Tasks:
-- Create `bootstrap/roles/ssh-bastion/templates/sshd_config.j2`
+- Create `ansible/roles/ssh-bastion/templates/sshd_config.j2`
 - Template must include:
   - `Port {{ ssh_bastion_port }}`
   - `PermitRootLogin no`
@@ -232,7 +251,7 @@ Tasks:
   - `KexAlgorithms {{ ssh_bastion_kex_algorithms | join(',') }}`
   - `Subsystem sftp /usr/lib/openssh/sftp-server` (keep for scp compatibility)
 
-- Create `bootstrap/roles/ssh-bastion/tasks/sshd.yml`
+- Create `ansible/roles/ssh-bastion/tasks/sshd.yml`
 - Task: deploy template to `/etc/ssh/sshd_config` (owner: root, mode: 0600)
 - Task: validate config with `sshd -t` before notifying handler (use `ansible.builtin.command` with `validate`)
 - Handler: `restart sshd` → `ansible.builtin.service: name=ssh state=restarted`
@@ -254,7 +273,7 @@ Tasks:
 **Story A.5.1** — Ensure user home directory and .ssh exist
 
 Tasks:
-- Create `bootstrap/roles/ssh-bastion/tasks/authorized_keys.yml`
+- Create `ansible/roles/ssh-bastion/tasks/authorized_keys.yml`
 - Task: ensure user `{{ ssh_bastion_user }}` exists (`ansible.builtin.user`)
 - Task: ensure `~{{ ssh_bastion_user }}/.ssh` directory exists (mode: 0700)
 
@@ -295,11 +314,11 @@ Port knocking is handled by our own `knock-sshd` Rust binary (Epic D, Story D.9)
 **Story A.6.1** — Deploy knock-sshd binary and config (when `not ssh_bastion_use_tailscale`)
 
 Tasks:
-- Create `bootstrap/roles/ssh-bastion/tasks/knock_sshd.yml`
+- Create `ansible/roles/ssh-bastion/tasks/knock_sshd.yml`
 - Task: copy `knock-sshd` binary to `/usr/local/bin/knock-sshd` (owner: root, mode: 0755)
   - Source: pre-built binary from GitHub release artifact, or built locally and pushed via Ansible `copy` module
   - Alternative: install via package manager if/when published to a system package repo
-- Create `bootstrap/roles/ssh-bastion/templates/knock-sshd.toml.j2`:
+- Create `ansible/roles/ssh-bastion/templates/knock-sshd.toml.j2`:
   ```toml
   # /etc/knock-sshd/config.toml — managed by Ansible
   interface = "{{ ssh_bastion_knock_interface | default('') }}"
@@ -331,7 +350,7 @@ Tasks:
     ansible.builtin.command: dseditgroup -o edit -a {{ ssh_bastion_user }} -t user access_bpf
     when: ansible_system == 'Darwin'
   ```
-- Create `bootstrap/roles/ssh-bastion/templates/knock-sshd.service.j2` (Linux systemd):
+- Create `ansible/roles/ssh-bastion/templates/knock-sshd.service.j2` (Linux systemd):
   ```ini
   [Unit]
   Description=knock-sshd port knock daemon
@@ -345,7 +364,7 @@ Tasks:
   [Install]
   WantedBy=multi-user.target
   ```
-- Create `bootstrap/roles/ssh-bastion/templates/knock-sshd.plist.j2` (macOS launchd):
+- Create `ansible/roles/ssh-bastion/templates/knock-sshd.plist.j2` (macOS launchd):
   ```xml
   <?xml version="1.0" encoding="UTF-8"?>
   <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -374,7 +393,7 @@ Tasks:
 **Story A.7.1** — Skip knockd when Tailscale is in use
 
 Tasks:
-- Create `bootstrap/roles/ssh-bastion/tasks/tailscale_variant.yml`
+- Create `ansible/roles/ssh-bastion/tasks/tailscale_variant.yml`
 - Task: assert Tailscale is installed when `ssh_bastion_use_tailscale` is true
   - `command: which tailscale`
   - fail message: "Tailscale must be installed separately before running this role with ssh_bastion_use_tailscale=true"
@@ -397,7 +416,7 @@ Tasks:
 **Story A.8.1** — Wire all task files in `tasks/main.yml`
 
 Tasks:
-- Update `bootstrap/roles/ssh-bastion/tasks/main.yml` to include subtask files in order:
+- Update `ansible/roles/ssh-bastion/tasks/main.yml` to include subtask files in order:
   1. `packages.yml`
   2. `firewall.yml`
   3. `sshd.yml`
@@ -439,7 +458,11 @@ Tasks:
 
 Tasks:
 - Edit `Brewfile` (location: dotfiles root or `cfgcaddy/` directory — confirm exact path)
-- Add: `brew "tstapler/stelekit/knock-ssh"` in the CLI tools section (tap `tstapler/stelekit` is already in Brewfile)
+- Add to Brewfile:
+  ```ruby
+  tap "tstapler/escutcheon", "https://github.com/tstapler/escutcheon"
+  brew "tstapler/escutcheon/escutcheon"
+  ```
 - Optionally retain: `brew "knock"` as a standalone fallback for manual knocking or the pre_tasks fragment until `--knock-only` is implemented in the Rust binary
 - Verify `brew bundle` installs `knock-ssh` binary to `$PATH`
 
@@ -499,7 +522,11 @@ The bash wrapper script (previously B.3.1) has been superseded by a dedicated Ru
 **Story B.3.1** — Integrate knock-ssh Rust binary via Brewfile and cfgcaddy
 
 Tasks:
-- Add Brewfile entry: `brew "tstapler/stelekit/knock-ssh"` (tap `tstapler/stelekit` already present)
+- Add Brewfile entries:
+  ```ruby
+  tap "tstapler/escutcheon", "https://github.com/tstapler/escutcheon"
+  brew "tstapler/escutcheon/escutcheon"
+  ```
 - Verify `brew bundle` installs the `knock-ssh` binary to a path on `$PATH` (typically `/opt/homebrew/bin/knock-ssh` or `/usr/local/bin/knock-ssh`)
 - Remove any legacy `cfgcaddy/roles/cfgcaddy/files/bin/knock-ssh` bash script if present
 - Remove any legacy `~/bin/knock-ssh` symlink/file from managed dotfiles
@@ -551,7 +578,7 @@ Tasks:
   ansible_port: 2222
   ansible_user: tyler
   ansible_ssh_private_key_file: ~/.ssh/id_ed25519_bastion
-  # knock-ssh is the Rust binary installed via Homebrew (tstapler/stelekit/knock-ssh).
+  # knock-ssh is the Rust binary installed via Homebrew (tstapler/escutcheon/escutcheon).
   # It reads ~/.config/knock-ssh/config.toml and is silent on stdout/stderr during
   # the knock phase (Ansible-safe). Use the Homebrew-installed path directly.
   ansible_ssh_executable: knock-ssh
@@ -604,7 +631,7 @@ Tasks:
 - Create `bootstrap/playbooks/tasks/knock-bastion.yml` as a reusable task fragment:
   ```yaml
   # Include in playbooks: - import_tasks: tasks/knock-bastion.yml
-  # Uses knock-ssh Rust binary (tstapler/stelekit/knock-ssh) directly to knock
+  # Uses knock-ssh Rust binary (tstapler/escutcheon/escutcheon) directly to knock
   # the bastion. knock-ssh reads ~/.config/knock-ssh/config.toml for sequences.
   # Passing a bare hostname with no SSH args causes knock-ssh to knock then exit
   # without exec-ing ssh (or alternatively, use KNOCK_ONLY=1 env var if implemented).
@@ -688,13 +715,13 @@ Tasks:
 
 ---
 
-## Epic D: knock-ssh Rust Binary
+## Epic D: escutcheon Rust Crate
 
 Standalone Rust crate that acts as a transparent SSH wrapper. When invoked as `ansible_ssh_executable` or called directly, it behaves exactly like `ssh` but sends the port-knock sequence first. Replaces the bash wrapper script (previously Story B.3.1).
 
-**Repository**: `tstapler/knock-ssh` (public GitHub repo, Homebrew-installable)
-**Crate binary name**: `knock-ssh`
-**Homebrew tap**: `tstapler/stelekit` (formula added in Story D.7; tap already in Brewfile)
+**Repository**: `tstapler/escutcheon` (public GitHub repo, Homebrew-installable)
+**Crate name**: `escutcheon` (ships two binaries: `knock-ssh` and `knock-sshd`)
+**Homebrew tap**: self-hosted in `tstapler/escutcheon` repo under `Formula/escutcheon.rb`; tap via `brew tap tstapler/escutcheon https://github.com/tstapler/escutcheon`
 
 **Design constraints**:
 - All knock output is suppressed (no stdout/stderr during knock phase — Ansible's SSH parser breaks on unexpected output)
@@ -710,7 +737,7 @@ Standalone Rust crate that acts as a transparent SSH wrapper. When invoked as `a
 **Story D.1** — `cargo init` and dependency selection
 
 Tasks:
-- Create public GitHub repo `tstapler/knock-ssh`
+- Create public GitHub repo `tstapler/escutcheon`
 - Initialize as a workspace with two binary targets:
   ```toml
   # Cargo.toml (workspace root)
@@ -830,18 +857,24 @@ Tasks:
 
 ### D.7 Homebrew Formula
 
-**Story D.7** — Add `knock-ssh` formula to `tstapler/stelekit` tap
+**Story D.7** — Add Homebrew formula to main crate repo (self-hosted tap)
+
+The formula lives in `Formula/escutcheon.rb` inside `tstapler/escutcheon` itself — no separate tap repo needed. Homebrew supports tapping any repo by passing an explicit URL.
 
 Tasks:
-- Create `Formula/knock-ssh.rb` in the `tstapler/stelekit` tap repository
+- Create `Formula/escutcheon.rb` in the `tstapler/escutcheon` repo
 - Formula should:
-  - Fetch source tarball from GitHub releases (`tstapler/knock-ssh`)
+  - Fetch source tarball from GitHub releases (`tstapler/escutcheon`)
   - Build with `cargo build --release`
   - Install both `target/release/knock-ssh` and `target/release/knock-sshd` to `bin/`
   - Include `sha256` checksum (updated per release)
   - Note: no libpcap dependency in formula — `pnet` links only against system libc
-- Verify `brew install tstapler/stelekit/knock-ssh` succeeds on macOS (arm64 and x86_64)
-- Verify `brew audit --strict Formula/knock-ssh.rb` passes
+- Verify the following succeeds on macOS (arm64 and x86_64):
+  ```
+  brew tap tstapler/escutcheon https://github.com/tstapler/escutcheon
+  brew install tstapler/escutcheon/escutcheon
+  ```
+- Verify `brew audit --strict Formula/escutcheon.rb` passes
 - Document release process: tag → GitHub release → update formula sha256
 
 ---
@@ -897,7 +930,7 @@ Tasks:
 **Story D.8** — Wire knock-ssh Rust binary into dotfiles and Ansible
 
 Tasks:
-- Brewfile: confirm `brew "tstapler/stelekit/knock-ssh"` is present (Story B.1.1)
+- Brewfile: confirm `brew "tstapler/escutcheon/escutcheon"` is present (Story B.1.1)
 - `inventory/group_vars/bastion.yml`: set `ansible_ssh_executable: knock-ssh` (Homebrew installs to `$PATH`; no `~/bin` path needed)
 - cfgcaddy config template (Story B.3.2): ensure `~/.config/knock-ssh/config.toml` is rendered and deployed
 - cfgcaddy gitignore: add `~/.config/knock-ssh/config.toml` and `~/.local/share/knock-ssh/`
@@ -975,7 +1008,8 @@ cfgcaddy/
             # NOTE: bin/knock-ssh bash script removed; binary installed via Homebrew
 
 bootstrap/
-├── ansible.cfg
+├── ansible.cfg                           # roles_path includes ~/.ansible/roles
+├── requirements.yml                      # pulls ssh-bastion role from tstapler/escutcheon
 ├── playbooks/
 │   └── tasks/
 │       └── knock-bastion.yml             # reusable pre_tasks fragment
@@ -988,24 +1022,30 @@ bootstrap/
         └── internal.yml              # ProxyJump vars for internal hosts
 ```
 
-### knock-ssh Rust Crate (external repo)
+### escutcheon Rust Crate (external repo)
 
 ```
-tstapler/knock-ssh (GitHub, public)
+tstapler/escutcheon (GitHub, public)
 ├── src/
 │   ├── bin/
 │   │   ├── knock-ssh/main.rs         # client: SSH wrapper + knock sender
 │   │   └── knock-sshd/main.rs        # server: raw packet listener + state machine
 │   └── lib.rs                        # shared: config types, firewall enum, sequence logic
+├── ansible/
+│   └── roles/
+│       └── ssh-bastion/              # Ansible role (Epic A)
+│           ├── tasks/
+│           ├── defaults/
+│           ├── handlers/
+│           ├── templates/
+│           └── meta/
+├── Formula/
+│   └── escutcheon.rb                 # Homebrew formula (self-hosted tap)
 ├── Cargo.toml                        # clap, serde, toml, dirs, pnet, tokio, dashmap, tracing
 ├── Cargo.lock
 └── .github/
     └── workflows/
         └── release.yml               # build + release artifacts for Homebrew
-
-tstapler/stelekit (Homebrew tap)
-└── Formula/
-    └── knock-ssh.rb                  # Homebrew formula
 
 Runtime paths (gitignored):
   ~/.config/knock-ssh/config.toml     # host knock sequences (from cfgcaddy template)
@@ -1018,11 +1058,11 @@ Runtime paths (gitignored):
 
 1. ADR-001 (knockd vs fwknop) must be resolved before Story A.6. Default implementation uses knockd; fwknop is a stub.
 2. ADR-003 (UFW backend) is resolved: use `ufw allow from %IP%` in knockd commands per pitfalls research.
-3. ADR-005 (Rust binary vs bash wrapper) is resolved: use the Rust binary (`tstapler/knock-ssh`). The bash wrapper script (previously B.3.1) is removed from the plan.
+3. ADR-005 (Rust binary vs bash wrapper) is resolved: use the Rust binary (`tstapler/escutcheon`). The bash wrapper script (previously B.3.1) is removed from the plan.
 4. **`ansible_ssh_executable` alone is insufficient for playbooks targeting internal hosts via ProxyJump.** The Rust `knock-ssh` binary detects explicit ProxyJump arguments (`-J` / `-o ProxyJump=`) and knocks the bastion correctly (Story D.4). However, if ProxyJump is configured only in `~/.ssh/config` (not passed as an explicit ssh arg), the binary cannot detect it. Playbooks targeting internal hosts MUST include `knock-bastion.yml` as a `pre_tasks` fragment (Story B.5.3) to guarantee the bastion is knocked before any connection attempt. `ansible_ssh_executable` with the Rust binary handles ad-hoc commands and provides a fallback for playbooks using explicit `ansible_ssh_common_args` ProxyJump args.
 5. `~/.config/knock-ssh/config.toml` (Story B.4.1 / B.3.2) must be populated before the `knock-ssh` binary can knock. Story B.5.4 automates this from vault variables.
 6. Epic D (Rust binary) must be complete and the Homebrew formula published (Story D.7) before any Ansible run targeting the bastion, as `ansible_ssh_executable: knock-ssh` requires the binary to be on `$PATH`.
-7. Brewfile entry `brew "tstapler/stelekit/knock-ssh"` (Story B.1.1 / D.8) must be applied (`brew bundle`) before `knock-ssh` is available on a new machine.
+7. Brewfile entries `tap "tstapler/escutcheon", "https://github.com/tstapler/escutcheon"` + `brew "tstapler/escutcheon/escutcheon"` (Story B.1.1 / D.7) must be applied (`brew bundle`) before `knock-ssh` is available on a new machine.
 8. **No emergency IP required**: this role is supplemental — the server is always reachable via a primary access method (existing SSH on port 22, cloud console, Tailscale, etc.). Set `ssh_bastion_firewall` to match the host's firewall (`ufw`, `firewalld`, `pf`, `iptables`, `nftables`, or `none`).
 
 ---
