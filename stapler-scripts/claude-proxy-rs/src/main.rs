@@ -14,8 +14,9 @@ mod metrics;
 mod providers;
 mod system_prompt;
 
+use std::sync::Arc;
+
 use axum::{
-    extract::Path,
     http::StatusCode,
     response::{IntoResponse, Json},
     routing::{get, post, put},
@@ -31,6 +32,7 @@ use tracing_appender::non_blocking;
 use tracing_subscriber::{filter, layer::SubscriberExt, util::SubscriberInitExt, Layer};
 
 use config::Config;
+use memory::MemoryAppState;
 
 fn main() {
     // Build an explicit multi-thread runtime (Story 1.4: do not use #[tokio::main]).
@@ -63,12 +65,17 @@ async fn async_main() {
     );
 
     // ------------------------------------------------------------------
-    // 3. Router (Story 1.4)
+    // 3. Shared state
     // ------------------------------------------------------------------
-    let app = build_router();
+    let memory_state = Arc::new(MemoryAppState::new(config.memory_max_entries));
 
     // ------------------------------------------------------------------
-    // 4. Bind and serve
+    // 4. Router (Story 1.4)
+    // ------------------------------------------------------------------
+    let app = build_router(memory_state);
+
+    // ------------------------------------------------------------------
+    // 5. Bind and serve
     // ------------------------------------------------------------------
     let addr = SocketAddr::from(([127, 0, 0, 1], config.port));
     info!(%addr, "listening");
@@ -131,7 +138,7 @@ fn init_logging() -> (non_blocking::WorkerGuard, non_blocking::WorkerGuard) {
 ///
 /// `DefaultBodyLimit::max(50_000_000)` is applied only to the message routes,
 /// not globally (Story 1.4).
-fn build_router() -> Router {
+fn build_router(memory_state: Arc<MemoryAppState>) -> Router {
     // Message routes get a 50 MB body limit.
     let message_routes = Router::new()
         .route("/v1/messages", post(handle_messages))
@@ -146,15 +153,17 @@ fn build_router() -> Router {
         // Dashboard and metrics
         .route("/dashboard", get(handle_dashboard))
         .route("/metrics", get(handle_metrics))
-        // Memory store
-        .route("/memory", get(handle_memory_list))
-        .route("/memory/:key", put(handle_memory_put))
-        .route("/memory/:key", get(handle_memory_get))
+        // Memory store (Epic 9)
+        .route("/memory", get(memory::handler_memory_list))
+        .route("/memory/:key", put(memory::handler_memory_put))
+        .route("/memory/:key", get(memory::handler_memory_get))
         // Admin / learn
         .route("/admin/learn-preview", get(handle_learn_preview))
         .route("/admin/learn-apply", post(handle_learn_apply))
         // Message routes (with body limit)
         .merge(message_routes)
+        // Inject shared memory state
+        .with_state(memory_state)
         // Tracing layer outermost
         .layer(TraceLayer::new_for_http())
 }
@@ -205,24 +214,6 @@ async fn handle_chat_completions() -> impl IntoResponse {
 async fn handle_v1_chat_completions() -> impl IntoResponse {
     // TODO: Epic 2
     StatusCode::OK
-}
-
-/// `GET /memory` — list all memory keys.
-async fn handle_memory_list() -> impl IntoResponse {
-    // TODO: Epic 9
-    Json(json!({"keys": []}))
-}
-
-/// `PUT /memory/:key` — store a value.
-async fn handle_memory_put(Path(_key): Path<String>) -> impl IntoResponse {
-    // TODO: Epic 9
-    StatusCode::OK
-}
-
-/// `GET /memory/:key` — retrieve a value.
-async fn handle_memory_get(Path(_key): Path<String>) -> impl IntoResponse {
-    // TODO: Epic 9
-    StatusCode::NOT_FOUND
 }
 
 /// `GET /admin/learn-preview` — preview session-mined corrections.
