@@ -14,9 +14,11 @@ mod metrics;
 mod providers;
 mod system_prompt;
 
+use std::net::SocketAddr;
 use std::sync::Arc;
 
 use axum::{
+    extract::State,
     http::StatusCode,
     response::{IntoResponse, Json},
     routing::{get, post, put},
@@ -25,7 +27,6 @@ use axum::{
 use axum::extract::DefaultBodyLimit;
 use rolling_file::{BasicRollingFileAppender, RollingConditionBasic};
 use serde_json::json;
-use std::net::SocketAddr;
 use tower_http::trace::TraceLayer;
 use tracing::info;
 use tracing_appender::non_blocking;
@@ -33,6 +34,30 @@ use tracing_subscriber::{filter, layer::SubscriberExt, util::SubscriberInitExt, 
 
 use config::Config;
 use memory::MemoryAppState;
+use metrics::{run_lag_monitor, MetricsCollector};
+
+// ────────────────────────────────────────────────────────────────────────────
+// AppState
+// ────────────────────────────────────────────────────────────────────────────
+
+/// Shared application state passed to all route handlers.
+#[derive(Clone)]
+struct AppState {
+    metrics: Arc<MetricsCollector>,
+    memory: Arc<MemoryAppState>,
+}
+
+// Allow axum to extract Arc<MemoryAppState> directly from AppState,
+// so memory module handlers keep their original State<Arc<MemoryAppState>> signature.
+impl axum::extract::FromRef<AppState> for Arc<MemoryAppState> {
+    fn from_ref(state: &AppState) -> Arc<MemoryAppState> {
+        Arc::clone(&state.memory)
+    }
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Entry point
+// ────────────────────────────────────────────────────────────────────────────
 
 fn main() {
     // Build an explicit multi-thread runtime (Story 1.4: do not use #[tokio::main]).
@@ -67,12 +92,18 @@ async fn async_main() {
     // ------------------------------------------------------------------
     // 3. Shared state
     // ------------------------------------------------------------------
-    let memory_state = Arc::new(MemoryAppState::new(config.memory_max_entries));
+    let metrics = MetricsCollector::new();
+    tokio::spawn(run_lag_monitor(Arc::clone(&metrics)));
+
+    let state = AppState {
+        metrics: Arc::clone(&metrics),
+        memory: Arc::new(MemoryAppState::new(config.memory_max_entries)),
+    };
 
     // ------------------------------------------------------------------
     // 4. Router (Story 1.4)
     // ------------------------------------------------------------------
-    let app = build_router(memory_state);
+    let app = build_router(state);
 
     // ------------------------------------------------------------------
     // 5. Bind and serve
@@ -138,7 +169,7 @@ fn init_logging() -> (non_blocking::WorkerGuard, non_blocking::WorkerGuard) {
 ///
 /// `DefaultBodyLimit::max(50_000_000)` is applied only to the message routes,
 /// not globally (Story 1.4).
-fn build_router(memory_state: Arc<MemoryAppState>) -> Router {
+fn build_router(state: AppState) -> Router {
     // Message routes get a 50 MB body limit.
     let message_routes = Router::new()
         .route("/v1/messages", post(handle_messages))
@@ -150,29 +181,27 @@ fn build_router(memory_state: Arc<MemoryAppState>) -> Router {
         // Info / health
         .route("/", get(handle_root))
         .route("/health", get(handle_health))
-        // Dashboard and metrics
-        .route("/dashboard", get(handle_dashboard))
+        // Dashboard and metrics (Epic 10)
+        .route("/dashboard", get(dashboard::handle_dashboard))
         .route("/metrics", get(handle_metrics))
+        .route("/errors/summary", get(handle_errors_summary))
         // Memory store (Epic 9)
         .route("/memory", get(memory::handler_memory_list))
         .route("/memory/:key", put(memory::handler_memory_put))
         .route("/memory/:key", get(memory::handler_memory_get))
-        // Admin / learn
+        // Admin / learn (Epic 8)
         .route("/admin/learn-preview", get(handle_learn_preview))
         .route("/admin/learn-apply", post(handle_learn_apply))
         // Message routes (with body limit)
         .merge(message_routes)
-        // Inject shared memory state
-        .with_state(memory_state)
-        // Tracing layer outermost
+        .with_state(state)
         .layer(TraceLayer::new_for_http())
 }
 
-// ---------------------------------------------------------------------------
-// Route handlers (stubs — all return 200 or unimplemented for now)
-// ---------------------------------------------------------------------------
+// ────────────────────────────────────────────────────────────────────────────
+// Route handlers
+// ────────────────────────────────────────────────────────────────────────────
 
-/// `GET /` — proxy info JSON.
 async fn handle_root() -> impl IntoResponse {
     Json(json!({
         "service": "claude-proxy-rs",
@@ -181,49 +210,41 @@ async fn handle_root() -> impl IntoResponse {
     }))
 }
 
-/// `GET /health` — health check.
 async fn handle_health() -> impl IntoResponse {
     Json(json!({"status": "ok"}))
 }
 
-/// `GET /dashboard` — monitoring dashboard HTML.
-async fn handle_dashboard() -> impl IntoResponse {
-    // TODO: Epic 10 — serve full dashboard HTML
-    (StatusCode::OK, "<!-- dashboard: TODO Epic 10 -->")
+async fn handle_metrics(State(state): State<AppState>) -> impl IntoResponse {
+    Json(state.metrics.to_metrics_json())
 }
 
-/// `GET /metrics` — JSON metrics.
-async fn handle_metrics() -> impl IntoResponse {
-    // TODO: Epic 10
-    Json(json!({"status": "todo", "epic": 10}))
+async fn handle_errors_summary(State(state): State<AppState>) -> impl IntoResponse {
+    let errors = state.metrics.error_tracker.get_summary(100);
+    let total = errors.len();
+    Json(json!({"errors": errors, "total": total}))
 }
 
-/// `POST /v1/messages` — Anthropic Messages API.
 async fn handle_messages() -> impl IntoResponse {
-    // TODO: Epic 2 + 3 + 4 + 5
+    // TODO: Epic 2 — wire AnthropicProvider + FallbackHandler
     StatusCode::OK
 }
 
-/// `POST /chat/completions` — OpenAI-compatible endpoint.
 async fn handle_chat_completions() -> impl IntoResponse {
     // TODO: Epic 2
     StatusCode::OK
 }
 
-/// `POST /v1/chat/completions` — OpenAI-compatible endpoint (LiteLLM).
 async fn handle_v1_chat_completions() -> impl IntoResponse {
     // TODO: Epic 2
     StatusCode::OK
 }
 
-/// `GET /admin/learn-preview` — preview session-mined corrections.
 async fn handle_learn_preview() -> impl IntoResponse {
-    // TODO: Epic 8
+    // TODO: Epic 8 — wire learn::learn_preview
     Json(json!({"corrections": []}))
 }
 
-/// `POST /admin/learn-apply` — write staged corrections to disk.
 async fn handle_learn_apply() -> impl IntoResponse {
-    // TODO: Epic 8
+    // TODO: Epic 8 — wire learn::learn_apply
     Json(json!({"written": 0}))
 }

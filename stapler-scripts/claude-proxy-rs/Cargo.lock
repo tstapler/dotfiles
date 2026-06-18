@@ -769,6 +769,7 @@ dependencies = [
  "eventsource-stream",
  "futures-util",
  "glob",
+ "hex",
  "lshdedup-core",
  "moka",
  "nix",
