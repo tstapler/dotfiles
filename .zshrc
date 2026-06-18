@@ -89,12 +89,7 @@ bindkey '^R' zaw-history
 
 export ZPLUG_FILTER=fzy:fzf-tmux:fzf:peco:percol:zaw
 
-# Add a helper function to append to path
-export -f pathadd() {
-    if [ -d "$1" ] && [[ ":$PATH:" != *":$1:"* ]]; then
-        PATH="${PATH:+"$PATH:"}$1"
-    fi
-}
+# pathadd is defined in ~/.shell/exports.sh (sourced below).
 
 if [[ -x "/home/linuxbrew/.linuxbrew/bin/brew" ]]; then
     eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
@@ -104,7 +99,7 @@ fi
 source $HOME/.shell/languages.sh
 
 if hash keychain 2>/dev/null; then
-	eval `keychain --agents gpg,ssh --quick --quiet --noask --inherit any`
+	eval `keychain --quick --quiet --noask`
 fi
 
 # Prompt Config
@@ -137,7 +132,3 @@ case $OS in
 		source ~/.shell/osx.sh
 	;;
 esac
-
-
-# Added by Antigravity CLI installer
-export PATH="/home/tstapler/.local/bin:$PATH"

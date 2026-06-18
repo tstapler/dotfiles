@@ -1,3 +1,12 @@
+# Append a directory to PATH if it exists and isn't already present.
+# Defined here so this file is self-contained for both zsh and bash
+# (.bashrc and .zshrc both source it).
+pathadd() {
+    if [ -d "$1" ] && [[ ":$PATH:" != *":$1:"* ]]; then
+        PATH="${PATH:+"$PATH:"}$1"
+    fi
+}
+
 # Add Dart pub files to PATH
 pathadd "$HOME/.pub-cache/bin"
 
