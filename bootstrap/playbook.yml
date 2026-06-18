@@ -29,7 +29,8 @@
     - name: Set github_personal_user on FBG machines
       set_fact:
         github_personal_user: tstapler
-      when: ansible_hostname | lower is match('^fbg-.*')
+      when: ansible_facts['hostname'] | lower is match('^fbg-.*')
+      tags: [always]
 
   roles:
     - claude

@@ -4,7 +4,7 @@
 # Skips gracefully (with instructions) when the account is not authenticated
 # in gh or the token lacks the admin:public_key scope.
 
-- name: "Print gh login instructions for {{ reg.account }} ({{ reg.label }} key)"
+- name: "Print gh login instructions for account {{ reg.account }}"
   debug:
     msg: |
       GitHub account '{{ reg.account }}' is not logged in to gh, so its {{ reg.label }}
@@ -16,7 +16,7 @@
   when: reg.account not in fbg_gh_auth_text
   tags: [fbg]
 
-- name: "Register {{ reg.label }} key for {{ reg.account }}"
+- name: "Register SSH key for account {{ reg.account }}"
   when: reg.account in fbg_gh_auth_text
   tags: [fbg]
   block:
@@ -25,7 +25,7 @@
       changed_when: false
       environment: "{{ fbg_gh_env }}"
 
-    - name: "Add {{ reg.label }} SSH key to {{ reg.account }}"
+    - name: "Add SSH key to account {{ reg.account }}"
       command: "gh ssh-key add {{ reg.pubkey }} --title {{ fbg_key_title }}"
       register: fbg_key_add
       changed_when: fbg_key_add.rc == 0
