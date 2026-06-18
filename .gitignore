@@ -312,3 +312,6 @@ node_modules/
 
 # Playwright MCP
 .playwright-mcp/
+
+# Personal data emitted by the wardrobe-receipt-cataloger skill
+.claude/skills/wardrobe-receipt-cataloger/receipts.json
