@@ -230,6 +230,19 @@ nerd-fonts/
 local.sh
 secrets.op.sh.tpl
 secrets.fbg.op.sh.tpl
+
+# .shell/ — ignore everything by default (machine-local config, 1Password
+# secret templates, backups) and allowlist only the shared, non-secret
+# scripts. Any new file in .shell/ stays out of the repo until added here.
+.shell/*
+!.shell/aliases.sh
+!.shell/exports.sh
+!.shell/functions.sh
+!.shell/languages.sh
+!.shell/osx.sh
+!.shell/powerlevel9k.sh
+!.shell/rust.sh
+!.shell/workiva.sh
 setup_*_1password.sh
 # Celery stuff
 celerybeat-schedule
