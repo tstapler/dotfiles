@@ -12,7 +12,11 @@ use tracing::{debug, info, warn};
 
 use crate::auth;
 use crate::config::Config;
-use super::ProviderError;
+use crate::fallback::Provider;
+use super::{ProviderError, ProviderResponse};
+
+use async_trait::async_trait;
+use futures_util::StreamExt;
 
 /// Anthropic API provider.
 ///
@@ -26,6 +30,8 @@ pub struct AnthropicProvider {
     stream_client: Client,
     /// Base URL for the Anthropic API. Default: "https://api.anthropic.com".
     base_url: String,
+    /// Stored config for use from the Provider trait impl.
+    config: Config,
 }
 
 impl AnthropicProvider {
@@ -50,6 +56,7 @@ impl AnthropicProvider {
             client,
             stream_client,
             base_url: "https://api.anthropic.com".to_string(),
+            config: config.clone(),
         })
     }
 
@@ -127,7 +134,7 @@ impl AnthropicProvider {
     /// Send a non-streaming request to `POST /v1/messages`.
     ///
     /// Returns the full response body as a `serde_json::Value` plus the HTTP status.
-    pub async fn send(
+    pub async fn send_request(
         &self,
         mut body: Value,
         incoming_headers: &HeaderMap,
@@ -175,7 +182,7 @@ impl AnthropicProvider {
     ///
     /// Returns the raw `reqwest::Response` for the caller to drive as an SSE
     /// byte stream.  The caller is responsible for iterating `bytes_stream()`.
-    pub async fn send_streaming(
+    pub async fn send_streaming_request(
         &self,
         mut body: Value,
         incoming_headers: &HeaderMap,
@@ -387,4 +394,31 @@ async fn map_error_status(
         .map_err(|e| ProviderError::Upstream { status: status.as_u16(), body: e.to_string() })?;
 
     Ok((resp_value, status))
+}
+
+// ---------------------------------------------------------------------------
+// Provider trait impl (wires AnthropicProvider into FallbackHandler)
+// ---------------------------------------------------------------------------
+
+#[async_trait]
+impl Provider for AnthropicProvider {
+    fn name(&self) -> &str {
+        "anthropic"
+    }
+
+    async fn send(
+        &self,
+        body: Value,
+        headers: HeaderMap,
+        stream: bool,
+    ) -> Result<ProviderResponse, ProviderError> {
+        if stream {
+            let response = self.send_streaming_request(body, &headers, &self.config).await?;
+            let byte_stream = response.bytes_stream();
+            Ok(ProviderResponse::Stream(Box::pin(byte_stream)))
+        } else {
+            let (value, _status) = self.send_request(body, &headers, &self.config).await?;
+            Ok(ProviderResponse::Full(value))
+        }
+    }
 }

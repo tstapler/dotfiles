@@ -13,8 +13,14 @@ use tokio::sync::Mutex;
 use tokio::time::Instant;
 use tracing::{debug, warn};
 
+use async_trait::async_trait;
+use axum::http::HeaderMap;
+use bytes::Bytes;
+use futures_util::stream;
+
 use crate::config::Config;
-use crate::providers::ProviderError;
+use crate::fallback::Provider;
+use crate::providers::{ProviderError, ProviderResponse};
 
 // Use the SDK's own re-exported SdkError alias so we don't need to add
 // aws-smithy-runtime-api as a direct dependency.
@@ -682,4 +688,62 @@ fn home_relative(relative: &str) -> std::path::PathBuf {
         .map(std::path::PathBuf::from)
         .unwrap_or_else(|_| std::path::PathBuf::from("/root"));
     home.join(relative)
+}
+
+// ---------------------------------------------------------------------------
+// Provider trait impl (wires BedrockProvider into FallbackHandler)
+// ---------------------------------------------------------------------------
+
+#[async_trait]
+impl Provider for BedrockProvider {
+    fn name(&self) -> &str {
+        "bedrock"
+    }
+
+    async fn send(
+        &self,
+        body: Value,
+        headers: HeaderMap,
+        stream: bool,
+    ) -> Result<ProviderResponse, ProviderError> {
+        let beta_header = headers
+            .get("anthropic-beta")
+            .and_then(|v| v.to_str().ok())
+            .map(str::to_string);
+
+        if stream {
+            let mut rx = self
+                .stream_message(&body, beta_header.as_deref())
+                .await?;
+
+            // Convert the mpsc Receiver into a futures Stream of Bytes.
+            let (tx_stream, rx_stream) = tokio::sync::mpsc::channel::<Result<Bytes, reqwest::Error>>(64);
+
+            tokio::spawn(async move {
+                while let Some(result) = rx.recv().await {
+                    match result {
+                        Ok(s) => {
+                            if tx_stream.send(Ok(Bytes::from(s))).await.is_err() {
+                                break;
+                            }
+                        }
+                        Err(e) => {
+                            // Convert ProviderError to a string in an upstream error shape.
+                            let msg = format!("data: {{\"type\":\"error\",\"error\":{{\"message\":\"{}\"}}}}\n\n", e);
+                            let _ = tx_stream.send(Ok(Bytes::from(msg))).await;
+                            break;
+                        }
+                    }
+                }
+            });
+
+            let byte_stream = tokio_stream::wrappers::ReceiverStream::new(rx_stream);
+            Ok(ProviderResponse::Stream(Box::pin(byte_stream)))
+        } else {
+            let value = self
+                .send_message(&body, beta_header.as_deref(), self.config.bedrock_max_retries)
+                .await?;
+            Ok(ProviderResponse::Full(value))
+        }
+    }
 }

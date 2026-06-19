@@ -8,7 +8,7 @@ name = "claude-proxy-rs"
 path = "src/main.rs"
 
 [dependencies]
-axum = { version = "0.8" }
+axum = { version = "0.8", features = ["macros"] }
 axum-extra = { version = "0.10", features = ["typed-header"] }
 tower = "0.5"
 tower-http = { version = "0.7", features = ["trace", "timeout"] }
@@ -16,7 +16,7 @@ reqwest = { version = "0.13", default-features = false, features = ["json", "str
 eventsource-stream = "0.2"
 tokio = { version = "1.52", features = ["full"] }
 tokio-util = { version = "0.7", features = ["rt"] }
-tokio-stream = "0.1"
+tokio-stream = { version = "0.1", features = ["net"] }
 futures-util = "0.3"
 aws-sdk-bedrockruntime = "1.135"
 aws-config = { version = "1.8", features = ["behavior-version-latest"] }
