@@ -1,10 +1,10 @@
 ---
-description: Create a numbered ADR in project_plans/<project>/decisions/ for a significant
+description: Create a numbered ADR in docs/adr/ for a significant
   architectural choice
 prompt: '# Create ADR: Architecture Decision Record
 
 
-  Creates `project_plans/<project>/decisions/ADR-NNN-<title>.md`.
+  Creates `docs/adr/ADR-NNN-<title>.md`.
 
 
   Use when making a significant architectural choice during Phase 3 (Planning) or
@@ -32,9 +32,9 @@ prompt: '# Create ADR: Architecture Decision Record
   or ask.
 
 
-  Scan `project_plans/<project>/decisions/` to find existing ADRs and determine the
+  Scan `docs/adr/` to find existing ADRs and determine the
   next sequential number (e.g., if ADR-001 and ADR-002 exist, next is ADR-003). If
-  no decisions/ directory exists, start at 001.
+  no docs/adr/ directory exists, start at 001.
 
 
   ## Step 2: Ask clarifying questions (if not already clear)
@@ -56,7 +56,7 @@ prompt: '# Create ADR: Architecture Decision Record
   ## Step 3: Write the ADR file
 
 
-  Create `project_plans/<project>/decisions/ADR-NNN-<kebab-title>.md`:
+  Create `docs/adr/ADR-NNN-<kebab-title>.md`:
 
 
   ```markdown
@@ -133,7 +133,7 @@ prompt: '# Create ADR: Architecture Decision Record
 
   Tell the user:
 
-  - File created: `project_plans/<project>/decisions/ADR-NNN-<title>.md`
+  - File created: `docs/adr/ADR-NNN-<title>.md`
 
   - Status is `Proposed` — change to `Accepted` when the team/stakeholders agree
 
@@ -172,7 +172,7 @@ prompt: '# Create ADR: Architecture Decision Record
 
 # Create ADR: Architecture Decision Record
 
-Creates `project_plans/<project>/decisions/ADR-NNN-<title>.md`.
+Creates `docs/adr/ADR-NNN-<title>.md`.
 
 Use when making a significant architectural choice during Phase 3 (Planning) or whenever a decision warrants documentation:
 - Choosing between two non-trivial approaches
@@ -187,7 +187,7 @@ Use when making a significant architectural choice during Phase 3 (Planning) or 
 If `$ARGUMENTS` is provided, parse `project` and `title` from it.
 Otherwise, infer project from context (open files, current task, recent messages) or ask.
 
-Scan `project_plans/<project>/decisions/` to find existing ADRs and determine the next sequential number (e.g., if ADR-001 and ADR-002 exist, next is ADR-003). If no decisions/ directory exists, start at 001.
+Scan `docs/adr/` to find existing ADRs and determine the next sequential number (e.g., if ADR-001 and ADR-002 exist, next is ADR-003). If no docs/adr/ directory exists, start at 001.
 
 ## Step 2: Ask clarifying questions (if not already clear)
 
@@ -201,7 +201,7 @@ If the context makes these clear, skip the questions and draft from context.
 
 ## Step 3: Write the ADR file
 
-Create `project_plans/<project>/decisions/ADR-NNN-<kebab-title>.md`:
+Create `docs/adr/ADR-NNN-<kebab-title>.md`:
 
 ```markdown
 # ADR-NNN: <Title>
@@ -248,7 +248,7 @@ Create `project_plans/<project>/decisions/ADR-NNN-<kebab-title>.md`:
 ## Step 4: Confirm output
 
 Tell the user:
-- File created: `project_plans/<project>/decisions/ADR-NNN-<title>.md`
+- File created: `docs/adr/ADR-NNN-<title>.md`
 - Status is `Proposed` — change to `Accepted` when the team/stakeholders agree
 - Reference this ADR from `plan.md` under the architectural decisions section
 

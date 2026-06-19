@@ -67,7 +67,7 @@ Wait for all 4 to complete. Collect summaries — do not re-read research files 
 Send a **single message** with Agent calls to parallelize planning work:
 
 - **Synthesis agent** (required): reads all research files + requirements.md, writes `project_plans/<PROJECT_NAME>/implementation/plan.md` in the standard SDD format (epics → stories → tasks). Returns: epic/story/task counts, flagged choices.
-- **ADR agent** (if technology decisions were flagged): writes decision records to `project_plans/<PROJECT_NAME>/decisions/ADR-NNN-*.md`. Returns: count of ADRs, decisions recorded.
+- **ADR agent** (if technology decisions were flagged): writes decision records to `docs/adr/ADR-NNN-*.md`. Returns: count of ADRs, decisions recorded.
 - **Adversarial reviewer agent** (after synthesis completes — send in a second message once plan.md exists): reads plan.md, writes `project_plans/<PROJECT_NAME>/implementation/adversarial-review.md`. Returns: verdict (BLOCKED/CONCERNS/CLEAN). If BLOCKED, patch plan.md and re-run.
 
 If no technology decisions need recording, omit the ADR agent and use just the synthesis agent.

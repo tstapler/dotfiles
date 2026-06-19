@@ -10,7 +10,7 @@ Write an Architecture Decision Record (ADR).
 
 ## Instructions
 
-1. **Follow [SETUP.md](../skills/SETUP.md)** — identify PROJECT_NAME.
+1. **ADRs live in the top-level `docs/adr/` directory** (repo-wide, not per-project). Create it if it does not exist.
 
 2. **Run the interview using `AskUserQuestion` for each question.**
 
@@ -53,10 +53,10 @@ Write an Architecture Decision Record (ADR).
      - "There is no relevant standard yet"
    ```
 
-3. **Auto-number the ADR.** Scan `project_plans/<PROJECT_NAME>/decisions/` for existing ADR files.
+3. **Auto-number the ADR.** Scan `docs/adr/` for existing ADR files.
    Next number = highest existing N + 1, or ADR-001 if none exist.
 
-4. **Write `project_plans/<PROJECT_NAME>/decisions/ADR-<NNN>-<kebab-title>.md`:**
+4. **Write `docs/adr/ADR-<NNN>-<kebab-title>.md`:**
 
 ```markdown
 # ADR-<NNN>: <Title>
@@ -87,4 +87,4 @@ Write an Architecture Decision Record (ADR).
 <"None" if this aligns with all team standards>
 ```
 
-5. Output: `✅ ADR-<NNN> written to project_plans/<PROJECT_NAME>/decisions/`
+5. Output: `✅ ADR-<NNN> written to docs/adr/`

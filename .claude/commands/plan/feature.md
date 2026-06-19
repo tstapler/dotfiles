@@ -140,7 +140,7 @@ prompt: "# Feature Planning & Task Documentation\n\nThis command uses the `softw
   \        <step number=\"7\" name=\"documentation_generation\">\n            <title>Documentation\
   \ Architecture Generation</title>\n            <tasks>\n                <task>Create\
   \ `docs/tasks/{feature-name}.md` with complete feature documentation</task>\n  \
-  \              <task>Write each ADR as a **separate file**: `project_plans/{project}/decisions/ADR-NNN-{short-title}.md`.\
+  \              <task>Write each ADR as a **separate file**: `docs/adr/ADR-NNN-{short-title}.md`.\
   \ Use `/plan:adr` format. Summarize in the feature plan with a file reference and\
   \ one-line decision.</task>\n                <task>Generate Epic overview with value,\
   \ metrics, scope, constraints</task>\n                <task>Detail Story breakdown\
@@ -181,10 +181,10 @@ prompt: "# Feature Planning & Task Documentation\n\nThis command uses the `softw
   \ and explicitly excluded?</scope>\n                <constraints>Technical, business,\
   \ or resource limitations</constraints>\n            </epic_overview>\n        \
   \    <architecture_decisions>\n                <!-- ADRs are written as SEPARATE\
-  \ FILES: project_plans/{project}/decisions/ADR-NNN-{title}.md\n                \
+  \ FILES: docs/adr/ADR-NNN-{title}.md\n                \
   \     Use /plan:adr to create them. Reference them here with a one-line summary\
   \ only. -->\n                <adr_reference number=\"001\">\n                  \
-  \  <file>project_plans/{project}/decisions/ADR-001-{title}.md</file>\n         \
+  \  <file>docs/adr/ADR-001-{title}.md</file>\n         \
   \           <summary>One-line decision summary (e.g., \"Chose gRPC over REST for\
   \ inter-service communication\")</summary>\n                </adr_reference>\n \
   \           </architecture_decisions>\n            <story_breakdown>\n         \
@@ -470,7 +470,7 @@ Execute the structured feature planning process defined in the XML prompt below 
             <title>Documentation Architecture Generation</title>
             <tasks>
                 <task>Create `docs/tasks/{feature-name}.md` with complete feature documentation</task>
-                <task>Write each ADR as a **separate file**: `project_plans/{project}/decisions/ADR-NNN-{short-title}.md`. Use `/plan:adr` format. Summarize in the feature plan with a file reference and one-line decision.</task>
+                <task>Write each ADR as a **separate file**: `docs/adr/ADR-NNN-{short-title}.md`. Use `/plan:adr` format. Summarize in the feature plan with a file reference and one-line decision.</task>
                 <task>Generate Epic overview with value, metrics, scope, constraints</task>
                 <task>Detail Story breakdown with acceptance criteria</task>
                 <task>Specify Atomic tasks with objectives, prerequisites, implementation, validation</task>
@@ -527,10 +527,10 @@ Execute the structured feature planning process defined in the XML prompt below 
                 <constraints>Technical, business, or resource limitations</constraints>
             </epic_overview>
             <architecture_decisions>
-                <!-- ADRs are written as SEPARATE FILES: project_plans/{project}/decisions/ADR-NNN-{title}.md
+                <!-- ADRs are written as SEPARATE FILES: docs/adr/ADR-NNN-{title}.md
                      Use /plan:adr to create them. Reference them here with a one-line summary only. -->
                 <adr_reference number="001">
-                    <file>project_plans/{project}/decisions/ADR-001-{title}.md</file>
+                    <file>docs/adr/ADR-001-{title}.md</file>
                     <summary>One-line decision summary (e.g., "Chose gRPC over REST for inter-service communication")</summary>
                 </adr_reference>
             </architecture_decisions>

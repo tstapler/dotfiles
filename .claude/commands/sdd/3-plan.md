@@ -30,7 +30,7 @@ Dispatch a planning subagent to produce the implementation plan. The subagent do
    >
    > **Step 3:** Write `project_plans/<PROJECT_NAME>/implementation/plan.md` following the template below. Use exact file paths — no placeholders. Task sizing: 2–5 minutes each, max 3–5 files per task.
    >
-   > **Step 4:** Write any ADRs to `project_plans/<PROJECT_NAME>/decisions/ADR-NNN-<kebab-title>.md`.
+   > **Step 4:** Write any ADRs to `docs/adr/ADR-NNN-<kebab-title>.md`.
    >
    > **Step 5:** Return a summary: epic count, story count, task count, any flagged choices.
 
