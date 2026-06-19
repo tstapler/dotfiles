@@ -6,35 +6,36 @@
     path: "{{ ansible_facts['env']['HOME'] }}/.ssh"
     state: directory
     mode: '0700'
-  tags: [github]
+  tags: [github, fbg]
 
 - name: Seed github.com into known_hosts
   shell: |
     ssh-keygen -F github.com -f "{{ ansible_facts['env']['HOME'] }}/.ssh/known_hosts" > /dev/null 2>&1 || \
     ssh-keyscan -H github.com >> "{{ ansible_facts['env']['HOME'] }}/.ssh/known_hosts"
   changed_when: false
-  tags: [github]
+  tags: [github, fbg]
 
 # ── Key generation ────────────────────────────────────────────────────────
 
-- name: Generate id_rsa keypair
+- name: Generate primary ed25519 keypair
   command: >
-    ssh-keygen -t rsa -b 4096
-    -f {{ ansible_facts['env']['HOME'] }}/.ssh/id_rsa
+    ssh-keygen -t ed25519
+    -f {{ github_primary_key }}
     -N ""
     -C "{{ github_key_comment }}"
   args:
-    creates: "{{ ansible_facts['env']['HOME'] }}/.ssh/id_rsa"
-  tags: [github]
+    creates: "{{ github_primary_key }}"
+  tags: [github, fbg]
 
 - name: Generate personal ed25519 keypair
   command: >
     ssh-keygen -t ed25519
-    -f {{ ansible_facts['env']['HOME'] }}/.ssh/id_ed25519_personal
+    -f {{ github_personal_key }}
     -N ""
     -C "personal-{{ github_key_comment }}"
   args:
-    creates: "{{ ansible_facts['env']['HOME'] }}/.ssh/id_ed25519_personal"
+    creates: "{{ github_personal_key }}"
+  when: github_personal_user != ""
   tags: [github, fbg]
 
 # ── gh CLI authentication — primary account ───────────────────────────────
@@ -46,7 +47,7 @@
   changed_when: false
   environment:
     PATH: "{{ brew_prefix }}/bin:{{ ansible_facts['env']['PATH'] }}"
-  tags: [github]
+  tags: [github, fbg]
 
 - name: Authenticate primary account via 1Password
   shell: op read "{{ github_op_token_path }}" | gh auth login --with-token
@@ -55,7 +56,7 @@
     - github_op_token_path != ""
   environment:
     PATH: "{{ brew_prefix }}/bin:{{ ansible_facts['env']['PATH'] }}"
-  tags: [github]
+  tags: [github, fbg]
 
 - name: Require primary gh authentication
   fail:
@@ -68,7 +69,7 @@
   when:
     - github_auth.rc != 0
     - github_op_token_path == ""
-  tags: [github]
+  tags: [github, fbg]
 
 # ── gh CLI authentication — personal account (FBG) ───────────────────────
 
@@ -109,19 +110,19 @@
 
 # ── SSH key registration ───────────────────────────────────────────────────
 
-- name: Register id_rsa with primary GitHub account
+- name: Register primary key with primary GitHub account
   command: >
-    gh ssh-key add {{ ansible_facts['env']['HOME'] }}/.ssh/id_rsa.pub
-    --title "{{ ansible_facts['hostname'] }}-rsa"
-  register: github_add_rsa
-  changed_when: github_add_rsa.rc == 0
+    gh ssh-key add {{ github_primary_key }}.pub
+    --title "{{ ansible_facts['hostname'] }}-primary"
+  register: github_add_primary
+  changed_when: github_add_primary.rc == 0
   failed_when: >
-    github_add_rsa.rc != 0 and
-    'already' not in (github_add_rsa.stderr | lower) and
-    'already' not in (github_add_rsa.stdout | lower)
+    github_add_primary.rc != 0 and
+    'already' not in (github_add_primary.stderr | lower) and
+    'already' not in (github_add_primary.stdout | lower)
   environment:
     PATH: "{{ brew_prefix }}/bin:{{ ansible_facts['env']['PATH'] }}"
-  tags: [github]
+  tags: [github, fbg]
 
 - name: Re-fetch personal token after authentication
   command: gh auth token --user {{ github_personal_user }}
@@ -134,7 +135,7 @@
 
 - name: Register personal ed25519 key with personal GitHub account
   command: >
-    gh ssh-key add {{ ansible_facts['env']['HOME'] }}/.ssh/id_ed25519_personal.pub
+    gh ssh-key add {{ github_personal_key }}.pub
     --title "{{ ansible_facts['hostname'] }}-personal"
   register: github_add_personal
   changed_when: github_add_personal.rc == 0

@@ -1,52 +1,30 @@
 ---
-# FBG-specific bootstrap. Sets up SSH keys + git identity, then delegates to
-# the private dotfiles-fbg repo.
+# FBG-specific bootstrap. The generic `github` role (which runs first, and is
+# also tagged `fbg`) generates + registers the SSH keys and authenticates gh.
+# This role only wires up the FBG-specific pieces: the SSH host aliases, the
+# work git identity, and the private dotfiles-fbg repo.
 #
 # Key / identity model:
-#   - github.com       -> work key (id_ed25519_fbg), work GitHub account.
-#                         This is the DEFAULT, so `git@github.com:...` uses work.
-#   - github-personal  -> personal key (id_ed25519_personal), personal account.
-#                         Personal repos use `git@github-personal:...` (SSH) or
-#                         HTTPS+gh; selection is by the host in the remote URL.
-#   - repos under ~/WorkProjects use the work email via ~/.gitconfig.fbg, which
-#     the public .gitconfig pulls in with an includeIf.
+#   - github.com      -> primary key (github_primary_key), work account.
+#                        Default host, so git@github.com:... uses the work key.
+#   - github-personal -> personal key (github_personal_key), personal account.
+#                        Personal repos use git@github-personal:... (or HTTPS+gh).
+#   - repos under ~/WorkProjects use the work email via ~/.gitconfig.fbg
+#     (pulled in by the includeIf in the main ~/.gitconfig).
 #
 # Run with: ansible-playbook playbook.yml --tags fbg
 
-- name: Define FBG identity and key facts
+- name: Define FBG identity facts
   set_fact:
     fbg_git_name: "Tyler Stapler"
     fbg_work_email: "Tyler.Stapler@betfanatics.com"
-    fbg_personal_email: "tystapler@gmail.com"
-    fbg_work_ssh_key: "{{ ansible_facts['env']['HOME'] }}/.ssh/id_ed25519_fbg"
-    fbg_personal_ssh_key: "{{ ansible_facts['env']['HOME'] }}/.ssh/id_ed25519_personal"
-    fbg_key_title: "dotfiles-{{ ansible_facts['hostname'] }}"
-    fbg_gh_env:
-      PATH: "{{ brew_prefix }}/bin:{{ ansible_facts['env']['HOME'] }}/.local/bin:{{ ansible_facts['env']['PATH'] }}"
   tags: [fbg]
 
-- name: Ensure ~/.ssh and ~/.ssh/config.d exist
+- name: Ensure ~/.ssh/config.d exists
   file:
-    path: "{{ item }}"
+    path: "{{ ansible_facts['env']['HOME'] }}/.ssh/config.d"
     state: directory
     mode: '0700'
-  loop:
-    - "{{ ansible_facts['env']['HOME'] }}/.ssh"
-    - "{{ ansible_facts['env']['HOME'] }}/.ssh/config.d"
-  tags: [fbg]
-
-- name: Generate work SSH key if missing
-  command: >
-    ssh-keygen -t ed25519 -f {{ fbg_work_ssh_key }} -N "" -C "{{ fbg_work_email }}"
-  args:
-    creates: "{{ fbg_work_ssh_key }}"
-  tags: [fbg]
-
-- name: Generate personal SSH key if missing
-  command: >
-    ssh-keygen -t ed25519 -f {{ fbg_personal_ssh_key }} -N "" -C "{{ fbg_personal_email }}"
-  args:
-    creates: "{{ fbg_personal_ssh_key }}"
   tags: [fbg]
 
 - name: Write SSH host aliases (github.com = work, github-personal = personal)
@@ -58,14 +36,14 @@
       Host github.com
         HostName github.com
         User git
-        IdentityFile {{ fbg_work_ssh_key }}
+        IdentityFile {{ github_primary_key }}
         IdentitiesOnly yes
 
       # Personal account, selected by using github-personal in the remote URL.
       Host github-personal
         HostName github.com
         User git
-        IdentityFile {{ fbg_personal_ssh_key }}
+        IdentityFile {{ github_personal_key }}
         IdentitiesOnly yes
   tags: [fbg]
 
@@ -86,13 +64,6 @@
     insertbefore: BOF
   tags: [fbg]
 
-- name: Ensure github.com key present in known_hosts
-  shell: |
-    ssh-keygen -F github.com -f "{{ ansible_facts['env']['HOME'] }}/.ssh/known_hosts" > /dev/null 2>&1 || \
-    ssh-keyscan -H github.com >> "{{ ansible_facts['env']['HOME'] }}/.ssh/known_hosts"
-  changed_when: false
-  tags: [fbg]
-
 - name: Write work git identity (included for repos under ~/WorkProjects)
   copy:
     dest: "{{ ansible_facts['env']['HOME'] }}/.gitconfig.fbg"
@@ -105,44 +76,12 @@
           email = {{ fbg_work_email }}
   tags: [fbg]
 
-- name: Read public keys for display
-  slurp:
-    src: "{{ item }}.pub"
-  loop:
-    - "{{ fbg_work_ssh_key }}"
-    - "{{ fbg_personal_ssh_key }}"
-  register: fbg_pubkeys
+- name: Ensure ~/WorkProjects exists
+  file:
+    path: "{{ ansible_facts['env']['HOME'] }}/WorkProjects"
+    state: directory
+    mode: '0755'
   tags: [fbg]
-
-# --- Register the keys with GitHub via gh (one account each) ----------------
-- name: Get authenticated gh accounts
-  command: gh auth status --hostname github.com
-  register: fbg_gh_auth_status
-  failed_when: false
-  changed_when: false
-  environment: "{{ fbg_gh_env }}"
-  tags: [fbg]
-
-- name: Build combined gh auth status text
-  set_fact:
-    fbg_gh_auth_text: "{{ fbg_gh_auth_status.stdout }}{{ fbg_gh_auth_status.stderr }}"
-  tags: [fbg]
-
-# Personal first, work last, so the active gh account ends on the work account
-# (the default for this machine).
-- name: Register SSH keys with GitHub per account
-  include_tasks: register_key.yml
-  loop:
-    - account: tstapler
-      pubkey: "{{ fbg_personal_ssh_key }}.pub"
-      label: personal
-    - account: TylerStaplerAtFanatics
-      pubkey: "{{ fbg_work_ssh_key }}.pub"
-      label: work
-  loop_control:
-    loop_var: reg
-  tags: [fbg]
-# ----------------------------------------------------------------------------
 
 - name: Check work SSH access to github.com
   command: ssh -T -o BatchMode=yes -o StrictHostKeyChecking=accept-new git@github.com
@@ -151,25 +90,14 @@
   changed_when: false
   tags: [fbg]
 
-- name: Show public keys and next steps if work SSH access is not yet set up
+- name: Note if work SSH access is not active yet
   debug:
     msg: |
-      Work SSH access to github.com is not active yet. Add the public keys below
-      to the matching GitHub accounts, then re-run: ansible-playbook playbook.yml --tags fbg
-
-        Work key    -> {{ fbg_work_ssh_key }}.pub  (add to the work account, TylerStaplerAtFanatics)
-        {{ fbg_pubkeys.results[0].content | b64decode | trim }}
-
-        Personal key -> {{ fbg_personal_ssh_key }}.pub  (add to the personal account, tstapler)
-        {{ fbg_pubkeys.results[1].content | b64decode | trim }}
+      Work SSH access to github.com is not active yet — the private dotfiles-fbg
+      repo was not cloned. Ensure the github role registered the primary key with
+      the work account (set github_op_token_path or authenticate gh), then re-run:
+      ansible-playbook playbook.yml --tags fbg
   when: "'successfully authenticated' not in fbg_work_ssh_auth.stderr"
-  tags: [fbg]
-
-- name: Ensure ~/WorkProjects exists
-  file:
-    path: "{{ ansible_facts['env']['HOME'] }}/WorkProjects"
-    state: directory
-    mode: '0755'
   tags: [fbg]
 
 - name: Clone private FBG dotfiles

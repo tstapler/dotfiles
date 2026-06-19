@@ -3,3 +3,10 @@ github_key_comment: "{{ ansible_facts['env']['USER'] }}@{{ ansible_facts['hostna
 github_personal_user: ""
 github_op_token_path: ""          # e.g. op://Personal/GitHub/token
 github_personal_op_token_path: "" # e.g. op://Personal/GitHub Personal/token
+
+# Canonical SSH key paths. The primary key is the default for github.com (the
+# primary gh account); the personal key is used for a second account, selected
+# via the github-personal SSH alias (see the fbg role). Other roles reference
+# these so key generation, registration, and SSH config all agree.
+github_primary_key: "{{ ansible_facts['env']['HOME'] }}/.ssh/id_ed25519"
+github_personal_key: "{{ ansible_facts['env']['HOME'] }}/.ssh/id_ed25519_personal"
