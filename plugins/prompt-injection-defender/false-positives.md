@@ -29,3 +29,23 @@
 **Content that triggered it:** `patterns.yaml` contains the attack patterns themselves as regex strings. The file necessarily contains strings like `ignore previous instructions`, `DAN mode`, `jailbreak`, leetspeak examples, Cyrillic/Greek homoglyph samples, etc. — all of which trigger the very rules they define.  
 **Why it's a false positive:** The plugin is scanning its own rule definitions file.  
 **Suggested fix:** Add the plugin's own directory to a hard-coded path exclusion list, or add a general exclusion for files whose path contains `prompt-injection-defender/`.
+
+---
+
+## 2026-06-18 — TypeScript JSDoc "highest priority" in domain type
+
+**File:** `web-app/src/lib/hooks/useBacklogService.ts`  
+**Triggered rule:** `[Instruction Override] Priority manipulation attempt` (MEDIUM severity)  
+**Content that triggered it:** JSDoc comment on the `priority` field of the `BacklogItem` interface: `/** 1 = highest priority, 5 = lowest */`. The phrase "highest priority" matches the pattern `(highest|top|maximum|critical)\s+priority`.  
+**Why it's a false positive:** This is a standard documentation comment in a TypeScript source file explaining the numeric range of a domain model field. "Highest priority" refers to software ticket priority levels (P1 = highest), not AI instruction precedence.  
+**Suggested fix:** The `Priority manipulation attempt` pattern should require additional AI-targeting context after "priority" — e.g., require the word "instruction", "override", "over", or "than" to follow it. Bare `highest priority` in a source file doc comment is a common domain concept (Jira-style P1–P5, OS thread priorities, etc.) and should not fire without a clear AI-targeting signal.
+
+---
+
+## 2026-06-18 — MDD plan.md with state-machine terminology
+
+**File:** `/Users/tylerstapler/dotfiles/project_plans/ssh-bastion/implementation/plan.md`  
+**Triggered rule:** `[Instruction Override] Attempts to reset context` (HIGH severity)  
+**Content that triggered it:** Story D.9 in the plan describes knock-sshd's per-IP state machine. The phrase "reset state for that IP" (describing the daemon resetting its knock sequence tracker when a TTL expires) matched the instruction-override pattern looking for "reset" combined with context/state terminology.  
+**Why it's a false positive:** This is a checked-in planning document in the dotfiles repo describing software behavior — not a prompt injection attempt. "Reset state" here refers to in-memory application state (a `DashMap` entry), not session/conversation context.  
+**Suggested fix:** The `Instruction Override` pattern matching "reset" should require additional AI-targeting context (e.g., "reset your instructions", "reset context", "reset conversation") rather than firing on bare "reset state" which is common in software design documents.

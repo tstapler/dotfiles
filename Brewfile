@@ -24,6 +24,7 @@ tap "synfinatic/aws-sso-cli"
 tap "test/claudia"
 tap "tilt-dev/tap"
 tap "tstapler/agrapha"
+tap "tstapler/escutcheon", "https://github.com/tstapler/escutcheon"
 tap "tstapler/stapler-squad", "https://github.com/tstapler/stapler-squad"
 tap "tstapler/stelekit", "https://github.com/tstapler/stelekit"
 tap "vectordotdev/brew"
@@ -119,6 +120,8 @@ brew "libavif"
 brew "webp"
 # Disk usage analyzer with console interface written in Go
 brew "gdu"
+# Disk Usage Analyzer (lower memory usage than gdu)
+brew "dua-cli"
 # GitHub command-line tool
 brew "gh"
 # Image processing and image analysis library
@@ -360,6 +363,7 @@ brew "stefanprodan/tap/timoni"
 # A dev environment as code for microservice apps
 brew "tilt-dev/tap/tilt"
 # Manage multiple AI terminal agents like Claude Code, Aider, Codex, OpenCode, and Amp.
+brew "tstapler/escutcheon/escutcheon"
 brew "tstapler/stapler-squad/stapler-squad"
 # Markdown-based outliner and note-taking app (Kotlin Multiplatform)
 brew "tstapler/stelekit/stelekit", link: false

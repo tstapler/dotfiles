@@ -2,3 +2,9 @@
 collections:
   - name: community.general
     version: ">=9.0.0"
+
+roles:
+  - name: tstapler.ssh_bastion
+    src: https://github.com/tstapler/escutcheon
+    scm: git
+    version: main
