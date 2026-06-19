@@ -65,6 +65,8 @@ links:
 ignore:
   # Globbing patterns to ignore when
   # linking config files to home dir
+  - ".shell/secrets*.tpl"
+  - ".shell/setup_*.sh"
   - "README.md"
   - "TODO.md"
   - "CONVENTIONS.md"

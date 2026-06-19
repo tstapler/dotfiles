@@ -243,6 +243,7 @@ secrets.fbg.op.sh.tpl
 !.shell/powerlevel9k.sh
 !.shell/rust.sh
 !.shell/workiva.sh
+!.shell/README.md
 setup_*_1password.sh
 # Celery stuff
 celerybeat-schedule
