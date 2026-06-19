@@ -5,7 +5,7 @@ SHELL_FILES     := install.sh bootstrap/run.sh
 
 # Sentinel files track last successful lint run so make skips if nothing changed
 .cache/ansible-lint.ok: $(BOOTSTRAP_FILES)
-	cd bootstrap && uvx ansible-lint playbook.yml
+	cd bootstrap && uvx ansible-lint@26.4.0 playbook.yml
 	@mkdir -p .cache && touch $@
 
 .cache/shellcheck.ok: $(SHELL_FILES)

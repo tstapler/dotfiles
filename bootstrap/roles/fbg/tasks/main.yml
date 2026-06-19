@@ -1,8 +1,12 @@
 ---
-# FBG-specific bootstrap. The generic `github` role (which runs first, and is
-# also tagged `fbg`) generates + registers the SSH keys and authenticates gh.
-# This role only wires up the FBG-specific pieces: the SSH host aliases, the
-# work git identity, and the private dotfiles-fbg repo.
+# FBG-specific bootstrap. The generic `github` role generates + registers the
+# SSH keys and authenticates gh; it is listed before `fbg` in the playbook, so
+# on a full run it always runs first (roles execute in listed order). This role
+# only wires up the FBG-specific pieces: the SSH host aliases, the work git
+# identity, and the private dotfiles-fbg repo.
+#
+# Note: `--tags fbg` runs only this layer; it assumes a prior full bootstrap set
+# up the keys. For a scoped combined run use `--tags github,fbg`.
 #
 # Key / identity model:
 #   - github.com      -> primary key (github_primary_key), work account.
