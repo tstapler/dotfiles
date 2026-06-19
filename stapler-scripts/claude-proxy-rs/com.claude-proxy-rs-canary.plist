@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Canary plist: Rust proxy on port 47001, Python proxy stays on 47000.
+     Load with: launchctl load ~/Library/LaunchAgents/com.claude-proxy-rs-canary.plist
+     Point a test Claude Code instance at it:
+       alias test-claude='ANTHROPIC_BASE_URL=http://localhost:47001 claude'
+     Unload with: launchctl unload ~/Library/LaunchAgents/com.claude-proxy-rs-canary.plist -->
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.claude-proxy-rs</string>
+    <string>com.claude-proxy-rs-canary</string>
     <key>ProgramArguments</key>
     <array>
         <string>/usr/local/bin/claude-proxy-rs</string>
@@ -17,7 +22,7 @@
         <key>AWS_REGION</key>
         <string>us-west-2</string>
         <key>PROXY_PORT</key>
-        <string>47000</string>
+        <string>47001</string>
         <key>COOLDOWN_SECONDS</key>
         <string>300</string>
         <key>REQUEST_TIMEOUT</key>
@@ -34,15 +39,12 @@
         <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
     </dict>
     <key>StandardOutPath</key>
-    <string>/tmp/claude-proxy-rs.log</string>
+    <string>/tmp/claude-proxy-rs-canary.log</string>
     <key>StandardErrorPath</key>
-    <string>/tmp/claude-proxy-rs.error.log</string>
+    <string>/tmp/claude-proxy-rs-canary.error.log</string>
     <key>KeepAlive</key>
-    <true/>
-    <!-- RunAtLoad is false so that loading the plist does not automatically start
-         the proxy. Use "make start" or "make migrate" to activate it explicitly.
-         This prevents accidental double-start on the first git pull + launchctl load. -->
-    <key>RunAtLoad</key>
     <false/>
+    <key>RunAtLoad</key>
+    <true/>
 </dict>
 </plist>
