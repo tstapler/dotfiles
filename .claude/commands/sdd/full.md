@@ -63,11 +63,11 @@ Wait for all to complete. Use summaries — do not re-read plan.md in full.
 
 ---
 
-## Phase 4 — Validate (two parallel Agent calls)
+## Phase 4 — Validate (three parallel Agent calls)
 
 Read `.claude/commands/sdd/4-validate.md` for the full subagent prompts and readiness gate criteria.
 
-Dispatch the **validation agent** and **pre-mortem agent** in a single parallel message. Wait for both to complete.
+Dispatch the **validation agent**, **pre-mortem agent**, and **cross-artifact consistency agent** in a single parallel message. Wait for all three to complete.
 
 If the readiness gate returns FAIL: patch plan.md for P1 pre-mortem items, halt and surface remaining failures to the user. Do not proceed to Phase 5.
 If the triad review returns NOT READY: halt and tell the user which leg to fix first.
