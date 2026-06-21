@@ -26,6 +26,7 @@ Spawn 6 parallel subagents to research the problem — covering stack, features,
    - The full text of `requirements.md`
    - Its specific research question (below)
    - An instruction to **write its output directly to the target file** and return a 3-bullet summary
+   - This codebase exploration guidance: **When exploring the existing codebase, use context-efficient techniques: `Glob` for finding files by pattern, `sg --pattern '<pattern>' --lang <lang>` (ast-grep) for structural code searches (function signatures, type definitions, call sites — prefer `sg` over grep for code), `Grep` for text patterns in configs/docs, and `Read` with targeted line ranges. Do not read entire files. Orient in ≤5 tool calls.**
 
    **Agent 1 — Stack** → writes `project_plans/<PROJECT_NAME>/research/stack.md`:
    > Research the technology stack for this feature. Which specific libraries, frameworks, versions, and patterns apply? What dependencies will be needed? What are the current community-recommended versions? Write your findings to `project_plans/<PROJECT_NAME>/research/stack.md`, then return a 3-bullet summary.

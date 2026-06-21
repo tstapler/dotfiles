@@ -40,6 +40,14 @@ Planning context degrades code generation quality — this is not optional.
    > - `project_plans/<PROJECT_NAME>/implementation/validation.md` — read the test cases for stories in this epic
    > - `project_plans/<PROJECT_NAME>/design/ux.md` — read if this epic contains user-facing stories (skip otherwise)
    >
+   > **Codebase orientation (before writing any code):**
+   > Understand the existing code context for this epic using context-efficient techniques — do NOT read entire files or directories blindly:
+   > - `Glob` to find files by pattern (e.g., `src/**/*.ts`, `**/*service*.go`)
+   > - `sg --pattern '<pattern>' --lang <lang>` for structural code searches — finding existing function signatures, interface definitions, type declarations, or call sites. Use `sg` (ast-grep) instead of `grep` for code structure: it's syntax-aware and token-efficient. See `/code-ast-grep` for pattern syntax.
+   > - `Grep` for text-based searches in configs, docs, or non-code files
+   > - `Read` only targeted line ranges you need — not whole files
+   > Orient yourself in ≤5 tool calls before writing anything.
+   >
    > **For each task in this epic:**
    > 1. Implement the task — exact files listed in plan.md
    > 2. Write the corresponding tests from validation.md (use the pre-designed test names exactly)
