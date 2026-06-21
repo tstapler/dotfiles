@@ -31,6 +31,17 @@ Reserve `Bash` exclusively for: git operations, running tests/commands, and syst
 
 **Missing tools**: If a required CLI tool is not installed, use `WebSearch` to find the correct Homebrew formula, then install it with `brew install <formula>`. Use the `homebrew` skill for guidance.
 
+## Codebase Exploration (context-efficient)
+
+Before reading code, orient with cheap tools first — do not read entire files or directories blindly:
+
+1. `Glob` to find files by pattern (`src/**/*.ts`, `**/*service*.go`)
+2. `sg --pattern '<pattern>' --lang <lang>` for **structural** searches — function signatures, type definitions, interface declarations, call sites. Prefer `sg` over `Grep` for anything that depends on code syntax. See `/code-ast-grep` for pattern syntax.
+3. `Grep` for text patterns in configs, docs, or non-code files
+4. `Read` with `offset`/`limit` to read targeted line ranges — not whole files
+
+Orient yourself before acting. Avoid reading a file in full unless the entire file is relevant.
+
 ## Code Editing
 
 - Prefer `Edit` / `Write` tools for file changes
