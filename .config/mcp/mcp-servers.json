@@ -52,6 +52,14 @@
       ],
       "_fork": "https://github.com/tstapler/mcp-website-downloader",
       "env": {}
+    },
+    "docs": {
+      "command": "npm",
+      "args": ["exec", "--yes", "--", "git+https://github.com/tstapler/docs-mcp-server"],
+      "_fork": "https://github.com/tstapler/docs-mcp-server",
+      "env": {
+        "DOCS_MCP_STORE_PATH": "~/.local/share/docs-mcp-server"
+      }
     }
   }
 }
