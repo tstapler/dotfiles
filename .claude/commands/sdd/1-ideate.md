@@ -1,6 +1,7 @@
 ---
 description: "Phase 1 — Interview to capture requirements. Outputs: project_plans/<project>/requirements.md"
 user-invocable: true
+allowed-tools: Read, Write, AskUserQuestion
 ---
 
 # sdd:1-ideate

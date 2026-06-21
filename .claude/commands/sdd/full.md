@@ -26,7 +26,7 @@ Never use a "coordinator agent" that internally spawns further agents. Dispatch 
 
 Read `.claude/commands/sdd/1-ideate.md` and execute its instructions exactly.
 
-Orchestration addition: if `$1` was provided, use it as the project name and skip the project name question.
+Orchestration addition: if `$ARGUMENTS[0]` was provided, use it as the project name and skip the project name question.
 
 After writing requirements.md, confirm with the user before proceeding:
 ```

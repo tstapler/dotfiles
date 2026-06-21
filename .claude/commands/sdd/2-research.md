@@ -1,6 +1,7 @@
 ---
 description: "Phase 2 — Parallel research across 6 dimensions. Outputs: project_plans/<project>/research/*.md"
 user-invocable: true
+allowed-tools: Read, Write, Task, AskUserQuestion
 ---
 
 # sdd:2-research

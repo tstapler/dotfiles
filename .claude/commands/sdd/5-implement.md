@@ -1,6 +1,8 @@
 ---
 description: "Phase 5 — Execute plan via parallel worker subagents. START IN A FRESH SESSION."
 user-invocable: true
+effort: high
+allowed-tools: Read, Write, Edit, Bash, Agent, AskUserQuestion
 ---
 
 # sdd:5-implement

@@ -1,6 +1,8 @@
 ---
 description: "Phase 4 — Map test coverage to requirements + run pre-mortem before writing any code. Outputs: validation.md + pre-mortem.md in project_plans/<project>/implementation/"
 user-invocable: true
+effort: high
+allowed-tools: Read, Write, Edit, Task, AskUserQuestion
 ---
 
 # sdd:4-validate

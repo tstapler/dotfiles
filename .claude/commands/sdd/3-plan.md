@@ -1,6 +1,8 @@
 ---
 description: "Phase 3 — Architecture + task breakdown. Outputs: project_plans/<project>/implementation/plan.md"
 user-invocable: true
+effort: high
+allowed-tools: Read, Write, Edit, Task, AskUserQuestion
 ---
 
 # sdd:3-plan
