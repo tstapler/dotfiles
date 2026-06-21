@@ -13,11 +13,12 @@ Review the implementation across three layers — language idioms, architecture 
 Layer 1 — Idioms & Best Practices   (parallel agents, dynamically matched to diff)
 Layer 2 — Architecture & Design     (parallel agents, pattern-level)
 Layer 3 — Correctness & Tests       (inline, hard gate)
+Layer 4 — UX & Behavioral           (browser automation + golden path run, user-facing only)
 
 Verdicts:
   🔁 REFACTOR  → structural issues → return to /sdd:5-implement, fix, re-run /sdd:6-verify
-  ❌ BLOCKED   → test failures, security holes, or missing acceptance criteria
-  ✅ PASS      → all three layers clean → proceed to /sdd:7-ship
+  ❌ BLOCKED   → test failures, security holes, missing acceptance criteria, broken UI
+  ✅ PASS      → all layers clean → proceed to /sdd:7-ship
 ```
 
 ## Instructions
@@ -153,7 +154,7 @@ Verdicts:
    >   1. Invoke `/skill:create <group>-<technology-kebab-case> "Idiomatic review for <technology>"
    >      user` using the synthesized checklist as the SKILL.md core content.
    >   2. Add a new row to the skill lookup table in
-   >      `~/dotfiles/plugins/sdd/commands/6-verify.md` (and sync to all cache paths) with
+   >      `~/dotfiles/.claude/commands/sdd/6-verify.md` with
    >      the format:
    >      `| <Technology> | \`<skill-name>\` | <top 3 focus areas from checklist> |`
    >   3. Report: skill created at `~/.claude/skills/<skill-name>/`, lookup table updated.
@@ -226,12 +227,59 @@ Verdicts:
    b. **Run the test suite.** Use the appropriate command for the stack. Show the output —
       do not claim tests pass without running them.
 
-   c. **Check security:** injection, auth gaps, exposed secrets, input validation at system boundaries.
+   c. **Check security.** First, scan the diff for security-sensitive surface:
+      - Auth/authorization code (login, token handling, session management, permission checks)
+      - External HTTP calls or webhook handlers
+      - User-supplied input that reaches a DB query, shell command, or file path
+      - Secrets or credentials in code or config
+
+      If ANY of the above is present: dispatch a security review agent using the `security-review` skill as the subagent type, scoped to the security-sensitive diff slice. Add findings to the verification report under "Security." Block on CRITICAL or HIGH findings.
+
+      If none of the above is present: inline check — scan for exposed secrets, hardcoded credentials, or missing input validation at system entry points. Note findings but do not block on LOW/INFO.
 
    d. **Check error handling:** all errors from external calls (git, DB, RPC) are handled and
       surfaced appropriately.
 
-8. **Output the verification report:**
+   e. **Check observability:** verify the diff satisfies the Observability Plan from `plan.md`:
+      - New service boundaries have structured log lines at entry and exit
+      - Error paths log the error with enough context to debug (not just the error message)
+      - Any operation >100ms has a metric or trace span
+      - Alert conditions defined in plan.md are wired (or explicitly deferred with a follow-up task created)
+      If no Observability Plan exists in plan.md: note as a gap in the report but do not block.
+
+8. **Layer 4 — UX & Behavioral Verification** (only if Layer 3 did not trigger BLOCKED)
+
+   **Skip this layer if** the feature has no user-facing surface (pure infrastructure, background jobs, CLI with no interactive UI). Check `project_plans/<PROJECT_NAME>/design/ux.md` — if absent, skip.
+
+   a. **Run `quality:does-it-work`** inline (invoke the skill). This launches the app and walks the golden path as a user would. It must complete without errors before proceeding.
+
+   b. **UX acceptance criteria check.** For each UX acceptance criterion in `project_plans/<PROJECT_NAME>/design/ux.md`:
+
+      **Primary path — Playwright** (use when the project has Playwright or Cypress configured):
+      - Run the corresponding E2E test from validation.md
+      - Show test output
+      - Mark each criterion PASS / FAIL
+
+      **Secondary path — claude-in-chrome** (use when Playwright is not configured but a browser surface exists):
+      - Load the `claude-in-chrome` tools via the `claude-in-chrome` skill
+      - Verify each criterion via browser automation
+      - Capture GIF using `mcp__claude-in-chrome__gif_creator`, save to `project_plans/<PROJECT_NAME>/design/golden-path.gif`
+
+      **Fallback — ui-playwright skill** (use when neither Playwright nor chrome-extension is available):
+      - Invoke the `ui-playwright` skill to generate a Playwright test for the golden path
+      - Run it with `npx playwright test`
+      - If Playwright is not installed: produce a manual UX verification checklist with one checkbox per criterion from `design/ux.md`. Mark each VERIFIED (tested manually), DEFERRED (needs browser env), or N/A.
+
+   c. **Spot-check key UX properties:**
+      - Golden path completes without dead ends
+      - All error states show a message and an exit action (not just an error code)
+      - No broken/empty UI states that weren't designed (loading → empty state → content)
+      - Keyboard navigation: Tab reaches all interactive elements
+      - Console has no unhandled JS errors during the golden path
+
+   If any UX criterion is FAIL: this is a BLOCKED verdict — return to Phase 5 with specific UI issues.
+
+9. **Output the verification report:**
 
 ```
 ## Verification Report — <PROJECT_NAME>
@@ -266,11 +314,23 @@ Tests: <N> passed, <N> failed, <N> skipped
 ### Security
 <✅ No issues / ⚠️ Warnings / ❌ Blockers>
 
+### Layer 4 — UX & Behavioral
+(Omit this section if no user-facing surface)
+
+| UX Criterion | Result | Evidence |
+|---|---|---|
+| User completes task in ≤N steps | ✅ PASS | golden-path.gif |
+| Error state shows correct message | ✅ PASS | screenshot |
+| No dead ends | ✅ PASS | manual check |
+| Keyboard navigable | ⚠️ SKIP | Playwright not configured |
+
+quality:does-it-work: <✅ Golden path ran without errors / ❌ Failed at step: ...>
+
 ### Verdict
 <✅ PASS — ready for /sdd:7-ship>
 <🔁 REFACTOR — return to /sdd:5-implement: [list of issues]>
 <❌ BLOCKED — fix N issue(s) before proceeding: [list]>
 ```
 
-9. **If REFACTOR or BLOCKED**: list each issue with the exact file, line, and a concrete fix.
-   Do not proceed until all violations are resolved and the full review is re-run.
+10. **If REFACTOR or BLOCKED**: list each issue with the exact file, line, and a concrete fix.
+    Do not proceed until all violations are resolved and the full review is re-run.

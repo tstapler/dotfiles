@@ -55,6 +55,14 @@ Lightweight end-to-end workflow for tasks simple enough to complete in one conte
 
    Run the relevant tests using the appropriate command for the stack. Show the output. Only claim success after seeing green.
 
+   **For refactors only — architecture smell-check** (does not block, but must be acknowledged):
+   Review the diff for these three signals:
+   - A class or function now has more than one reason to change (Single Responsibility violated)
+   - A primitive (string, int) is used where a domain type would clarify meaning or prevent bugs
+   - New coupling introduced between packages that didn't exist before
+
+   If any signal is present, note it explicitly in the summary under "Architecture notes." These are not failures — they are conscious trade-offs to document.
+
 6. **Output a brief summary:**
 
    ```

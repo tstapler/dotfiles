@@ -41,13 +41,13 @@ Conduct a structured requirements interview and produce `requirements.md`.
 
    **Question 3:**
    ```
-   header: "Success"
-   question: "What does success look like? How will we measure it?"
+   header: "Baseline & Success"
+   question: "What are users doing today without this (the workaround or baseline)? And what measurable behavior change proves the new approach is better? (Shipping is not a success metric.)"
    options:
-     - "Specific metric improves (latency, error rate, conversion)"
-     - "Feature is shipped and working correctly"
-     - "Bug is gone with regression test preventing recurrence"
-     - "I'll describe the success metric (click Other)"
+     - "There's a manual workaround — I'll describe it (click Other); success = users stop doing it"
+     - "Specific metric improves over baseline (latency, error rate, conversion rate, p95)"
+     - "User completes task X in under N steps / seconds vs. the current N+M"
+     - "Bug is gone with regression test preventing recurrence; baseline = bug reproduced"
    ```
 
    **Question 4:**
@@ -82,10 +82,77 @@ Conduct a structured requirements interview and produce `requirements.md`.
      - "No hard exclusions yet — leave open questions in requirements"
    ```
 
+   **Question 7:**
+   ```
+   header: "Alternatives"
+   question: "Have you considered other approaches? (This shapes the Phase 2 build-vs-buy research.)"
+   options:
+     - "Use an existing library or OSS project instead of building"
+     - "Use a SaaS/API instead of building"
+     - "Have the LLM generate the algorithm vs. use a battle-tested library"
+     - "Already decided — want to research alternatives anyway"
+   multiSelect: true
+   ```
+
+   **Question 8:**
+   ```
+   header: "Feasibility"
+   question: "What technical blockers or rabbit holes could derail this? (Rabbit holes = things that sound simple but have unknown depth once you dig in.)"
+   options:
+     - "Unknown — research needed (Phase 2 will surface blockers and rabbit holes)"
+     - "Known blocker I'll describe (click Other)"
+     - "Suspected rabbit hole I'll flag (click Other)"
+     - "Prior attempt failed — I'll explain (click Other)"
+   ```
+
+   **Question 9:**
+   ```
+   header: "Observability"
+   question: "What should be logged, measured, or alerted on for this feature?"
+   options:
+     - "Define specific metrics/logs (click Other)"
+     - "Standard request logging is sufficient"
+     - "Oncall alert needed — I'll describe the condition (click Other)"
+     - "Not applicable (no runtime behavior / pure tooling)"
+   ```
+
+   **Question 10:**
+   ```
+   header: "Risk control"
+   question: "Does this change need a feature flag, rollback plan, or staged rollout?"
+   options:
+     - "Feature flag — gate behind a flag so it can be disabled without a deploy"
+     - "Rollback plan — define how to revert if this causes incidents"
+     - "Staged rollout — % of traffic or specific cohort first"
+     - "Not needed — low risk, no special rollout required"
+   multiSelect: true
+   ```
+
+   **Question 11:**
+   ```
+   header: "Appetite"
+   question: "What is your time appetite — the maximum you'd invest before cutting scope or abandoning? (Shape Up: appetite constrains scope, not the other way around.)"
+   options:
+     - "Small: 1–2 days — must be a minimal, surgical change"
+     - "Medium: 1–2 weeks — a focused feature build"
+     - "Large: 3–6 weeks — a substantive investment"
+     - "Not set — let research and planning determine scope"
+   ```
+
 3. **Anti-rationalization check.** Before writing `requirements.md`, confirm:
    - You have a problem statement (not a solution statement)
-   - You know the success metric
+   - The baseline (current workaround) is captured so success can be measured against it
+   - The success metric describes a behavior change, not just delivery
    - You have enough context to research the right technology stack in Phase 2
+   - Alternatives, feasibility risks, and rabbit holes are captured
+   - Observability requirements are captured (even if "standard logging sufficient")
+   - Risk control decision is captured (feature flag / rollback / none)
+   - Appetite is captured (the time budget that constrains scope, not just a deadline)
+   - **Complexity score derived** — assign 1–4 and write it in requirements.md:
+     - **1** = Bug fix or small refactor with Small appetite
+     - **2** = New feature with Small or Medium appetite
+     - **3** = New project, multiple epics, or feature with ≥1 external integration and Medium/Large appetite
+     - **4** = Migration, compliance/security-critical, or cross-cutting change with Large appetite
 
 4. **Write `project_plans/<PROJECT_NAME>/requirements.md`:**
 
@@ -94,18 +161,32 @@ Conduct a structured requirements interview and produce `requirements.md`.
 
 **Date**: <YYYY-MM-DD>
 **Type**: <new service | feature addition | migration | bug fix>
+**Complexity**: <1 — quick task | 2 — focused feature | 3 — system design | 4 — high-stakes / cross-cutting>
 
 ## Problem Statement
 <what problem this solves, for whom>
+
+## Baseline
+<what users do today without this feature — the current workaround or absent behavior. Used to evaluate whether the solution is better than the status quo, and as the regression anchor in Phase 6 verify.>
 
 ## Users / Consumers
 <who or what systems interact with this>
 
 ## Success Metrics
-<measurable outcomes>
+<measurable outcomes — tied to the baseline above: what changes, by how much, compared to what>
+
+## Appetite
+<Small (1–2 days) | Medium (1–2 weeks) | Large (3–6 weeks) | TBD>
+*(Scope must fit the appetite. If it doesn't fit, cut scope — do not move the deadline.)*
 
 ## Constraints
-<hard constraints: deadlines, performance, compliance, team>
+<hard constraints: deadlines, team size, budget>
+
+## Non-functional Requirements
+- **Performance SLO**: <p99 latency target, throughput, or "not specified">
+- **Scalability**: <expected data volume, concurrent users, or "not applicable">
+- **Security classification**: <public / internal / confidential / regulated>
+- **Data residency**: <regional data constraints, or "no special requirements">
 
 ## Scope
 ### In Scope
@@ -113,6 +194,21 @@ Conduct a structured requirements interview and produce `requirements.md`.
 
 ### Out of Scope
 <explicit exclusions>
+
+## Rabbit Holes
+<things that sound in-scope and simple, but could have unknown depth or complexity once implementation starts — flag these for Phase 3 planning to explicitly resolve or de-risk>
+
+## Alternatives Considered
+<approaches evaluated from Question 7 — library, SaaS, LLM-generated, etc.>
+
+## Feasibility Risks
+<known or suspected blockers from Question 8>
+
+## Observability Requirements
+<what to log, what metrics to emit, what oncall alert condition if any, or "standard request logging sufficient">
+
+## Risk Control
+<feature flag name if applicable | rollback procedure | staged rollout plan | "not needed — low risk">
 
 ## Open Questions
 <unresolved questions for research phase>
