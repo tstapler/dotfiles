@@ -1,6 +1,5 @@
 {
-  "hooks": {
-    "Stop": [
+  "Stop": [
       {
         "matcher": "",
         "hooks": [
@@ -10,8 +9,8 @@
           }
         ]
       }
-    ],
-    "PreToolUse": [
+  ],
+  "PreToolUse": [
       {
         "matcher": "Write|Edit",
         "hooks": [
@@ -21,6 +20,5 @@
           }
         ]
       }
-    ]
-  }
+  ]
 }

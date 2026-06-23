@@ -1,0 +1,10 @@
+{
+    "name": "ponytail",
+    "description": "Lazy senior dev mode. Forces the simplest, shortest solution that actually works: YAGNI, stdlib first, no unrequested abstractions. 6-rung decision ladder enforced via SessionStart hook.",
+    "version": "4.7.0",
+    "upstream": "https://github.com/TylerStaplerAtFanatics/ponytail",
+    "author": {
+        "name": "Dietrich Gebert",
+        "url": "https://github.com/DietrichGebert"
+    }
+}
