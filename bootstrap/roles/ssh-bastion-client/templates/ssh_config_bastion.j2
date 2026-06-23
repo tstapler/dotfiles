@@ -1,0 +1,13 @@
+# Managed by Ansible - ssh-bastion-client role
+# Edit via bootstrap/roles/ssh-bastion-client/templates/ssh_config_bastion.j2
+
+Host {{ bastion_name }}
+    HostName {{ bastion_host }}
+    Port {{ bastion_port }}
+    IdentityFile {{ bastion_key_path }}
+    IdentitiesOnly yes
+    ControlMaster auto
+    ControlPath ~/.ssh/cm-%r@%h:%p
+    ControlPersist 10m
+    ServerAliveInterval 60
+    ServerAliveCountMax 10

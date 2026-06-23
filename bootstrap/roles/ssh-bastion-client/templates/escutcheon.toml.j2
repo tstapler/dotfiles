@@ -1,0 +1,9 @@
+# Managed by Ansible - ssh-bastion-client role
+# Edit via bootstrap/roles/ssh-bastion-client/templates/escutcheon.toml.j2
+
+[hosts.{{ bastion_name }}]
+host     = "{{ bastion_host }}"
+port     = {{ bastion_port }}
+sequence = {{ bastion_knock_sequence | tojson }}
+proto    = "{{ bastion_knock_proto }}"
+ttl_secs = {{ bastion_knock_ttl_secs }}

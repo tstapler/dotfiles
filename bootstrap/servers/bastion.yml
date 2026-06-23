@@ -1,0 +1,26 @@
+---
+# Deploy ssh-bastion role to all bastion hosts.
+#
+# Prerequisites:
+#   1. op (1Password CLI) signed in: eval $(op signin)
+#   2. Ansible pubkey uploaded to the host manually (first-run bootstrap):
+#      ssh-copy-id -i ~/.ssh/id_ed25519_bastion.pub ubuntu@<host-ip>
+#   3. Secrets in 1Password under Escutcheon/<inventory_hostname>:
+#      - ssh_port       (integer, e.g. 58422)
+#      - knock_sequence (JSON array, e.g. [12345, 23456, 34567])
+#      - ansible_pubkey (ed25519 public key string)
+#
+# Run:
+#   ansible-playbook bootstrap/servers/bastion.yml -i bootstrap/servers/inventory.yml
+#
+# First run (plain 22 before knock-sshd is installed):
+#   ansible-playbook bootstrap/servers/bastion.yml -i bootstrap/servers/inventory.yml \
+#     -e ansible_port=22
+
+- name: Configure SSH bastion
+  hosts: bastion
+  become: true
+  gather_facts: true
+  roles:
+    - role: tstapler.ssh_bastion
+      tags: [ssh-bastion]

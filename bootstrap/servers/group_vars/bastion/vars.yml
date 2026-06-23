@@ -1,0 +1,32 @@
+---
+# All secrets resolved from 1Password at runtime.
+# Vault item path: Escutcheon/<inventory_hostname>
+# Fields: ssh_port, knock_sequence, ansible_pubkey, fido2_pubkey (optional)
+#
+# op signin must be active before running the playbook.
+
+ssh_bastion_port: >-
+  {{ lookup('community.general.onepassword',
+            'Escutcheon/' + inventory_hostname,
+            field='ssh_port') | int }}
+
+ssh_bastion_knock_sequence: >-
+  {{ lookup('community.general.onepassword',
+            'Escutcheon/' + inventory_hostname,
+            field='knock_sequence') | from_json }}
+
+ssh_bastion_ansible_pubkey: >-
+  {{ lookup('community.general.onepassword',
+            'Escutcheon/' + inventory_hostname,
+            field='ansible_pubkey') }}
+
+# FIDO2 key (YubiKey / Titan) - add sk-ed25519 or sk-ecdsa-sk public key here.
+# Leave empty if using only the Ansible key for initial access.
+ssh_bastion_fido2_pubkeys: >-
+  {{ [lookup('community.general.onepassword',
+             'Escutcheon/' + inventory_hostname,
+             field='fido2_pubkey', errors='ignore')]
+     | select | list }}
+
+ssh_bastion_firewall: ufw          # Ubuntu default
+ssh_bastion_use_tailscale: false

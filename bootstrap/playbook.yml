@@ -45,3 +45,6 @@
     - github
     - role: fbg
       tags: [fbg]
+    - role: ssh-bastion-client
+      tags: [ssh-bastion-client]
+      when: bastion_host | default('') | length > 0

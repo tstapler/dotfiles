@@ -1,0 +1,16 @@
+---
+# Override these in group_vars or host_vars by resolving from 1Password:
+#   bastion_host: "{{ lookup('community.general.onepassword', 'Escutcheon/bastion-1', field='address') }}"
+#   bastion_port: "{{ lookup('community.general.onepassword', 'Escutcheon/bastion-1', field='ssh_port') | int }}"
+#   bastion_knock_sequence: "{{ lookup('community.general.onepassword', 'Escutcheon/bastion-1', field='knock_sequence') | from_json }}"
+
+bastion_name: bastion-1                           # logical name used in SSH alias + escutcheon config
+bastion_host: ""                                  # IP or hostname - MUST be set via 1Password lookup
+bastion_port: 0                                   # SSH port - MUST be set via 1Password lookup
+bastion_knock_sequence: []                        # knock ports - MUST be set via 1Password lookup
+bastion_knock_proto: tcp
+bastion_knock_ttl_secs: 300                       # skip re-knock within this window
+bastion_key_path: "{{ ansible_facts['env']['HOME'] }}/.ssh/id_ed25519_bastion"
+bastion_key_comment: "bastion-{{ ansible_facts['env']['USER'] }}@{{ ansible_facts['hostname'] }}"
+bastion_ssh_config_dir: "{{ ansible_facts['env']['HOME'] }}/.ssh/config.d"
+bastion_escutcheon_config_dir: "{{ ansible_facts['env']['HOME'] }}/.config/escutcheon"

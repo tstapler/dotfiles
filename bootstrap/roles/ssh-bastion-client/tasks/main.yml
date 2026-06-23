@@ -1,0 +1,79 @@
+---
+- name: Assert required vars are set
+  ansible.builtin.assert:
+    that:
+      - bastion_host | length > 0
+      - bastion_port | int > 0
+      - bastion_knock_sequence | length > 0
+    fail_msg: >
+      Set bastion_host, bastion_port, and bastion_knock_sequence.
+      Resolve them from 1Password in group_vars.
+  tags: [ssh-bastion-client]
+
+# ── SSH key ────────────────────────────────────────────────────────────────
+
+- name: Generate dedicated bastion ed25519 key
+  ansible.builtin.command:
+    cmd: >
+      ssh-keygen -t ed25519
+      -f {{ bastion_key_path }}
+      -N ""
+      -C "{{ bastion_key_comment }}"
+    creates: "{{ bastion_key_path }}"
+  tags: [ssh-bastion-client]
+
+- name: Read bastion public key
+  ansible.builtin.slurp:
+    src: "{{ bastion_key_path }}.pub"
+  register: _bastion_pubkey
+  tags: [ssh-bastion-client]
+
+- name: Print bastion public key (upload to 1Password + server authorized_keys)
+  ansible.builtin.debug:
+    msg: |
+      Bastion public key (add to 1Password Escutcheon/{{ bastion_name }}/ansible_pubkey
+      and to server authorized_keys if first-time setup):
+
+      {{ _bastion_pubkey.content | b64decode | trim }}
+  tags: [ssh-bastion-client]
+
+# ── SSH config fragment ────────────────────────────────────────────────────
+
+- name: Ensure SSH config.d directory exists
+  ansible.builtin.file:
+    path: "{{ bastion_ssh_config_dir }}"
+    state: directory
+    mode: "0700"
+  tags: [ssh-bastion-client]
+
+- name: Ensure main SSH config includes config.d
+  ansible.builtin.lineinfile:
+    path: "{{ ansible_facts['env']['HOME'] }}/.ssh/config"
+    line: "Include ~/.ssh/config.d/*"
+    insertbefore: BOF
+    create: true
+    mode: "0600"
+  tags: [ssh-bastion-client]
+
+- name: Deploy bastion SSH config fragment
+  ansible.builtin.template:
+    src: ssh_config_bastion.j2
+    dest: "{{ bastion_ssh_config_dir }}/{{ bastion_name }}"
+    mode: "0600"
+  tags: [ssh-bastion-client]
+
+# ── escutcheon config ──────────────────────────────────────────────────────
+
+- name: Ensure escutcheon config directory exists
+  ansible.builtin.file:
+    path: "{{ bastion_escutcheon_config_dir }}"
+    state: directory
+    mode: "0755"
+  tags: [ssh-bastion-client]
+
+- name: Deploy escutcheon config.toml
+  ansible.builtin.template:
+    src: escutcheon.toml.j2
+    dest: "{{ bastion_escutcheon_config_dir }}/config.toml"
+    mode: "0600"
+  tags: [ssh-bastion-client]

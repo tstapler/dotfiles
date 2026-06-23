@@ -1,0 +1,23 @@
+---
+# Bastion client vars - resolved from 1Password at runtime.
+# op signin must be active: eval $(op signin)
+#
+# To add a second bastion, duplicate this file and adjust the name/item path.
+# Then add another ssh-bastion-client role entry to playbook.yml with those vars.
+
+bastion_name: bastion-1
+
+bastion_host: >-
+  {{ lookup('community.general.onepassword',
+            'Escutcheon/bastion-1',
+            field='address', errors='ignore') | default('') }}
+
+bastion_port: >-
+  {{ lookup('community.general.onepassword',
+            'Escutcheon/bastion-1',
+            field='ssh_port', errors='ignore') | default(0) | int }}
+
+bastion_knock_sequence: >-
+  {{ (lookup('community.general.onepassword',
+             'Escutcheon/bastion-1',
+             field='knock_sequence', errors='ignore') | default('[]')) | from_json }}
