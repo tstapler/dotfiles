@@ -126,10 +126,16 @@ metrics = MetricsCollector()
 
 # Initialize providers
 anthropic = AnthropicProvider()
-bedrock = BedrockProvider()
+try:
+    bedrock = BedrockProvider()
+    providers = [anthropic, bedrock]
+except Exception as e:
+    logger.warning(f"Bedrock provider unavailable (no AWS config?): {e} — running Anthropic-only")
+    bedrock = None
+    providers = [anthropic]
 
 # Create fallback handler with provider priority
-fallback = FallbackHandler([anthropic, bedrock], metrics=metrics)
+fallback = FallbackHandler(providers, metrics=metrics)
 
 
 # Dashboard HTML template

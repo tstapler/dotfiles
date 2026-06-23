@@ -36,12 +36,14 @@ help:
 # Install proxy as LaunchAgent
 install: deps
 	@echo "Installing Claude Proxy as LaunchAgent..."
-	@if [ -z "$$CLAUDE_CODE_OAUTH_TOKEN" ]; then \
-		echo "Error: CLAUDE_CODE_OAUTH_TOKEN environment variable not set"; \
-		echo "Please set: export CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat-..."; \
-		exit 1; \
-	fi
-	@sed -e "s|INSERT_OAUTH_TOKEN_HERE|$$CLAUDE_CODE_OAUTH_TOKEN|g" -e "s|INSERT_WORKING_DIR_HERE|$(shell pwd)|g" com.claude-proxy.plist > ~/Library/LaunchAgents/com.claude-proxy.plist
+	@TOKEN="$$CLAUDE_CODE_OAUTH_TOKEN"; \
+	if [ -z "$$TOKEN" ]; then \
+		TOKEN=$$(security find-generic-password -s "Claude Code-credentials" -w 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['claudeAiOauth']['accessToken'])" 2>/dev/null || echo ""); \
+	fi; \
+	if [ -z "$$TOKEN" ]; then \
+		echo "Warning: No OAuth token found — proxy will read from Keychain at runtime"; \
+	fi; \
+	sed -e "s|INSERT_OAUTH_TOKEN_HERE|$$TOKEN|g" -e "s|INSERT_WORKING_DIR_HERE|$(shell pwd)|g" -e "s|INSERT_USERNAME_HERE|$(shell whoami)|g" com.claude-proxy.plist > ~/Library/LaunchAgents/com.claude-proxy.plist
 	@launchctl load ~/Library/LaunchAgents/com.claude-proxy.plist
 	@echo "Claude Proxy installed and started"
 	@echo "Proxy running at: http://localhost:47000"
@@ -58,7 +60,7 @@ update: deps
 		echo "Warning: CLAUDE_CODE_OAUTH_TOKEN not set, preserving existing token"; \
 		/bin/cp -f com.claude-proxy.plist ~/Library/LaunchAgents/com.claude-proxy.plist; \
 	else \
-		sed -e "s|INSERT_OAUTH_TOKEN_HERE|$$CLAUDE_CODE_OAUTH_TOKEN|g" -e "s|INSERT_WORKING_DIR_HERE|$(shell pwd)|g" com.claude-proxy.plist > ~/Library/LaunchAgents/com.claude-proxy.plist; \
+		sed -e "s|INSERT_OAUTH_TOKEN_HERE|$$CLAUDE_CODE_OAUTH_TOKEN|g" -e "s|INSERT_WORKING_DIR_HERE|$(shell pwd)|g" -e "s|INSERT_USERNAME_HERE|$(shell whoami)|g" com.claude-proxy.plist > ~/Library/LaunchAgents/com.claude-proxy.plist; \
 	fi
 	@echo "Starting proxy with updated code..."
 	@launchctl load ~/Library/LaunchAgents/com.claude-proxy.plist
@@ -228,13 +230,16 @@ deps:
 
 # Update OAuth token in plist
 update-token:
-	@if [ -z "$$CLAUDE_CODE_OAUTH_TOKEN" ]; then \
-		echo "Error: CLAUDE_CODE_OAUTH_TOKEN environment variable not set"; \
-		echo "Please set: export CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat-..."; \
-		exit 1; \
-	fi
 	@echo "Updating OAuth token in LaunchAgent..."
-	@sed -e "s|INSERT_OAUTH_TOKEN_HERE|$$CLAUDE_CODE_OAUTH_TOKEN|g" -e "s|INSERT_WORKING_DIR_HERE|$(shell pwd)|g" com.claude-proxy.plist > ~/Library/LaunchAgents/com.claude-proxy.plist
+	@TOKEN="$$CLAUDE_CODE_OAUTH_TOKEN"; \
+	if [ -z "$$TOKEN" ]; then \
+		TOKEN=$$(security find-generic-password -s "Claude Code-credentials" -w 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['claudeAiOauth']['accessToken'])" 2>/dev/null || echo ""); \
+	fi; \
+	if [ -z "$$TOKEN" ]; then \
+		echo "Error: No OAuth token found. Set CLAUDE_CODE_OAUTH_TOKEN or ensure Claude Code is logged in."; \
+		exit 1; \
+	fi; \
+	sed -e "s|INSERT_OAUTH_TOKEN_HERE|$$TOKEN|g" -e "s|INSERT_WORKING_DIR_HERE|$(shell pwd)|g" -e "s|INSERT_USERNAME_HERE|$(shell whoami)|g" com.claude-proxy.plist > ~/Library/LaunchAgents/com.claude-proxy.plist
 	@make restart
 	@echo "Token updated and proxy restarted"
 

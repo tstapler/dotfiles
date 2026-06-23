@@ -94,8 +94,15 @@ echo ""
 info "=== Configuration ==="
 echo ""
 
-# OAuth token (required, secret)
-prompt OAUTH_TOKEN "Claude Code OAuth token (starts with sk-ant-oat-)" "" true
+# OAuth token — try Keychain first, fall back to prompt
+KEYCHAIN_TOKEN=$(security find-generic-password -s "Claude Code-credentials" -w 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['claudeAiOauth']['accessToken'])" 2>/dev/null || echo "")
+
+if [ -n "$KEYCHAIN_TOKEN" ]; then
+    info "✓ OAuth token found in macOS Keychain (Claude Code-credentials)"
+    OAUTH_TOKEN="$KEYCHAIN_TOKEN"
+else
+    prompt OAUTH_TOKEN "Claude Code OAuth token (starts with sk-ant-oat-)" "" true
+fi
 validate_oauth_token "$OAUTH_TOKEN"
 
 # AWS profile
@@ -147,6 +154,7 @@ info "Creating LaunchAgent plist..."
 sed \
     -e "s|INSERT_OAUTH_TOKEN_HERE|$OAUTH_TOKEN|g" \
     -e "s|INSERT_WORKING_DIR_HERE|$SCRIPT_DIR|g" \
+    -e "s|INSERT_USERNAME_HERE|$(whoami)|g" \
     -e "s|<string>Sandbox.AdministratorAccess</string>|<string>$AWS_PROFILE</string>|g" \
     -e "s|<string>us-west-2</string>|<string>$AWS_REGION</string>|g" \
     -e "s|<string>47000</string>|<string>$PROXY_PORT</string>|g" \

@@ -3,8 +3,27 @@ import os
 import multiprocessing
 from typing import Optional
 
-# OAuth token for Anthropic API
-CLAUDE_CODE_OAUTH_TOKEN: Optional[str] = os.environ.get("CLAUDE_CODE_OAUTH_TOKEN")
+# OAuth token for Anthropic API — falls back to macOS Keychain entry written by Claude Code
+def _get_token_from_keychain() -> Optional[str]:
+    import sys
+    if sys.platform != "darwin":
+        return None
+    try:
+        import subprocess, json
+        result = subprocess.run(
+            ["security", "find-generic-password", "-s", "Claude Code-credentials", "-w"],
+            capture_output=True, text=True, timeout=5
+        )
+        if result.returncode == 0:
+            creds = json.loads(result.stdout.strip())
+            return creds.get("claudeAiOauth", {}).get("accessToken")
+    except Exception:
+        pass
+    return None
+
+CLAUDE_CODE_OAUTH_TOKEN: Optional[str] = (
+    os.environ.get("CLAUDE_CODE_OAUTH_TOKEN") or _get_token_from_keychain()
+)
 
 # AWS settings for Bedrock
 AWS_PROFILE: str = os.environ.get("AWS_PROFILE", "Sandbox.AdministratorAccess")
