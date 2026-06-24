@@ -38,6 +38,8 @@ links:
   - src: .ideavimrc
   - src: .config/helm/starters
   - src: .cargo/config
+  - src: .config/environment.d
+    os: "Linux Darwin"
   - src: .config/goose/config.yaml
     dest: .config/goose/config.yaml
     os: "Linux Darwin"

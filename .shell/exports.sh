@@ -151,3 +151,19 @@ export PERSONAL_WIKI="$HOME/Documents/personal-wiki"
 
 # Export the path that we have updated via pathadd
 export PATH="$PATH"
+
+# SSH agent priority: 1Password → GPG → ~/.ssh/agent/* fallback.
+# environment.d/ssh-agent.conf handles the systemd user instance (Claude Code, services).
+if [ -z "$SSH_AUTH_SOCK" ] || [ ! -S "$SSH_AUTH_SOCK" ]; then
+  _gpg_sock="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/gnupg/S.gpg-agent.ssh"
+  _op_sock="$HOME/.1password/agent.sock"
+  _fb_sock=$(ls -t "$HOME/.ssh/agent"/s.*.agent.* 2>/dev/null | head -1)
+  if [ -S "$_op_sock" ]; then
+    export SSH_AUTH_SOCK="$_op_sock"
+  elif [ -S "$_gpg_sock" ]; then
+    export SSH_AUTH_SOCK="$_gpg_sock"
+  elif [ -n "$_fb_sock" ] && [ -S "$_fb_sock" ]; then
+    export SSH_AUTH_SOCK="$_fb_sock"
+  fi
+  unset _gpg_sock _op_sock _fb_sock
+fi
