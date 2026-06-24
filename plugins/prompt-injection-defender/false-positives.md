@@ -42,6 +42,16 @@
 
 ---
 
+## 2026-06-23 — reflect-and-fix.md skill file
+
+**File:** `/Users/tylerstapler/.claude/commands/quality/reflect-and-fix.md`
+**Triggered rule:** `[Role-Playing/DAN] No-rules mode request` (HIGH severity)
+**Content that triggered it:** The skill file's enforcement-ladder taxonomy and anti-pattern descriptions. Likely matched on phrases describing what bad patterns to avoid (e.g. terms related to "no rules", "bypass", or similar in the context of describing enforcement gaps the skill is designed to prevent).
+**Why it's a false positive:** This is a checked-in personal skill definition in `~/.claude/commands/`. It is a structured process document for post-mortem analysis, not a prompt injection attempt. It does not attempt to override persona, bypass safety measures, or enable alternative modes.
+**Decision:** This is the fifth false positive with zero confirmed true positives. Plugin disabled as of this date.
+
+---
+
 ## 2026-06-18 — MDD plan.md with state-machine terminology
 
 **File:** `/Users/tylerstapler/dotfiles/project_plans/ssh-bastion/implementation/plan.md`  
