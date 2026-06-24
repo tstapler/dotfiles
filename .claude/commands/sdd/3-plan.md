@@ -42,7 +42,7 @@ Dispatch a planning subagent to produce the implementation plan. The subagent do
    >
    > **Step 4:** Write `project_plans/<PROJECT_NAME>/implementation/plan.md` following the template below. Use exact file paths — no placeholders. Task sizing: 2–5 minutes each, max 3–5 files per task. **For every acceptance criterion**, include one concrete Given-When-Then example (use Domain Glossary type names in the Given state, real data values in When/Then). If you cannot write a concrete example for a criterion, the criterion is ambiguous — rewrite it before writing plan.md.
    >
-   > **Step 5:** Write any ADRs to `docs/adr/ADR-NNN-<kebab-title>.md`.
+   > **Step 5:** Write any ADRs to `project_plans/<PROJECT_NAME>/decisions/ADR-NNN-<kebab-title>.md`.
    >
    > **Step 6:** Return a summary: epic count, story count, task count, any flagged choices, glossary term count.
 
