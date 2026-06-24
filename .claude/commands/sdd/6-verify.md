@@ -340,3 +340,7 @@ quality:does-it-work: <✅ Golden path ran without errors / ❌ Failed at step: 
 
 10. **If REFACTOR or BLOCKED**: list each issue with the exact file, line, and a concrete fix.
     Do not proceed until all violations are resolved and the full review is re-run.
+
+## Related Skills
+
+- **lean-agent-loop**: Drive the check → fix → re-verify cycle when spec violations require multiple repair rounds
