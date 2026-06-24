@@ -60,6 +60,12 @@ Verdicts:
    | Go — RPC / ConnectRPC | research agent | idem |
    | Go — go-git / VCS ops | `code-go-git` | per-repo `sync.Mutex` (NOT RWMutex) covering full iterator lifetime; never cache `CommitIter` or `*Worktree`; `wt.Status()` is concurrency-unsafe and pathologically slow on large repos |
 
+   #### Kotlin / KMP
+
+   | Technology / Pattern | Skill | Focus areas |
+   |---|---|---|
+   | Kotlin Multiplatform (KMP) | `code-kmp` | expect/actual discipline, Swift boundary safety (no thrown exceptions, StateFlow bridging), ViewModel `clear()` lifecycle, `kotlinx-datetime` for timestamps |
+
    #### Rust
 
    | Technology / Pattern | Skill | Focus areas |

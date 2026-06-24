@@ -1,7 +1,7 @@
 ---
 description: "Phase 1 — Interview to capture requirements. Outputs: project_plans/<project>/requirements.md"
 user-invocable: true
-allowed-tools: Read, Write, AskUserQuestion
+allowed-tools: Read, Write, AskUserQuestion, Bash
 ---
 
 # sdd:1-ideate
@@ -16,146 +16,76 @@ Conduct a structured requirements interview and produce `requirements.md`.
 
 1. **Follow [SETUP.md](../skills/SETUP.md)** — identify PROJECT_NAME.
 
-2. **Run the interview using `AskUserQuestion` for each question.** Ask one at a time — wait for each answer before asking the next. Use "Other" answers for custom/freeform input.
+2. **Gather context before asking anything.**
 
-   **Question 1:**
-   ```
-   header: "Problem"
-   question: "What problem does this solve? Who experiences it and how often?"
-   options:
-     - "A user-facing bug or broken feature"
-     - "A missing capability users need"
-     - "A technical issue (performance, reliability, or debt)"
-     - "A compliance or regulatory requirement"
-   ```
+   Read the codebase and user's request to derive what you can without asking:
+   - `git log --oneline -10` — recent work, clues about scope and language
+   - Top-level directory structure — tech stack, project type, existing patterns
+   - The user's initial request — problem type, implied users, implied scope
 
-   **Question 2:**
-   ```
-   header: "Users"
-   question: "Who are the users or systems that will interact with this?"
-   options:
-     - "End users (human operators or customers)"
-     - "Downstream services or internal APIs"
-     - "Both human users and automated systems"
-     - "Internal tooling or developer experience"
-   ```
+   From this, pre-fill what you can confidently determine:
+   - Scope type (new project vs. existing — usually obvious from context)
+   - Likely users (often derivable from the codebase or request)
+   - Tech stack constraints (don't ask what you can read)
 
-   **Question 3:**
-   ```
-   header: "Baseline & Success"
-   question: "What are users doing today without this (the workaround or baseline)? And what measurable behavior change proves the new approach is better? (Shipping is not a success metric.)"
-   options:
-     - "There's a manual workaround — I'll describe it (click Other); success = users stop doing it"
-     - "Specific metric improves over baseline (latency, error rate, conversion rate, p95)"
-     - "User completes task X in under N steps / seconds vs. the current N+M"
-     - "Bug is gone with regression test preventing recurrence; baseline = bug reproduced"
-   ```
+3. **Think about what's still unknown.**
 
-   **Question 4:**
-   ```
-   header: "Constraints"
-   question: "What are the hard constraints? (deadline, performance targets, compliance)"
-   options:
-     - "Deadline-driven — I'll specify the date (click Other)"
-     - "Performance or SLA target — I'll specify (click Other)"
-     - "Compliance or security requirement"
-     - "No hard constraints"
-   ```
+   Before asking any question, reason about:
+   - What information is genuinely missing that you cannot infer?
+   - Which gaps would most change the requirements or research direction if answered differently?
+   - What project-specific nuances (this stack, this team, this domain) make the standard questions poor fits?
 
-   **Question 5:**
-   ```
-   header: "Scope type"
-   question: "Is this a new project or a change to an existing one?"
-   options:
-     - "New project (greenfield)"
-     - "New feature in an existing project"
-     - "Refactor or improvement to existing code"
-     - "Bug fix in an existing project"
-   ```
+   From this reasoning, generate only the questions needed to fill real gaps. If context and the user's request already cover all the information goals, write `requirements.md` without asking anything. Every question must earn its place.
 
-   **Question 6:**
-   ```
-   header: "Out of scope"
-   question: "What must this NOT do? (out of scope, known exclusions)"
-   options:
-     - "I'll list specific exclusions (click Other)"
-     - "Scope is fully clear — no explicit exclusions"
-     - "No hard exclusions yet — leave open questions in requirements"
-   ```
+4. **Design each question for this specific project.**
 
-   **Question 7:**
-   ```
-   header: "Alternatives"
-   question: "Have you considered other approaches? (This shapes the Phase 2 build-vs-buy research.)"
-   options:
-     - "Use an existing library or OSS project instead of building"
-     - "Use a SaaS/API instead of building"
-     - "Have the LLM generate the algorithm vs. use a battle-tested library"
-     - "Already decided — want to research alternatives anyway"
-   multiSelect: true
-   ```
+   For each question you decide to ask:
+   - Write the `header` (≤ 12 chars) as the information goal, not a generic category
+   - Write the `question` text referencing actual project specifics (file names, tech, known patterns) where relevant
+   - Write `options` that reflect realistic answers *for this project* — not generic possibilities
+   - Add `multiSelect: true` only when multiple selections are genuinely independent and meaningful
+   - Always include an "Other — I'll describe it" option so the user isn't trapped
 
-   **Question 8:**
-   ```
-   header: "Feasibility"
-   question: "What technical blockers or rabbit holes could derail this? (Rabbit holes = things that sound simple but have unknown depth once you dig in.)"
-   options:
-     - "Unknown — research needed (Phase 2 will surface blockers and rabbit holes)"
-     - "Known blocker I'll describe (click Other)"
-     - "Suspected rabbit hole I'll flag (click Other)"
-     - "Prior attempt failed — I'll explain (click Other)"
-   ```
+   Example: instead of `"What are the hard constraints?"` with generic options, write `"This touches the payments service — are there PCI or SLA constraints that bound the approach?"` with options drawn from what you know about this codebase.
 
-   **Question 9:**
-   ```
-   header: "Observability"
-   question: "What should be logged, measured, or alerted on for this feature?"
-   options:
-     - "Define specific metrics/logs (click Other)"
-     - "Standard request logging is sufficient"
-     - "Oncall alert needed — I'll describe the condition (click Other)"
-     - "Not applicable (no runtime behavior / pure tooling)"
-   ```
+5. **Ask questions one at a time** using `AskUserQuestion`, only for genuine gaps. Wait for each answer before asking the next. Do not batch. If there are no gaps, skip directly to step 7.
 
-   **Question 10:**
-   ```
-   header: "Risk control"
-   question: "Does this change need a feature flag, rollback plan, or staged rollout?"
-   options:
-     - "Feature flag — gate behind a flag so it can be disabled without a deploy"
-     - "Rollback plan — define how to revert if this causes incidents"
-     - "Staged rollout — % of traffic or specific cohort first"
-     - "Not needed — low risk, no special rollout required"
-   multiSelect: true
-   ```
+6. **Information goals** — your questions must collectively cover these before you can write `requirements.md`. You decide which questions elicit which goals; some goals may be covered by one question, some by context alone.
 
-   **Question 11:**
-   ```
-   header: "Appetite"
-   question: "What is your time appetite — the maximum you'd invest before cutting scope or abandoning? (Shape Up: appetite constrains scope, not the other way around.)"
-   options:
-     - "Small: 1–2 days — must be a minimal, surgical change"
-     - "Medium: 1–2 weeks — a focused feature build"
-     - "Large: 3–6 weeks — a substantive investment"
-     - "Not set — let research and planning determine scope"
-   ```
+   **Always required:**
+   - Problem statement (what breaks or is missing, for whom)
+   - Baseline (what users do today without this)
+   - Success metric (measurable behavior change — not "shipped")
+   - Appetite (time budget that constrains scope)
 
-3. **Anti-rationalization check.** Before writing `requirements.md`, confirm:
+   **Required unless clearly inferable from context:**
+   - Hard constraints (deadline, compliance, performance target)
+   - Out-of-scope boundary (what this must NOT do)
+   - Feasibility risks and rabbit holes
+
+   **Required only for complexity ≥ 3:**
+   - Observability requirements (metrics, alerts)
+   - Risk control decision (feature flag, rollback, staged rollout)
+
+   **Derive without asking (do not ask the user):**
+   - Scope type (new vs. existing) — read from context
+   - Users / consumers — infer from problem statement and codebase
+   - Tech stack — read from the repo
+
+7. **Anti-rationalization check.** Before writing `requirements.md`, confirm:
    - You have a problem statement (not a solution statement)
-   - The baseline (current workaround) is captured so success can be measured against it
+   - The baseline is captured so success can be measured against it
    - The success metric describes a behavior change, not just delivery
-   - You have enough context to research the right technology stack in Phase 2
+   - Appetite is captured (the time budget that constrains scope)
    - Alternatives, feasibility risks, and rabbit holes are captured
-   - Observability requirements are captured (even if "standard logging sufficient")
-   - Risk control decision is captured (feature flag / rollback / none)
-   - Appetite is captured (the time budget that constrains scope, not just a deadline)
-   - **Complexity score derived** — assign 1–4 and write it in requirements.md:
+   - **Complexity score derived** — assign 1–4:
      - **1** = Bug fix or small refactor with Small appetite
      - **2** = New feature with Small or Medium appetite
      - **3** = New project, multiple epics, or feature with ≥1 external integration and Medium/Large appetite
      - **4** = Migration, compliance/security-critical, or cross-cutting change with Large appetite
+   - **For complexity ≥ 3**: observability requirements and risk control decision are captured
 
-4. **Write `project_plans/<PROJECT_NAME>/requirements.md`:**
+8. **Write `project_plans/<PROJECT_NAME>/requirements.md`:**
 
 ```markdown
 # Requirements: <PROJECT_NAME>
@@ -171,7 +101,7 @@ Conduct a structured requirements interview and produce `requirements.md`.
 <what users do today without this feature — the current workaround or absent behavior. Used to evaluate whether the solution is better than the status quo, and as the regression anchor in Phase 6 verify.>
 
 ## Users / Consumers
-<who or what systems interact with this>
+<who or what systems interact with this — derived from context>
 
 ## Success Metrics
 <measurable outcomes — tied to the baseline above: what changes, by how much, compared to what>
@@ -200,22 +130,22 @@ Conduct a structured requirements interview and produce `requirements.md`.
 <things that sound in-scope and simple, but could have unknown depth or complexity once implementation starts — flag these for Phase 3 planning to explicitly resolve or de-risk>
 
 ## Alternatives Considered
-<approaches evaluated from Question 7 — library, SaaS, LLM-generated, etc.>
+<approaches considered — library, SaaS, LLM-generated, etc.>
 
 ## Feasibility Risks
-<known or suspected blockers from Question 8>
+<known or suspected blockers>
 
 ## Observability Requirements
-<what to log, what metrics to emit, what oncall alert condition if any, or "standard request logging sufficient">
+*(complexity ≥ 3 only)* <what to log, what metrics to emit, what oncall alert condition if any, or "standard request logging sufficient">
 
 ## Risk Control
-<feature flag name if applicable | rollback procedure | staged rollout plan | "not needed — low risk">
+*(complexity ≥ 3 only)* <feature flag name if applicable | rollback procedure | staged rollout plan | "not needed — low risk">
 
 ## Open Questions
 <unresolved questions for research phase>
 ```
 
-5. **After writing the file**, output:
+9. **After writing the file**, output:
    ```
    ✅ Phase 1 complete — requirements.md written to project_plans/<PROJECT_NAME>/
 
