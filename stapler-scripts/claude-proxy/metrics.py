@@ -58,6 +58,12 @@ class MetricsCollector:
         self._stats_last_computed = 0
         self._stats_cache_ttl = 5  # seconds
 
+        # In-memory lag accumulators (flushed to diskcache every 60s, not every sample)
+        self._lag_current_ms: float = 0.0
+        self._lag_mem: Dict[str, Dict[str, int]] = {}  # minute_key -> {max, sum, count}
+        self._lag_last_flush: float = time.time()
+        self._LAG_FLUSH_INTERVAL = 60  # seconds
+
         logger.info(f"Metrics collector initialized: {cache_dir}")
 
     def _incr(self, key: str, value: int = 1):
@@ -279,31 +285,31 @@ class MetricsCollector:
         logger.debug(f"Recorded fallback: {from_provider} -> {to_provider} ({reason})")
 
     def record_event_loop_lag(self, lag_ms: float):
-        """Record an event loop lag sample (called ~every second).
-
-        DEPRECATED: Use async record_event_loop_lag_async() instead.
-        """
-        minute_key = datetime.now().strftime("%Y-%m-%dT%H:%M")
-        # Store as integer with 0.01ms precision to use atomic incr
-        lag_int = int(lag_ms * 100)
-
-        # Update max for this minute
-        max_key = f"lag:{minute_key}:max"
-        current_max = self._get(max_key, 0)
-        if lag_int > current_max:
-            self._set(max_key, lag_int)
-
-        # Accumulate sum and count for avg
-        self._incr(f"lag:{minute_key}:sum", lag_int)
-        self._incr(f"lag:{minute_key}:count")
-
-        # Keep the latest sample for instant display
-        self._set("lag:current_ms", round(lag_ms, 2))
+        """Flush in-memory lag accumulators to diskcache (called every 60s from thread pool)."""
+        for minute_key, bucket in list(self._lag_mem.items()):
+            max_key = f"lag:{minute_key}:max"
+            current_max = self._get(max_key, 0)
+            if bucket["max"] > current_max:
+                self._set(max_key, bucket["max"])
+            self._incr(f"lag:{minute_key}:sum", bucket["sum"])
+            self._incr(f"lag:{minute_key}:count", bucket["count"])
+        self._set("lag:current_ms", round(self._lag_current_ms, 2))
+        self._lag_mem.clear()
+        self._lag_last_flush = time.time()
 
     async def record_event_loop_lag_async(self, lag_ms: float):
-        """Record an event loop lag sample asynchronously (non-blocking)."""
-        # Offload to thread pool to avoid blocking event loop
-        await asyncio.to_thread(self.record_event_loop_lag, lag_ms)
+        """Record an event loop lag sample — pure in-memory, no disk I/O."""
+        minute_key = datetime.now().strftime("%Y-%m-%dT%H:%M")
+        lag_int = int(lag_ms * 100)
+        self._lag_current_ms = lag_ms
+        bucket = self._lag_mem.setdefault(minute_key, {"max": 0, "sum": 0, "count": 0})
+        if lag_int > bucket["max"]:
+            bucket["max"] = lag_int
+        bucket["sum"] += lag_int
+        bucket["count"] += 1
+        # Flush to diskcache every 60s in a thread (non-blocking)
+        if time.time() - self._lag_last_flush >= self._LAG_FLUSH_INTERVAL:
+            await asyncio.to_thread(self.record_event_loop_lag, lag_ms)
 
     async def record_request_complete_async(
         self,
@@ -417,16 +423,23 @@ class MetricsCollector:
         for i in range(15, -1, -1):
             minute = now - timedelta(minutes=i)
             minute_key = minute.strftime("%Y-%m-%dT%H:%M")
-            max_int = self._get(f"lag:{minute_key}:max", 0)
-            sum_int = self._get(f"lag:{minute_key}:sum", 0)
-            count = self._get(f"lag:{minute_key}:count", 0)
+            # Prefer in-memory bucket (not yet flushed) over diskcache
+            mem = self._lag_mem.get(minute_key)
+            if mem:
+                max_int = mem["max"]
+                sum_int = mem["sum"]
+                count = mem["count"]
+            else:
+                max_int = self._get(f"lag:{minute_key}:max", 0)
+                sum_int = self._get(f"lag:{minute_key}:sum", 0)
+                count = self._get(f"lag:{minute_key}:count", 0)
             lag_data.append({
                 "minute": minute.strftime("%H:%M"),
                 "max_ms": round(max_int / 100, 2),
                 "avg_ms": round(sum_int / 100 / count, 2) if count > 0 else 0
             })
 
-        current_lag_ms = self._get("lag:current_ms", 0.0)
+        current_lag_ms = self._lag_current_ms
 
         # Recent errors (from in-memory deque)
         recent_errors = list(self.recent_errors)

@@ -189,41 +189,17 @@ class AnthropicProvider(Provider):
         if supported and model not in supported:
             raise ModelUnsupportedError(f"Model '{model}' not available on Anthropic API")
 
-        # Log tool count before cleaning
-        if "tools" in body:
-            logger.info(f"[{request_id}] Found {len(body['tools'])} tools before cleaning")
-            # Log if any tools have custom field
-            custom_count = sum(1 for t in body['tools'] if isinstance(t, dict) and 'custom' in t)
-            if custom_count > 0:
-                logger.info(f"[{request_id}] {custom_count} tools have 'custom' field before cleaning")
-            else:
-                logger.info(f"[{request_id}] No tools have 'custom' field before cleaning")
-            # Log tool 19 specifically (the one in the error)
-            if len(body['tools']) > 19:
-                tool19 = body['tools'][19]
-                logger.info(f"[{request_id}] Tool[19] keys before cleaning: {list(tool19.keys()) if isinstance(tool19, dict) else 'not a dict'}")
-
         # Clean request body to remove unsupported fields
         body = self._clean_request_body(body)
 
-        # Log tool count after cleaning
         if "tools" in body:
-            logger.info(f"[{request_id}] Have {len(body['tools'])} tools after cleaning")
-            # Verify custom fields are gone
             custom_count = sum(1 for t in body['tools'] if isinstance(t, dict) and 'custom' in t)
             if custom_count > 0:
-                logger.warning(f"[{request_id}] WARNING! {custom_count} tools STILL have 'custom' field after cleaning!")
-                # Log details of first tool with custom field
+                logger.warning(f"[{request_id}] {custom_count} tools STILL have 'custom' field after cleaning!")
                 for idx, t in enumerate(body['tools']):
                     if isinstance(t, dict) and 'custom' in t:
                         logger.warning(f"[{request_id}] Tool {idx} still has custom: {t.get('custom')}")
                         break
-            else:
-                logger.info(f"[{request_id}] All tools cleaned - no 'custom' fields remaining")
-            # Log tool 19 specifically after cleaning
-            if len(body['tools']) > 19:
-                tool19 = body['tools'][19]
-                logger.info(f"[{request_id}] Tool[19] keys after cleaning: {list(tool19.keys()) if isinstance(tool19, dict) else 'not a dict'}")
 
         headers = self._build_headers(token, auth_type, headers)
 
@@ -287,25 +263,13 @@ class AnthropicProvider(Provider):
         if supported and model not in supported:
             raise ModelUnsupportedError(f"Model '{model}' not available on Anthropic API")
 
-        # Log tool count before cleaning
-        if "tools" in body:
-            logger.info(f"[{request_id}] STREAM: Found {len(body['tools'])} tools before cleaning")
-            # Log if any tools have custom field
-            custom_count = sum(1 for t in body['tools'] if isinstance(t, dict) and 'custom' in t)
-            if custom_count > 0:
-                logger.info(f"[{request_id}] STREAM: {custom_count} tools have 'custom' field before cleaning")
-
         # Clean request body to remove unsupported fields
         body = self._clean_request_body(body)
 
-        # Log tool count after cleaning
         if "tools" in body:
-            logger.info(f"[{request_id}] STREAM: Have {len(body['tools'])} tools after cleaning")
-            # Verify custom fields are gone
             custom_count = sum(1 for t in body['tools'] if isinstance(t, dict) and 'custom' in t)
             if custom_count > 0:
-                logger.warning(f"[{request_id}] STREAM: WARNING! {custom_count} tools STILL have 'custom' field after cleaning!")
-                # Log details of first tool with custom field
+                logger.warning(f"[{request_id}] STREAM: {custom_count} tools STILL have 'custom' field after cleaning!")
                 for idx, t in enumerate(body['tools']):
                     if isinstance(t, dict) and 'custom' in t:
                         logger.warning(f"[{request_id}] STREAM: Tool {idx} still has custom: {t.get('custom')}")

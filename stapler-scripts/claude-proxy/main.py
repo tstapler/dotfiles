@@ -1398,7 +1398,7 @@ async def get_request_body(request_id: str, stage: str = "original"):
 @app.get("/metrics")
 async def get_metrics():
     """JSON metrics endpoint for dashboard and API consumers."""
-    stats = metrics.get_stats()
+    stats = await asyncio.to_thread(metrics.get_stats)
 
     # Add count_tokens stats
     stats["count_tokens"] = metrics.get_count_tokens_stats()
