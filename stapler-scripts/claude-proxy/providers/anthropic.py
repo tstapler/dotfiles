@@ -4,7 +4,7 @@ import json
 import os
 import diskcache
 from typing import Dict, Any, AsyncIterator, Optional
-from . import Provider, RateLimitError, ValidationError, ModelUnsupportedError
+from . import Provider, RateLimitError, ValidationError, AuthenticationError, ModelUnsupportedError
 
 _model_cache = diskcache.Cache(
     os.path.expanduser("~/.cache/claude-proxy/model-cache"),
@@ -218,6 +218,9 @@ class AnthropicProvider(Provider):
             retry_after = int(response.headers.get("retry-after", 60))
             raise RateLimitError("API overloaded", retry_after=retry_after)
 
+        if response.status_code == 401:
+            raise AuthenticationError(f"Anthropic API error (401): {response.text}")
+
         if 400 <= response.status_code < 500:
             error_text = response.text
             if "Invalid model name" in error_text or "invalid_model" in error_text:
@@ -291,6 +294,10 @@ class AnthropicProvider(Provider):
             if response.status_code == 529:
                 retry_after = int(response.headers.get("retry-after", 60))
                 raise RateLimitError("API overloaded", retry_after=retry_after)
+
+            if response.status_code == 401:
+                error_text = await response.aread()
+                raise AuthenticationError(f"Anthropic API error (401): {error_text}")
 
             if 400 <= response.status_code < 500:
                 error_text = await response.aread()

@@ -137,11 +137,12 @@ class FallbackHandler:
                     raise
 
                 except AuthenticationError as e:
-                    # Authentication errors are not retryable - fail immediately
-                    logger.error(f"{req_prefix}✗ {provider.name}: authentication error (model={model}) - {e}")
+                    # Auth failure on this provider — try Bedrock (different credentials)
+                    logger.warning(f"{req_prefix}✗ {provider.name}: authentication error (model={model}) - falling back")
                     if self.metrics:
                         self.metrics.record_request_complete(provider.name, model, start_time, False, "auth", stream=False)
-                    raise
+                    last_error = e
+                    break
 
                 except Exception as e:
                     logger.error(f"{req_prefix}✗ {provider.name} (model={model}): {e}")
@@ -280,11 +281,12 @@ class FallbackHandler:
                     raise
 
                 except AuthenticationError as e:
-                    # Authentication errors are not retryable - fail immediately
-                    logger.error(f"{req_prefix}✗ {provider.name}: authentication error - {e}")
+                    # Auth failure on this provider — try Bedrock (different credentials)
+                    logger.warning(f"{req_prefix}✗ {provider.name}: authentication error - falling back")
                     if self.metrics:
                         self.metrics.record_request_complete(provider.name, model, start_time, False, "auth", stream=True)
-                    raise
+                    last_error = e
+                    break
 
                 except Exception as e:
                     logger.error(f"{req_prefix}✗ {provider.name}: {e}")
