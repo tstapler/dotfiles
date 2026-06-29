@@ -1,0 +1,427 @@
+#!/usr/bin/env sh
+# git-ssh-fallback: transparent HTTPS→SSH fallback wrapper for git.
+# Deployed as ~/.local/bin/git by cfgcaddy; takes priority over /usr/bin/git.
+# See project_plans/git-ssh-fallback/ for design docs, ADRs, and validation plan.
+set -euf
+
+# --- RecursionGuard ---
+# When this wrapper execs the real git, it sets GIT_SSH_FALLBACK_ACTIVE=1 so
+# any git subprocess (hooks, submodules) re-entering the wrapper passes straight
+# through without repeating auth logic.
+case "${GIT_SSH_FALLBACK_ACTIVE:-}" in
+  1) exec "${REAL_GIT:-/usr/bin/git}" "$@" ;;
+esac
+
+# ---------------------------------------------------------------------------
+# Utility functions
+# ---------------------------------------------------------------------------
+
+_log() {
+  # Emit debug trace lines only when debug mode is active.
+  case "${GIT_SSH_FALLBACK_DEBUG:-}${GIT_TRACE:-}" in
+    *?*) printf '[git-ssh-fallback] %s\n' "$*" >&2 ;;
+  esac
+}
+
+_warn() {
+  printf 'warning: %s\n' "$*" >&2
+}
+
+_find_real_git() {
+  # Resolve the wrapper's real directory (follow symlinks so ~/.local/bin/git
+  # symlink → dotfiles/stapler-scripts/git-ssh-fallback is handled correctly).
+  local self="$0"
+  local wrapper_dir
+  if command -v readlink >/dev/null 2>&1; then
+    wrapper_dir="$(dirname "$(readlink -f "$self" 2>/dev/null || echo "$self")")"
+  else
+    wrapper_dir="$(dirname "$self")"
+  fi
+
+  # Walk PATH in a subshell to avoid clobbering IFS in the parent.
+  ( IFS=:
+    for dir in $PATH; do
+      [ "$dir" = "$wrapper_dir" ] && continue
+      [ -x "$dir/git" ] || continue
+      printf '%s' "$dir/git"
+      exit 0
+    done
+    printf '%s' "/usr/bin/git"
+  )
+}
+
+# _timeout: POSIX-compatible timeout wrapper.
+# macOS does not ship a 'timeout' binary by default (brew install coreutils
+# provides one). When unavailable, we fall back to a background-kill pattern.
+_timeout() {
+  local secs="$1"
+  shift
+  if command -v timeout >/dev/null 2>&1; then
+    local _ts=0
+    timeout "$secs" "$@" || _ts=$?
+    return "$_ts"
+  fi
+  # POSIX fallback: run command in background, kill it after $secs seconds.
+  "$@" &
+  local cmd_pid=$!
+  ( sleep "$secs" && kill "$cmd_pid" 2>/dev/null ) &
+  local guard_pid=$!
+  local status=0
+  wait "$cmd_pid" || status=$?
+  kill "$guard_pid" 2>/dev/null || true
+  wait "$guard_pid" 2>/dev/null || true
+  return "$status"
+}
+
+# ---------------------------------------------------------------------------
+# NetworkSubcommand detection
+# ---------------------------------------------------------------------------
+
+_extract_subcommand() {
+  # Return the first non-flag token from git's argument list.
+  # Handles flags-with-arguments: -C <path>, -c <k=v>, --git-dir <path>, etc.
+  local skip_next=0
+  for arg in "$@"; do
+    if [ "$skip_next" -eq 1 ]; then
+      skip_next=0
+      continue
+    fi
+    case "$arg" in
+      # Flags that consume the next argument as their value
+      -C|--git-dir|--work-tree|--namespace|--super-prefix|-c|--config-env)
+        skip_next=1; continue ;;
+      --*=*) continue ;;  # --flag=value (self-contained)
+      -*)    continue ;;  # other flags
+      *)     printf '%s' "$arg"; return 0 ;;
+    esac
+  done
+}
+
+_is_network_op() {
+  case "${1:-}" in
+    clone|fetch|pull|push|ls-remote|submodule|remote) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+# ---------------------------------------------------------------------------
+# RemoteHost extraction
+# ---------------------------------------------------------------------------
+
+_extract_host() {
+  # Usage: _extract_host <subcmd> [git-args...]
+  # Prints the HTTPS hostname, or empty string if already SSH or unknown.
+  local subcmd="$1"
+  shift
+  local url=""
+  local real_git="${REAL_GIT:-$(command -v git 2>/dev/null || echo /usr/bin/git)}"
+
+  if [ "$subcmd" = "clone" ]; then
+    for arg in "$@"; do
+      case "$arg" in
+        https://*) url="$arg"; break ;;
+        git@*|ssh://*) return 0 ;;  # already SSH — print nothing
+        --*) continue ;;
+        -*) continue ;;
+      esac
+    done
+  else
+    # fetch/push/pull/etc.: look up the remote URL from git config.
+    local remote="origin"
+    for arg in "$@"; do
+      case "$arg" in -*) ;; *) remote="$arg"; break ;; esac
+    done
+    url=$( "$real_git" remote get-url "$remote" 2>/dev/null ) || url=""
+    case "$url" in
+      git@*|ssh://*) return 0 ;;  # already SSH
+    esac
+  fi
+
+  [ -z "$url" ] && return 0
+
+  # Parse https://[user:pass@]HOST[:port]/path → bare HOST
+  local host="${url#https://}"
+  host="${host#*@}"   # strip user:pass@
+  host="${host%%/*}"  # strip /path
+  host="${host%%:*}"  # strip :port
+  printf '%s' "$host"
+}
+
+# ---------------------------------------------------------------------------
+# Auth check with 5-minute file cache
+# ---------------------------------------------------------------------------
+
+_check_auth() {
+  local host="$1"
+  local cache_dir="${GIT_SSH_FALLBACK_CACHE_DIR:-$HOME/.cache/git-ssh-fallback}"
+  local cache_file="$cache_dir/${host}.auth"
+
+  mkdir -p "$cache_dir"
+
+  # Cache hit: file is < 5 minutes old.
+  if [ -f "$cache_file" ] && find "$cache_file" -mmin -5 2>/dev/null | grep -q .; then
+    _log "auth: cached (authenticated) for $host"
+    printf 'authenticated'
+    return 0
+  fi
+
+  if ! command -v gh >/dev/null 2>&1; then
+    _log "auth: gh not in PATH — treating as unauthenticated"
+    printf 'unauthenticated'
+    return 0
+  fi
+
+  local gh_status=0
+  _timeout 1 gh auth token --hostname "$host" >/dev/null 2>&1 || gh_status=$?
+
+  case "$gh_status" in
+    0)
+      _log "auth: authenticated for $host (gh exit 0)"
+      touch "$cache_file"
+      printf 'authenticated'
+      ;;
+    124)
+      # macOS Keychain contention (cli/cli#13317): ambiguous auth state.
+      # Treat as authenticated — HTTPS is safer than forcing SSH on timeout.
+      # See ADR-003 and requirements.md §Security design decision.
+      _log "auth: gh timed out for $host (exit 124) — assuming authenticated"
+      _warn "gh auth check timed out for $host — assuming authenticated (Keychain locked?)"
+      printf 'authenticated'
+      ;;
+    *)
+      _log "auth: unauthenticated for $host (gh exit $gh_status)"
+      printf 'unauthenticated'
+      ;;
+  esac
+}
+
+# ---------------------------------------------------------------------------
+# SSH agent detection
+# ---------------------------------------------------------------------------
+
+_test_socket_liveness() {
+  # Returns 0 if socket path exists, is a socket, and the agent responds.
+  # ssh-add exit codes: 0 = keys loaded, 1 = no keys (both mean alive),
+  # 2 = cannot connect (stale socket), other = timeout/unavailable.
+  local sock="${1:-}"
+  [ -n "$sock" ] || return 1
+  [ -S "$sock" ] || return 1
+  local ss=0
+  _timeout 1 ssh-add -l >/dev/null 2>&1 || ss=$?
+  case "$ss" in
+    0|1) return 0 ;;  # agent alive (keys loaded or empty)
+    *)   return 1 ;;  # stale socket or timed out
+  esac
+}
+
+_detect_ssh_agent() {
+  # Probe SSH agent sockets in priority order, mirroring exports.sh sequence.
+  # Sets SSH_AUTH_SOCK and returns 0 on success; returns 1 if none found.
+  local xdg_runtime="${XDG_RUNTIME_DIR:-/run/user/$(id -u 2>/dev/null || echo 0)}"
+
+  # Priority 1: existing SSH_AUTH_SOCK
+  if _test_socket_liveness "${SSH_AUTH_SOCK:-}"; then
+    _log "ssh agent: live at existing SSH_AUTH_SOCK"
+    return 0
+  fi
+
+  # Priority 2: 1Password (standard path)
+  if _test_socket_liveness "$HOME/.1password/agent.sock"; then
+    export SSH_AUTH_SOCK="$HOME/.1password/agent.sock"
+    _log "ssh agent: live at ~/.1password/agent.sock"
+    return 0
+  fi
+
+  # Priority 3: 1Password (macOS native container path)
+  local op_mac="$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+  if _test_socket_liveness "$op_mac"; then
+    export SSH_AUTH_SOCK="$op_mac"
+    _log "ssh agent: live at 1Password macOS native path"
+    return 0
+  fi
+
+  # Priority 4: GPG agent SSH socket
+  if _test_socket_liveness "$xdg_runtime/gnupg/S.gpg-agent.ssh"; then
+    export SSH_AUTH_SOCK="$xdg_runtime/gnupg/S.gpg-agent.ssh"
+    _log "ssh agent: live at GPG agent SSH socket"
+    return 0
+  fi
+
+  # Priority 5: systemd ssh-agent socket
+  if _test_socket_liveness "$xdg_runtime/ssh-agent.socket"; then
+    export SSH_AUTH_SOCK="$xdg_runtime/ssh-agent.socket"
+    _log "ssh agent: live at systemd ssh-agent socket"
+    return 0
+  fi
+
+  # Priority 6: most-recently-modified ~/.ssh/agent/* socket
+  local newest_sock=""
+  newest_sock=$( find "$HOME/.ssh/agent" -name 's.*.agent.*' -maxdepth 1 2>/dev/null | sort -r | head -1 ) || newest_sock=""
+  if _test_socket_liveness "$newest_sock"; then
+    export SSH_AUTH_SOCK="$newest_sock"
+    _log "ssh agent: live at ~/.ssh/agent/* socket"
+    return 0
+  fi
+
+  _log "ssh agent: no live agent found on any probe path"
+  return 1
+}
+
+# ---------------------------------------------------------------------------
+# ConfigInjection: per-invocation url.insteadOf via env vars
+# ---------------------------------------------------------------------------
+
+_inject_ssh_config() {
+  local host="$1"
+  # Accumulate onto any GIT_CONFIG entries already set by the calling env,
+  # rather than clobbering them (C2 mitigation).
+  local n="${GIT_CONFIG_COUNT:-0}"
+  GIT_CONFIG_COUNT=$(( n + 1 ))
+  export GIT_CONFIG_COUNT
+  # Dynamic variable naming: $n is always an integer; $host is a hostname
+  # (alphanumeric + dots + hyphens) extracted from a URL — eval is safe here.
+  eval "export GIT_CONFIG_KEY_${n}=\"url.git@${host}:.insteadOf\""
+  eval "export GIT_CONFIG_VALUE_${n}=\"https://${host}/\""
+  # StrictHostKeyChecking=accept-new prevents interactive host key prompts
+  # in headless contexts (CI, Claude Code subagents, systemd sessions).
+  export GIT_SSH_COMMAND="ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10"
+  _log "config injection: url.git@${host}:.insteadOf = https://${host}/"
+}
+
+# ---------------------------------------------------------------------------
+# gh-managed host classification
+# ---------------------------------------------------------------------------
+
+# GH_MANAGED_HOSTS: hosts where 'gh auth token --hostname' is authoritative.
+#
+# GitHub Enterprise Server (GHES) uses custom hostnames, e.g. git.company.com.
+# gh fully manages these when configured via 'gh auth login --hostname HOST'.
+# Without enrollment here, GHES hosts take the non-gh proactive-SSH path
+# (may silently route to SSH even when HTTPS would work).
+#
+# To enroll a GHES instance:
+#   export GIT_SSH_FALLBACK_GH_HOSTS="git.company.com another.ghes.example.com"
+GH_MANAGED_HOSTS="github.com gist.github.com ${GIT_SSH_FALLBACK_GH_HOSTS:-}"
+
+_is_gh_managed_host() {
+  local host="$1"
+  # Exact string equality only — no glob, no grep, no eval.
+  # Prevents glob metacharacters in GIT_SSH_FALLBACK_GH_HOSTS from causing
+  # false positives or injection (N3 mitigation from adversarial review).
+  for candidate in $GH_MANAGED_HOSTS; do
+    [ "$host" = "$candidate" ] && return 0
+  done
+  return 1
+}
+
+# ---------------------------------------------------------------------------
+# Main execution
+# ---------------------------------------------------------------------------
+
+_main() {
+  REAL_GIT="$(_find_real_git)"
+  _log "wrapper: $0 | real git: $REAL_GIT"
+
+  # Self-test: verify internal function contracts without executing git logic.
+  case "${1:-}" in
+    --self-test)
+      local _failures=0
+
+      # Assertion 1: _find_real_git returns a path other than this script
+      local _rt
+      _rt="$(_find_real_git)"
+      case "$_rt" in
+        "$0") printf '[git-ssh-fallback] self-test FAIL: find_real_git returned wrapper path\n' >&2
+              _failures=$(( _failures + 1 )) ;;
+      esac
+
+      # Assertion 2: _extract_subcommand skips -C <path> correctly
+      local _sub
+      _sub="$(_extract_subcommand "-C" "/tmp" "fetch" "origin")"
+      [ "$_sub" = "fetch" ] || {
+        printf '[git-ssh-fallback] self-test FAIL: extract_subcommand returned "%s" (expected "fetch")\n' "$_sub" >&2
+        _failures=$(( _failures + 1 ))
+      }
+
+      # Assertion 3: _is_network_op returns false for local ops
+      _is_network_op "status" && {
+        printf '[git-ssh-fallback] self-test FAIL: "status" classified as network op\n' >&2
+        _failures=$(( _failures + 1 ))
+      } || true
+
+      [ "$_failures" -eq 0 ] && printf '[git-ssh-fallback] self-test: PASS\n' && return 0
+      return 1
+      ;;
+  esac
+
+  # Classify the git subcommand.
+  local _subcmd
+  _subcmd="$(_extract_subcommand "$@")"
+
+  if ! _is_network_op "$_subcmd"; then
+    _log "local op: ${_subcmd:-<empty>} — passing through"
+    export GIT_SSH_FALLBACK_ACTIVE=1
+    exec "$REAL_GIT" "$@"
+  fi
+
+  # Extract the HTTPS hostname being targeted.
+  local _host
+  _host="$(_extract_host "$_subcmd" "$@")"
+
+  if [ -z "$_host" ]; then
+    _log "no HTTPS host detected (already SSH or no remote) — passing through"
+    export GIT_SSH_FALLBACK_ACTIVE=1
+    exec "$REAL_GIT" "$@"
+  fi
+
+  _log "network op: $_subcmd | host: $_host"
+
+  if _is_gh_managed_host "$_host"; then
+    # gh-managed host: check authentication proactively.
+    local _auth
+    _auth="$(_check_auth "$_host")"
+    case "$_auth" in
+      authenticated)
+        _log "gh-managed $_host: authenticated — proceeding with HTTPS"
+        export GIT_SSH_FALLBACK_ACTIVE=1
+        exec "$REAL_GIT" "$@"
+        ;;
+      unauthenticated)
+        if _detect_ssh_agent; then
+          _warn "falling back to SSH (gh not authenticated for $_host)"
+          _inject_ssh_config "$_host"
+          _log "exec: $REAL_GIT $*"
+          export GIT_SSH_FALLBACK_ACTIVE=1
+          exec "$REAL_GIT" "$@"
+        else
+          _warn "SSH fallback skipped: no SSH agent found (SSH_AUTH_SOCK not set)"
+          printf 'hint: %s\n' "Run with GIT_SSH_FALLBACK_DEBUG=1 for detailed diagnostic output" >&2
+          export GIT_SSH_FALLBACK_ACTIVE=1
+          exec "$REAL_GIT" "$@"
+        fi
+        ;;
+    esac
+  else
+    # Non-gh host: proactive SSH only if a live agent exists AND the host is
+    # in known_hosts. The known_hosts gate prevents breaking HTTPS-only forges
+    # (e.g., corporate Gitea with PAT auth) where no SSH key is provisioned.
+    if _detect_ssh_agent && ssh-keygen -F "$_host" >/dev/null 2>&1; then
+      _log "non-gh host $_host: SSH agent live, host in known_hosts — using SSH directly"
+      _warn "falling back to SSH (gh not applicable for $_host)"
+      _inject_ssh_config "$_host"
+      _log "exec: $REAL_GIT $*"
+      export GIT_SSH_FALLBACK_ACTIVE=1
+      exec "$REAL_GIT" "$@"
+    else
+      _log "non-gh host $_host: no live SSH agent or not in known_hosts — using HTTPS"
+      export GIT_SSH_FALLBACK_ACTIVE=1
+      exec "$REAL_GIT" "$@"
+    fi
+  fi
+}
+
+# Run main logic when executed directly; skip when sourced for unit testing.
+# $0 is the shell name (bash, sh, dash) when sourced, script path when run.
+case "$0" in
+  *git|*git-ssh-fallback) _main "$@" ;;
+esac

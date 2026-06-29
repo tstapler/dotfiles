@@ -21,6 +21,9 @@ links:
   - src: stapler-scripts/*
     dest: bin/scripts
     os: "Linux Darwin"
+  - src: stapler-scripts/git-ssh-fallback
+    dest: .local/bin/git
+    os: "Linux Darwin"
   - src: stapler-scripts/PowerShell
     dest: "%userprofile%\\My Documents\\WindowsPowerShell\\"
     os: "Windows"
