@@ -1,0 +1,8 @@
+{
+    "name": "git-stacked-prs",
+    "description": "Stacked PR workflow using git-machete. Breaks large changes into a chain of reviewable PRs. Four stages: evaluate → plan → execute → ship. Run /git:stack to start.",
+    "version": "0.1.0",
+    "author": {
+        "name": "Tyler Stapler"
+    }
+}
