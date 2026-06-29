@@ -1,0 +1,1 @@
+../../skills/db/skills/antipatterns/SKILL.md

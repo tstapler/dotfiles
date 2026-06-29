@@ -1,0 +1,1 @@
+../../skills/sdd/skills/1-ideate/SKILL.md

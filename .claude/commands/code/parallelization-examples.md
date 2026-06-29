@@ -1,0 +1,1 @@
+../../skills/code/skills/parallelization-examples/SKILL.md

@@ -1,0 +1,1 @@
+../../skills/sdd/skills/4-validate/SKILL.md

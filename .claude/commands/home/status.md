@@ -1,0 +1,1 @@
+../../skills/home/skills/status/SKILL.md

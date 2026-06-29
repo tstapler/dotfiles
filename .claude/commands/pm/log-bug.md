@@ -1,0 +1,1 @@
+../../skills/pm/skills/log-bug/SKILL.md

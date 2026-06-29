@@ -1,0 +1,1 @@
+../../skills/skill/skills/convert-candidates/SKILL.md

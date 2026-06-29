@@ -1,0 +1,1 @@
+../../skills/jira/skills/doc/SKILL.md

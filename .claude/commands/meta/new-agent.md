@@ -1,0 +1,1 @@
+../../skills/meta/skills/new-agent/SKILL.md

@@ -1,0 +1,1 @@
+../../skills/knowledge/skills/KNOWLEDGE_PROCESSING_ARCHITECTURE/SKILL.md

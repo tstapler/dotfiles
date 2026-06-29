@@ -1,0 +1,1 @@
+../../skills/quality/skills/architecture-review/SKILL.md

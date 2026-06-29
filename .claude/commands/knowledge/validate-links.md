@@ -1,0 +1,1 @@
+../../skills/knowledge/skills/validate-links/SKILL.md

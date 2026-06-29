@@ -1,0 +1,1 @@
+../../skills/sdd/skills/6-verify/SKILL.md

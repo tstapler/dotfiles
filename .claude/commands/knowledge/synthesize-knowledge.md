@@ -1,0 +1,1 @@
+../../skills/knowledge/skills/synthesize-knowledge/SKILL.md

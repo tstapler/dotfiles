@@ -1,0 +1,1 @@
+../../skills/knowledge/skills/get-wikipedia-image/SKILL.md

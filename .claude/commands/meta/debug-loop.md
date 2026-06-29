@@ -1,0 +1,1 @@
+../../skills/meta/skills/debug-loop/SKILL.md

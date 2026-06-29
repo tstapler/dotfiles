@@ -1,0 +1,1 @@
+../../skills/home/skills/3-plan/SKILL.md

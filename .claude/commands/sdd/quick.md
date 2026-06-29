@@ -1,0 +1,1 @@
+../../skills/sdd/skills/quick/SKILL.md

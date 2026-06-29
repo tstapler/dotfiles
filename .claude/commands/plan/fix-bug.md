@@ -1,0 +1,1 @@
+../../skills/plan/skills/fix-bug/SKILL.md

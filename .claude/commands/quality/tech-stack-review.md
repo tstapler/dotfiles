@@ -1,0 +1,1 @@
+../../skills/quality/skills/tech-stack-review/SKILL.md

@@ -1,0 +1,1 @@
+../../skills/home/skills/1-scope/SKILL.md

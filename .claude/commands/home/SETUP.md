@@ -1,0 +1,1 @@
+../../skills/home/skills/SETUP/SKILL.md

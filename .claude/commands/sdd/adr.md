@@ -1,0 +1,1 @@
+../../skills/sdd/skills/adr/SKILL.md

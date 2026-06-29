@@ -1,0 +1,1 @@
+../../skills/knowledge/skills/MIGRATION_GUIDE/SKILL.md

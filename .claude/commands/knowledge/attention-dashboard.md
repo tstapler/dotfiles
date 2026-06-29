@@ -1,0 +1,1 @@
+../../skills/knowledge/skills/attention-dashboard/SKILL.md

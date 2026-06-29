@@ -1,0 +1,1 @@
+../../skills/knowledge/skills/slack-daily-synthesis/SKILL.md

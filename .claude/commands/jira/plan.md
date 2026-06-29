@@ -1,0 +1,1 @@
+../../skills/jira/skills/plan/SKILL.md

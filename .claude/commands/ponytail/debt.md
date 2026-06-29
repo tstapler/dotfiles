@@ -1,0 +1,1 @@
+../../skills/ponytail/skills/debt/SKILL.md

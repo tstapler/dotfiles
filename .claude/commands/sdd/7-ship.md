@@ -1,0 +1,1 @@
+../../skills/sdd/skills/7-ship/SKILL.md

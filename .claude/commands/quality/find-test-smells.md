@@ -1,0 +1,1 @@
+../../skills/quality/skills/find-test-smells/SKILL.md

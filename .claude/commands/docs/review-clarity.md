@@ -1,0 +1,1 @@
+../../skills/docs/skills/review-clarity/SKILL.md

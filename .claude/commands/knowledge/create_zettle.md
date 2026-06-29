@@ -1,0 +1,1 @@
+../../skills/knowledge/skills/create_zettle/SKILL.md

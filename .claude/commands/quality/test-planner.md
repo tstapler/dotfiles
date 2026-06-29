@@ -1,0 +1,1 @@
+../../skills/quality/skills/test-planner/SKILL.md

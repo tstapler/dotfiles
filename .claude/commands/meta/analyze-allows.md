@@ -1,0 +1,1 @@
+../../skills/meta/skills/analyze-allows/SKILL.md

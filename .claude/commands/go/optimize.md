@@ -1,0 +1,1 @@
+../../skills/go/skills/optimize/SKILL.md

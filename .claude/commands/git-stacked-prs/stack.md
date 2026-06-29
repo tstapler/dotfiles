@@ -1,0 +1,1 @@
+../../skills/git-stacked-prs/skills/stack/SKILL.md

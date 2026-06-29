@@ -1,0 +1,1 @@
+../../skills/home/skills/6-close/SKILL.md

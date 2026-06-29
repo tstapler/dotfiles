@@ -1,0 +1,1 @@
+../../skills/knowledge/skills/process-journal-zettels/SKILL.md
