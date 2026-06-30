@@ -46,6 +46,11 @@ class FallbackHandler:
 
     def _set_cooldown(self, provider_name: str, seconds: int = None):
         """Set cooldown for a provider."""
+        # With only one provider, cooldown causes 100% 500s for its duration.
+        # Let the 429 propagate instead so the client retries on its own schedule.
+        if len(self.providers) <= 1:
+            logger.warning(f"Provider {provider_name} rate limited — only provider, skipping cooldown so 429 propagates to client")
+            return
         if seconds is None:
             seconds = config.COOLDOWN_SECONDS
         cooldown_until = time.time() + seconds
