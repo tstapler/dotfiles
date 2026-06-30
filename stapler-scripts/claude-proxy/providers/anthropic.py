@@ -4,7 +4,7 @@ import json
 import os
 import diskcache
 from typing import Dict, Any, AsyncIterator, Optional
-from . import Provider, RateLimitError, ValidationError, AuthenticationError, ModelUnsupportedError
+from . import Provider, RateLimitError, ValidationError, AuthenticationError, ModelUnsupportedError, ServerError
 
 _model_cache = diskcache.Cache(
     os.path.expanduser("~/.cache/claude-proxy/model-cache"),
@@ -229,7 +229,7 @@ class AnthropicProvider(Provider):
 
         if response.status_code != 200:
             error_text = response.text
-            raise Exception(f"Anthropic API error ({response.status_code}): {error_text}")
+            raise ServerError(f"Anthropic API error ({response.status_code}): {error_text}", status_code=response.status_code)
 
         # Parse response and check for rate limit errors in body
         response_data = response.json()
@@ -308,7 +308,7 @@ class AnthropicProvider(Provider):
 
             if response.status_code != 200:
                 error_text = await response.aread()
-                raise Exception(f"Anthropic API error ({response.status_code}): {error_text}")
+                raise ServerError(f"Anthropic API error ({response.status_code}): {error_text}", status_code=response.status_code)
 
             async for line in response.aiter_lines():
                 if line.startswith("data: "):

@@ -32,6 +32,13 @@ class ModelUnsupportedError(Exception):
     pass
 
 
+class ServerError(Exception):
+    """Raised on 5xx responses — transient outage, short cooldown, fall to next provider."""
+    def __init__(self, message: str, status_code: int = 500):
+        super().__init__(message)
+        self.status_code = status_code
+
+
 class Provider(ABC):
     """Abstract base class for API providers."""
 

@@ -108,6 +108,7 @@ async def _monitor_event_loop_lag():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     asyncio.create_task(_monitor_event_loop_lag())
+    asyncio.create_task(fallback.start_health_check_loop())
     init_compactor()
     # Set anyio's default thread limiter to match BEDROCK_THREAD_POOL_SIZE
     # so streaming boto3 calls (which must use anyio threads for from_thread.run) are bounded
@@ -1404,13 +1405,15 @@ async def get_metrics():
     stats["count_tokens"] = metrics.get_count_tokens_stats()
 
     # Add live cooldown status from FallbackHandler
-    stats["cooldowns"] = {
-        p.name: {
-            "cooling_down": fallback._is_in_cooldown(p.name),
-            "remaining_seconds": max(0, int((fallback.cooldowns.get(p.name) or 0) - time.time()))
-        }
-        for p in fallback.providers
-    }
+    def _cooldown_status(provider_name):
+        entry = fallback.cooldowns.get(provider_name)
+        if not entry:
+            return {"cooling_down": False, "remaining_seconds": 0, "reason": None}
+        until, reason = fallback._unpack_cooldown(entry)
+        remaining = max(0, int(until - time.time()))
+        return {"cooling_down": remaining > 0, "remaining_seconds": remaining, "reason": reason}
+
+    stats["cooldowns"] = {p.name: _cooldown_status(p.name) for p in fallback.providers}
 
     return JSONResponse(stats)
 

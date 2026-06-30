@@ -4,7 +4,7 @@ import asyncio
 import json
 import logging
 from typing import Dict, Any, List, AsyncIterator, Optional
-from providers import Provider, RateLimitError, ValidationError, TimeoutError, AuthenticationError, ModelUnsupportedError
+from providers import Provider, RateLimitError, ValidationError, TimeoutError, AuthenticationError, ModelUnsupportedError, ServerError
 import config
 import diskcache
 import os
@@ -24,38 +24,47 @@ class FallbackHandler:
 
         # Log any existing cooldowns on startup
         for provider_name in list(self.cooldowns):
-            cooldown_until = self.cooldowns.get(provider_name)
-            if cooldown_until:
-                remaining = int(cooldown_until - time.time())
+            entry = self.cooldowns.get(provider_name)
+            if entry:
+                until, reason = self._unpack_cooldown(entry)
+                remaining = int(until - time.time())
                 if remaining > 0:
-                    logger.info(f"🔄 Restored cooldown: {provider_name} has {remaining}s remaining")
+                    logger.info(f"🔄 Restored cooldown: {provider_name} has {remaining}s remaining (reason={reason})")
                 else:
-                    # Expired, clean it up
                     self.cooldowns.delete(provider_name)
+
+    @staticmethod
+    def _unpack_cooldown(entry) -> tuple:
+        """Unpack a cooldown entry to (until: float, reason: str).
+
+        Handles both the legacy float format and the current dict format.
+        """
+        if isinstance(entry, dict):
+            return entry.get("until", 0.0), entry.get("reason", "unknown")
+        return float(entry), "unknown"
 
     def _is_in_cooldown(self, provider_name: str) -> bool:
         """Check if provider is in cooldown period."""
-        cooldown_until = self.cooldowns.get(provider_name)
-        if cooldown_until is None:
+        entry = self.cooldowns.get(provider_name)
+        if entry is None:
             return False
-        if time.time() >= cooldown_until:
-            # Cooldown expired, remove it
+        until, _ = self._unpack_cooldown(entry)
+        if time.time() >= until:
             self.cooldowns.delete(provider_name)
             return False
         return True
 
-    def _set_cooldown(self, provider_name: str, seconds: int = None):
+    def _set_cooldown(self, provider_name: str, seconds: int = None, reason: str = "rate_limit"):
         """Set cooldown for a provider."""
         # With only one provider, cooldown causes 100% 500s for its duration.
-        # Let the 429 propagate instead so the client retries on its own schedule.
+        # Let the error propagate so the client retries on its own schedule.
         if len(self.providers) <= 1:
-            logger.warning(f"Provider {provider_name} rate limited — only provider, skipping cooldown so 429 propagates to client")
+            logger.warning(f"Provider {provider_name} unhealthy — only provider, skipping cooldown so error propagates to client")
             return
         if seconds is None:
             seconds = config.COOLDOWN_SECONDS
-        cooldown_until = time.time() + seconds
-        self.cooldowns.set(provider_name, cooldown_until)
-        logger.warning(f"Provider {provider_name} in cooldown for {seconds}s (persisted to disk)")
+        self.cooldowns.set(provider_name, {"until": time.time() + seconds, "reason": reason})
+        logger.warning(f"Provider {provider_name} in cooldown for {seconds}s (reason={reason}, persisted to disk)")
 
     async def send_message(
         self,
@@ -134,6 +143,15 @@ class FallbackHandler:
                     last_error = e
                     break
 
+                except ServerError as e:
+                    # 5xx from this provider — short cooldown, fall through to next provider
+                    logger.warning(f"{req_prefix}✗ {provider.name}: server error {e.status_code} (model={model}) - cooling down 60s and falling back")
+                    self._set_cooldown(provider.name, seconds=60, reason="server_error")
+                    if self.metrics:
+                        self.metrics.record_fallback(provider.name, "bedrock", "server_error")
+                    last_error = e
+                    break
+
                 except ValidationError as e:
                     # Validation errors are client errors - don't retry with other providers
                     logger.error(f"{req_prefix}✗ {provider.name}: validation error (model={model}) - {e}")
@@ -156,7 +174,7 @@ class FallbackHandler:
 
         # All providers failed
         if self.metrics:
-            error_type = "rate_limit" if isinstance(last_error, RateLimitError) else "timeout" if isinstance(last_error, TimeoutError) else "unknown"
+            error_type = "rate_limit" if isinstance(last_error, RateLimitError) else "timeout" if isinstance(last_error, TimeoutError) else "server_error" if isinstance(last_error, ServerError) else "unknown"
             self.metrics.record_request_complete("none", model, start_time, False, error_type, stream=False)
         if last_error:
             raise last_error
@@ -278,6 +296,15 @@ class FallbackHandler:
                     last_error = e
                     break
 
+                except ServerError as e:
+                    # 5xx from this provider — short cooldown, fall through to next provider
+                    logger.warning(f"{req_prefix}✗ {provider.name}: server error {e.status_code} (model={model}) - cooling down 60s and falling back")
+                    self._set_cooldown(provider.name, seconds=60, reason="server_error")
+                    if self.metrics:
+                        self.metrics.record_fallback(provider.name, "bedrock", "server_error")
+                    last_error = e
+                    break
+
                 except ValidationError as e:
                     # Validation errors are client errors - don't retry with other providers
                     logger.error(f"{req_prefix}✗ {provider.name}: validation error - {e}")
@@ -300,8 +327,75 @@ class FallbackHandler:
 
         # All providers failed
         if self.metrics:
-            error_type = "rate_limit" if isinstance(last_error, RateLimitError) else "timeout" if isinstance(last_error, TimeoutError) else "unknown"
+            error_type = "rate_limit" if isinstance(last_error, RateLimitError) else "timeout" if isinstance(last_error, TimeoutError) else "server_error" if isinstance(last_error, ServerError) else "unknown"
             self.metrics.record_request_complete("none", model, start_time, False, error_type, stream=True)
         if last_error:
             raise last_error
         raise Exception("All providers are in cooldown or failed")
+
+    async def _probe_provider(self, provider_name: str) -> tuple:
+        """Send a minimal probe request to check if a provider has recovered.
+
+        Returns (healthy: bool, detail: str).
+        Only implemented for Anthropic — Bedrock is never put in cooldown.
+        """
+        if provider_name != "anthropic":
+            return True, "probe not needed"
+
+        provider = next((p for p in self.providers if p.name == "anthropic"), None)
+        if not provider:
+            return False, "provider not in list"
+
+        token = config.CLAUDE_CODE_OAUTH_TOKEN
+        if not token:
+            return False, "no OAuth token configured — cannot probe"
+
+        probe_body = {
+            "model": "claude-haiku-4-5-20251001",
+            "max_tokens": 1,
+            "messages": [{"role": "user", "content": "hi"}],
+        }
+        try:
+            await provider.send_message(probe_body, token, "oauth")
+            return True, "200 OK"
+        except RateLimitError as e:
+            retry_after = getattr(e, "retry_after", None)
+            return False, f"still rate limited (retry_after={retry_after}s)"
+        except ServerError as e:
+            return False, f"still returning {e.status_code}"
+        except Exception as e:
+            return False, str(e)
+
+    async def start_health_check_loop(self):
+        """Background task: probe providers in server_error cooldown and clear on recovery.
+
+        Runs every 60 seconds. Only probes server_error cooldowns — rate_limit cooldowns
+        have an authoritative retry-after and are left to expire naturally.
+        """
+        PROBE_INTERVAL = 60
+        while True:
+            await asyncio.sleep(PROBE_INTERVAL)
+            try:
+                for provider in self.providers:
+                    entry = self.cooldowns.get(provider.name)
+                    if not entry:
+                        continue
+                    until, reason = self._unpack_cooldown(entry)
+                    remaining = int(until - time.time())
+                    if remaining <= 0:
+                        self.cooldowns.delete(provider.name)
+                        continue
+                    if reason != "server_error":
+                        logger.debug(f"Health check: skipping {provider.name} probe (reason={reason}, {remaining}s remaining)")
+                        continue
+                    logger.info(f"🔍 Health check: probing {provider.name} ({remaining}s remaining in outage cooldown)...")
+                    healthy, detail = await self._probe_provider(provider.name)
+                    if healthy:
+                        self.cooldowns.delete(provider.name)
+                        logger.info(f"✅ Health check: {provider.name} recovered — cooldown cleared ({detail})")
+                    else:
+                        # Reset the cooldown to another probe interval so we check again
+                        self.cooldowns.set(provider.name, {"until": time.time() + PROBE_INTERVAL, "reason": "server_error"})
+                        logger.info(f"Health check: {provider.name} still unhealthy — probing again in {PROBE_INTERVAL}s ({detail})")
+            except Exception as e:
+                logger.error(f"Health check loop error: {e}")
