@@ -4,7 +4,7 @@ import json
 import os
 import diskcache
 from typing import Dict, Any, AsyncIterator, Optional
-from . import Provider, RateLimitError, ValidationError, AuthenticationError, ModelUnsupportedError, ServerError
+from . import Provider, RateLimitError, ValidationError, AuthenticationError, ModelUnsupportedError, ServerError, TimeoutError
 
 _model_cache = diskcache.Cache(
     os.path.expanduser("~/.cache/claude-proxy/model-cache"),
@@ -227,6 +227,9 @@ class AnthropicProvider(Provider):
                 raise ModelUnsupportedError(f"Model '{body.get('model')}' not recognized by Anthropic API")
             raise ValidationError(f"Anthropic API error ({response.status_code}): {error_text}", status_code=response.status_code)
 
+        if response.status_code == 504:
+            raise TimeoutError(f"Anthropic API timeout (504)")
+
         if response.status_code != 200:
             error_text = response.text
             raise ServerError(f"Anthropic API error ({response.status_code}): {error_text}", status_code=response.status_code)
@@ -305,6 +308,9 @@ class AnthropicProvider(Provider):
                 if "Invalid model name" in error_str or "invalid_model" in error_str:
                     raise ModelUnsupportedError(f"Model '{body.get('model')}' not recognized by Anthropic API")
                 raise ValidationError(f"Anthropic API error ({response.status_code}): {error_text}", status_code=response.status_code)
+
+            if response.status_code == 504:
+                raise TimeoutError(f"Anthropic API timeout (504)")
 
             if response.status_code != 200:
                 error_text = await response.aread()
