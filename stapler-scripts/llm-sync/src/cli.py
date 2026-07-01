@@ -185,7 +185,7 @@ def sync_plugins(plugin_source: PluginSource, dry_run: bool, antigravity_dir: Op
             installer.install_plugins(global_plugins, dry_run=dry_run)
 
             # Antigravity Global
-            ag_target = (antigravity_dir or (Path.home() / ".gemini" / "config")) / "plugins"
+            ag_target = (antigravity_dir or (Path.home() / ".gemini" / "antigravity-cli")) / "plugins"
             ag_installer = AntigravityPluginInstaller(target_dir=ag_target)
             console.print(f"[dim]Antigravity Global install -> {ag_installer.target_dir}[/dim]")
             ag_installer.install_plugins(global_plugins, dry_run=dry_run)

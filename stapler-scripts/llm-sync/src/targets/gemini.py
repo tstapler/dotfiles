@@ -21,7 +21,7 @@ class GeminiTarget(SyncTarget, SyncSource):
         commands_dir: Optional[Path] = None,
     ):
         self.agents_dir = agents_dir or Path.home() / ".gemini" / "agents"
-        self.skills_dir = skills_dir or Path.home() / ".gemini" / "antigravity-cli" / "skills"
+        self.skills_dir = skills_dir or Path.home() / ".gemini" / "skills"
         self.commands_dir = commands_dir or Path.home() / ".gemini" / "commands"
 
     def load_agents(self) -> List[Agent]:
@@ -232,7 +232,8 @@ class GeminiTarget(SyncTarget, SyncSource):
                     saved_count += 1
 
             # Antigravity CLI: commands are skills — write SKILL.md to skills_dir
-            skill_file = self.skills_dir / cmd.name / "SKILL.md"
+            flat_name = cmd.name.replace("/", "-").replace("\\", "-")
+            skill_file = self.skills_dir / flat_name / "SKILL.md"
             if not skill_file.exists() or force:
                 frontmatter = {"name": cmd.name, "description": cmd.description}
                 fm_yaml = yaml.dump(frontmatter, sort_keys=False)
@@ -270,7 +271,8 @@ class AntigravityTarget(GeminiTarget):
         saved_count = 0
 
         for cmd in commands:
-            skill_file = self.skills_dir / cmd.name / "SKILL.md"
+            flat_name = cmd.name.replace("/", "-").replace("\\", "-")
+            skill_file = self.skills_dir / flat_name / "SKILL.md"
             if not skill_file.exists() or force:
                 frontmatter = {"name": cmd.name, "description": cmd.description}
                 fm_yaml = yaml.dump(frontmatter, sort_keys=False)

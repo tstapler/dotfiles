@@ -20,7 +20,7 @@ class AntigravityMcpTarget:
 
     def __init__(self, mcp_config_file: Optional[Path] = None):
         self.mcp_config_file = mcp_config_file or (
-            Path.home() / ".gemini" / "antigravity-cli" / "mcp_config.json"
+            Path.home() / ".gemini" / "config" / "mcp.json"
         )
         self.settings_file = self.mcp_config_file  # alias for sync_mcp compat
 
