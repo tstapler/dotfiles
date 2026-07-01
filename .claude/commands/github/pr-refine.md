@@ -1,6 +1,5 @@
 ---
-description: Review a pull request and suggest refinement options, then document them
-  as a structured feature plan
+description: Review a pull request and suggest refinement options, then document them as a structured feature plan
 ---
 
 # Pull Request Refinement & Planning
@@ -479,3 +478,4 @@ This command succeeds when:
 ---
 
 Let me analyze PR #$1 and provide comprehensive refinement suggestions!
+
