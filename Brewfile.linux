@@ -18,6 +18,7 @@ brew "htop"
 brew "jq"
 brew "neovim"
 brew "node"
+brew "ollama", restart_service: :changed
 brew "python@3.12"
 brew "ripgrep"
 brew "shellcheck"
