@@ -64,3 +64,5 @@ git-fetch-with-cli = true
 	path = ~/.gitconfig.fbg
 [credential]
 	helper = !gh auth git-credential
+[machete]
+	squashMergeDetection = simple
