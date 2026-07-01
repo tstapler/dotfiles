@@ -16,8 +16,8 @@ Layer 3 — Correctness & Tests       (inline, hard gate)
 Layer 4 — UX & Behavioral           (browser automation + golden path run, user-facing only)
 
 Verdicts:
-  🔁 REFACTOR  → structural issues → return to /sdd:5-implement, fix, re-run /sdd:6-verify
-  ❌ BLOCKED   → test failures, security holes, missing acceptance criteria, broken UI
+  🔁 FIX LOOP  → issues found → lean-agent-loop spawns fix agent, re-verifies, repeats (max 5)
+  ❌ STUCK     → issues remain after 5 fix iterations — report and stop for human review
   ✅ PASS      → all layers clean → proceed to /sdd:7-ship
 ```
 
@@ -213,19 +213,36 @@ Verdicts:
 
 5. **Wait for all Layer 1 and Layer 2 agents to complete.**
 
-6. **Classify findings and decide whether a refactor pass is needed:**
+6. **Classify findings and run the Layer 1+2 repair loop (max 5 iterations):**
 
    | Severity | Action |
    |---|---|
-   | Any BLOCKER from architecture review | 🔁 REFACTOR — return to Phase 5 |
-   | ≥3 MUST FIX idiom findings in a single file | 🔁 REFACTOR — return to Phase 5 |
+   | Any BLOCKER from architecture review | Enter repair loop |
+   | ≥3 MUST FIX idiom findings in a single file | Enter repair loop |
    | SUGGEST / CONCERN findings | Apply inline if <30 min total; otherwise note as follow-up |
    | NITPICK findings | Note only; do not block |
 
-   If REFACTOR verdict: stop here. Return to `/sdd:5-implement` with a list of what to fix.
-   Re-run `/sdd:6-verify` after the refactor.
+   **Repair loop** — run only if BLOCKER or MUST FIX findings exist:
 
-7. **Layer 3 — Correctness & Tests** (only if Layers 1 + 2 did not trigger REFACTOR)
+   ```
+   ITERATION = 0, MAX = 5
+   while (blockers_or_mustfix_remain) and (ITERATION < MAX):
+     ITERATION++
+     1. Collect all open BLOCKER + MUST FIX findings:
+        each entry = { file, line, severity, description, concrete fix }
+     2. Spawn a fresh fix subagent (lean-agent-loop pattern):
+        - Provide: finding list, full diff, repo path
+        - Agent: edits files, runs affected tests locally, commits (does NOT push)
+        - Agent returns: list of changes made + commit SHA
+     3. Re-run Layer 1 + Layer 2 agents scoped to only the files the fix agent touched.
+     4. Collect new findings. Remove items the fix agent resolved. Re-evaluate.
+
+   If clean after loop: proceed to Layer 3.
+   If MAX reached with blockers remaining: stop — report "Layer 1+2 STUCK after 5 iterations"
+   with the unresolved finding list. Do not proceed to Layer 3.
+   ```
+
+7. **Layer 3 — Correctness & Tests** (only if Layers 1 + 2 repair loop exited clean)
 
    a. **Verify acceptance criteria.** For each story in `plan.md`, confirm every acceptance
       criterion is met in the diff.
@@ -253,7 +270,30 @@ Verdicts:
       - Alert conditions defined in plan.md are wired (or explicitly deferred with a follow-up task created)
       If no Observability Plan exists in plan.md: note as a gap in the report but do not block.
 
-8. **Layer 4 — UX & Behavioral Verification** (only if Layer 3 did not trigger BLOCKED)
+   **After running steps a–e, apply the Layer 3 repair loop (max 5 iterations) for any failing items:**
+
+   ```
+   ITERATION = 0, MAX = 5
+   while (unmet_criteria or test_failures or security_blockers or error_handling_gaps) and (ITERATION < MAX):
+     ITERATION++
+     1. Collect all open issues:
+        - Unmet acceptance criteria from plan.md (criterion text, what's missing)
+        - Failing tests (test name, failure output)
+        - Security CRITICAL/HIGH findings (file, description)
+        - Unhandled error paths (file:line, description)
+     2. Spawn a fresh fix subagent (lean-agent-loop pattern):
+        - Provide: issue list with exact locations, plan.md acceptance criteria, repo path
+        - Agent: implements missing pieces, fixes tests, commits (does NOT push)
+        - Agent returns: what was implemented/fixed + commit SHA
+     3. Re-run: test suite + re-check each acceptance criterion + re-check fixed security items.
+     4. Update open issue list. Remove resolved items.
+
+   If clean after loop: proceed to Layer 4.
+   If MAX reached with failures remaining: stop — report "Layer 3 STUCK after 5 iterations"
+   with the unresolved issue list. Do not proceed to Layer 4.
+   ```
+
+8. **Layer 4 — UX & Behavioral Verification** (only if Layer 3 repair loop exited clean)
 
    **Skip this layer if** the feature has no user-facing surface (pure infrastructure, background jobs, CLI with no interactive UI). Check `project_plans/<PROJECT_NAME>/design/ux.md` — if absent, skip.
 
@@ -283,7 +323,26 @@ Verdicts:
       - Keyboard navigation: Tab reaches all interactive elements
       - Console has no unhandled JS errors during the golden path
 
-   If any UX criterion is FAIL: this is a BLOCKED verdict — return to Phase 5 with specific UI issues.
+   **After running steps a–c, apply the Layer 4 repair loop (max 5 iterations) for any FAIL criteria:**
+
+   ```
+   ITERATION = 0, MAX = 5
+   while (ux_criteria_failures or golden_path_errors) and (ITERATION < MAX):
+     ITERATION++
+     1. Collect all open UX failures:
+        - Each failing criterion (criterion text, observed vs. expected behavior)
+        - golden-path errors (step that failed, error message)
+     2. Spawn a fresh fix subagent (lean-agent-loop pattern):
+        - Provide: failure list, ux.md criteria, relevant component files, repo path
+        - Agent: implements UI fixes, commits (does NOT push)
+        - Agent returns: what was changed + commit SHA
+     3. Re-run quality:does-it-work + re-check each previously failing UX criterion.
+     4. Update failure list. Remove resolved items.
+
+   If clean after loop: proceed to step 9 (report).
+   If MAX reached with failures remaining: stop — report "Layer 4 STUCK after 5 iterations"
+   with the unresolved UX failures. Do not produce a PASS verdict.
+   ```
 
 9. **Output the verification report:**
 
@@ -332,15 +391,22 @@ Tests: <N> passed, <N> failed, <N> skipped
 
 quality:does-it-work: <✅ Golden path ran without errors / ❌ Failed at step: ...>
 
+### Fix Loop Summary
+| Layer | Iterations used | Items resolved | Items remaining |
+|---|---|---|---|
+| L1+L2 | N / 5 | N | 0 |
+| L3 | N / 5 | N | 0 |
+| L4 | N / 5 | N | 0 |
+
 ### Verdict
-<✅ PASS — ready for /sdd:7-ship>
-<🔁 REFACTOR — return to /sdd:5-implement: [list of issues]>
-<❌ BLOCKED — fix N issue(s) before proceeding: [list]>
+<✅ PASS — all layers clean after fix loop(s) — ready for /sdd:7-ship>
+<❌ STUCK — Layer N unresolved after 5 iterations: [list of remaining issues]>
 ```
 
-10. **If REFACTOR or BLOCKED**: list each issue with the exact file, line, and a concrete fix.
-    Do not proceed until all violations are resolved and the full review is re-run.
+10. **If any layer reports STUCK**: list each unresolved issue with file, line, description, and
+    what the fix agent attempted. These require human judgment before proceeding — the automated
+    loop exhausted its repair budget without converging.
 
 ## Related Skills
 
-- **lean-agent-loop**: Drive the check → fix → re-verify cycle when spec violations require multiple repair rounds
+- **lean-agent-loop**: Pattern used by all four repair loops — orchestrator holds state, fresh subagents do the fixing, re-verify scoped to touched files only
