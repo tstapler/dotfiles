@@ -245,12 +245,68 @@ Dispatch a planning subagent to produce the implementation plan. The subagent do
    >
    > **Step 5:** Return a summary: number of surfaces designed, number of UX acceptance criteria written.
 
-6. **Wait for all reviewers to complete.** Read all summaries.
+6. **Wait for all reviewers to complete.** Read all summaries. Then run each repair loop below independently.
 
-   - If **architecture review is BLOCKED** → read architecture-review.md, patch plan.md to resolve each architecture BLOCKER, then re-run the architecture review on the updated plan (repeat until CONCERNS or CLEAN).
-   - If **adversarial review is BLOCKED** → read adversarial-review.md, patch plan.md to resolve each operational BLOCKER, then re-run the adversarial reviewer on the updated plan (repeat until CONCERNS or CLEAN).
-   - If **UX subagent produced blockers** (e.g., a flow with no exit path) → patch requirements or plan.md before proceeding.
-   - **CONCERNS or CLEAN on both reviewers, no UX blockers** → proceed.
+   **Architecture review repair loop (max 5 iterations):**
+   ```
+   ITERATION = 0, MAX = 5
+   while (architecture-review.md verdict == BLOCKED) and (ITERATION < MAX):
+     ITERATION++
+     1. Collect all BLOCKER findings from architecture-review.md:
+        each entry = { story/task ref, violation, proposed remediation }
+     2. Spawn a fresh fix subagent (lean-agent-loop pattern):
+        - Provide: BLOCKER list, current plan.md, requirements.md
+        - Agent: edits plan.md to resolve each BLOCKER (restructures stories/tasks,
+          fixes pattern choices, corrects layer boundaries) — does NOT touch code
+        - Agent returns: list of plan changes made
+     3. Re-run the architecture review subagent on the updated plan.md.
+        Scope its prompt to "re-review only previously BLOCKED items."
+     4. Read new verdict. Remove resolved blockers from open list.
+
+   If CONCERNS or CLEAN: proceed.
+   If MAX reached with blockers remaining: stop — report "Architecture review STUCK after 5
+   iterations" with unresolved blocker list. Do not proceed to Phase 4.
+   ```
+
+   **Adversarial review repair loop (max 5 iterations):**
+   ```
+   ITERATION = 0, MAX = 5
+   while (adversarial-review.md verdict == BLOCKED) and (ITERATION < MAX):
+     ITERATION++
+     1. Collect all BLOCKER findings from adversarial-review.md:
+        each entry = { issue description, recommendation }
+     2. Spawn a fresh fix subagent (lean-agent-loop pattern):
+        - Provide: BLOCKER list, current plan.md, requirements.md
+        - Agent: edits plan.md to address each BLOCKER (adds failure modes, error paths,
+          missing stories, or removes scope drift) — does NOT touch code
+        - Agent returns: list of plan changes made
+     3. Re-run the adversarial reviewer subagent on the updated plan.md.
+        Scope its prompt to "re-review only previously BLOCKED items."
+     4. Read new verdict. Remove resolved blockers from open list.
+
+   If CONCERNS or CLEAN: proceed.
+   If MAX reached with blockers remaining: stop — report "Adversarial review STUCK after 5
+   iterations" with unresolved blocker list. Do not proceed to Phase 4.
+   ```
+
+   **UX blocker repair loop (max 3 iterations — run only if UX subagent ran):**
+   ```
+   ITERATION = 0, MAX = 3
+   while (ux.md contains flows with no exit path or missing error states) and (ITERATION < MAX):
+     ITERATION++
+     1. Collect UX blockers: each entry = { surface, missing element, criterion text }
+     2. Spawn a fresh fix subagent (lean-agent-loop pattern):
+        - Provide: UX blocker list, current ux.md, requirements.md
+        - Agent: edits ux.md to add missing exit paths, error states, or broken flows
+        - Agent returns: list of ux.md changes made
+     3. Re-check ux.md inline: does every flow have an exit path and error handling?
+     4. Remove resolved items.
+
+   If clean: proceed.
+   If MAX reached: report "UX design STUCK after 3 iterations" with unresolved flows.
+   ```
+
+   **CONCERNS or CLEAN on all three, no STUCK verdicts** → proceed.
 
 7. **Output the coordinator summary:**
    ```

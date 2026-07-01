@@ -64,10 +64,27 @@ Planning context degrades code generation quality — this is not optional.
 5. **Wait for all parallel workers to complete.** Do not start the next batch until all current workers have returned.
 
    **Worker failure recovery**:
-   - If a worker returns with failing tests: dispatch a fresh fix agent with the exact failure output. Re-run the failing tests to verify. Max 2 fix cycles per worker — if still failing after 2 cycles:
-     1. **Diagnose root cause type**: Is this an implementation bug (wrong logic, missing case) or a planning error (plan assumed an incorrect API, wrong dependency, or infeasible approach)?
-     2. **If a planning error**: propose a specific plan patch via `AskUserQuestion`: "Worker for Epic N is blocked after 2 fix cycles. Root cause: [diagnosis]. Proposed plan change: [specific amendment to plan.md]. Approve and apply, or take manual control?" Apply only if user approves.
-     3. **If an implementation bug or unclear**: escalate the raw error to the user.
+   - If a worker returns with failing tests: run the worker repair loop (max 5 iterations):
+     ```
+     ITERATION = 0, MAX = 5
+     while (worker has failing tests) and (ITERATION < MAX):
+       ITERATION++
+       1. Collect exact failure output: test name, assertion failure, stack trace
+       2. Spawn a fresh fix subagent (lean-agent-loop pattern):
+          - Provide: failure output, epic tasks + files from plan.md, repo path
+          - Agent: edits implementation files, does NOT change other epics' files, commits
+          - Agent returns: what was changed + commit SHA
+       3. Re-run only the failing tests to verify (not the full suite).
+       4. Update failure list. Remove resolved tests.
+
+     If all tests pass: continue to next epic batch.
+     If MAX reached: diagnose root cause type —
+       - Planning error (plan assumed incorrect API, wrong dependency, infeasible approach):
+         propose a specific plan patch via AskUserQuestion: "Worker for Epic N STUCK after
+         5 cycles. Root cause: [diagnosis]. Proposed plan change: [specific amendment].
+         Approve and apply, or take manual control?" Apply only if user approves.
+       - Implementation bug or unclear: escalate raw error + all 5 fix attempts to user.
+     ```
    - If a worker crashes mid-task (no return): re-dispatch the same worker prompt. The worker will re-read plan.md and pick up from where files are missing.
 
 6. **Dispatch the next wave** for any remaining epics that are now unblocked (their dependencies completed in the previous batch). Repeat until all epics are done.
@@ -80,7 +97,23 @@ Planning context degrades code generation quality — this is not optional.
    > For each test name in validation.md, verify the test exists in the diff.
    > Return: criteria met (N/N), tests present (N/N), gaps found.
 
-   If gaps are found: dispatch targeted fix agents (one per gap, in parallel). Re-run the spec sweep after fixes. Max 2 sweep cycles — escalate remaining gaps to the user if not resolved.
+   If gaps are found: run the spec compliance repair loop (max 5 iterations):
+   ```
+   ITERATION = 0, MAX = 5
+   while (gaps_remain) and (ITERATION < MAX):
+     ITERATION++
+     1. Collect all open gaps: { story/criterion, what's missing, relevant files }
+     2. Dispatch targeted fix agents in parallel (one per gap, lean-agent-loop pattern):
+        - Each agent: implements the missing piece, writes or fixes the missing test,
+          commits — does NOT touch other stories' files
+        - Each agent returns: what was added + commit SHA
+     3. Re-run the spec compliance sweep scoped to previously gapped items only.
+     4. Remove resolved gaps from open list.
+
+   If all gaps resolved: proceed to Phase 5 summary.
+   If MAX reached: escalate remaining gaps to user with list of what each fix agent
+   attempted and why it didn't converge.
+   ```
 
 8. **Output the Phase 5 summary:**
    ```

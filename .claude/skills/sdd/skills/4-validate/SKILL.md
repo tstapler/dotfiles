@@ -182,7 +182,24 @@ Dispatch a validation subagent to design the test suite. The subagent writes val
    Invoke `/pm:triad-review <PROJECT_NAME>` inline (do not skip — it catches UX and PM gaps that engineering-only review misses).
 
    - If verdict is **READY TO BUILD** → proceed.
-   - If verdict is **NEEDS WORK** → patch `plan.md` to resolve blockers (one paragraph each), then re-run the triad review. Do not proceed to Phase 5 until the triad is clear.
+   - If verdict is **NEEDS WORK** → run the triad repair loop (max 3 iterations):
+     ```
+     ITERATION = 0, MAX = 3
+     while (verdict == NEEDS WORK) and (ITERATION < MAX):
+       ITERATION++
+       1. Collect all blocker items from the triad review result:
+          each entry = { leg (PM/UX/Eng), issue, recommendation }
+       2. Spawn a fresh fix subagent (lean-agent-loop pattern):
+          - Provide: blocker list, current plan.md, requirements.md, ux.md (if present)
+          - Agent: patches plan.md to address PM/Eng gaps; patches ux.md for UX gaps
+          - Agent returns: list of changes made
+       3. Re-run `/pm:triad-review <PROJECT_NAME>` on the updated artifacts.
+       4. Read new verdict. Remove resolved items.
+
+     If READY TO BUILD: proceed.
+     If MAX reached: stop — report "Triad Review STUCK after 3 iterations" with
+     unresolved items. Do not proceed to Phase 5 without human sign-off.
+     ```
    - If verdict is **NOT READY** → halt. Return to the weakest leg: PM gap → re-run `/sdd:1-ideate`; UX gap → run `/ux:design <PROJECT_NAME>`; Engineering gap → patch `plan.md`.
 
 7. **Output the coordinator summary:**
