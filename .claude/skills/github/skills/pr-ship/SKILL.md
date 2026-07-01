@@ -134,6 +134,38 @@ prompt: |
 
   Only run if `[ ]` and Gates 1a+1b+2 are `[x]`. Address all reviewer feedback **before** pushing so CI runs on code reviewers have already seen and haven't flagged.
 
+  #### Copilot Review Check (run first)
+
+  Before processing any threads, check whether Copilot was requested as a reviewer:
+
+  ```bash
+  REPO_NWO=$(gh repo view --json nameWithOwner --jq '.nameWithOwner')
+  OWNER="${REPO_NWO%%/*}"; REPO_NAME="${REPO_NWO##*/}"
+
+  # Is Copilot a requested reviewer?
+  COPILOT_REQUESTED=$(gh pr view "$PR" --json reviewRequests \
+    --jq '[.reviewRequests[] | (.login // .name // "")] | map(select(test("copilot";"i"))) | length > 0')
+  ```
+
+  If `COPILOT_REQUESTED == true`:
+
+  ```bash
+  # Has Copilot already posted a review?
+  COPILOT_REVIEWED=$(gh pr view "$PR" --json reviews \
+    --jq '[.reviews[] | select(.author.login | test("copilot";"i"))] | length > 0')
+
+  # Has Copilot posted a rate-limit / skip comment?
+  COPILOT_RATE_LIMITED=$(gh api "repos/$OWNER/$REPO_NAME/issues/$PR/comments" \
+    --jq '[.[] | select(.user.login | test("copilot";"i")) | .body] | map(select(test("rate.limit|quota|unavailable|temporarily|skip|unable|error";"i"))) | length > 0')
+  ```
+
+  Decision:
+  - **`COPILOT_REVIEWED == true`** → include Copilot's review comments in Gate 3 processing below (treat like any other reviewer).
+  - **`COPILOT_REVIEWED == false` + `COPILOT_RATE_LIMITED == true`** → log "Copilot rate-limited — skipping Copilot review" in Decision Log and proceed to thread processing.
+  - **`COPILOT_REVIEWED == false` + `COPILOT_RATE_LIMITED == false`** → Copilot review is still pending. Use `ScheduleWakeup` with `delaySeconds: 90` and stop. Do **not** advance Gate 3. Log "Waiting for Copilot review" in Decision Log.
+
+  #### Thread Processing
+
   Use the `github-address-pr-comments` skill (`~/.claude/skills/github-address-pr-comments/SKILL.md`) to:
   1. Fetch all unresolved threads (single GraphQL call)
   2. For each thread: fix/decline/defer per decision rules below
