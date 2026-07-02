@@ -64,6 +64,8 @@ links:
     os: "Linux Darwin"
   - src: .claude/skills-index.md
     os: "Linux Darwin"
+  - src: .config/ssq-hooks
+    os: "Linux Darwin"
 
 ignore:
   # Globbing patterns to ignore when

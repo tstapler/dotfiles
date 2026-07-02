@@ -1,0 +1,41 @@
+# User-specific approval rules for ssq-hooks.
+# These supplement the built-in seed rules for tools that are personal
+# or not generally applicable to all stapler-squad users.
+#
+# Fields:
+#   id:                  unique rule identifier (string)
+#   name:                human-readable name
+#   tool_name:           "Bash" for shell commands
+#   programs:            list of executable names to match
+#   subcommands:         list of subcommands to match (optional)
+#   blocked_subcommands: subcommands that block this rule from matching
+#   required_flags:      flags that must be present
+#   forbidden_flags:     flags that must not be present
+#   command_pattern:     regex matched against the full command string
+#   decision:            "allow", "escalate", or "deny"
+#   risk_level:          "low", "medium", "high", or "critical"
+#   reason:              shown in the approval UI
+#   alternative:         suggested safer alternative (optional)
+#   priority:            higher wins; 100 = AutoAllow tier, 500 = Escalate-before-allow
+#   enabled:             true/false
+
+rules:
+  - id: user-allow-proextract
+    name: Allow proextract (local point-cloud processing binary)
+    tool_name: Bash
+    programs: [proextract]
+    decision: allow
+    risk_level: low
+    reason: "proextract is a local Rust binary for point-cloud and texture processing; it has no network or system side effects."
+    priority: 100
+    enabled: true
+
+  - id: user-allow-sshpass
+    name: Allow sshpass (non-interactive SSH password auth)
+    tool_name: Bash
+    programs: [sshpass]
+    decision: allow
+    risk_level: low
+    reason: "sshpass is used for embedded/IoT device SSH access where key-based auth is unavailable."
+    priority: 100
+    enabled: true

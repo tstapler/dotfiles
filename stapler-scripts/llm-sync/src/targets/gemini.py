@@ -246,3 +246,41 @@ class GeminiTarget(SyncTarget, SyncSource):
                         f.write(skill_content)
 
         return saved_count
+
+
+class AntigravityTarget(GeminiTarget):
+    """Writes config to the Antigravity customizations path (~/.gemini/config/)."""
+
+    def __init__(
+        self,
+        agents_dir: Optional[Path] = None,
+        skills_dir: Optional[Path] = None,
+    ):
+        super().__init__(
+            agents_dir=agents_dir or Path.home() / ".gemini" / "config" / "agents",
+            skills_dir=skills_dir or Path.home() / ".gemini" / "config" / "skills",
+            commands_dir=Path.home() / ".gemini" / "commands",  # dummy/fallback
+        )
+
+    def save_commands(
+        self, commands: List[Command], dry_run: bool = False, force: bool = False
+    ) -> int:
+        # Only write as skills to self.skills_dir for Antigravity (no TOML command files needed)
+        self.skills_dir.mkdir(parents=True, exist_ok=True)
+        saved_count = 0
+
+        for cmd in commands:
+            skill_file = self.skills_dir / cmd.name / "SKILL.md"
+            if not skill_file.exists() or force:
+                frontmatter = {"name": cmd.name, "description": cmd.description}
+                fm_yaml = yaml.dump(frontmatter, sort_keys=False)
+                skill_content = f"---\n{fm_yaml}---\n\n{cmd.content}"
+
+                if dry_run:
+                    console.print(f"[blue]Would write {skill_file} (antigravity command)[/blue]")
+                else:
+                    skill_file.parent.mkdir(parents=True, exist_ok=True)
+                    with open(skill_file, "w", encoding="utf-8") as f:
+                        f.write(skill_content)
+                    saved_count += 1
+        return saved_count

@@ -1,6 +1,9 @@
 import json
+import re
 from pathlib import Path
 from typing import Dict, List, Optional
+
+import yaml
 
 try:
     from core import Command, Plugin, Skill
@@ -100,11 +103,12 @@ class PluginSource:
         for cmd_file in sorted(commands_dir.glob("**/*.md")):
             try:
                 content = cmd_file.read_text(encoding="utf-8")
+                description = self._extract_frontmatter_description(content)
                 rel = cmd_file.relative_to(commands_dir)
                 # Namespace under plugin name: sdd/1-ideate
                 name = f"{plugin_name}/{str(rel.with_suffix('')).replace(chr(92), '/')}"
                 commands.append(
-                    Command(name=name, description="", content=content)
+                    Command(name=name, description=description, content=content)
                 )
             except Exception as e:
                 console.print(f"[red]Error reading command {cmd_file}: {e}[/red]")
@@ -119,14 +123,27 @@ class PluginSource:
         for skill_file in sorted(skills_dir.glob("**/SKILL.md")):
             try:
                 content = skill_file.read_text(encoding="utf-8")
+                description = self._extract_frontmatter_description(content)
                 # Use the parent directory name as the skill name
                 skill_name = skill_file.parent.name
                 skills.append(
-                    Skill(name=skill_name, description="", content=content)
+                    Skill(name=skill_name, description=description, content=content)
                 )
             except Exception as e:
                 console.print(f"[red]Error reading skill {skill_file}: {e}[/red]")
         return skills
+
+    def _extract_frontmatter_description(self, content: str) -> str:
+        """Extract the 'description' field from YAML frontmatter (first --- block)."""
+        m = re.match(r'^---\s*\n(.*?)\n---', content, re.DOTALL)
+        if m:
+            try:
+                fm = yaml.safe_load(m.group(1))
+                if isinstance(fm, dict):
+                    return str(fm.get("description", ""))
+            except yaml.YAMLError:
+                pass
+        return ""
 
     def _load_hooks(self, plugin_dir: Path) -> Dict[str, List[dict]]:
         hooks_file = plugin_dir / "hooks" / "hooks.json"
@@ -134,7 +151,10 @@ class PluginSource:
             return {}
         try:
             with open(hooks_file, "r", encoding="utf-8") as f:
-                return json.load(f)
+                data = json.load(f)
+                if isinstance(data, dict) and "hooks" in data and len(data) == 1:
+                    return data["hooks"]
+                return data
         except Exception as e:
             console.print(f"[red]Error reading hooks {hooks_file}: {e}[/red]")
             return {}

@@ -1,6 +1,6 @@
 """Claude Proxy - Simple OAuth + Bedrock fallback proxy for Claude Code."""
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, Response
 from fastapi.responses import StreamingResponse, JSONResponse, HTMLResponse
 from typing import Dict, Any
 import asyncio
@@ -1429,11 +1429,179 @@ async def root():
             "/v1/models - List available models (LiteLLM)",
             "/chat/completions - OpenAI compatible endpoint",
             "/v1/chat/completions - OpenAI compatible endpoint (LiteLLM)",
+            "/v1beta/* - Generic Google Gemini API proxy for Antigravity CLI",
             "/dashboard - Monitoring dashboard (HTML)",
             "/metrics - Metrics endpoint (JSON)",
             "/health - Health check"
         ]
     }
+
+
+@app.api_route("/v1beta/{path:path}", methods=["GET", "POST"])
+async def gemini_proxy_endpoint(request: Request, path: str):
+    """
+    Generic proxy for Google Gemini API (/v1beta/*) to support the Antigravity CLI.
+    Forwards requests to generativelanguage.googleapis.com with automatic retries.
+    """
+    import uuid
+    import httpx
+    request_id = str(uuid.uuid4())[:8]
+    req_prefix = f"[{request_id}] "
+
+    # Build upstream URL
+    upstream_url = f"https://generativelanguage.googleapis.com/v1beta/{path}"
+    if request.url.query:
+        upstream_url = f"{upstream_url}?{request.url.query}"
+
+    method = request.method
+    headers = dict(request.headers)
+    
+    # Remove host and transfer-related headers to let httpx handle them
+    headers.pop("host", None)
+    headers.pop("content-length", None)
+
+    logger.info(f"{req_prefix}→ Gemini Proxy: {method} {request.url.path} -> {upstream_url}")
+
+    body = await request.body()
+    max_attempts = 10
+    client_timeout = httpx.Timeout(10.0, read=300.0, write=30.0, pool=30.0)
+
+    async with httpx.AsyncClient(timeout=client_timeout) as client:
+        for attempt in range(max_attempts):
+            try:
+                # Prepare request
+                req = client.build_request(
+                    method=method,
+                    url=upstream_url,
+                    headers=headers,
+                    content=body,
+                )
+
+                if method == "POST" and ("generateContent" in path or "streamGenerateContent" in path):
+                    if "streamGenerateContent" in path:
+                        # Handle streaming
+                        response = await client.send(req, stream=True)
+                        
+                        if response.status_code == 429:
+                            await response.aread()
+                            exclude_headers = {"content-encoding", "transfer-encoding", "content-length", "connection"}
+                            forward_headers = {k: v for k, v in response.headers.items() if k.lower() not in exclude_headers}
+                            logger.warning(f"{req_prefix}✗ Gemini Proxy: rate limit (429) - returning immediately")
+                            return Response(content=response.content, status_code=429, headers=forward_headers)
+                        
+                        if response.status_code >= 500:
+                            await response.aread()
+                            response.raise_for_status()
+
+                        # Exclude headers that should not be forwarded directly in stream responses
+                        exclude_headers = {"content-encoding", "transfer-encoding", "content-length", "connection"}
+                        forward_headers = {
+                            k: v for k, v in response.headers.items()
+                            if k.lower() not in exclude_headers
+                        }
+
+                        # Return a StreamingResponse
+                        async def stream_generator():
+                            try:
+                                async for chunk in response.aiter_bytes():
+                                    yield chunk
+                            finally:
+                                await response.aclose()
+
+                        logger.info(f"{req_prefix}✓ Gemini Proxy streaming response started (status={response.status_code})")
+                        return StreamingResponse(
+                            stream_generator(),
+                            status_code=response.status_code,
+                            headers=forward_headers
+                        )
+                    else:
+                        # Non-streaming POST
+                        response = await client.send(req)
+                        if response.status_code == 429:
+                            exclude_headers = {"content-encoding", "transfer-encoding", "content-length", "connection"}
+                            forward_headers = {k: v for k, v in response.headers.items() if k.lower() not in exclude_headers}
+                            logger.warning(f"{req_prefix}✗ Gemini Proxy: rate limit (429) - returning immediately")
+                            return Response(content=response.content, status_code=429, headers=forward_headers)
+                            
+                        if response.status_code >= 500:
+                            response.raise_for_status()
+                        
+                        exclude_headers = {"content-encoding", "transfer-encoding", "content-length", "connection"}
+                        forward_headers = {
+                            k: v for k, v in response.headers.items()
+                            if k.lower() not in exclude_headers
+                        }
+
+                        logger.info(f"{req_prefix}✓ Gemini Proxy complete response (status={response.status_code})")
+                        return Response(
+                            content=response.content,
+                            status_code=response.status_code,
+                            headers=forward_headers
+                        )
+                else:
+                    # Regular GET/POST/PUT (e.g. models, countTokens)
+                    response = await client.send(req)
+                    if response.status_code == 429:
+                        exclude_headers = {"content-encoding", "transfer-encoding", "content-length", "connection"}
+                        forward_headers = {k: v for k, v in response.headers.items() if k.lower() not in exclude_headers}
+                        logger.warning(f"{req_prefix}✗ Gemini Proxy: rate limit (429) - returning immediately")
+                        return Response(content=response.content, status_code=429, headers=forward_headers)
+
+                    if response.status_code >= 500:
+                        response.raise_for_status()
+
+                    exclude_headers = {"content-encoding", "transfer-encoding", "content-length", "connection"}
+                    forward_headers = {
+                        k: v for k, v in response.headers.items()
+                        if k.lower() not in exclude_headers
+                    }
+
+                    logger.info(f"{req_prefix}✓ Gemini Proxy response (status={response.status_code})")
+                    return Response(
+                        content=response.content,
+                        status_code=response.status_code,
+                        headers=forward_headers
+                    )
+
+            except (httpx.HTTPStatusError, httpx.HTTPError) as e:
+                status_code = getattr(getattr(e, "response", None), "status_code", 500)
+                
+                if status_code in [500, 502, 503, 504] and attempt < max_attempts - 1:
+                    backoff = 1.5 * (2 ** attempt)
+                    logger.warning(
+                        f"{req_prefix}✗ Gemini Proxy error {status_code} on attempt {attempt + 1}/{max_attempts}. "
+                        f"Retrying in {backoff:.1f}s..."
+                    )
+                    await asyncio.sleep(backoff)
+                    continue
+                else:
+                    response = getattr(e, "response", None)
+                    if response is not None:
+                        logger.error(f"{req_prefix}✗ Gemini Proxy failed (status={response.status_code}): {response.text}")
+                        
+                        exclude_headers = {"content-encoding", "transfer-encoding", "content-length", "connection"}
+                        forward_headers = {
+                            k: v for k, v in response.headers.items()
+                            if k.lower() not in exclude_headers
+                        }
+                        
+                        return Response(
+                            content=response.content,
+                            status_code=response.status_code,
+                            headers=forward_headers
+                        )
+                    else:
+                        logger.error(f"{req_prefix}✗ Gemini Proxy connection/timeout error: {e}")
+                        raise HTTPException(status_code=502, detail=f"Bad Gateway: {str(e)}")
+
+            except Exception as e:
+                logger.error(f"{req_prefix}✗ Gemini Proxy unexpected error: {e}", exc_info=True)
+                if attempt < max_attempts - 1:
+                    backoff = 1.5 * (2 ** attempt)
+                    logger.warning(f"{req_prefix}Retrying in {backoff:.1f}s due to: {e}")
+                    await asyncio.sleep(backoff)
+                    continue
+                raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == "__main__":
