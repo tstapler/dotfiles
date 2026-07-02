@@ -515,10 +515,11 @@ Launch the Explore agent with these queries (adjust based on language/framework)
 - [ ] Distance from main sequence
 
 **Dependency Analysis**
-- [ ] Create dependency graph of key modules
-- [ ] Identify coupling hotspots (highly coupled modules)
-- [ ] Find circular dependencies
+- [ ] Generate an actual dependency graph with tooling, don't infer coupling from reading code alone — see the `code-hotspot-analysis` skill for the concrete tool stack (`goda`/`go mod graph` for Go package graphs, `go-callvis` for call graphs, `ast-grep` for cross-package field-access violations). For non-Go stacks, use the language's equivalent (e.g. `madge` for JS/TS, `jdeps`/ArchUnit for Java).
+- [ ] Identify coupling hotspots (highly coupled modules) — prefer the tool-generated graph's afferent-coupling count over eyeballing import lists
+- [ ] Find circular dependencies (most graph tools flag these directly)
 - [ ] Check dependency direction (should point toward stable abstractions)
+- [ ] If reviewing at `--depth=deep` or targeting a whole module/layer, consider running `code-hotspot-analysis`'s temporal-coupling pass first (git co-change history) to prioritize which packages actually warrant this deep a look, rather than reviewing every module uniformly
 
 ### Cohesion Analysis
 
@@ -841,9 +842,11 @@ Prioritized roadmap with agent usage and ticket creation
 
 ## Related Commands
 
+- `code-hotspot-analysis` skill - Run this FIRST for `--depth=deep`/whole-codebase reviews: tool-generated coupling graphs and git-history hotspot scoring to prioritize which modules actually warrant a deep principle-by-principle review, instead of spending equal effort everywhere
 - `/code:implement` - Implement features following best practices
 - `/fix-failures` - Systematically fix test and linter failures
 - `/quality:refactor-code` - Refactor specific code using established principles
+- `/quality:find-refactor-candidates` - Complementary metrics-driven pass (complexity, churn, test coverage) for choosing refactoring targets
 
 ---
 

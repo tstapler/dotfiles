@@ -12,6 +12,27 @@ I'll run the following analyses to find potential refactoring targets:
 
 ### 1. Code Complexity
 
+**Go** (if the target is a Go module — check for `go.mod` before falling back to the Python tools below):
+
+```bash
+# Find large files (potentially too many responsibilities)
+find $1 -type f -name "*.go" -not -name "*_test.go" -exec wc -l {} \; | sort -nr | head -20
+
+# Cyclomatic complexity per function
+go install github.com/fzipp/gocyclo/cmd/gocyclo@latest
+gocyclo -top 20 $1
+
+# Cognitive complexity per function (often a better maintainability proxy than cyclomatic)
+go install github.com/uudashr/gocognit/cmd/gocognit@latest
+gocognit -top 20 $1
+
+# Largest structs by field count, functions with the most parameters — ast-grep structural
+# queries catch god-objects and primitive-obsession signals gocyclo/gocognit don't.
+# See the code-hotspot-analysis skill for concrete sg patterns.
+```
+
+**Python**:
+
 ```bash
 # Find large files (potentially too many responsibilities)
 find $1 -type f -name "*.py" -exec wc -l {} \; | sort -nr | head -20
@@ -27,10 +48,12 @@ done | sort -t: -k2 -nr | head -20
 radon cc $1 -a -s
 ```
 
-### 2. Change Frequency (Git History)
+### 2. Change Frequency and Hotspot Scoring (Git History)
+
+Raw commit-frequency-per-file (below) tells you *what* changes a lot, but not whether that churn is happening in complex, risky code or in a trivial file that just gets touched often for benign reasons. For a real signal, combine churn with complexity into a **hotspot score** (`commits × complexity`) and look at **co-change pairs** (files that change together across commits, regardless of whether they import each other) — this is CodeScene's actual technique, not just "sort files by commit count." See the `code-hotspot-analysis` skill for the full methodology (tool stack: `code-maat`, or a co-change script fallback) and run it before treating the raw frequency numbers below as conclusive.
 
 ```bash
-# Files modified most frequently (may need better design)
+# Files modified most frequently (may need better design) — a starting signal, not the final answer
 git log --pretty=format: --name-only | sort | uniq -c | sort -nr | head -20
 
 # Files with most contributors (many hands = potential inconsistency)
@@ -82,11 +105,12 @@ coverage report -m | sort -k 4 -nr | head -20
 
 I'll analyze the output from these commands and identify prime refactoring candidates based on:
 
-1. **Complexity Hotspots**: Files with high cyclomatic complexity, many lines, or numerous functions
-2. **Churn Rate**: Files that change frequently but may be poorly structured
-3. **Technical Debt**: Files with many TODO/FIXME comments or linting errors
-4. **Maintainability**: Files touched by many different developers over time
-5. **Test Coverage**: Files with complex logic but inadequate test coverage
+1. **Hotspot Score** (the primary signal — see `code-hotspot-analysis`): complexity × churn, not either alone. A complex file nobody touches is low priority; a simple file that changes constantly is usually fine; a complex file that changes constantly is where bugs and slow PRs concentrate.
+2. **Temporal Coupling**: file pairs that change together across commits despite no import relationship — often reveals a missing abstraction boundary that static analysis alone won't surface.
+3. **Complexity Hotspots**: Files with high cyclomatic/cognitive complexity, many lines, or numerous functions — useful in isolation only when churn data isn't available.
+4. **Technical Debt**: Files with many TODO/FIXME comments or linting errors
+5. **Maintainability**: Files touched by many different developers over time — a codebase signal about code, not a metric for evaluating people
+6. **Test Coverage**: Files with complex logic but inadequate test coverage
 
 ## Recommended Refactoring Approach
 
@@ -98,14 +122,13 @@ For each identified candidate, I'll suggest:
 
 ## Additional Languages
 
-While the examples above focus on Python, I can adapt the commands for other languages including:
+Go and Python have concrete tooling above. For other languages, the same two-axis approach (complexity + churn, per `code-hotspot-analysis`) still applies — swap in the language's complexity tool and keep the git-history/hotspot-scoring commands as-is (they're language-agnostic):
 
-- JavaScript/TypeScript
-- Java
-- C#
-- Ruby
-- Go
-- Rust
+- JavaScript/TypeScript: `eslint` complexity rules, or `plato`/`es6-plato` for a complexity report
+- Java: `pmd`'s cyclomatic-complexity ruleset, or `checkstyle`
+- C#: `Microsoft.CodeAnalysis.Metrics` / Visual Studio's built-in code metrics
+- Ruby: `flog`/`flay` (flog for complexity, flay for duplication)
+- Rust: `cargo-geiger` doesn't cover this; `rust-code-analysis` (Mozilla) has complexity metrics
 
 Let me analyze your codebase to find the most promising refactoring candidates based on these metrics.
 
