@@ -67,11 +67,13 @@ BEDROCK_BETA_COMPATIBILITY = {
     "token-efficient-tools-2025-02-19": [
         "claude-3-7-sonnet",  # Claude 3.7 Sonnet
         "claude-sonnet-4",    # Claude Sonnet 4+
+        "claude-sonnet-5",    # Claude Sonnet 5+
         "claude-opus-4",      # Claude Opus 4+
         "claude-haiku-4",     # Claude Haiku 4+
     ],
     "Interleaved-thinking-2025-05-14": [
         "claude-sonnet-4",    # Claude Sonnet 4+
+        "claude-sonnet-5",    # Claude Sonnet 5+
         "claude-opus-4",      # Claude Opus 4+
         "claude-haiku-4",     # Claude Haiku 4+
     ],
@@ -80,14 +82,17 @@ BEDROCK_BETA_COMPATIBILITY = {
     ],
     "dev-full-thinking-2025-05-14": [
         "claude-sonnet-4",    # Claude Sonnet 4+
+        "claude-sonnet-5",    # Claude Sonnet 5+
         "claude-opus-4",      # Claude Opus 4+
         "claude-haiku-4",     # Claude Haiku 4+
     ],
     "context-1m-2025-08-07": [
         "claude-sonnet-4",    # Claude Sonnet 4
+        "claude-sonnet-5",    # Claude Sonnet 5
     ],
     "context-management-2025-06-27": [
         "claude-sonnet-4-5",  # Claude Sonnet 4.5
+        "claude-sonnet-5",    # Claude Sonnet 5
         "claude-haiku-4-5",   # Claude Haiku 4.5
     ],
     "effort-2025-11-24": [
