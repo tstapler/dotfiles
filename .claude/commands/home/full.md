@@ -1,0 +1,1 @@
+../../skills/home/skills/full/SKILL.md

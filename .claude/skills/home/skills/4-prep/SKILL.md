@@ -13,9 +13,9 @@ If any BLOCKER items are unchecked, work must not begin. Blockers are safety haz
 
 ## Instructions
 
-1. **Follow [SETUP.md](SETUP.md)** — identify PROJECT_NAME.
+1. **Follow [SETUP.md](SETUP.md)** — identify PROJECT_NAME, and mark this stage's task `in_progress` if a task tool is available (Check 3).
 
-2. **Read required inputs:**
+2. **Entry gate — read required inputs:**
    - `home_plans/<PROJECT_NAME>/plan.md` — halt if missing, run `/home:3-plan` first
    - `home_plans/<PROJECT_NAME>/scope.md`
    - `home_plans/<PROJECT_NAME>/adversarial-review.md` (if present)
@@ -102,12 +102,12 @@ If any BLOCKER items are unchecked, work must not begin. Blockers are safety haz
    | 4 | No BLOCKER items remain in adversarial-review.md (or file absent) | |
    | 5 | All open decisions in plan.md are resolved | |
 
-   Verdict:
+   Verdict (this is the stage's exit gate — do not advance past NOT READY):
    - **READY** — all criteria met → output summary and proceed.
    - **ALMOST** — minor gaps (tools not yet rented, some materials not purchased) → note what's outstanding, confirm user wants to proceed.
    - **NOT READY** — blockers or permits unresolved → halt with clear list of what must be done first. Do not proceed to `/home:5-execute`.
 
-5. **Output the coordinator summary:**
+5. **Mark this stage's task `completed`** if a task tool is available and the verdict is READY or ALMOST (leave it `in_progress` if NOT READY — the gate hasn't passed). **Output the coordinator summary:**
    ```
    ✅ Phase 4 complete — prep-checklist.md written to home_plans/<PROJECT_NAME>/
 

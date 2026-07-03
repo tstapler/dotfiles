@@ -9,9 +9,9 @@ Document the completed project, record final costs, extract lessons learned, and
 
 ## Instructions
 
-1. **Follow [SETUP.md](SETUP.md)** — identify PROJECT_NAME.
+1. **Follow [SETUP.md](SETUP.md)** — identify PROJECT_NAME, and mark this stage's task `in_progress` if a task tool is available (Check 3).
 
-2. **Read all project artifacts:**
+2. **Entry gate — read all project artifacts:**
    - `home_plans/<PROJECT_NAME>/scope.md`
    - `home_plans/<PROJECT_NAME>/plan.md`
    - `home_plans/<PROJECT_NAME>/execution-log.md` — halt if missing; the project isn't tracked as executed yet
@@ -72,7 +72,7 @@ date-completed: <YYYY-MM-DD>
 <List significant issues from the execution log, or "None">
 
 ## Resources & References
-<Any products, contractors, or techniques worth remembering for future projects>
+<Products, contractors, or techniques worth remembering for future projects. Link to the product/retailer wiki pages created during research (e.g. `[[Product Name]]`) instead of plain text where one exists — check `home_plans/<PROJECT_NAME>/research/materials.md` for pages created/updated during Phase 2>
 
 ## Related Projects
 - [[<any related home projects>]]
@@ -92,7 +92,7 @@ date-completed: <YYYY-MM-DD>
      - "No — just document them in the wiki page"
    ```
 
-7. **Output the close summary:**
+7. **Exit gate**: confirm the wiki page was written and is non-empty. Mark this stage's task `completed` if a task tool is available (this closes out the project's whole task chain). **Output the close summary:**
    ```
    ✅ Phase 6 complete — project closed
 

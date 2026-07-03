@@ -1,6 +1,6 @@
 ---
 name: product-selection
-description: "Find, validate, and compare home renovation products (fixtures, hardware, appliances, finishes) with confirmed working image URLs and product links. Handles retailer bot-protection by routing image sourcing through accessible CDNs. Runs a structured discovery interview first to narrow requirements before searching. Output is a comparison table ready to paste into a wiki page or shareable email. ALWAYS trigger this skill when the user asks to find, research, compare, or select any physical product for the 711 N 60th remodel or any home improvement project — even if they don't say 'product selection' explicitly."
+description: "Find, validate, and compare home renovation products (fixtures, hardware, appliances, finishes) with confirmed working image URLs and product links, plus community review and longevity research per candidate. Handles retailer bot-protection by routing image sourcing through accessible CDNs. Runs a structured discovery interview first to narrow requirements before searching. Output is a comparison table ready to paste into a wiki page or shareable email. ALWAYS trigger this skill when the user asks to find, research, compare, or select any physical product for the 711 N 60th remodel or any home improvement project — even if they don't say 'product selection' explicitly."
 ---
 
 # product-selection — Home Renovation Product Research & Validation
@@ -11,10 +11,17 @@ Given a product category and requirements, this skill:
 
 1. **Interviews** the user to precisely define requirements before searching (avoids wasted research)
 2. **Searches** for 2–4 options across price/quality tiers
-3. **Sources** working image URLs from accessible CDNs (not guessed — validated)
-4. **Validates** all product page links return HTTP 200 before including them
-5. **Formats** a comparison table for wiki page or stakeholder email
-6. **Records** the selection decision back to the relevant wiki page
+3. **Digs into reviews and longevity** for each candidate — not just spec/price
+4. **Sources** working image URLs from accessible CDNs (not guessed — validated)
+5. **Validates** all product page links return HTTP 200 before including them
+6. **Formats** a comparison table for wiki page or stakeholder email
+7. **Records** the selection decision back to the relevant wiki page
+
+## Stages & Gates
+
+This skill runs as seven discrete stages (0-6 below), each with an entry gate (what must be true to start) and an exit gate (what must be true to advance). Don't skip a gate to save time — a failed gate is a normal, expected stopping point, not a problem to route around.
+
+**Track progress with the task tool (if available).** At the start of Phase 0, create one task per stage if a task tool is available — Claude Code: `TaskCreate`/`TaskUpdate`; Gemini CLI/Antigravity: `write_todos`. Mark each stage `in_progress` when it starts and `completed` when its exit gate passes. If no task tool is available, skip this — it's a convenience for resuming, not a requirement.
 
 ---
 
@@ -24,11 +31,13 @@ Given a product category and requirements, this skill:
 - **Lowe's** (lowes.com) — first preference
 - **Amazon** (amazon.com) — second preference
 
-When candidates are sold at Lowe's or Amazon, lead with those links in the comparison output. If a product is not available at either, note that explicitly and fall back to other retailers. Both domains block automated WebFetch (see Phase 2 domain table) — use their URLs as human-clickable links only, never for image sourcing or URL validation.
+When candidates are sold at Lowe's or Amazon, lead with those links in the comparison output. If a product is not available at either, note that explicitly and fall back to other retailers. Both domains block automated WebFetch (see Phase 3 domain table) — use their URLs as human-clickable links only, never for image sourcing or URL validation.
 
 ---
 
 ## Phase 0 — Discovery Interview
+
+**Entry gate**: none — this is the first stage. Mark its task `in_progress` if a task tool is available.
 
 **Run this phase before any searching.** Use `AskUserQuestion` for each question. Do not batch — ask one at a time, wait for the answer, then adapt follow-up questions based on responses. Do not propose solutions during the interview.
 
@@ -106,7 +115,7 @@ options:
 ```
 This determines whether to run full image validation (email requires confirmed image URLs) or a lighter wiki-only format.
 
-### Pre-search Checklist
+### Exit gate — Pre-search Checklist
 Before proceeding, confirm:
 - [ ] Product category is specific (not "faucet" — "single-hole bar faucet, gooseneck, 1.8 GPM")
 - [ ] Finish is locked and any "must match" item is identified by model number
@@ -114,11 +123,15 @@ Before proceeding, confirm:
 - [ ] Quantity is known if this is hardware (knobs, hinges, pulls, etc.)
 - [ ] Visual coordination notes are recorded
 
+Do not proceed to Phase 1 until every box is checked — ask a follow-up question instead of guessing. Mark Phase 0's task `completed` if a task tool is available.
+
 ---
 
 ## Phase 1 — Search Strategy
 
-Run 2–3 parallel WebSearch calls based on requirements gathered in Phase 0.
+**Entry gate**: Phase 0's checklist passed. Mark this stage's task `in_progress` if a task tool is available.
+
+Run 2–3 parallel WebSearch calls based on requirements gathered in Phase 0. Follow the `research-workflow` skill's search discipline (rate limits, search caps, full URL/title/date documentation for every result).
 
 ### Query Templates
 ```
@@ -137,9 +150,23 @@ Find 2–4 candidates across price tiers. For each, record:
 - Retailer URLs (even blocked domains — they're for human-clickable links, not WebFetch)
 - Any confirmed constraints it satisfies or violates
 
+**Exit gate**: 2-4 candidates identified across at least 2 price tiers, each with the fields above recorded. Mark Phase 1's task `completed` if a task tool is available.
+
 ---
 
-## Phase 2 — Image Sourcing
+## Phase 2 — Review & Longevity Research
+
+**Entry gate**: Phase 1's candidate list exists. Mark this stage's task `in_progress` if a task tool is available.
+
+For **each** candidate, apply the `review-longevity-research` skill: search community/long-term-use sources, weigh sponsored vs. organic signal, and check longevity proxies (warranty, repairability, construction). Produce the skill's `### Review & Longevity — <Product Name>` block for every candidate.
+
+**Exit gate**: every candidate has a Review & Longevity block — either real findings, or an explicit "no long-term data available" note if the product is too new. Never skip a candidate silently. Mark this stage's task `completed` if a task tool is available.
+
+---
+
+## Phase 3 — Image Sourcing
+
+**Entry gate**: Phase 2's Review & Longevity blocks exist for every candidate. Mark this stage's task `in_progress` if a task tool is available.
 
 ### Fetch Tool Hierarchy
 
@@ -210,9 +237,13 @@ For each candidate product:
 
 **If no image found after all three attempts:** Note "image available at [brand URL] — opens in browser" in the comparison. Never fabricate or guess an image URL.
 
+**Exit gate**: every candidate has either a sourced image or an explicit "opens in browser" note — never a silently missing image. Mark this stage's task `completed` if a task tool is available.
+
 ---
 
-## Phase 3 — URL Validation
+## Phase 4 — URL Validation
+
+**Entry gate**: Phase 3's image sourcing pass is done for every candidate. Mark this stage's task `in_progress` if a task tool is available.
 
 **Validate every URL before including it — no exceptions.**
 
@@ -248,9 +279,13 @@ Use these in the final output:
 - `⚠ browser only` — all three fetch methods blocked; product link confirmed accessible in user's browser
 - `❌ broken` — 404 confirmed across all tools with no working alternative found
 
+**Exit gate**: every product page URL and image URL carries one of the four status tags above — nothing left unvalidated. Mark this stage's task `completed` if a task tool is available.
+
 ---
 
-## Phase 4 — Format Output
+## Phase 5 — Format Output
+
+**Entry gate**: Phase 4's validation pass is complete for every candidate. Mark this stage's task `in_progress` if a task tool is available.
 
 ### Comparison Table (wiki format)
 ```markdown
@@ -264,8 +299,10 @@ Use these in the final output:
 | B | ... | ~$X | [confirmed image URL] | [product link] | ✓ confirmed |
 | C | ... | ~$X | N/A | [product link] | ⚠ browser only |
 
-**Recommendation**: [1–2 sentences — finish match, value, design rationale]
+**Recommendation**: [1–2 sentences — finish match, value, design rationale, and any review/longevity signal that influenced the pick]
 **Total cost** (if hardware): [unit price × quantity] = [range]
+
+<!-- Append each candidate's Review & Longevity block from Phase 2 below the table -->
 ```
 
 ### Email Format (stakeholder-shareable)
@@ -290,21 +327,27 @@ When output is for email, use inline images with Markdown:
 - Total cost at bottom if hardware
 - Summary table of recommendations at the end
 
+**Exit gate**: the comparison table (and email format, if requested) is complete, every option has a status tag, and the Review & Longevity blocks are attached. Mark this stage's task `completed` if a task tool is available. Present the comparison to the user and wait for a selection before Phase 6.
+
 ---
 
-## Phase 5 — Record Decision
+## Phase 6 — Record Decision
 
-After the user selects an option, update the relevant wiki page in `logseq/pages/`:
+**Entry gate**: the user has selected an option from Phase 5's comparison. Mark this stage's task `in_progress` if a task tool is available.
+
+Apply the `knowledge-synthesis` skill's **Decision Write-Back Pattern** to record the choice on the relevant wiki page in `logseq/pages/`. Product-selection specifics on top of the generic pattern:
 
 1. **Update the options table** to mark the selected item
-2. **Move item from "Outstanding Items — Owner's Side"** to "Decisions Made / Locked"
-3. **Add status**: `[ ] Pending approval` → `[x] Approved` → `[ ] Ordered`
-4. **Record the rationale** (1 sentence — why this option was chosen)
+2. **Move the item from "Outstanding Items — Owner's Side"** to "Decisions Made / Locked"
+3. **Status progression**: `[ ] Pending approval` → `[x] Approved` → `[ ] Ordered`
+4. **Link the chosen option** to its Product & Retailer Zettel (per the Decision Write-Back Pattern) if one was created — carry over the Review & Longevity findings from Phase 2 onto that page rather than losing them once the decision is made
 
 ```markdown
 ## Decisions Made / Locked
-- **[Category]**: [Brand Model SKU] — [finish] — [rationale, e.g., "matches Levi faucet finish, same brand"] — [x] Approved / [ ] Ordered
+- **[Category]**: [[Brand Model SKU]] — [finish] — [rationale, e.g., "matches Levi faucet finish, same brand, stronger long-term reliability record"] — [x] Approved / [ ] Ordered
 ```
+
+**Exit gate**: the wiki page reflects the decision (moved out of outstanding, status set, linked to the product zettel if one exists). Mark this stage's task `completed` if a task tool is available — this is the last stage.
 
 ---
 
@@ -372,11 +415,15 @@ After the user selects an option, update the relevant wiki page in `logseq/pages
 - [ ] Recommendation includes finish-match and design rationale
 - [ ] Functional constraints satisfied (checked against Phase 0 answers)
 - [ ] Occupant constraints noted (dog-proof, ADA, child-safe, etc.)
+- [ ] Every candidate has a Review & Longevity block (Phase 2) — real findings or an explicit "no long-term data" note
+- [ ] Every non-obvious claim (price, review, longevity, failure mode) has a source URL per the `research-workflow` skill
 
 ---
 
 ## Related Skills
 
 - [[design-review]] — Verify selected products against CD set specs before ordering
-- [[knowledge-synthesis]] — Synthesize product research into permanent wiki notes
+- [[knowledge-synthesis]] — Synthesize product research into permanent wiki notes; supplies the Product & Retailer Zettel Template (Phase 2/3) and Decision Write-Back Pattern (Phase 6)
+- [[review-longevity-research]] — Phase 2's method for community-review and longevity digging
+- [[research-workflow]] — Search methodology and sourcing discipline used throughout
 - [[handy:plan]] — Plan installation of selected products

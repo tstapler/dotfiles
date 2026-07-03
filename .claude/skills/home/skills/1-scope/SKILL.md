@@ -13,9 +13,11 @@ Conduct a structured interview to capture the full scope of the home project and
 
 ## Instructions
 
-1. **Follow [SETUP.md](SETUP.md)** — identify PROJECT_NAME.
+1. **Follow [SETUP.md](SETUP.md)** — identify PROJECT_NAME, and mark this stage's task `in_progress` if a task tool is available (Check 3).
 
-2. **Run the interview using `AskUserQuestion` for each question.** Ask one at a time — wait for each answer before asking the next.
+2. **Load wiki context first.** Check `logseq/pages/` for existing pages about the space or topic (house/room pages, prior project pages, relevant product/retailer zettels). Extract any known dimensions, constraints, or prior decisions and use them to pre-fill answers — skip interview questions the wiki already answers.
+
+3. **Run the interview using `AskUserQuestion` for each question.** Ask one at a time — wait for each answer before asking the next. Skip any question already resolved by the wiki context above.
 
    **Question 1:**
    ```
@@ -104,13 +106,15 @@ Conduct a structured interview to capture the full scope of the home project and
      - "I'll describe the constraint (click Other)"
    ```
 
-3. **Anti-rationalization check.** Before writing `scope.md`, confirm:
+4. **Exit gate — anti-rationalization check.** Before writing `scope.md`, confirm:
    - You have a clear problem or goal statement
    - You know the budget range
    - You know the acceptable labor approach
    - You understand the timeline and disruption constraints
 
-4. **Write `home_plans/<PROJECT_NAME>/scope.md`:**
+   Do not write `scope.md` until all four are true — ask a follow-up question instead of guessing.
+
+5. **Write `home_plans/<PROJECT_NAME>/scope.md`:**
 
 ```markdown
 # Scope: <PROJECT_NAME>
@@ -149,7 +153,7 @@ Conduct a structured interview to capture the full scope of the home project and
 <Anything unresolved that research should answer>
 ```
 
-5. **After writing the file**, output:
+6. **Verify the exit gate before advancing**: confirm `scope.md` was actually written and is non-empty. Mark this stage's task `completed` if a task tool is available, then output:
    ```
    ✅ Phase 1 complete — scope.md written to home_plans/<PROJECT_NAME>/
 

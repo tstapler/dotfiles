@@ -6,7 +6,7 @@ user-invocable: true
 
 # home:quick
 
-Lightweight end-to-end workflow for home tasks simple enough to handle in one session. No project files written, no phase gates — just a clear plan and execution.
+Lightweight end-to-end workflow for home tasks simple enough to handle in one session. No project files written, no phase gates, no task-tool tracking — just a clear plan and execution. (This is a deliberate exception to the SETUP.md stage-gate convention used by `/home:1-scope` through `/home:6-close` — the whole point of `quick` is to skip that ceremony for small tasks.)
 
 ## When to use this
 
@@ -43,9 +43,13 @@ Lightweight end-to-end workflow for home tasks simple enough to handle in one se
 
 3. **List what's needed.**
 
+   First, a quick wiki check: `Grep`/`Glob` `logseq/pages/` for any existing page on a product, part, or retailer relevant to this task. If found, reuse that info instead of re-researching. Don't let this slow down the fast path — skip it if nothing obviously matches.
+
    In two short lists:
-   - **Materials**: specific items to buy, with suggested sources (Lowe's / Amazon preferred)
+   - **Materials**: specific items to buy, with suggested sources (Lowe's / Amazon preferred). Use `[[Product Name]]` for anything with an existing wiki page.
    - **Tools**: what to have on hand
+
+   If a specific product/part is distinctive and likely to recur in future quick tasks (skip one-off consumables), you may jot a short page following the Product & Retailer Zettel Template in the `knowledge-synthesis` skill — optional, only if it doesn't slow things down.
 
 4. **Give the step-by-step.**
 

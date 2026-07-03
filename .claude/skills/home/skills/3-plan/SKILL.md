@@ -9,9 +9,9 @@ Dispatch a planning subagent to produce the full project plan — task sequence,
 
 ## Instructions
 
-1. **Follow [SETUP.md](SETUP.md)** — identify PROJECT_NAME.
+1. **Follow [SETUP.md](SETUP.md)** — identify PROJECT_NAME, and mark this stage's task `in_progress` if a task tool is available (Check 3).
 
-2. **Read all inputs (coordinator reads these to pass to subagent):**
+2. **Entry gate — read all inputs** (coordinator reads these to pass to subagent):
    - `home_plans/<PROJECT_NAME>/scope.md` — halt if missing, run `/home:1-scope` first
    - `home_plans/<PROJECT_NAME>/research/methods.md` — warn if missing, continue with scope only
    - `home_plans/<PROJECT_NAME>/research/materials.md`
@@ -25,11 +25,11 @@ Dispatch a planning subagent to produce the full project plan — task sequence,
    - Full text of all research files (if present)
    - These exact instructions:
 
-   > You are a home project planning subagent. Produce a complete, actionable project plan.
+   > You are a home project planning subagent. Produce a complete, actionable project plan grounded in the research provided — do not invent facts the research doesn't support.
    >
    > **Step 1:** Review the scope and research. Identify whether any permits are required — if so, note them prominently at the top of the plan.
    >
-   > **Step 2:** Write `home_plans/<PROJECT_NAME>/plan.md` following the template below. Use concrete product names and quantities — no vague references. Tasks should be sized for a single work session (30 min–3 hrs each).
+   > **Step 2:** Write `home_plans/<PROJECT_NAME>/plan.md` following the template below. Use concrete product names and quantities — no vague references. Tasks should be sized for a single work session (30 min–3 hrs each). Where a research file linked a product to a wiki page (`[[Product Name]]`), reuse that same wiki-link in the Materials List rather than plain text — this keeps the plan connected to the wiki's product/retailer graph. Carry forward source citations from the research files: every non-obvious budget, code, or safety claim in the plan should be traceable to a source in the research, listed in the plan's trailing `## Sources` section.
    >
    > **Step 3:** Return a summary: phase count, task count, total budget estimate, whether permits are required.
 
@@ -120,6 +120,11 @@ Dispatch a planning subagent to produce the full project plan — task sequence,
 
    ## Decisions & Open Questions
    <Any choices that need to be made before or during execution>
+
+   ---
+
+   ## Sources
+   <URLs carried forward from the research files, backing the budget/code/safety claims above>
    ```
 
 4. **Wait for the subagent to complete.** Do not continue until plan.md has been written.
@@ -141,6 +146,7 @@ Dispatch a planning subagent to produce the full project plan — task sequence,
    > 5. **Missing materials** — Are consumables (sandpaper, tape, drop cloths, fasteners, caulk, primer) accounted for?
    > 6. **Scope creep** — Are any tasks broader than what the scope asked for?
    > 7. **Pet and occupant safety** — Are there steps requiring the space to be vacated? Toxic fumes? Sharp debris?
+   > 8. **Missing citations** — Are there budget, code, or safety claims stated as fact with no source in the plan's `## Sources` section or the underlying research?
    >
    > For each concern, classify as:
    > - **BLOCKER** — Must be resolved before work starts (safety hazard, required permit, impossible task sequence)
@@ -172,7 +178,7 @@ Dispatch a planning subagent to produce the full project plan — task sequence,
    - **BLOCKED** → read adversarial-review.md, patch plan.md to resolve each BLOCKER, then re-run the adversarial reviewer on the updated plan (repeat until CONCERNS or CLEAN).
    - **CONCERNS or CLEAN** → proceed.
 
-7. **Output the coordinator summary:**
+7. **Exit gate**: confirm `plan.md` and `adversarial-review.md` both exist and are non-trivial, and that the review verdict is CONCERNS or CLEAN (never advance past a BLOCKED verdict). Mark this stage's task `completed` if a task tool is available, then output the coordinator summary:
    ```
    ✅ Phase 3 complete — plan.md written to home_plans/<PROJECT_NAME>/
 

@@ -17,9 +17,9 @@ Log progress, task completions, issues, and actual costs during active execution
 
 ## Instructions
 
-1. **Follow [SETUP.md](SETUP.md)** — identify PROJECT_NAME.
+1. **Follow [SETUP.md](SETUP.md)** — identify PROJECT_NAME. If a task tool is available (Check 3) and this stage's task doesn't exist yet, create it and mark `in_progress` — it stays `in_progress` across every `/home:5-execute` call in this project until Phase 6 closes it out.
 
-2. **Read `home_plans/<PROJECT_NAME>/plan.md`** to know the full task list.
+2. **Entry gate**: Read `home_plans/<PROJECT_NAME>/plan.md` to know the full task list. Halt if missing — run `/home:3-plan` first.
 
 3. **Read `home_plans/<PROJECT_NAME>/execution-log.md`** if it exists. If not, create it with this header:
 
