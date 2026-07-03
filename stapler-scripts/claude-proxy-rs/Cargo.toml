@@ -7,6 +7,10 @@ edition = "2021"
 name = "claude-proxy-rs"
 path = "src/main.rs"
 
+[[bin]]
+name = "mcp-proxy"
+path = "src/bin/mcp-proxy/main.rs"
+
 [dependencies]
 axum = { version = "0.8", features = ["macros"] }
 axum-extra = { version = "0.10", features = ["typed-header"] }
@@ -54,6 +58,11 @@ bytes = "1"
 
 # Note: release and dev profiles are defined in the workspace root Cargo.toml
 # (stapler-scripts/Cargo.toml) — profiles in non-root workspace packages are ignored.
+
+rmcp = { version = "2.1", features = ["server", "client", "transport-io", "transport-streamable-http-client-reqwest", "transport-streamable-http-server"] }
+toml = "0.8"
+dashmap = "5"
+clap = { version = "4", features = ["derive"] }
 
 [dev-dependencies]
 tempfile = "3"
