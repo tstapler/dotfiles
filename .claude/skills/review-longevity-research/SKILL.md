@@ -36,7 +36,7 @@ Longevity signal and price tier are separate axes — don't assume price implies
 
 ## Sourcing Discipline
 
-Follow the `research-workflow` skill's Source Documentation Requirements for everything found here — every review-derived claim (a failure mode, a warranty length, a corroborated complaint) needs a URL and title, not just a paraphrase. If synthesizing into a wiki page, this feeds directly into the `knowledge-synthesis` skill's Product & Retailer Zettel Template's "why recommended (or not)" field.
+Follow the `meta-research-workflow` skill's Source Documentation Requirements for everything found here — every review-derived claim (a failure mode, a warranty length, a corroborated complaint) needs a URL and title, not just a paraphrase. If synthesizing into a wiki page, this feeds directly into the `knowledge-synthesis` skill's Product & Retailer Zettel Template's "why recommended (or not)" field.
 
 ## Output Shape
 
@@ -54,7 +54,7 @@ Whatever the caller's format, report review/longevity findings as a short block,
 
 | Skill | When to apply |
 |-------|--------------|
-| `research-workflow` | Sourcing/citation discipline for every claim made here |
+| `meta-research-workflow` | Sourcing/citation discipline for every claim made here |
 | `knowledge-synthesis` | Where review/longevity findings land once synthesized into a wiki product page |
 | `product-selection` | Primary caller — runs this as part of its search/comparison phases |
 | `home:2-research` | Materials and Risks agents call this for community-review and common-failure-mode digging |

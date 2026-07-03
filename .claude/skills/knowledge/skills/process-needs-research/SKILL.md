@@ -160,6 +160,8 @@ description: Finds journal entries marked with [[Needs Research]], discovers and
 
 **Objective**: Conduct comprehensive research for each entry using available tools.
 
+> Follow the `meta-research-workflow` skill's Core Workflow and Source Documentation Requirements for base search methodology and citation discipline (multi-source verification, URL/title/access-date citation, Brave Search rate limits). The steps below are domain-specific templates layered on top of that base — they don't replace it.
+
 **Actions**:
 For each entry in priority order:
 
@@ -230,12 +232,10 @@ For each entry in priority order:
      - Cost considerations
      - Use case fit
 
-3. **Deep dive with Puppeteer** (when needed):
-   - Navigate to official websites for detailed information
-   - Screenshot key feature pages
-   - Extract pricing information
-   - Review documentation structure
-   - Capture product demos or examples
+3. **Deep dive with Puppeteer** (when needed) — follow the `meta-research-workflow` skill's Deep Verification guidance (navigate, screenshot key evidence, verify you arrived at the correct page). For this skill specifically, prioritize:
+   - Official websites for detailed pricing/feature information
+   - Documentation structure review
+   - Product demos or examples
 
 4. **Synthesize findings**:
    - Summarize research results
@@ -269,6 +269,8 @@ For each entry in priority order:
 ### Phase 3: Zettel Creation
 
 **Objective**: Create comprehensive zettels documenting research findings.
+
+> Follow the `knowledge-synthesis` skill's Zettelkasten Structure, Linking Strategy, and Tagging Guidelines as the base note format. In particular, use that skill's `#[[Tag]]` format for tags (not the plain `[[Tag]]` shown in the `## Related` sections of the templates below — those templates predate that convention). The templates below are domain-specific structures (Product/Tool, Project/Technical, Comparison) layered on top of that base.
 
 **Actions**:
 For each research entry:
@@ -894,4 +896,14 @@ All processing must satisfy:
 - Address any entries requiring clarification
 - Verify new zettels integrate properly
 - Act on recommendations as appropriate
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `meta-research-workflow` | Base search methodology and Source Documentation Requirements (Phase 2) |
+| `knowledge-synthesis` | Base Zettelkasten structure, linking strategy, and tagging conventions (Phase 3) |
+| `review-longevity-research` | For product/tool research specifically — community review and longevity signal digging beyond spec/price comparison |
 

@@ -131,7 +131,7 @@ Do not proceed to Phase 1 until every box is checked — ask a follow-up questio
 
 **Entry gate**: Phase 0's checklist passed. Mark this stage's task `in_progress` if a task tool is available.
 
-Run 2–3 parallel WebSearch calls based on requirements gathered in Phase 0. Follow the `research-workflow` skill's search discipline (rate limits, search caps, full URL/title/date documentation for every result).
+Run 2–3 parallel WebSearch calls based on requirements gathered in Phase 0. Follow the `meta-research-workflow` skill's search discipline (rate limits, search caps, full URL/title/date documentation for every result).
 
 ### Query Templates
 ```
@@ -416,7 +416,7 @@ Apply the `knowledge-synthesis` skill's **Decision Write-Back Pattern** to recor
 - [ ] Functional constraints satisfied (checked against Phase 0 answers)
 - [ ] Occupant constraints noted (dog-proof, ADA, child-safe, etc.)
 - [ ] Every candidate has a Review & Longevity block (Phase 2) — real findings or an explicit "no long-term data" note
-- [ ] Every non-obvious claim (price, review, longevity, failure mode) has a source URL per the `research-workflow` skill
+- [ ] Every non-obvious claim (price, review, longevity, failure mode) has a source URL per the `meta-research-workflow` skill
 
 ---
 
@@ -425,5 +425,5 @@ Apply the `knowledge-synthesis` skill's **Decision Write-Back Pattern** to recor
 - [[design-review]] — Verify selected products against CD set specs before ordering
 - [[knowledge-synthesis]] — Synthesize product research into permanent wiki notes; supplies the Product & Retailer Zettel Template (Phase 2/3) and Decision Write-Back Pattern (Phase 6)
 - [[review-longevity-research]] — Phase 2's method for community-review and longevity digging
-- [[research-workflow]] — Search methodology and sourcing discipline used throughout
+- [[meta-research-workflow]] — Search methodology and sourcing discipline used throughout
 - [[handy:plan]] — Plan installation of selected products

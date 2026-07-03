@@ -38,7 +38,7 @@ Generate an engineering-focused project plan for an experienced builder working 
 
 ## Research Requirements
 
-Use the @research agent to investigate:
+Follow the `meta-research-workflow` skill's Core Workflow and Source Documentation Requirements for search methodology and citation discipline (multi-source verification, full URL/title/access-date citation). Use the @research agent to investigate:
 1. Current Seattle code requirements for the specific project scope
 2. Seattle permit requirements and inspection trigger points
 3. Professional techniques and trade methods (not DIY tutorials)
@@ -288,7 +288,7 @@ Total: $X
 
 ### 11. Reference Links
 
-Link to relevant Logseq pages:
+Follow the `knowledge-synthesis` skill's Linking Strategy for `[[wiki link]]` and `#[[Tag]]` conventions. Link to relevant Logseq pages:
 - [[Seattle Building Codes]] sections referenced
 - [[Working Alone Techniques]] applied
 - [[Building Science]] principles
@@ -300,7 +300,7 @@ Link to relevant Logseq pages:
 
 ### 12. Artifact Deeplinks
 
-Store a retrieval record for every reference document consulted during plan generation. Format:
+This is this skill's specialized variant of the `meta-research-workflow` skill's Source Documentation Requirements, shaped for engineering citations (code sections, TDS/SDS documents) rather than generic web sources. Store a retrieval record for every reference document consulted during plan generation. Format:
 
 ```
 | Source | Section | Retrieved | URL / File |
@@ -393,4 +393,14 @@ After both the project plan and journal entry are created:
 Generate the expert project plan for: **$@**
 
 Then create the corresponding journal entry documenting the planning work completed.
+
+---
+
+## Related Skills
+
+| Skill | When to apply |
+|-------|--------------|
+| `meta-research-workflow` | Base search methodology and citation discipline for §Research Requirements / §12 Artifact Deeplinks |
+| `knowledge-synthesis` | Base Zettelkasten note structure and `[[wiki link]]`/`#[[Tag]]` linking conventions for §11 Reference Links |
+| `review-longevity-research` | When §5 Tools and Materials involves choosing between specific products/brands, not just retrieving TDS for an already-chosen material |
 
