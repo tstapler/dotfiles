@@ -20,6 +20,24 @@ Spawn 6 parallel subagents to research the problem — covering stack, features,
    - **Complexity 4** (high-stakes): run all 6 agents. In Agent 3's prompt, add: "Separately evaluate failure modes specific to the migration or compliance aspect."
    - If no Complexity field found in requirements.md: default to all 6 agents.
 
+2.75. **Check for existing hotspot/architecture analysis before dispatching Agent 3.** Don't
+   re-derive this yourself — delegate to the skills that own it:
+   - Invoke the **`code-hotspot-analysis`** skill (or check whether it's already been run) to see
+     if the file(s)/module(s) named in `requirements.md` are a known complexity×churn hotspot.
+   - Invoke the **`quality:architecture-review`** skill (or check whether it's already been run,
+     targeted at the same area) for any prior SOLID/Clean Architecture/DDD findings.
+   - Also check `project_plans/*/research/architecture.md` from an earlier SDD run for an
+     overlapping file/module.
+
+   Let those skills' own conventions determine where their output lives and what it contains —
+   don't hardcode file-naming assumptions here, since that drifts out of sync with the skills.
+   If prior analysis is found, note its location and a one-line summary of its relevant findings
+   — this gets handed to Agent 3 below instead of having it re-derive the same analysis from
+   scratch. If nothing exists yet and this is a Complexity 3-4 feature touching a large or
+   legacy area, consider running `code-hotspot-analysis` now rather than skipping straight to
+   Agent 3's inline research. If nothing applies, proceed as normal — this step is a cheap check,
+   not a blocker.
+
 3. **Dispatch research agents in parallel using the `Task` tool** (all 6 in a single message — do not run sequentially):
 
    Each agent prompt must include:
@@ -36,6 +54,8 @@ Spawn 6 parallel subagents to research the problem — covering stack, features,
 
    **Agent 3 — Architecture** → writes `project_plans/<PROJECT_NAME>/research/architecture.md`:
    > Research the architecture approach. What architectural patterns apply to this type of problem? What are the integration points with existing systems? What are the data flow and consistency requirements?
+   >
+   > If step 2.75 above found an existing hotspot/architecture analysis covering this area, its path is: `<path from step 2.75, or "none found">`. Read it first and build on it explicitly — cite its findings by file:line where relevant instead of re-deriving them, and focus your own research on filling gaps it didn't cover (e.g. it may have flagged *that* a class is a God Object without researching *how* this specific requirement should be layered around it). Do not silently ignore it and produce a parallel, disconnected analysis.
    >
    > **If the requirements describe a complex business domain involving multiple actors, systems, or business rules** (not simple CRUD): produce an Event-Command-Policy table using EventStorming grammar. This surfaces bounded context boundaries and business rules before planning begins:
    >
@@ -89,6 +109,7 @@ Spawn 6 parallel subagents to research the problem — covering stack, features,
    - UX: <1-line summary, or "N/A — no user-facing surface">
    - Build vs. Buy recommendation: <1-line: build / adopt <library> / use <SaaS>>
    - Top risk: <1 pitfall to watch>
+   - Prior analysis incorporated: <path, or "none found">
 
    Next step: /sdd:3-plan
    ```
