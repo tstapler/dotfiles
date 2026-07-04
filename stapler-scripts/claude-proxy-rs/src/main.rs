@@ -11,6 +11,7 @@ mod fallback;
 mod learn;
 mod memory;
 mod metrics;
+mod mcp_gateway;
 mod providers;
 mod system_prompt;
 
@@ -147,7 +148,10 @@ async fn async_main() {
         system_prompt: spp,
     };
 
-    let app = build_router(state);
+    let mut app = build_router(state);
+    if let Some(mcp_routes) = mcp_gateway::build_mcp_router().await {
+        app = app.merge(mcp_routes);
+    }
 
     let addr = SocketAddr::from(([127, 0, 0, 1], config.port));
     info!(%addr, "listening");
