@@ -28,21 +28,29 @@ _warn() {
 }
 
 _find_real_git() {
-  # Resolve the wrapper's real directory (follow symlinks so ~/.local/bin/git
-  # symlink → dotfiles/stapler-scripts/git-ssh-fallback is handled correctly).
+  # Identify ourselves by resolved (symlink-followed) path, not by directory
+  # string: ~/.local/bin/git is a symlink to dotfiles/stapler-scripts/git-ssh-fallback,
+  # so comparing unresolved PATH entries against the resolved wrapper directory
+  # never matched — this let PATH search return the wrapper itself as "the real
+  # git" whenever ~/.local/bin preceded the real git in PATH, causing infinite
+  # self-recursion (each recursion forking a new process via command substitution).
   local self="$0"
-  local wrapper_dir
+  local self_resolved
   if command -v readlink >/dev/null 2>&1; then
-    wrapper_dir="$(dirname "$(readlink -f "$self" 2>/dev/null || echo "$self")")"
+    self_resolved="$(readlink -f "$self" 2>/dev/null || echo "$self")"
   else
-    wrapper_dir="$(dirname "$self")"
+    self_resolved="$self"
   fi
 
   # Walk PATH in a subshell to avoid clobbering IFS in the parent.
   ( IFS=:
     for dir in $PATH; do
-      [ "$dir" = "$wrapper_dir" ] && continue
       [ -x "$dir/git" ] || continue
+      candidate_resolved="$dir/git"
+      if command -v readlink >/dev/null 2>&1; then
+        candidate_resolved="$(readlink -f "$dir/git" 2>/dev/null || echo "$dir/git")"
+      fi
+      [ "$candidate_resolved" = "$self_resolved" ] && continue
       printf '%s' "$dir/git"
       exit 0
     done
@@ -127,9 +135,24 @@ _extract_host() {
     done
   else
     # fetch/push/pull/etc.: look up the remote URL from git config.
+    # "$@" here is the full original arg list (the caller passes $subcmd
+    # duplicated ahead of it), so the first non-flag token is always the
+    # subcommand itself — skip it. `git remote <verb> <name>` has an extra
+    # action-verb token (get-url/show/set-url/...) before the actual remote
+    # name — skip that too, or we'd look up a remote literally named "remote".
     local remote="origin"
+    local skip=1
+    [ "$subcmd" = "remote" ] && skip=2
     for arg in "$@"; do
-      case "$arg" in -*) ;; *) remote="$arg"; break ;; esac
+      case "$arg" in
+        -*) continue ;;
+      esac
+      if [ "$skip" -gt 0 ]; then
+        skip=$(( skip - 1 ))
+        continue
+      fi
+      remote="$arg"
+      break
     done
     url=$( "$real_git" remote get-url "$remote" 2>/dev/null ) || url=""
     case "$url" in
