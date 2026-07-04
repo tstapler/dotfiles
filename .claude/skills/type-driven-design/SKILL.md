@@ -142,7 +142,7 @@ public record Id<T>(String value) {
 
 ---
 
-> For Pydantic-based smart constructors and Python type annotations, apply the `code-python` skill.
+> For Pydantic-based smart constructors and Python type annotations, apply the `python-development` skill.
 
 ## Technique 2: Smart Constructors
 
@@ -573,7 +573,7 @@ Every field carries a proof. A valid `Order` instance means all these invariants
 |-------|--------------|
 | `design-patterns` | Selecting GoF/PoEAA patterns that type-driven design encodes (Value Object, State) |
 | `code-spring-boot` | Java-specific type techniques: records, sealed interfaces, parse at Spring boundaries |
-| `code-python` | Python newtypes, Pydantic smart constructors, frozen dataclasses |
+| `python-development` | Python newtypes, Pydantic smart constructors, frozen dataclasses |
 | `go-development` | Go newtype, phantom generics, unexported-field Value Objects |
 | `code-refactoring` | Automated refactors to replace primitive obsession across a codebase |
 | `code-review` | Identifying primitive obsession, missing smart constructors, or magic strings in PRs |

@@ -6,7 +6,7 @@ paths: "**/*.py"
 
 # Python Scripting Standards
 
-For **library/service code** see `code-python`. This skill is for **standalone scripts** — one-file tools, automation scripts, data processing jobs.
+For **library/service code** see `python-development`. This skill is for **standalone scripts** — one-file tools, automation scripts, data processing jobs.
 
 ---
 
@@ -172,7 +172,7 @@ for item in track(items, description="Processing..."):
 
 | Situation | Use instead |
 |-----------|-------------|
-| > 3 files that share logic | `code-python` project layout |
+| > 3 files that share logic | `python-development` project layout |
 | Needs a test suite | `pyproject.toml` + `uv add --dev pytest` |
-| Long-running service / daemon | Service architecture (code-python + structlog) |
+| Long-running service / daemon | Service architecture (python-development + structlog) |
 | Jupyter exploration | Jupyter notebook |

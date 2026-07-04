@@ -39,12 +39,12 @@ Design an Agent Skill with the following requirements:
 1. **Name and Description Optimization**
    - Skill names MUST follow the `{group}-{name}` prefix convention matching the existing library
    - Standard groups: `code`, `github`, `git`, `infra`, `ui`, `pm`, `meta`, `knowledge`, `db`, `jj` — use a new group only if none fit
-   - Examples from the live library: `code-python`, `github-pr`, `github-org-team-activity`, `infra-homebrew`, `ui-playwright`, `pm-product-management`, `meta-prompt-engineering`
+   - Examples from the live library: `python-development`, `github-pr`, `github-org-team-activity`, `infra-homebrew`, `ui-playwright`, `pm-product-management`, `meta-prompt-engineering`
    - Validate full name follows format: lowercase-alphanumeric-with-hyphens (max 64 chars)
    - Craft description that clearly conveys WHEN to use this skill (max 1024 chars)
    - Think from Claude's perspective: what helps triggering decisions?
    - Examples:
-     - ✅ Good: `github-org-team-activity`, `code-python`, `infra-homebrew`
+     - ✅ Good: `github-org-team-activity`, `python-development`, `infra-homebrew`
      - ❌ Bad: `activity` (missing group prefix), `github` (no descriptive suffix), `comprehensive-github-org-activity-tracker` (too long)
 
 2. **Progressive Disclosure Architecture**

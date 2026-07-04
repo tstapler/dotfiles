@@ -57,7 +57,7 @@ and whether any should run in parallel. Output a short activation plan.
 5. Output in this format:
 
 ```
-Primary:    code-python
+Primary:    python-development
 Before:     code-architecture-best-practices (design the layer structure first)
 During:     type-driven-design (as domain model is built)
 After:      code-review, security-review
@@ -77,7 +77,7 @@ Read the system-reminder for the authoritative live list. Use this catalog for s
 | `code-architecture-best-practices` | SOLID, Clean Architecture, Hexagonal/DDD, module boundaries, dependency direction |
 | `design-patterns` | GoF (Factory, Strategy, Observer…) and PoEAA (Repository, Service Layer, Unit of Work) |
 | `type-driven-design` | Encoding invariants into the type system: NewType, smart constructors, sum types, refinement types, parse-don't-validate |
-| `code-python` | Python standards: uv, type annotations, pytest, Pydantic, async, hexagonal, structlog |
+| `python-development` | Python standards: uv, type annotations, pytest, Pydantic, async, hexagonal, structlog |
 | `code-spring-boot` | Spring Boot Java: layering, testing, security, data access |
 | `go-development` | Go idioms, error handling, interfaces, testing |
 | `code-refactoring` | Large structural refactors via `ast-grep` (scope) + `gritql` (transformation) with quality gates |

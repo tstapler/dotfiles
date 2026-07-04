@@ -17,7 +17,7 @@ Reference for evaluating how new techniques fit the user's existing Claude Code 
 
 | Category | Skills |
 |----------|--------|
-| **Development** | `code-python`, `code-ast-grep`, `code-gritql`, `code-refactoring`, `code-java-api-discovery` |
+| **Development** | `python-development`, `code-ast-grep`, `code-gritql`, `code-refactoring`, `code-java-api-discovery` |
 | **Version Control** | `git-worktrees`, `jj-version-control`, `github-pr` |
 | **Infrastructure** | `infra-homebrew`, `infra-testing`, `infra-docker-build-test`, `fbg-terraform-changes` |
 | **Documentation** | `knowledge-synthesis`, `knowledge-confluence-sync` |

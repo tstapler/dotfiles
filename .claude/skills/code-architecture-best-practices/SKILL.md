@@ -336,7 +336,7 @@ Key integration points:
 |-------|--------------|
 | `type-driven-design` | Make domain invariants compiler-enforced via newtypes and sum types |
 | `design-patterns` | Apply GoF/PoEAA patterns within the architectural layer structure |
-| `code-python` | Python-specific standards: uv, pytest, Pydantic, async, hexagonal layout |
+| `python-development` | Python-specific standards: uv, pytest, Pydantic, async, hexagonal layout |
 | `code-spring-boot` | Spring Boot-specific layering, testing, and dependency injection patterns |
 | `code-refactoring` | Restructure existing code toward clean architecture boundaries |
 | `code-review` | Verify architectural decisions meet these principles before merging |

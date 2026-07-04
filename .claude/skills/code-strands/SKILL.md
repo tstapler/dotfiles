@@ -299,7 +299,7 @@ orchestrator = Agent(
 | `meta-context-engineering` | Optimizing context windows, compaction, and sub-agent isolation |
 | `meta-model-selection` | Choosing the right Claude model for orchestrators vs. specialists |
 | `type-driven-design` | Typing inter-agent Pydantic contracts; parse-don't-validate at boundaries |
-| `code-python` | Python standards (uv, Pydantic, async) for Strands tool implementations |
+| `python-development` | Python standards (uv, Pydantic, async) for Strands tool implementations |
 | `security-review` | Auditing tool permissions, invocation_state exposure, and agent trust boundaries |
 
 ## Reference

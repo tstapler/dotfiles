@@ -17,7 +17,7 @@ Evaluate new Claude techniques, tools, and workflow changes for adoption value a
 - Deciding whether to adopt a tool, pattern, or configuration change
 
 **Don't use for:**
-- Building or implementing the technique (use `meta-prompt-engineering` or `code-python`)
+- Building or implementing the technique (use `meta-prompt-engineering` or `python-development`)
 - General research without an adoption decision (use `meta-research-workflow`)
 
 ## Core Evaluation Workflow
