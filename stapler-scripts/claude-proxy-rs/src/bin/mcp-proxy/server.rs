@@ -8,6 +8,7 @@ use tracing::{debug, info, warn};
 
 use crate::allowlist::AllowList;
 use crate::cache::SchemaCache;
+use crate::compress::SchemaCompressor;
 use crate::config::McpProxyConfig;
 use crate::upstream::UpstreamClient;
 
@@ -16,6 +17,7 @@ pub struct ProxyServer {
     upstream: Arc<UpstreamClient>,
     allowlist: AllowList,
     cache: SchemaCache,
+    compressor: SchemaCompressor,
     dry_run: bool,
 }
 
@@ -31,12 +33,14 @@ impl ProxyServer {
 
         let allowlist = AllowList::new(&server_name, server_cfg.allow.iter().cloned());
         let cache = SchemaCache::new(cache_ttl);
+        let compressor = SchemaCompressor::new(config.compression.level.clone());
 
         Self {
             server_name,
             upstream: Arc::new(upstream),
             allowlist,
             cache,
+            compressor,
             dry_run,
         }
     }
@@ -78,14 +82,13 @@ impl ServerHandler for ProxyServer {
         self.allowlist.detect_drift(&raw_tools);
 
         let filtered = self.allowlist.filter_catalog(raw_tools, self.dry_run);
-        let total_available = filtered.len();
-
-        let tokens_before = estimate_token_count(&filtered) + estimate_filtered_overhead();
-        let tokens_after = estimate_token_count(&filtered);
+        let tokens_before = estimate_token_count(&filtered);
+        let compressed = self.compressor.compress(filtered);
+        let tokens_after = estimate_token_count(&compressed);
 
         info!(
             server = %self.server_name,
-            tools_returned = filtered.len(),
+            tools_returned = compressed.len(),
             tokens_before = tokens_before,
             tokens_after = tokens_after,
             pct_saved = ((tokens_before.saturating_sub(tokens_after)) * 100)
@@ -94,9 +97,9 @@ impl ServerHandler for ProxyServer {
             "session_start tools/list"
         );
 
-        self.cache.set(filtered.clone()).await;
+        self.cache.set(compressed.clone()).await;
 
-        Ok(ListToolsResult { tools: filtered, ..Default::default() })
+        Ok(ListToolsResult { tools: compressed, ..Default::default() })
     }
 
     async fn call_tool(

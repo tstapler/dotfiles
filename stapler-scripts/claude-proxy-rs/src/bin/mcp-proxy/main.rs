@@ -1,6 +1,7 @@
 mod allowlist;
 mod cache;
 mod cli;
+mod compress;
 mod config;
 mod metrics;
 mod search;
