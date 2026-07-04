@@ -16,6 +16,20 @@ async def main() -> None:
 
 Use `gather()` when: Python < 3.11, or `return_exceptions=True` is needed to collect all results including errors.
 
+**Catching failures — `TaskGroup` always raises `ExceptionGroup`, even for one failing task:**
+
+```python
+try:
+    async with asyncio.TaskGroup() as tg:
+        t1 = tg.create_task(fetch("https://a.example"))
+        t2 = tg.create_task(fetch("https://b.example"))
+except* httpx.HTTPError as eg:
+    for e in eg.exceptions:
+        log.error("fetch failed", error=str(e))
+```
+
+A plain `except httpx.HTTPError:` around the `async with` block will **not** catch task failures — `TaskGroup` always wraps them in an `ExceptionGroup`/`BaseExceptionGroup`, so you need `except*` (PEP 654) even when only one task fails.
+
 ## Timeouts — `asyncio.timeout()` (3.11+)
 
 ```python
@@ -25,7 +39,7 @@ async def robust_fetch(url: str) -> bytes:
             return (await c.get(url)).content
 ```
 
-`asyncio.timeout()` wraps arbitrary blocks and can be rescheduled. Prefer it over `asyncio.wait_for()` in 3.11+.
+`asyncio.timeout()` wraps arbitrary blocks and can be rescheduled. Prefer it over `asyncio.wait_for()` in 3.11+. Timeout only fires at `await` points — a long synchronous stretch inside the block won't be interrupted.
 
 ## Cancellation — always re-raise `CancelledError`
 

@@ -1,24 +1,37 @@
 ---
-name: code-python
-description: Apply Python coding standards when writing, reviewing, or debugging Python code. Use for type annotations, package management with uv, Pydantic DTOs, Typer CLIs, pytest patterns, and PEP 8 style guidelines.
+name: python-development
+description: Apply idiomatic, well-structured Python development practices. Use when writing, reviewing, or refactoring Python code. Covers type annotations, package management with uv, Pydantic DTOs, Typer CLIs, pytest patterns, PEP 8 style, architecture, and type-driven design.
 paths: "**/*.py,**/pyproject.toml,**/*.toml"
 ---
 
-# Python Development Standards
+# Python Development
 
 Apply these standards when writing, reviewing, or debugging Python code.
+
+## Project Setup: Reference This Skill in CLAUDE.md
+
+The first time you touch Python code in a project, check that repo's `CLAUDE.md` (or `AGENTS.md`). If it exists but doesn't mention this skill, add a line pointing at it, e.g.:
+
+```markdown
+## Python
+Apply the `python-development` skill for all Python code (standards, architecture, type-driven design).
+```
+
+If no `CLAUDE.md` exists yet, don't create one just for this — only add the note when the file already exists for another reason, or when the user is setting up project conventions.
 
 ## Package Management
 
 - **Always use `uv`** for dependency management
 - Use `uv install -e .` for development installations
 - Use `uv run` for executing scripts with dependencies
+- Group dev/test/docs deps with the standard `[dependency-groups]` table (PEP 735) in `pyproject.toml` — not a Poetry-style custom scheme
+- For monorepos with multiple packages sharing a lockfile, use a **uv workspace** (root `[tool.uv.workspace]` + member `pyproject.toml` files) rather than separate venvs per package
 
 ## Dependencies Declaration (PEP 723)
 
 ```python
 # /// script
-# requires-python = ">=3.11"
+# requires-python = ">=3.12"
 # dependencies = [
 #   "requests<3",
 #   "rich",
@@ -38,6 +51,17 @@ def process(items: list[str], value: int | None = None) -> dict[str, int]: ...
 # from typing import List, Dict, Optional  ← don't use these
 # def process(items: List[str], value: Optional[int] = None) -> Dict[str, int]: ...
 ```
+
+**PEP 695 generics** (3.12+, matches this skill's baseline) — replaces `TypeVar` + `Generic[T]` boilerplate:
+
+```python
+type UserId = int                              # generic-friendly alias, not a nominal type
+class Repository[T]:                            # generic class
+    def get(self, id: T) -> T: ...
+def first[T](items: list[T]) -> T: ...          # generic function
+```
+
+This is distinct from `NewType` below — a `type` alias is *interchangeable* with its target (a `UserId` and a plain `int` mix freely), while `NewType` gives *nominal* typing (mypy treats them as incompatible). Use `type` aliases for readability, `NewType`/frozen dataclasses when you need mypy to catch mixups.
 
 Use **keyword-only arguments** (after `*`) for clarity at call sites:
 
@@ -68,7 +92,7 @@ def create_task(
 ## Code Style
 
 - Follow PEP 8 with line lengths up to **120 characters**
-- Use **Black** for formatting
+- Use **`ruff format`** for formatting — it's the Black-compatible successor; don't add Black as a separate tool
 - Mark unfinished code with `# TODO:` or `# FIXME:`
 - Comment only when code isn't self-explanatory
 - Write clear docstrings for all public functions and modules:
@@ -113,9 +137,6 @@ class UserRequest:
 ```python
 from pydantic import BaseModel, Field
 from typing import Literal
-
-class UserRole(str):
-    pass
 
 RoleType = Literal["admin", "editor", "viewer"]
 
@@ -220,20 +241,7 @@ uv run pytest --benchmark-compare      # Compare against saved baseline
 
 ## Tooling Baseline
 
-See [tooling.md](tooling.md) for the complete `pyproject.toml` template, `pydantic-settings` config management, `structlog` structured logging, and the concurrency decision tree.
-
-Quick setup in `pyproject.toml`:
-```toml
-[tool.ruff.lint]
-select = ["E", "W", "F", "I", "UP", "B", "SIM", "RUF"]
-# UP = pyupgrade (modernizes Optional→X|None, List→list, etc.)
-
-[tool.mypy]
-strict = true
-warn_return_any = true
-```
-
-Use `ruff` alongside (or instead of) `flake8` — it also handles import sorting and auto-modernizes old type syntax.
+See [tooling.md](tooling.md) for the complete `pyproject.toml` template (ruff, mypy, pytest config), `pydantic-settings` config management, `structlog` structured logging, and the concurrency decision tree. Use `ruff` alongside (or instead of) `flake8` — it also handles import sorting and auto-modernizes old type syntax.
 
 ## Type-Driven Design
 

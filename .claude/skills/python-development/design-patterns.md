@@ -143,8 +143,13 @@ class SendEmailCommand:
     body: str
 
 class CommandBus:
+    def __init__(self) -> None:
+        self._handlers: dict[type, Callable] = {}
+
+    def register(self, cmd_type: type, handler: Callable) -> None:
+        self._handlers[cmd_type] = handler
+
     def dispatch(self, cmd: SendEmailCommand) -> None:
-        # resolve handler by type
         handler = self._handlers[type(cmd)]
         handler(cmd)
 ```

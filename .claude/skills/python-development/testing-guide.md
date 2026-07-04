@@ -163,7 +163,8 @@ async def http_client():
 
 ```toml
 [tool.pytest.ini_options]
-asyncio_mode = "auto"   # all async tests/fixtures treated as asyncio; no @pytest.mark.asyncio needed
+asyncio_mode = "auto"                             # all async tests/fixtures treated as asyncio; no @pytest.mark.asyncio needed
+asyncio_default_fixture_loop_scope = "function"   # pytest-asyncio >=0.24 warns if unset
 ```
 
 ---

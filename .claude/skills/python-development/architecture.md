@@ -72,6 +72,10 @@ class OrderRepository(Protocol):
     def list_pending(self) -> list[Order]: ...
 ```
 
+`@runtime_checkable` (needed for `isinstance()` checks against a `Protocol`) only verifies that the named methods/attributes *exist* — not that their signatures match — and is slower than a plain `isinstance` check against a real class. Rely on mypy for signature checking; reach for `runtime_checkable` sparingly, not in hot paths.
+
+Reach for this whole ports/adapters split when there's real domain complexity worth isolating. For a simple CRUD service, a flatter layout (a couple of modules, no `ports/`) is less ceremony and just as testable — don't impose hexagonal architecture on a project that doesn't need it.
+
 ### Service Layer — thin orchestration, no business logic
 
 ```python

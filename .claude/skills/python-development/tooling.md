@@ -6,7 +6,7 @@ Add to `pyproject.toml`:
 ```toml
 [tool.ruff]
 line-length = 120
-target-version = "py311"
+target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "W", "F", "I", "UP", "B", "SIM", "RUF"]
@@ -38,7 +38,7 @@ version = "0.1.0"
 description = "One-line description"
 readme = "README.md"
 license = { text = "MIT" }
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 authors = [{ name = "Your Name", email = "you@example.com" }]
 dependencies = [
     "pydantic>=2.7",
@@ -50,17 +50,16 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["my-package[test,lint]"]
 test = [
-    "pytest>=8.2",
+    "pytest>=9.0",
     "pytest-cov>=5.0",
-    "pytest-asyncio>=0.23",
-    "pytest_asyncio",
+    "pytest-asyncio>=0.24",
     "hypothesis>=6.100",
     "testcontainers[postgres]>=4.7",
     "anyio[trio]>=4.4",
 ]
 lint = [
-    "ruff>=0.5",
-    "mypy>=1.10",
+    "ruff>=0.13",
+    "mypy>=2.0",
 ]
 
 [project.scripts]
@@ -72,14 +71,14 @@ packages = ["src/mypackage"]
 [tool.ruff]
 src = ["src"]
 line-length = 120
-target-version = "py311"
+target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "W", "F", "I", "UP", "B", "SIM", "ANN", "RUF"]
-ignore = ["ANN101", "ANN102"]
+# ANN101/ANN102 (missing self/cls annotations) were removed from ruff in 0.2.0 — don't ignore codes that no longer exist
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.12"
 strict = true
 warn_return_any = true
 plugins = ["pydantic.mypy"]
@@ -91,6 +90,7 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"   # pytest-asyncio >=0.24 warns if unset
 addopts = [
     "--strict-markers",
     "--tb=short",
@@ -254,4 +254,4 @@ async def read_async(path: str) -> bytes:
     return await asyncio.to_thread(Path(path).read_bytes)
 ```
 
-**GIL note (2025)**: Python 3.13 ships with a disableable GIL (`PYTHON_GIL=0`) but most C extensions aren't yet compatible. The CPU→processes / I/O→threads/async rule still holds.
+**GIL note (2026)**: free-threading (PEP 703/779) is now officially supported as of 3.14, with most top packages shipping free-threaded wheels — but default builds still ship with the GIL on, and per-thread overhead on free-threaded builds is still ~5–10%. The CPU→processes / I/O→threads/async rule still holds unless you've deliberately opted into a free-threaded build for a measured reason.
