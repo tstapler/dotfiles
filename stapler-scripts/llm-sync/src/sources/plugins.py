@@ -140,7 +140,7 @@ class PluginSource:
             try:
                 fm = yaml.safe_load(m.group(1))
                 if isinstance(fm, dict):
-                    return str(fm.get("description", ""))
+                    return fm.get("description") or ""
             except yaml.YAMLError:
                 pass
         return ""

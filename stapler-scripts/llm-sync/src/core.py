@@ -12,6 +12,13 @@ class SyncItem(ABC):
     metadata: Dict[str, Any] = field(default_factory=dict)
     source_file: Optional[str] = None
 
+    def __post_init__(self) -> None:
+        # Sources parse frontmatter with dict.get("description"), which
+        # returns None (not the default) when the key is present but empty.
+        # Normalize here so every downstream consumer can trust `str`.
+        if self.description is None:
+            self.description = ""
+
     def get_hash(self) -> str:
         """Calculate a stable hash of the item's content and key metadata."""
         # Base components for the hash

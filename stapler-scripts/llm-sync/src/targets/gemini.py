@@ -66,7 +66,7 @@ class GeminiTarget(SyncTarget, SyncSource):
                     commands.append(
                         Command(
                             name=name,
-                            description=data.get("description", ""),
+                            description=data.get("description") or "",
                             content=data.get("prompt", ""),
                             metadata=data,
                             source_file=str(cmd_file),
@@ -94,7 +94,7 @@ class GeminiTarget(SyncTarget, SyncSource):
                     default_name = str(rel_path.with_suffix("")).replace("\\", "/")
 
                     name = metadata.get("name") or default_name
-                    description = metadata.get("description", "")
+                    description = metadata.get("description") or ""
 
                     # Convert tools list to dict
                     tools_list = metadata.get("tools", [])
@@ -210,7 +210,8 @@ class GeminiTarget(SyncTarget, SyncSource):
             if not cmd_path.exists() or force:
                 content = cmd.content.replace("$ARGUMENTS", "{{args}}")
                 desc_safe = (
-                    cmd.description.replace("\\", "\\\\")
+                    (cmd.description or "")
+                    .replace("\\", "\\\\")
                     .replace('"', '\\"')
                     .replace("\n", " ")
                 )

@@ -95,7 +95,7 @@ class ClaudeSource(SyncSource, SyncTarget):
                             try:
                                 metadata = yaml.safe_load(frontmatter)
                                 if metadata:
-                                    description = metadata.get("description", "")
+                                    description = metadata.get("description") or ""
                                     if "name" in metadata:
                                         name = metadata["name"]
                             except yaml.YAMLError:
@@ -137,7 +137,7 @@ class ClaudeSource(SyncSource, SyncTarget):
                     default_name = str(rel_path.with_suffix("")).replace("\\", "/")
 
                     name = metadata.get("name") or default_name
-                    description = metadata.get("description", "")
+                    description = metadata.get("description") or ""
 
                     return Agent(
                         name=name,
