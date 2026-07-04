@@ -49,6 +49,20 @@
 
 - name: Refresh font cache (Linux)
   command: fc-cache -fv
+  register: fonts_cache_refresh
+  retries: 2
+  delay: 2
+  until: fonts_cache_refresh.rc == 0
   changed_when: false
+  failed_when: false
   when: ansible_facts['os_family'] != "Darwin" and not (is_wsl | default(false))
+  tags: [fonts]
+
+- name: Warn if font cache refresh still failed after retries
+  debug:
+    msg: >-
+      fc-cache failed after retries — non-fatal, fontconfig falls back to
+      scanning directories directly and the cache rebuilds lazily on next use.
+      stderr: {{ fonts_cache_refresh.stderr }}
+  when: fonts_cache_refresh.rc is defined and fonts_cache_refresh.rc != 0
   tags: [fonts]

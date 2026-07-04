@@ -119,9 +119,20 @@
   failed_when: >
     github_add_primary.rc != 0 and
     'already' not in (github_add_primary.stderr | lower) and
-    'already' not in (github_add_primary.stdout | lower)
+    'already' not in (github_add_primary.stdout | lower) and
+    'admin:public_key' not in github_add_primary.stderr
   environment:
     PATH: "{{ brew_prefix }}/bin:{{ ansible_facts['env']['PATH'] }}"
+  tags: [github]
+
+- name: Fail with instructions if primary token lacks admin:public_key scope
+  fail:
+    msg: |
+      gh CLI token for the primary account is missing the "admin:public_key"
+      scope needed to register SSH keys.
+      Grant it: gh auth refresh -h github.com -s admin:public_key
+      Then re-run: ansible-playbook bootstrap/playbook.yml --tags github
+  when: "'admin:public_key' in (github_add_primary.stderr | default(''))"
   tags: [github]
 
 - name: Re-fetch personal token after authentication
@@ -142,9 +153,21 @@
   failed_when: >
     github_add_personal.rc != 0 and
     'already' not in (github_add_personal.stderr | lower) and
-    'already' not in (github_add_personal.stdout | lower)
+    'already' not in (github_add_personal.stdout | lower) and
+    'admin:public_key' not in github_add_personal.stderr
   when: github_personal_user != ""
   environment:
     PATH: "{{ brew_prefix }}/bin:{{ ansible_facts['env']['PATH'] }}"
     GH_TOKEN: "{{ github_personal_token.stdout | trim }}"
+  tags: [github]
+
+- name: Fail with instructions if personal token lacks admin:public_key scope
+  fail:
+    msg: |
+      gh CLI token for personal account '{{ github_personal_user }}' is missing
+      the "admin:public_key" scope needed to register SSH keys.
+      If it's a `gh auth login` account: gh auth switch --user {{ github_personal_user }} && gh auth refresh -h github.com -s admin:public_key
+      If it's sourced from github_personal_op_token_path: reissue that PAT with the admin:public_key scope.
+      Then re-run: ansible-playbook bootstrap/playbook.yml --tags github
+  when: "'admin:public_key' in (github_add_personal.stderr | default(''))"
   tags: [github]
