@@ -1,0 +1,22 @@
+# AGENTS.md
+
+Tool-agnostic project context for AI coding agents (Claude Code, Codex, Cursor, etc.). Claude Code users: see `CLAUDE.md` too — it references the same workflow via Claude Code-specific skills/slash-commands; this file describes the same expectations in tool-neutral terms.
+
+## Stack
+
+- Frontend: {{FRONTEND}}
+- Backend: Rust + Axum + sqlx (`backend/`)
+- RPC: Connect-RPC for unary/server-streaming (`proto/`), WebSocket for bidirectional streaming (`backend/api/src/ws.rs`) — see `backend/CONNECT_RPC_NOTE.md` for the Rust Connect-RPC ecosystem's current maturity caveats before extending it
+- Compute: GCP Cloud Run (`iac/cloud_run.tf`)
+- Data: Neon Postgres (`iac/neon.tf`) + Cloudflare R2 (`iac/r2.tf`)
+- IaC: OpenTofu (`iac/`)
+- CI: GitHub Actions, path-filtered by directory (`.github/workflows/ci.yml`)
+
+## Working Conventions
+
+- **Plan before implementing non-trivial features.** In Claude Code this means the `/sdd:full` workflow (ideate → research → plan with ADRs → validate test coverage → subagent-driven implementation → verify → ship). If your tool doesn't support that workflow directly, still follow the same shape: write down requirements and an architecture decision before writing code, don't skip straight to implementation on anything beyond a small fix.
+- **Keep feature documentation derived from code, not hand-maintained prose.** In Claude Code this is the `journeys-extract`/`journeys-enrich`/`journeys-verify` skill family, producing `docs/journeys/*.md` — one file per user journey with a stable ID and test linkage. If working from another tool, still write to that same `docs/journeys/` convention so the docs stay tool-agnostic and don't fork.
+- **Establish brand/positioning once, early.** In Claude Code this is the `pm-brand-strategy` skill, writing `.claude/product-marketing-context.md`. If that file exists, read it before making UX/copy decisions regardless of which agent you are.
+- Axum has no framework-level architectural guardrails — structure is enforced by convention: `routes/` for thin handlers, `db/` for sqlx queries only, `domain/` for business logic with no framework types leaking in.
+- `iac/*.tf` variables are intentionally unset (no defaults) so an unconfigured `tofu apply` fails loudly rather than provisioning into the wrong project — fill them in before running, don't add defaults to make the error go away.
+- Cloud Run injects `$PORT` at runtime — the backend must bind to it, never hardcode a port.

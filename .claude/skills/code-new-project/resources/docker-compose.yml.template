@@ -1,0 +1,21 @@
+# Local dev database via Neon Local — an official Neon Docker proxy that
+# creates a real, ephemeral Neon branch when the container starts and
+# deletes it when it stops. Gives docker-compose-style "fresh DB every
+# `docker compose up`" ergonomics while still exercising Neon's actual
+# pooler/branching behavior, instead of a generic local Postgres image
+# that would silently diverge from prod. See reference.md's local-dev
+# section for why this beat plain docker-compose Postgres.
+#
+# Requires NEON_API_KEY, NEON_PROJECT_ID, and NEON_PARENT_BRANCH_ID in
+# your environment (see .env.example) — Neon Local still talks to the
+# real Neon control plane, so this is NOT an offline-capable option.
+services:
+  neon-local:
+    image: neondatabase/neon_local:latest
+    ports:
+      - "5432:5432"
+    environment:
+      NEON_API_KEY: ${NEON_API_KEY}
+      NEON_PROJECT_ID: ${NEON_PROJECT_ID}
+      PARENT_BRANCH_ID: ${NEON_PARENT_BRANCH_ID}
+      DRIVER: postgres

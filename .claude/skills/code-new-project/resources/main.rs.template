@@ -1,0 +1,36 @@
+// Minimal Axum starter. Structure convention (impose via discipline, since
+// Axum has no framework-level guardrails — see reference.md):
+//   src/main.rs      — wiring only: router, state, tracing init
+//   src/routes/      — one module per resource, thin handlers
+//   src/db/          — sqlx queries, no business logic
+//   src/domain/      — business logic, no framework types leaking in
+
+use axum::{routing::get, Router};
+use std::net::SocketAddr;
+use tower_http::trace::TraceLayer;
+
+#[tokio::main]
+async fn main() {
+    tracing_subscriber::fmt()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .init();
+
+    let app = Router::new()
+        .route("/healthz", get(healthz))
+        .layer(TraceLayer::new_for_http());
+
+    // Cloud Run injects $PORT — always bind to it, never hardcode 8080.
+    let port: u16 = std::env::var("PORT")
+        .ok()
+        .and_then(|p| p.parse().ok())
+        .unwrap_or(8080);
+    let addr = SocketAddr::from(([0, 0, 0, 0], port));
+
+    tracing::info!("listening on {addr}");
+    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
+    axum::serve(listener, app).await.unwrap();
+}
+
+async fn healthz() -> &'static str {
+    "ok"
+}

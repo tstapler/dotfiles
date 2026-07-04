@@ -1,0 +1,30 @@
+// Bidirectional streaming transport over WebSocket — the counterpart to
+// backend/api/src/ws.rs. Reserve this for genuinely bidirectional
+// exchanges (chat, live collaboration); use connect-client.ts for
+// unary/server-streaming instead.
+//
+// Frames are binary-encoded protobuf (ChatEnvelope from greet.proto),
+// matching what the Rust side expects. Requires the generated
+// `@bufbuild/protobuf` message class from `buf generate` — import path
+// below is a placeholder until that's run.
+
+// import { ChatEnvelopeSchema } from "../generated/greet/v1/greet_pb";
+// import { create, toBinary, fromBinary } from "@bufbuild/protobuf";
+
+export function connectChatSocket(url: string) {
+  const socket = new WebSocket(url);
+  socket.binaryType = "arraybuffer";
+
+  socket.addEventListener("open", () => {
+    // const join = create(ChatEnvelopeSchema, { payload: { case: "join", value: { user: "me" } } });
+    // socket.send(toBinary(ChatEnvelopeSchema, join));
+  });
+
+  socket.addEventListener("message", (event) => {
+    const bytes = new Uint8Array(event.data as ArrayBuffer);
+    // const envelope = fromBinary(ChatEnvelopeSchema, bytes);
+    // handle envelope.payload here
+  });
+
+  return socket;
+}

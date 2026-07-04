@@ -1,0 +1,27 @@
+[package]
+name = "api"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+axum = { workspace = true, features = ["ws"] }
+tokio.workspace = true
+tower.workspace = true
+tower-http.workspace = true
+sqlx.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+prost = "0.13"
+futures = "0.3"
+# Connect-RPC service-stub crate intentionally NOT added here yet — see
+# ../CONNECT_RPC_NOTE.md. Add `connectrpc-axum` (or `axum-connect`)
+# yourself once you've checked its current API against that note.
+
+[build-dependencies]
+prost-build = "0.13"
+
+[lints]
+workspace = true

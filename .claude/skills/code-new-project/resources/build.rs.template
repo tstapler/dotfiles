@@ -1,0 +1,6 @@
+fn main() -> std::io::Result<()> {
+    // Compiles proto/*.proto into Rust structs via prost — mature, stable,
+    // used regardless of whether the experimental Connect-RPC service-stub
+    // codegen (see CONNECT_RPC_NOTE.md) is wired in.
+    prost_build::compile_protos(&["../../proto/greet/v1/greet.proto"], &["../../proto"])
+}

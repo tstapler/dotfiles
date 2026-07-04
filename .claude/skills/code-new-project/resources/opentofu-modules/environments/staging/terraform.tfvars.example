@@ -1,0 +1,6 @@
+# Copy to terraform.tfvars and fill in — container_image is normally
+# passed via -var from CI at deploy time instead (see reference.md's CD
+# section), not committed here.
+gcp_project_id  = "TODO-your-staging-gcp-project-id"
+gcp_region      = "us-central1"
+container_image = "us-central1-docker.pkg.dev/TODO-project/TODO-repo/api:latest"

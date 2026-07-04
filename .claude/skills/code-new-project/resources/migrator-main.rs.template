@@ -1,0 +1,29 @@
+//! Tiny standalone binary that applies pending migrations, then exits.
+//! Built as its own workspace crate (not baked into the `api` binary or
+//! run at app-boot time) specifically so it can be the entrypoint of the
+//! Cloud Run migration Job (see iac/modules/app/cloud_run.tf) — running
+//! migrations at app-boot time races with Cloud Run's scale-to-zero
+//! concurrent cold-starts, a known anti-pattern (see reference.md).
+//!
+//! Connects with `DATABASE_URL` — the deploy pipeline must point this at
+//! the DIRECT (non-pooled) Neon connection string, not the pooled one the
+//! `api` service uses at runtime (Neon's pooler runs PgBouncer in
+//! transaction mode, which doesn't support the session-level locking
+//! `sqlx::migrate!` needs).
+
+#[tokio::main]
+async fn main() {
+    tracing_subscriber::fmt::init();
+
+    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let pool = sqlx::PgPool::connect(&database_url)
+        .await
+        .expect("failed to connect to database");
+
+    sqlx::migrate!("../migrations")
+        .run(&pool)
+        .await
+        .expect("migration failed");
+
+    tracing::info!("migrations applied successfully");
+}

@@ -1,0 +1,3 @@
+gcp_project_id  = "TODO-your-prod-gcp-project-id"
+gcp_region      = "us-central1"
+container_image = "us-central1-docker.pkg.dev/TODO-project/TODO-repo/api:latest"

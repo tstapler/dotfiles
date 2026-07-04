@@ -1,0 +1,32 @@
+# Polyglot pre-commit orchestration.
+# Run `lefthook install` once after cloning to activate.
+# https://github.com/evilmartians/lefthook
+
+pre-commit:
+  parallel: true
+  commands:
+    rust-fmt:
+      root: "backend/"
+      glob: "*.rs"
+      run: cargo fmt --check
+    rust-clippy:
+      root: "backend/"
+      glob: "*.rs"
+      run: cargo clippy --workspace --all-targets -- -D warnings
+    frontend-lint:
+      root: "frontend/"
+      glob: "*.{ts,html}"
+      run: npm run lint
+    iac-fmt:
+      root: "iac/"
+      glob: "*.tf"
+      run: tofu fmt -check
+
+pre-push:
+  commands:
+    rust-test:
+      root: "backend/"
+      run: cargo nextest run --workspace
+    frontend-test:
+      root: "frontend/"
+      run: npx vitest run

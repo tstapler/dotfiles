@@ -1,0 +1,15 @@
+version: v2
+plugins:
+  # TypeScript client for the Angular frontend — mature, well-documented.
+  - remote: buf.build/bufbuild/es
+    out: ../frontend/src/generated
+    opt: target=ts
+  - remote: buf.build/connectrpc/es
+    out: ../frontend/src/generated
+    opt: target=ts
+
+  # Rust: prost handles plain message types (mature, stable — used by the
+  # websocket streaming transport). Service-stub codegen for connectrpc-axum
+  # is intentionally NOT wired here yet — see backend/CONNECT_RPC_NOTE.md.
+  # prost codegen runs via backend/api/build.rs instead of buf, since
+  # prost-build compiles .proto directly without a buf remote plugin.

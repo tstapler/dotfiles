@@ -1,0 +1,35 @@
+# Connect-RPC on the Rust backend — experimental, needs a validation pass
+
+This project was scaffolded to use **Connect-RPC** (via [connectrpc.com](https://connectrpc.com))
+for unary and server-streaming RPCs — it lets one Protobuf-defined service
+speak the Connect protocol, native gRPC, and gRPC-Web simultaneously,
+callable directly from the Angular frontend with no proxy.
+
+**Status as of the July 2026 research pass this scaffold is based on**: the
+Rust server-side ecosystem for Connect-RPC is real but young. Two candidate
+crates exist — `connectrpc-axum` (native Axum integration, `connectrpc-build`
+for build.rs codegen) and `axum-connect` (older, similar goals) — and the
+`connectrpc-axum` maintainers explicitly describe it as **not yet
+recommended for production use**.
+
+Unlike the rest of this scaffold, **this piece was not smoke-tested against
+the actual crate API** before being generated — the exact method signatures
+and macro syntax weren't reliably known at scaffold time. Before relying on
+it:
+
+1. `cargo add connectrpc-axum` (or `axum-connect`) and check current docs.rs
+   for the actual API — it may have changed since this note was written.
+2. Wire the generated `GreetService` stub from `proto/greet/v1/greet.proto`
+   into `backend/api/src/main.rs` following that crate's current examples.
+3. Confirm `cargo check` actually passes before building on top of it.
+
+**If it's too rough**: fall back to plain JSON-over-Axum-routes for
+unary/server-streaming calls (still callable from Angular via `fetch` with
+`ReadableStream` for the streaming case) — you lose Protobuf schema
+validation and multi-protocol interop, but it's zero-risk and everything
+else in this scaffold (the WebSocket transport in `ws.rs`, the proto
+definitions themselves) still applies unchanged.
+
+The WebSocket transport (`backend/api/src/ws.rs`) does **not** depend on
+either crate — it's plain Axum + `prost`, both mature, and was smoke-tested
+(`cargo check`) as part of this scaffold.

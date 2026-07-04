@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package greet.v1;
+
+// Starter service — replace with real domain messages. Demonstrates the
+// three RPC shapes this stack supports and which transport each uses:
+//   - Unary / server-streaming -> Connect-RPC (works in any browser, no proxy)
+//   - Bidirectional streaming   -> WebSocket transport (see backend/api/src/ws.rs)
+//     because no stable browser supports true HTTP/2 duplex fetch as of 2026.
+service GreetService {
+  rpc Greet(GreetRequest) returns (GreetResponse);
+  rpc GreetStream(GreetRequest) returns (stream GreetResponse);
+}
+
+message GreetRequest {
+  string name = 1;
+}
+
+message GreetResponse {
+  string greeting = 1;
+}
+
+// Used over the WebSocket transport, not Connect-RPC — see ws.rs.
+// A oneof envelope keeps client<->server messages on a single socket
+// instead of needing separate up/down channels.
+message ChatEnvelope {
+  oneof payload {
+    ChatMessage message = 1;
+    ChatJoin join = 2;
+  }
+}
+
+message ChatMessage {
+  string from = 1;
+  string body = 2;
+}
+
+message ChatJoin {
+  string user = 1;
+}

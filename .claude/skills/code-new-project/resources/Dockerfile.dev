@@ -1,0 +1,26 @@
+# Pinned toolchain image for local/CI parity.
+# Both `.github/workflows/ci.yml` and a local `make ci` / `just ci` target
+# should run inside this image so a passing local check reliably means a
+# passing CI check. Build once, wire linters second (see SKILL.md).
+
+FROM rust:1.82-slim-bookworm AS base
+
+# Node.js for the Angular/frontend toolchain — pin the major version to
+# match frontend/.nvmrc.
+ARG NODE_MAJOR=22
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      curl ca-certificates build-essential pkg-config libssl-dev \
+    && curl -fsSL https://deb.nodesource.com/setup_${NODE_MAJOR}.x | bash - \
+    && apt-get install -y nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN rustup component add clippy rustfmt \
+    && cargo install cargo-nextest cargo-deny cargo-llvm-cov --locked
+
+# Uncomment if the KMP-sharing frontend path was chosen instead of Angular
+# (adds a JDK + Gradle for Kotlin/Compose Multiplatform Web builds):
+# ARG JAVA_VERSION=21
+# RUN apt-get update && apt-get install -y --no-install-recommends openjdk-${JAVA_VERSION}-jdk-headless \
+#     && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /workspace

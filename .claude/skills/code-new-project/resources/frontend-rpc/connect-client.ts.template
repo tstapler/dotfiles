@@ -1,0 +1,25 @@
+// Connect-RPC client for unary and server-streaming calls. Uses the
+// Connect protocol (not gRPC-Web) — plain fetch/JSON under the hood,
+// works in every browser today, no proxy required.
+//
+// Depends on generated types from `buf generate` (see proto/buf.gen.yaml)
+// landing in src/generated/. The generated GreetService client itself
+// isn't checked in here since it's produced by codegen, not hand-written.
+//
+// NOTE: this covers unary + server-streaming only. For bidirectional
+// streaming, use ws-client.ts instead — see backend/CONNECT_RPC_NOTE.md
+// for why (no stable browser supports true HTTP/2 duplex fetch yet).
+
+import { createClient } from "@connectrpc/connect";
+import { createConnectTransport } from "@connectrpc/connect-web";
+// import { GreetService } from "../generated/greet/v1/greet_pb"; // after `buf generate`
+
+const transport = createConnectTransport({
+  baseUrl: "/api", // proxy this to the Cloud Run backend in dev + prod
+});
+
+// export const greetClient = createClient(GreetService, transport);
+//
+// Usage:
+//   const res = await greetClient.greet({ name: "Tyler" });
+//   for await (const chunk of greetClient.greetStream({ name: "Tyler" })) { ... }

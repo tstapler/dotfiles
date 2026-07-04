@@ -1,0 +1,219 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  pull_request_target:
+    types: [closed]
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Git SHA of the staging-validated image to promote to prod"
+        required: true
+
+# One deploy at a time per environment — prevents concurrent `tofu apply`
+# races against the same state (see reference.md's CD section).
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  changes:
+    if: github.event_name != 'pull_request_target'
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      iac: ${{ steps.filter.outputs.iac }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+            frontend:
+              - 'frontend/**'
+            iac:
+              - 'iac/**'
+
+  backend:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - uses: taiki-e/install-action@cargo-nextest
+      - uses: taiki-e/install-action@cargo-deny
+      - uses: taiki-e/install-action@sqlx-cli
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: backend
+      - run: cargo fmt --check
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo deny check
+      # Verify the committed .sqlx/ offline cache is fresh BEFORE building —
+      # a stale cache would otherwise pass compilation against wrong query
+      # metadata. See reference.md's migrations section.
+      - run: cargo sqlx prepare --check --workspace
+        env:
+          SQLX_OFFLINE: "true"
+      - run: SQLX_OFFLINE=true cargo nextest run --workspace
+
+  # Ephemeral Neon branch per PR — real Postgres validation gate before
+  # merge, without paying Neon compute-hours for the everyday local loop
+  # (which uses Neon Local instead, see docker-compose.yml). Branch is
+  # created on PR open/sync and torn down on close via the
+  # pull_request_target/closed job below — see reference.md.
+  db-integration:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true' && github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: neondatabase/create-branch-action@v5
+        id: neon-branch
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          parent_id: ${{ vars.NEON_PROD_BRANCH_ID }}
+          branch_name: pr-${{ github.event.number }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: taiki-e/install-action@sqlx-cli
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: backend
+      # db_url = direct/non-pooled (Neon's own docs recommend this specific
+      # output for migrations); db_url_with_pooler = pooled, matching what
+      # the app uses at runtime. Verified against neondatabase/create-branch-action's
+      # actual documented outputs, not guessed. See reference.md.
+      - run: sqlx migrate run --source migrations
+        env:
+          DATABASE_URL: ${{ steps.neon-branch.outputs.db_url }}
+      - run: cargo nextest run --workspace --features integration-test
+        env:
+          DATABASE_URL: ${{ steps.neon-branch.outputs.db_url_with_pooler }}
+
+  db-branch-cleanup:
+    if: github.event_name == 'pull_request_target' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: neondatabase/delete-branch-action@v3
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          branch: pr-${{ github.event.number }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+
+  frontend:
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: frontend/.nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npx vitest run
+      - run: npx playwright install --with-deps
+      - run: npx playwright test
+
+  iac-validate:
+    needs: changes
+    if: needs.changes.outputs.iac == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: [staging, prod]
+    defaults:
+      run:
+        working-directory: iac/environments/${{ matrix.environment }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: opentofu/setup-opentofu@v1
+      - run: tofu fmt -check -recursive ../../
+      - run: tofu init -backend=false
+      - run: tofu validate
+
+  # Build, push, and deploy — gated to main only. Uses Workload Identity
+  # Federation (no long-lived GCP key ever stored in GitHub) and drives
+  # the deploy through `tofu apply` rather than `gcloud run deploy`, so
+  # OpenTofu stays the single owner of the Cloud Run resource (avoids the
+  # "two systems fighting over one resource" drift failure mode — see
+  # reference.md's CD section).
+  deploy-staging:
+    needs: [backend, frontend]
+    if: github.ref == 'refs/heads/main' && always() && !contains(needs.*.result, 'failure')
+    runs-on: ubuntu-latest
+    environment: staging
+    permissions:
+      id-token: write
+      contents: read
+    defaults:
+      run:
+        working-directory: iac/environments/staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - run: gcloud auth configure-docker ${{ vars.GCP_REGION }}-docker.pkg.dev --quiet
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: backend
+          push: true
+          tags: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID_STAGING }}/${{ vars.PROJECT_NAME }}/api:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - uses: opentofu/setup-opentofu@v1
+      - run: tofu init
+      - run: |
+          tofu apply -auto-approve \
+            -var container_image=${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID_STAGING }}/${{ vars.PROJECT_NAME }}/api:${{ github.sha }}
+
+  # Prod is a manual, deliberate promotion — not auto-deployed on every
+  # main merge. Run via Actions -> "CI" -> "Run workflow", passing the
+  # image tag (git SHA) that's already been validated on staging.
+  # `environment: prod` can require reviewer approval in repo settings
+  # for an extra gate — see reference.md's CD section for the reasoning.
+  deploy-prod:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    environment: prod
+    permissions:
+      id-token: write
+      contents: read
+    defaults:
+      run:
+        working-directory: iac/environments/prod
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+      - uses: opentofu/setup-opentofu@v1
+      - run: tofu init
+      - run: |
+          tofu apply -auto-approve \
+            -var container_image=${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID_STAGING }}/${{ vars.PROJECT_NAME }}/api:${{ inputs.image_tag }}
