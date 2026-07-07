@@ -38,10 +38,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run shellcheck on install.sh
-        uses: ludeeus/action-shellcheck@master
-        with:
-          scandir: '.'
-          additional_files: 'install.sh bootstrap/run.sh'
+        run: shellcheck install.sh bootstrap/run.sh
 
   test:
     runs-on: ubuntu-latest
