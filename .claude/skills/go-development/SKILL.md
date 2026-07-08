@@ -10,12 +10,142 @@ Apply idiomatic Go principles from Effective Go, the Go Code Review Comments wik
 
 ## Core Principles (Go Proverbs)
 
-- Don't communicate by sharing memory; share memory by communicating
-- The bigger the interface, the weaker the abstraction
-- Make the zero value useful
-- Errors are values — handle them, don't just check them
-- A little copying is better than a little dependency
-- Don't panic — use errors for normal control flow
+Each proverb below is paired with the concrete pattern that implements it.
+
+### Don't communicate by sharing memory; share memory by communicating
+
+Pass ownership of data to the next goroutine through a channel, instead of sharing a pointer
+that multiple goroutines read/write under a mutex. The goroutine that receives a value off
+the channel is its sole owner until it forwards the value again — no goroutine ever touches
+the same data concurrently, so no lock is needed for that data:
+
+```go
+type Job struct {
+    ID   string
+    Data []byte
+}
+
+// Ownership of each Job transfers through the channel — the goroutine that
+// receives it is the only one that touches it until it sends the Result on.
+func Pipeline(ctx context.Context, jobs <-chan Job) <-chan Result {
+    results := make(chan Result)
+    go func() {
+        defer close(results)
+        for job := range jobs {
+            select {
+            case results <- process(job):
+            case <-ctx.Done():
+                return
+            }
+        }
+    }()
+    return results
+}
+```
+
+A mutex is still the right tool for a different problem: protecting concurrent access to one
+genuinely shared data structure (e.g. an in-memory cache many goroutines read and write).
+Channels model transferring ownership between stages; mutexes model serialized access to a
+structure that stays put. Reach for whichever matches the actual shape of the problem.
+
+### The bigger the interface, the weaker the abstraction
+
+Keep interfaces to 1–3 methods, defined at the consumer — see "Interfaces" below for the
+full guidance and example.
+
+### Make the zero value useful
+
+Design a type so `var x T` is immediately usable with no constructor call:
+
+```go
+type Counter struct {
+    mu    sync.Mutex // zero value is a valid, ready-to-use mutex
+    count int        // zero value 0 is a valid starting count
+}
+
+func (c *Counter) Inc() {
+    c.mu.Lock()
+    defer c.mu.Unlock()
+    c.count++
+}
+
+var c Counter // ready to use immediately — no NewCounter() needed
+c.Inc()
+```
+
+### Errors are values — handle them, don't just check them
+
+Program *with* errors instead of only checking them at every call site. Rob Pike's canonical
+pattern absorbs an error across several operations and checks it exactly once:
+
+```go
+// errWriter absorbs the first error across many writes, checked once at the end
+type errWriter struct {
+    w   io.Writer
+    err error
+}
+
+func (ew *errWriter) write(buf []byte) {
+    if ew.err != nil {
+        return
+    }
+    _, ew.err = ew.w.Write(buf)
+}
+
+func WriteHeader(w io.Writer, title string) error {
+    ew := &errWriter{w: w}
+    ew.write([]byte("# " + title + "\n"))
+    ew.write([]byte("---\n"))
+    return ew.err // checked exactly once, not after every write
+}
+```
+
+See "Error Handling" below for wrapping and sentinel-error conventions.
+
+### A little copying is better than a little dependency
+
+Copy a small, self-contained helper into the package that needs it rather than importing a
+whole dependency for one function:
+
+```go
+// Copied in rather than pulling in a full retry/backoff library for one function.
+func backoff(attempt int) time.Duration {
+    d := time.Duration(1<<attempt) * 100 * time.Millisecond
+    if d > 5*time.Second {
+        d = 5 * time.Second
+    }
+    return d
+}
+```
+
+### Don't panic — use errors for normal control flow
+
+Return an error for any expected failure condition. Reserve `panic`/`recover` for genuinely
+unrecoverable situations, such as converting a handler panic into a controlled response at a
+process boundary instead of crashing the whole service:
+
+```go
+func Divide(a, b float64) (float64, error) {
+    if b == 0 {
+        return 0, errors.New("divide by zero")
+    }
+    return a / b, nil
+}
+
+// The one legitimate place to reach for recover(): a top-level boundary that
+// must stay up even if a handler panics.
+func RecoverMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        defer func() {
+            if rec := recover(); rec != nil {
+                log.Printf("panic recovered: %v", rec)
+                http.Error(w, "internal error", http.StatusInternalServerError)
+            }
+        }()
+        next.ServeHTTP(w, r)
+    })
+}
+```
 
 ---
 
@@ -42,6 +172,7 @@ defer f.Close()
 
 ## Interfaces
 
+- **Don't design with interfaces, discover them** (Rob Pike) — start concrete; extract an interface only when a second real implementation exists or is imminent, not for hypothetical future flexibility
 - Define interfaces in the **consuming** package, not the producer
 - Keep interfaces small (1–3 methods): `Reader`, `Writer`, `Closer`
 - Single-method interfaces use the `-er` suffix: `Stringer`, `Formatter`
@@ -170,28 +301,45 @@ func TestParse(t *testing.T) {
 
 ## Anti-Patterns to Avoid
 
-**Global mutable state** — use dependency injection:
+**Global mutable state** — use dependency injection; pass dependencies through a constructor:
 ```go
-// Bad: var db *Database
-// Good:
 type App struct{ db *Database }
 func NewApp(db *Database) *App { return &App{db: db} }
 ```
 
 **`init()` abuse** — limit to driver/plugin registration only; real initialization belongs in `main()` or constructors with proper error handling.
 
-**Interface pollution** — never create interfaces with 8+ methods; small interfaces compose better.
+**Interface pollution** — never create interfaces with 8+ methods; small interfaces compose better. This is one symptom of a broader problem — see "Concrete-First Design" below.
 
-**Goroutine variable capture:**
+**Goroutine variable capture** — rebind the loop variable per iteration before use in a closure:
 ```go
-// Bad: all goroutines share the same `item`
-for _, item := range items { go func() { process(item) }() }
-
-// Good:
 for _, item := range items { item := item; go func() { process(item) }() }
 ```
 
 **`import .`** — never; always qualify identifiers with package name.
+
+---
+
+## Concrete-First Design (Avoiding Leaky Abstractions)
+
+LLM-generated Go code characteristically reproduces Java/Spring-shaped abstractions —
+interfaces-first, Repository/Manager/Service layering, getter/setter pairs — because that
+style is over-represented in training data relative to idiomatic Go. These abstractions
+don't mesh with Go's data model and make code harder to maintain, not easier. Before adding
+any new type, interface, or layer, check it against the smell on the left; do the thing on
+the right instead.
+
+| Smell (don't) | Do instead |
+|---|---|
+| Interface with exactly one implementation, no near-term second one | Use the concrete type directly. Extract an interface only when a second real implementation exists or is imminent |
+| Interface defined in the same package as its implementation | Define it in the **consuming** package, containing only the methods that consumer needs |
+| Getter/setter pair wrapping a field with no logic | Export the field directly (`u.Name`, not `u.GetName()`) unless the accessor does real validation or computation |
+| `Manager`/`Handler`/`Processor`/`Service` type that only forwards calls | Delete the wrapper; call the wrapped type directly. Only keep a wrapping type if it adds behavior (caching, locking, metrics) at that layer |
+| Generic function/type where a concrete type or a plain loop would do | Write the concrete version first. Generalize only when 2+ real call sites need the identical logic |
+| Struct-wraps-struct-wraps-struct with no new exported behavior per layer | Collapse to one struct. Each layer must earn its existence by adding behavior, not by relaying calls |
+
+Run this check specifically on code an LLM just generated, not just human-written diffs —
+it's the fastest way to catch this drift before it compounds.
 
 ---
 
@@ -249,6 +397,7 @@ Apply techniques from the `type-driven-design` skill to encode invariants direct
 - [ ] Every goroutine has a documented exit condition
 - [ ] Every I/O function accepts and respects `ctx context.Context`
 - [ ] Interfaces have ≤3 methods; large ones are split
+- [ ] No speculative interfaces, forwarding-only wrapper types, or no-op getters/setters (see Concrete-First Design)
 - [ ] Acronyms consistently cased; receiver names consistent across all methods
 - [ ] `go vet`, `staticcheck`, `golangci-lint` pass clean
 - [ ] `go test -race ./...` passes
