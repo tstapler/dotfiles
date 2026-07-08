@@ -94,23 +94,7 @@ def create_task(
 - Follow PEP 8 with line lengths up to **120 characters**
 - Use **`ruff format`** for formatting — it's the Black-compatible successor; don't add Black as a separate tool
 - Mark unfinished code with `# TODO:` or `# FIXME:`
-- Comment only when code isn't self-explanatory
-- Write clear docstrings for all public functions and modules:
-
-```python
-def calculate_discount(price: float, rate: float = 0.1) -> float:
-    """
-    Calculate discounted price.
-
-    Args:
-        price: Original price in dollars.
-        rate: Discount rate between 0 and 1 (default: 0.1).
-
-    Returns:
-        Discounted price.
-    """
-    return price * (1 - rate)
-```
+- Comment only when code isn't self-explanatory; docstrings only when the function's purpose isn't obvious from its name and signature — never multi-line for simple functions
 
 ## Data Models
 
@@ -155,17 +139,7 @@ class UserRequest(BaseModel):
 
 ## API Clients
 
-Use class-based structures with pagination support:
-
-```python
-class APIClient:
-    def __init__(self, base_url: str, timeout: int = 30):
-        self.base_url = base_url
-        self.timeout = timeout
-
-    def list_items(self, page: int = 1, per_page: int = 100) -> list[Item]:
-        pass
-```
+Use a class with a single long-lived `httpx.AsyncClient` (injected or created in `__aenter__`). See [async-patterns.md](async-patterns.md) for the full lifespan pattern, retry/timeout config, and pagination helpers.
 
 ## Testing with Pytest
 

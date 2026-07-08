@@ -67,14 +67,7 @@ def test_notifier_calls_smtp():
 
 ### Verify fakes match Protocol at type-check time
 
-```python
-from typing import runtime_checkable
-
-@runtime_checkable
-class OrderRepository(Protocol): ...
-
-# mypy --strict tests/fakes.py catches structural mismatches at CI time
-```
+Mypy checks Protocol structural compatibility without any decorator — just run `mypy --strict tests/fakes.py` in CI. `@runtime_checkable` is only needed if you want `isinstance(obj, OrderRepository)` checks at runtime; don't add it just for mypy.
 
 ---
 

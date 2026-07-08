@@ -47,8 +47,7 @@ dependencies = [
     "httpx>=0.27",
 ]
 
-[project.optional-dependencies]
-dev = ["my-package[test,lint]"]
+[dependency-groups]
 test = [
     "pytest>=9.0",
     "pytest-cov>=5.0",
@@ -61,6 +60,7 @@ lint = [
     "ruff>=0.13",
     "mypy>=2.0",
 ]
+dev = ["my-package", {include-group = "test"}, {include-group = "lint"}]
 
 [project.scripts]
 my-cli = "mypackage.cli:main"
