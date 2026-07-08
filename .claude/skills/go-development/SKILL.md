@@ -1,6 +1,6 @@
 ---
 name: go-development
-description: Apply idiomatic, well-structured Go development practices. Use when writing, reviewing, or refactoring Go code. Covers error handling, interfaces, concurrency, testing, naming, project structure, and anti-patterns based on Effective Go, Go Code Review Comments, and Go Proverbs.
+description: Apply idiomatic, well-structured Go development practices. Use when writing, reviewing, or refactoring Go code. Covers error handling, interfaces, concurrency, testing, naming, project structure, type-system maximization (generics, embedding, iota, receivers), primitive-obsession fixes, and anti-patterns based on Effective Go, Go Code Review Comments, and Go Proverbs.
 paths: "**/*.go"
 ---
 
@@ -144,6 +144,146 @@ func RecoverMiddleware(next http.Handler) http.Handler {
         }()
         next.ServeHTTP(w, r)
     })
+}
+```
+
+### Concurrency is not parallelism
+
+Concurrency is a program *structure* — independent, composable units of work — that's
+correct regardless of how many cores run it. Parallelism is whether those units actually
+execute simultaneously, which the Go runtime decides based on `GOMAXPROCS` and available
+cores:
+
+```go
+// Structuring work as goroutines makes it concurrent; whether it runs in
+// parallel is a runtime/scheduling decision, not something the code asserts.
+runtime.GOMAXPROCS(runtime.NumCPU())
+```
+
+### Channels orchestrate; mutexes serialize
+
+The `Pipeline` example above moves ownership of a `Job` between stages — that's
+orchestration. The `Counter` example's `sync.Mutex` protects one persistent structure many
+callers reach into — that's serialization. Reach for whichever matches the actual shape of
+the problem: a pipeline of stages needs a channel; a single shared structure needs a mutex.
+
+### `interface{}` / `any` says nothing
+
+A generic constraint says something concrete about `T`; `any` says nothing at all about what
+it holds:
+
+```go
+// The constraint documents exactly what Sum can operate on
+func Sum[T int | float64](nums []T) T {
+    var total T
+    for _, n := range nums {
+        total += n
+    }
+    return total
+}
+```
+
+### Gofmt's style is no one's favorite, yet gofmt is everyone's favorite
+
+Run `gofmt -w .` before every commit (see "Tooling" below) — one non-negotiable formatting
+standard removes an entire class of style debate from every review.
+
+### Clear is better than clever
+
+Prefer the straightforward version over a compact one-liner — self-documenting names and
+explicit branches read faster than they're saved by cleverness:
+
+```go
+func IsBusinessDay(t time.Time) bool {
+    switch t.Weekday() {
+    case time.Saturday, time.Sunday:
+        return false
+    default:
+        return true
+    }
+}
+```
+
+### Reflection is never clear
+
+Prefer an explicit type switch or generics over `reflect` whenever the set of types is known
+at compile time. Reserve `reflect` for genuine serialization/framework code (`encoding/json`,
+ORMs) where the type set truly isn't known ahead of time:
+
+```go
+func Describe(v any) string {
+    switch x := v.(type) {
+    case int:
+        return fmt.Sprintf("int: %d", x)
+    case string:
+        return fmt.Sprintf("string: %q", x)
+    default:
+        return fmt.Sprintf("unknown: %v", x)
+    }
+}
+```
+
+### Escape hatches: syscall, cgo, and unsafe must be guarded and isolated
+
+Guard any `syscall`- or `cgo`-dependent file with a `//go:build` tag naming exactly what it
+depends on:
+
+```go
+//go:build linux
+
+package platform
+
+func setNonblocking(fd int) error {
+    return syscall.SetNonblock(fd, true)
+}
+```
+
+Treat a cgo-touching package as a foreign-function boundary, not ordinary Go — keep it small
+and isolated behind a plain Go interface the rest of the codebase depends on instead of the
+cgo package directly. Apply the same isolation to `unsafe`: confine it to one narrow,
+documented wrapper so the invariant it relies on lives in exactly one place:
+
+```go
+// unsafe usage isolated behind one narrow, documented wrapper
+func bytesToString(b []byte) string {
+    return unsafe.String(unsafe.SliceData(b), len(b))
+}
+```
+
+### Don't just check errors, handle them gracefully
+
+Checking an error is `if err != nil { return err }`. Handling it gracefully means the caller
+gets a degraded-but-useful result where one is available, not just a propagated failure:
+
+```go
+func (s *Service) GetUser(ctx context.Context, id string) (*User, error) {
+    u, err := s.upstream.Get(ctx, id)
+    if err != nil {
+        if cached, ok := s.cache.Get(id); ok {
+            return cached, nil // degrade gracefully instead of failing the caller outright
+        }
+        return nil, fmt.Errorf("get user %s: %w", id, err)
+    }
+    return u, nil
+}
+```
+
+### Design the architecture, name the components, document the details
+
+Package boundaries and names *are* the architecture documentation — see "Project Structure"
+and "Naming" below. Keep them deliberate (name packages by what they provide) rather than
+defaulting to `util`/`common`/`helpers`, which document nothing.
+
+### Documentation is for users
+
+Write doc comments from the caller's perspective — what it does and when it errors — not a
+narration of the implementation:
+
+```go
+// ParseConfig reads and validates the YAML config file at path.
+// It returns an error if the file is missing or fails schema validation.
+func ParseConfig(path string) (*Config, error) {
+    // ...
 }
 ```
 
@@ -375,19 +515,270 @@ Avoid applying patterns for their own sake — use them when the recurring probl
 
 ---
 
-## Type-Driven Design
+## Maximizing Go's Type System
 
-Apply techniques from the `type-driven-design` skill to encode invariants directly into Go's type system.
+Beyond primitive obsession (see "Type-Driven Design" below), these are the core Go-specific
+techniques for getting real leverage out of the type system.
 
-**Core Go techniques:**
-- `type UserID string` — newtype (never `= string` alias); prevents parameter mixups at compile time
-- Phantom types: `type ID[T any] string` — `ID[User]` and `ID[Order]` are incompatible
-- Smart constructors: unexported type + `func ParseEmail(s string) (Email, error)` — holding the type proves validity
-- Sum types: unexported marker interface (`orderStatus()`) + distinct structs per state
-- Typestate pattern: `Connection[Open]` vs `Connection[Closed]` — invalid transitions are compile errors
-- Parse at the HTTP/CLI boundary; pass proven types (`Email`, `UserID`, `Money`) into the application layer
+### Pointer vs Value Receivers — Pick One Semantic Per Type
 
-**Signs you need this skill:** magic string comparisons (`status == "pending"`), functions that take two `string` parameters that could be swapped, validation logic repeated across multiple functions, `nil` pointer panics from missing construction checks.
+Value receivers copy; pointer receivers share and can mutate. Choose one per type and use it
+for every method on that type — never mix them:
+
+```go
+// Value semantics: Point is small and safe to copy
+type Point struct{ X, Y int }
+func (p Point) Add(other Point) Point { return Point{p.X + other.X, p.Y + other.Y} }
+
+// Pointer semantics: Buffer holds mutable, potentially large state
+type Buffer struct{ data []byte }
+func (b *Buffer) Write(p []byte) (int, error) { b.data = append(b.data, p...); return len(p), nil }
+```
+
+Rule of thumb: value receivers for small, immutable, comparable types; pointer receivers once
+the type has mutable state or is expensive to copy.
+
+### Struct Embedding for Composition, Never Inheritance
+
+Embedding promotes an embedded type's methods and fields to the outer type, but the embedded
+type has no idea it's embedded — this is composition, not a base class:
+
+```go
+type Reader struct{ r io.Reader }
+type Logger struct{ log *slog.Logger }
+
+// LoggingReader embeds both — Read() and Log() are promoted onto it, but
+// neither Reader nor Logger knows LoggingReader exists
+type LoggingReader struct {
+    Reader
+    Logger
+}
+```
+
+If a promoted method ever needs overriding to "fix" the embedded type's behavior, that's the
+signal that inheritance-shaped thinking crept in — prefer holding the type as a named field and
+forwarding only the specific calls you need, rather than embedding for the override.
+
+### `iota` for Typed Enums
+
+Go has no `enum` keyword — a distinct type plus `iota` is the idiomatic replacement for magic
+strings or ints:
+
+```go
+type Level int
+
+const (
+    LevelDebug Level = iota
+    LevelInfo
+    LevelWarn
+    LevelError
+)
+
+func (l Level) String() string {
+    return [...]string{"debug", "info", "warn", "error"}[l]
+}
+```
+
+The distinct `Level` type — not a bare `int` — is what makes this a compile-time guarantee:
+nothing can pass an arbitrary int where a `Level` is expected, the same protection a newtype
+gives (see "Type-Driven Design" below).
+
+### Generics: Constraints Document Intent
+
+A type parameter's constraint is documentation the compiler enforces — pick the narrowest
+constraint that expresses what the function actually needs:
+
+```go
+type Ordered interface {
+    ~int | ~int64 | ~float64 | ~string
+}
+
+func Max[T Ordered](a, b T) T {
+    if a > b {
+        return a
+    }
+    return b
+}
+```
+
+Reach for `comparable` when the function only needs `==`/`!=` (map keys, `slices.Contains`),
+and a custom constraint like `Ordered` when it needs `<`/`>`. Don't reach for generics at all
+when a concrete type or a five-line loop covers the one call site you actually have — see
+"Concrete-First Design" above.
+
+### Struct Tags at Serialization Boundaries
+
+Struct tags describe how a type maps to an external wire format — keep them at the boundary,
+not leaking into domain logic:
+
+```go
+type UserDTO struct {
+    ID    string `json:"id"`
+    Email string `json:"email"`
+}
+```
+
+Parse a `UserDTO` into a domain `Email`/`UserID` (see "Type-Driven Design" below) immediately
+after unmarshaling. Tags describe the wire format; the domain model stays tag-free.
+
+---
+
+## Type-Driven Design (Avoiding Primitive Obsession)
+
+Apply these techniques to encode invariants directly into Go's type system so illegal states
+are unrepresentable. Full cross-language coverage (Python, Java) lives in the
+`type-driven-design` skill — this section is the Go-specific implementation of each.
+
+### Newtypes
+
+Give domain concepts their own type instead of passing raw primitives, so the compiler
+catches parameter mixups:
+
+```go
+type UserID string
+type AccountID string
+type Cents int64
+
+func Transfer(from, to AccountID, amount Cents) error { /* ... */ return nil }
+```
+
+Use `type Foo string` (a distinct type), never `type Foo = string` (an alias — no
+type-checking protection).
+
+### Phantom Types (Cross-Entity ID Safety)
+
+```go
+type ID[T any] string // T only exists at compile time, never at runtime
+
+type User struct{}
+type Order struct{}
+
+type UserID = ID[User]
+type OrderID = ID[Order]
+
+func GetUser(id UserID) (*User, error) { return nil, nil }
+// GetUser(orderID) is a compile error — UserID and OrderID are distinct types
+```
+
+### Smart Constructors
+
+An unexported underlying type plus an exported parsing function — holding the type proves
+the value was already validated:
+
+```go
+type Email string // representation is unexported; can't be constructed directly from another package
+
+func ParseEmail(s string) (Email, error) {
+    if !emailRegex.MatchString(s) {
+        return "", fmt.Errorf("invalid email %q", s)
+    }
+    return Email(s), nil
+}
+
+// Callers holding an Email never need to re-validate it
+func SendWelcome(to Email) { /* ... */ }
+```
+
+### Sum Types (Closed State Sets)
+
+An unexported marker method seals the set of implementations; a `switch` on the concrete
+type enforces exhaustive handling instead of comparing magic strings:
+
+```go
+type OrderStatus interface{ orderStatus() }
+
+type Pending   struct{}
+type Confirmed struct{}
+type Shipped   struct{}
+type Cancelled struct{}
+
+func (Pending) orderStatus()   {}
+func (Confirmed) orderStatus() {}
+func (Shipped) orderStatus()   {}
+func (Cancelled) orderStatus() {}
+
+func (o *Order) Confirm() error {
+    if _, ok := o.Status.(Pending); !ok {
+        return fmt.Errorf("can only confirm a pending order, got %T", o.Status)
+    }
+    o.Status = Confirmed{}
+    return nil
+}
+```
+
+### Value Objects
+
+Immutable, self-validating, equality-by-value types for domain concepts like money — see
+`Money` in `type-driven-design` for the full pattern:
+
+```go
+type Money struct {
+    cents    int64
+    currency string
+}
+
+func NewMoney(amount float64, currency string) (Money, error) {
+    if amount < 0 {
+        return Money{}, errors.New("amount cannot be negative")
+    }
+    return Money{cents: int64(math.Round(amount * 100)), currency: currency}, nil
+}
+
+func (m Money) Add(other Money) (Money, error) {
+    if m.currency != other.currency {
+        return Money{}, errors.New("currency mismatch")
+    }
+    return Money{cents: m.cents + other.cents, currency: m.currency}, nil
+}
+```
+
+### Refinement Types
+
+A type that carries proof of a constraint, such as non-emptiness, so downstream code needs
+no defensive check:
+
+```go
+type NonEmptySlice[T any] struct{ items []T }
+
+func NewNonEmptySlice[T any](items ...T) (NonEmptySlice[T], error) {
+    if len(items) == 0 {
+        return NonEmptySlice[T]{}, errors.New("must not be empty")
+    }
+    return NonEmptySlice[T]{items: items}, nil
+}
+
+func (s NonEmptySlice[T]) Head() T { return s.items[0] } // safe — proven non-empty
+```
+
+### Typestate Pattern
+
+Encode valid state transitions with phantom generics, so an invalid transition is a compile
+error rather than a runtime check:
+
+```go
+type Open   struct{}
+type Closed struct{}
+
+type Connection[State any] struct{ addr string }
+
+func NewConnection(addr string) Connection[Closed] { return Connection[Closed]{addr} }
+
+func (c Connection[Closed]) Open() (Connection[Open], error) {
+    return Connection[Open]{c.addr}, nil // dial happens here
+}
+func (c Connection[Open]) Query(sql string) (*Rows, error) { return nil, nil }
+func (c Connection[Open]) Close() Connection[Closed]        { return Connection[Closed]{c.addr} }
+// c.Query(sql) is a compile error if c is Connection[Closed]
+```
+
+### Parse at the Boundary, Trust Internally
+
+Validate and parse exactly once at the HTTP/CLI/message boundary; pass the proven type
+(`Email`, `UserID`, `Money`) through the rest of the call chain with no re-validation.
+
+**Signs you need this section:** magic string comparisons (`status == "pending"`), functions
+that take two `string` parameters that could be swapped, validation logic repeated across
+multiple functions, `nil` pointer panics from missing construction checks.
 
 ---
 
@@ -398,6 +789,7 @@ Apply techniques from the `type-driven-design` skill to encode invariants direct
 - [ ] Every I/O function accepts and respects `ctx context.Context`
 - [ ] Interfaces have ≤3 methods; large ones are split
 - [ ] No speculative interfaces, forwarding-only wrapper types, or no-op getters/setters (see Concrete-First Design)
+- [ ] Domain concepts use newtypes/value objects/sum types, not raw `string`/`int`/`float64` (see Type-Driven Design)
 - [ ] Acronyms consistently cased; receiver names consistent across all methods
 - [ ] `go vet`, `staticcheck`, `golangci-lint` pass clean
 - [ ] `go test -race ./...` passes
