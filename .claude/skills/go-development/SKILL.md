@@ -308,6 +308,52 @@ defer f.Close()
 - Error strings: lowercase, no trailing punctuation, include context
 - Never silently drop errors — `_ = f.Close()` requires a documented reason
 
+### Domain Error Taxonomies (Sealed-Interface Pattern)
+
+A sentinel error is one value; a custom error type is one shape. Neither gives you a *closed,
+enumerable set* of domain errors the way a sealed class hierarchy does. Go's closest
+equivalent — the same technique the standard library uses to seal `go/ast`'s `Expr`/`Stmt`
+interfaces — is an interface with an unexported marker method, so only types in this package
+can implement it:
+
+```go
+type DomainError interface {
+    error
+    domainError() // unexported — only this package can seal the set
+}
+
+type NotFoundError struct{ ID string }
+func (e *NotFoundError) Error() string { return fmt.Sprintf("not found: %s", e.ID) }
+func (e *NotFoundError) domainError()  {}
+
+type ConflictError struct{ Reason string }
+func (e *ConflictError) Error() string { return fmt.Sprintf("conflict: %s", e.Reason) }
+func (e *ConflictError) domainError()  {}
+```
+
+Callers get a real taxonomy to switch over instead of stringly-typed error checks:
+
+```go
+switch e := err.(type) {
+case *NotFoundError:
+    return http.StatusNotFound
+case *ConflictError:
+    return http.StatusConflict
+default:
+    return http.StatusInternalServerError
+}
+```
+
+**Limitation to know**: unlike a sealed class's `when`, Go's type switch is not
+compiler-enforced exhaustive — adding a new `DomainError` implementation later won't fail the
+build anywhere a case was missed. Two ways to close that gap:
+- A `default: panic(...)` converts a missed case into a loud runtime failure instead of a
+  silent fallthrough — not compile-time, but fails fast.
+- If the taxonomy is really a fixed set of *codes* rather than error types carrying different
+  data, model it as an `iota` enum instead (see "Maximizing Go's Type System" below) and run
+  the `exhaustive` linter (see "Tooling" below) — that one genuinely enforces switch
+  exhaustiveness at CI time, the closest Go gets to sealed-class guarantees.
+
 ---
 
 ## Interfaces
@@ -495,7 +541,7 @@ go test -race ./...   # Race detection
 golangci-lint run     # Meta-linter
 ```
 
-Recommended golangci-lint linters: `staticcheck`, `gosimple`, `govet`, `errcheck`, `gosec`, `revive`, `misspell`, `unconvert`.
+Recommended golangci-lint linters: `staticcheck`, `gosimple`, `govet`, `errcheck`, `gosec`, `revive`, `misspell`, `unconvert`, `exhaustive` (enforces switch exhaustiveness over `iota`-based enums).
 
 ---
 
@@ -663,7 +709,7 @@ func GetUser(id UserID) (*User, error) { return nil, nil }
 ### Smart Constructors
 
 An unexported underlying type plus an exported parsing function — holding the type proves
-the value was already validated:
+the value was already validated. The validation itself can be a format check:
 
 ```go
 type Email string // representation is unexported; can't be constructed directly from another package
@@ -677,6 +723,23 @@ func ParseEmail(s string) (Email, error) {
 
 // Callers holding an Email never need to re-validate it
 func SendWelcome(to Email) { /* ... */ }
+```
+
+...or just a presence check, which is all a non-empty ID needs — the type still stops an
+empty string, and a distinct type per entity still stops parameter mixups:
+
+```go
+type UserID string
+
+func NewUserID(s string) (UserID, error) {
+    if s == "" {
+        return "", errors.New("user ID cannot be empty")
+    }
+    return UserID(s), nil
+}
+
+// A UserID can only exist via NewUserID — an empty one can never reach this function
+func GetUser(id UserID) (*User, error) { /* ... */ return nil, nil }
 ```
 
 ### Sum Types (Closed State Sets)
