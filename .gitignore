@@ -95,6 +95,7 @@ fabric.properties
 
 ### Ansible template
 *.retry
+.ansible/
 
 ### Python template
 # Byte-compiled / optimized / DLL files
