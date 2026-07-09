@@ -86,6 +86,13 @@ impl ServerHandler for ProxyServer {
         let compressed = self.compressor.compress(filtered);
         let tokens_after = estimate_token_count(&compressed);
 
+        crate::metrics::write_session_start(
+            &crate::metrics::default_metrics_path(),
+            &self.server_name,
+            tokens_before as u64,
+            tokens_after as u64,
+        );
+
         info!(
             server = %self.server_name,
             tools_returned = compressed.len(),

@@ -279,6 +279,18 @@ async fn handle_metrics(State(state): State<AppState>) -> impl IntoResponse {
         "anthropic": { "cooling_down": cooling, "remaining_seconds": remaining },
         "bedrock":   { "cooling_down": false,   "remaining_seconds": 0 }
     });
+
+    // Merge MCP filter metrics written by mcp-proxy subprocess.
+    let mcp_path = {
+        let home = std::env::var("HOME").unwrap_or_default();
+        std::path::PathBuf::from(home).join(".cache/claude-proxy/mcp-filter-metrics.json")
+    };
+    if let Ok(bytes) = std::fs::read(&mcp_path) {
+        if let Ok(mcp) = serde_json::from_slice::<serde_json::Value>(&bytes) {
+            metrics_json["mcp_filter"] = mcp;
+        }
+    }
+
     Json(metrics_json)
 }
 

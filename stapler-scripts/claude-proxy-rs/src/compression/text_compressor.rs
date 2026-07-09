@@ -113,10 +113,10 @@ fn normalize_blank_lines(text: &str) -> String {
     for line in &lines {
         if line.trim().is_empty() {
             blank_run += 1;
-            if blank_run <= 2 {
+            if blank_run <= 1 {
                 out.push(line.to_string());
             }
-            // If blank_run > 2, skip the line (collapse).
+            // If blank_run > 1, skip the line (collapse to at most one blank line).
         } else {
             blank_run = 0;
             out.push(line.to_string());
