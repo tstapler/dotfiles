@@ -1,0 +1,6 @@
+[net]
+git-fetch-with-cli = true
+
+[build]
+rustc-wrapper = "sccache"
+incremental = false
