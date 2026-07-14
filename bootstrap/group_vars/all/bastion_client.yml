@@ -10,14 +10,14 @@ bastion_name: bastion-1
 bastion_host: >-
   {{ lookup('community.general.onepassword',
             'Escutcheon/bastion-1',
-            field='address', errors='ignore') | default('') }}
+            field='address', errors='ignore') | default('', true) }}
 
 bastion_port: >-
   {{ lookup('community.general.onepassword',
             'Escutcheon/bastion-1',
-            field='ssh_port', errors='ignore') | default(0) | int }}
+            field='ssh_port', errors='ignore') | default(0, true) | int }}
 
 bastion_knock_sequence: >-
   {{ (lookup('community.general.onepassword',
              'Escutcheon/bastion-1',
-             field='knock_sequence', errors='ignore') | default('[]')) | from_json }}
+             field='knock_sequence', errors='ignore') | default('[]', true)) | from_json }}
