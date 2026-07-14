@@ -9,19 +9,15 @@ tap "codekitchen/pipeline"
 tap "deviceinsight/packages"
 tap "fluxcd/tap"
 tap "getgrit/tap"
-tap "harelba/q"
-tap "homebrew/cask"
-tap "homebrew/core"
-tap "homebrew/services"
+tap "hashicorp/tap"
 tap "lacework/tap"
-tap "mergestat/mergestat"
 tap "norwoodj/tap"
 tap "oven-sh/bun"
 tap "saulpw/vd"
 tap "sqitchers/sqitch"
 tap "stefanprodan/tap"
 tap "synfinatic/aws-sso-cli"
-tap "test/claudia"
+tap "terraform-linters/tap"
 tap "tilt-dev/tap"
 tap "tstapler/agrapha"
 tap "tstapler/stapler-squad", "https://github.com/tstapler/stapler-squad"
@@ -215,8 +211,6 @@ brew "ocrmypdf"
 brew "ollama", restart_service: :changed
 # Open source, general-purpose policy engine
 brew "opa"
-# Cryptography and SSL/TLS Toolkit
-brew "openssl@1.1"
 # Vulnerability scanner which uses the OSV database
 brew "osv-scanner"
 # 7-Zip (high compression file archiver) implementation
@@ -284,7 +278,7 @@ brew "steampipe"
 # Send macOS User Notifications from the command-line
 brew "terminal-notifier"
 # Tool to build, change, and version infrastructure
-brew "terraform"
+brew "hashicorp/tap/terraform"
 # Tool to generate documentation from Terraform modules
 brew "terraform-docs"
 # CLI tool to generate terraform files from existing infrastructure
@@ -292,7 +286,7 @@ brew "terraformer"
 # Kubernetes-native framework for test definition and execution
 brew "testkube"
 # Linter for Terraform files
-brew "tflint"
+cask "terraform-linters/tap/tflint"
 # Static analysis security scanner for your terraform code
 brew "tfsec"
 # Terminal multiplexer
@@ -345,12 +339,8 @@ brew "fluxcd/tap/flux", link: false
 brew "fluxcd/tap/flux@0.41", link: true
 # GritQL is a query language for searching, linting, and modifying code
 brew "getgrit/tap/grit"
-# Run SQL directly on CSV or TSV files, and on multiple sqlite databases
-brew "harelba/q/q"
 # Lacework command-line interface helps to manage the Lacework platform
 brew "lacework/tap/lacework-cli"
-# Query git repositories with SQL. Generate reports, perform status checks, analyze codebases. 🔍 📊
-brew "mergestat/mergestat/mergestat"
 # Automatically generate markdown documentation for helm charts
 brew "norwoodj/tap/helm-docs"
 # Incredibly fast JavaScript runtime, bundler, transpiler and package manager - all in one.
@@ -393,7 +383,6 @@ cask "discord"
 cask "firefox"
 # Screenshot software with built-in annotation tools
 cask "flameshot"
-cask "gifcapture"
 # Desktop client for GitHub repositories
 cask "github"
 # HTTP and GraphQL Client
@@ -414,12 +403,8 @@ cask "meld"
 cask "opcode"
 # Administration and development platform for PostgreSQL
 cask "pgadmin4"
-# Command-line shell and scripting language
-cask "powershell"
 # Kubernetes and container management on the desktop
 cask "rancher"
-# Plugin for AWS CLI to start and end sessions that connect to managed instances
-cask "session-manager-plugin"
 # Music streaming service
 cask "spotify"
 # Rust-based terminal
