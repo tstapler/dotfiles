@@ -45,3 +45,71 @@
   environment:
     PATH: "{{ ansible_facts['env']['HOME'] }}/.local/bin:{{ brew_prefix }}/bin:{{ ansible_facts['env']['HOME'] }}/.asdf/bin:{{ ansible_facts['env']['HOME'] }}/.asdf/shims:/opt/homebrew/bin:/home/linuxbrew/.linuxbrew/bin:{{ ansible_facts['env']['PATH'] }}"
   tags: [dotfiles]
+
+# ── Personal git identity ──────────────────────────────────────────────────
+# .gitconfig is deliberately excluded from the cfgcaddy links manifest: on
+# machines where a corporate identity/credential tool owns
+# ~/.gitconfig, symlinking over it would break that tool's auto-managed
+# proxy/credential block on its next refresh. So the two cases are handled
+# explicitly here instead:
+#   - ~/.gitconfig is tool-managed  -> render our config into
+#     ~/.config/git/config instead. Git reads this at the same "global" tier
+#     as ~/.gitconfig (lower precedence, so the tool's file always wins on any
+#     key it actually sets), it's plain-user-owned so no sudo/system path is
+#     needed, and — unlike a system gitconfig under a package manager prefix —
+#     it's read by whichever `git` binary ends up on PATH (Apple's /usr/bin/git
+#     included), so it isn't silently skipped when Homebrew's git isn't first
+#     in PATH.
+#   - ~/.gitconfig is a normal file -> symlink it to the dotfiles copy,
+#     mirroring what cfgcaddy does for everything else.
+
+- name: Check if ~/.gitconfig exists
+  stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/.gitconfig"
+  register: dotfiles_gitconfig_stat
+  tags: [dotfiles]
+
+- name: Detect tool-managed ~/.gitconfig (e.g. corporate identity autoconfig)
+  command: grep -l "AUTOCONFIG" "{{ ansible_facts['env']['HOME'] }}/.gitconfig"
+  register: dotfiles_gitconfig_managed
+  failed_when: false
+  changed_when: false
+  when: dotfiles_gitconfig_stat.stat.exists and not dotfiles_gitconfig_stat.stat.islnk
+  tags: [dotfiles]
+
+- name: Ensure ~/.config/git exists
+  file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/git"
+    state: directory
+    mode: '0755'
+  when: dotfiles_gitconfig_managed.rc is defined and dotfiles_gitconfig_managed.rc == 0
+  tags: [dotfiles]
+
+- name: Render personal git identity into ~/.config/git/config (tool-managed ~/.gitconfig)
+  template:
+    src: "{{ dotfiles_dir }}/.gitconfig"
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/git/config"
+    mode: '0644'
+  when: dotfiles_gitconfig_managed.rc is defined and dotfiles_gitconfig_managed.rc == 0
+  tags: [dotfiles]
+
+- name: Back up pre-existing ~/.gitconfig before symlinking over it
+  command: cp "{{ ansible_facts['env']['HOME'] }}/.gitconfig" "{{ ansible_facts['env']['HOME'] }}/.gitconfig.pre-dotfiles-bak"
+  args:
+    creates: "{{ ansible_facts['env']['HOME'] }}/.gitconfig.pre-dotfiles-bak"
+  when: >
+    dotfiles_gitconfig_stat.stat.exists and not dotfiles_gitconfig_stat.stat.islnk and
+    (dotfiles_gitconfig_managed.rc is defined and dotfiles_gitconfig_managed.rc != 0)
+  tags: [dotfiles]
+
+- name: Symlink ~/.gitconfig to dotfiles copy (normal, non-tool-managed machines)
+  file:
+    src: "{{ dotfiles_dir }}/.gitconfig"
+    dest: "{{ ansible_facts['env']['HOME'] }}/.gitconfig"
+    state: link
+    force: true
+  when: >
+    not dotfiles_gitconfig_stat.stat.exists or
+    dotfiles_gitconfig_stat.stat.islnk or
+    (dotfiles_gitconfig_managed.rc is defined and dotfiles_gitconfig_managed.rc != 0)
+  tags: [dotfiles]
