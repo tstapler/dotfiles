@@ -21,6 +21,7 @@ brew "node"
 brew "ollama", restart_service: :changed
 brew "python@3.12"
 brew "ripgrep"
+brew "sccache"
 brew "shellcheck"
 brew "starship"
 brew "tmux"
