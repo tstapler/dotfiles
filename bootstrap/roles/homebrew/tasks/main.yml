@@ -50,8 +50,8 @@
 - name: Trust all taps in Brewfile (Homebrew 4.x security model)
   shell: |
     {
-      grep '^tap ' {{ homebrew_brewfile_path }} | awk '{print $2}' | tr -d '"'
-      grep -E '^(brew|cask) ' {{ homebrew_brewfile_path }} | awk '{print $2}' | tr -d '"' | \
+      grep -E '^tap ' {{ homebrew_brewfile_path }} | sed -E 's/^tap "([^"]+)".*/\1/'
+      grep -E '^(brew|cask) ' {{ homebrew_brewfile_path }} | sed -E 's/^(brew|cask) "([^"]+)".*/\2/' | \
         grep -E '^[^/]+/[^/]+/[^/]+' | awk -F'/' '{print $1 "/" $2}'
     } | sort -u | while read -r tap; do
       {{ brew_prefix }}/bin/brew trust --tap "$tap" 2>/dev/null || true
@@ -63,7 +63,7 @@
 
 - name: Add all taps from Brewfile
   shell: |
-    grep '^tap ' {{ homebrew_brewfile_path }} | awk '{print $2}' | tr -d '"' | \
+    grep -E '^tap ' {{ homebrew_brewfile_path }} | sed -E 's/^tap "([^"]+)".*/\1/' | \
     while read -r tap; do
       {{ brew_prefix }}/bin/brew tap "$tap" 2>/dev/null || true
     done
