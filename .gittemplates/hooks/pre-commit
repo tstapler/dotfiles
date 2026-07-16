@@ -2,3 +2,16 @@
 
 # Set the appropriate email based on repository
 $HOME/dotfiles/stapler-scripts/set_git_emails
+
+# Run any locally-installed drop-in pre-commit checks. This directory is
+# machine state, not part of any tracked repo, so overlay repos (see the
+# personal dotfiles `overlays` Ansible role) can drop in their own checks
+# here without this template ever needing to know about them.
+for hook in "$HOME/.config/git-hooks/pre-commit.d"/*.sh; do
+    [ -f "$hook" ] && . "$hook"
+done
+
+# Succeed unless a drop-in above explicitly `exit`ed non-zero. Without this,
+# an empty pre-commit.d leaves the loop's failed `[ -f ]` test as the hook's
+# exit status, which would abort every commit.
+exit 0
