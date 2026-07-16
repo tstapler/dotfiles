@@ -99,11 +99,15 @@ return {
       end
     end,
   },
-  -- Second spec fragment for "mason-org/mason.nvim" (already declared with
-  -- its own `config` in plugins/lsp.lua) — same merge pattern
-  -- plugins/lang/rust.lua already established for codelldb.
+  -- Second spec fragment for "jay-babu/mason-nvim-dap.nvim" (declared with
+  -- its own `config`-free `opts` in plugins/dap.lua, Epic 2.3.1) — same
+  -- merge pattern plugins/lang/rust.lua uses for codelldb. A bare
+  -- "mason-org/mason.nvim" `opts = { ensure_installed = {...} }` fragment
+  -- (this file's previous approach) is a confirmed no-op: base mason.nvim
+  -- implements no such option, only mason-lspconfig.nvim and
+  -- mason-nvim-dap.nvim do.
   {
-    "mason-org/mason.nvim",
+    "jay-babu/mason-nvim-dap.nvim",
     opts = { ensure_installed = { "js-debug-adapter" } },
     opts_extend = { "ensure_installed" },
   },

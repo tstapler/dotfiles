@@ -97,4 +97,44 @@ return {
     opts = { ensure_installed = { "gopls" } },
     opts_extend = { "ensure_installed" },
   },
+
+  -- Epic 2.3, Story 2.3.1 / Task 2.3.1b: Go's Delve DAP adapter, the
+  -- "plug-and-play" reference implementation later language epics
+  -- (Rust/Python/TS-JS) follow when wiring their own DAP adapters onto the
+  -- shared core in plugins/dap.lua.
+  --
+  -- delve's `path` is hardcoded to the mason install location rather than
+  -- left as the bare "dlv" PATH lookup nvim-dap-go defaults to
+  -- (pitfalls.md §2, Domain Glossary "DAP adapter") — GUI-launched Neovim
+  -- instances don't reliably inherit a shell-configured PATH, so a bare
+  -- command name silently fails to find the adapter in that context.
+  {
+    "leoluz/nvim-dap-go",
+    ft = "go",
+    dependencies = { "mfussenegger/nvim-dap" },
+    config = function()
+      require("dap-go").setup({
+        dap_configurations = {
+          {
+            type = "go",
+            name = "Debug (dlv)",
+            request = "launch",
+            program = "${file}",
+          },
+        },
+        delve = {
+          path = vim.fn.stdpath("data") .. "/mason/bin/dlv",
+        },
+      })
+    end,
+  },
+  -- Second spec fragment for "jay-babu/mason-nvim-dap.nvim" (declared with
+  -- its own `config`-free `opts` in plugins/dap.lua) — same
+  -- `opts`/`opts_extend` merge pattern used throughout plugins/lang/*.lua
+  -- for mason-lspconfig.nvim's `ensure_installed`.
+  {
+    "jay-babu/mason-nvim-dap.nvim",
+    opts = { ensure_installed = { "delve" } },
+    opts_extend = { "ensure_installed" },
+  },
 }

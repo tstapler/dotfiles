@@ -16,16 +16,16 @@
 -- drifting from whatever mason last pinned.
 --
 -- codelldb (the DAP adapter rustaceanvim drives via `:RustLsp debuggables`)
--- IS mason-managed, but mason-nvim-dap (the DAP-side Mason bridge) isn't in
--- the tree yet — it lands with the shared DAP core in Epic 2.3.1, a later,
--- separate task not part of this batch. Until then, request codelldb via
--- bare mason.nvim `ensure_installed`, the tool-agnostic base mechanism that
--- works standalone regardless of which later epic wires the DAP-adapter
--- plumbing on top of it. This is a second spec fragment for the same
--- "mason-org/mason.nvim" plugin already declared in plugins/lsp.lua —
--- lazy.nvim merges same-name spec fragments across files, deep-merging
--- `opts` (list-valued keys concatenated via `opts_extend`) while keeping the
--- `config` function already defined in plugins/lsp.lua.
+-- IS mason-managed. mason-nvim-dap (the DAP-side Mason bridge) now lands
+-- with the shared DAP core in plugins/dap.lua (Epic 2.3.1), so codelldb is
+-- requested through mason-nvim-dap.nvim's `ensure_installed`, not base
+-- mason.nvim's — a bare "mason-org/mason.nvim" `opts = { ensure_installed =
+-- {...} }` fragment is a confirmed no-op (base mason.nvim implements no such
+-- option; only mason-lspconfig.nvim and mason-nvim-dap.nvim do). This is a
+-- second spec fragment for the same "jay-babu/mason-nvim-dap.nvim" plugin
+-- already declared (with its own `config`-free `opts`) in plugins/dap.lua —
+-- lazy.nvim merges same-name spec fragments across files, concatenating
+-- list-valued `opts` keys named in `opts_extend`.
 return {
   {
     "mrcjkb/rustaceanvim",
@@ -40,7 +40,7 @@ return {
     end,
   },
   {
-    "mason-org/mason.nvim",
+    "jay-babu/mason-nvim-dap.nvim",
     opts = { ensure_installed = { "codelldb" } },
     opts_extend = { "ensure_installed" },
   },
