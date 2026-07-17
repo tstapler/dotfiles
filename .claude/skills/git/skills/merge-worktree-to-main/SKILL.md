@@ -10,10 +10,25 @@ Merges the current git worktree branch back into the main branch locally without
 
 1. **Identifies the main repository location** from the worktree setup
 2. **Validates the current branch** can be merged cleanly
-3. **Switches to the main worktree** (typically in ~/IdeaProjects)
+3. **Switches to the main worktree** (see Main Repository Path Resolution below)
 4. **Performs a fast-forward merge** of the feature branch
 5. **Optionally cleans up the feature worktree** after successful merge
 6. **Shows a summary** of the changes merged
+
+## Main Repository Path Resolution
+
+When locating the main repository (and no `--main-path` is given), check in this order and
+use the first one that exists:
+
+1. `~/Programming/<repo-name>`
+2. `~/WorkProjects/<repo-name>`
+3. `~/IdeaProjects/<repo-name>` (fallback default)
+
+Also account for repos whose main branch is checked out directly in a project directory
+rather than under one of these roots (e.g. `~/Programming/<repo-name>` *is* the main
+checkout, not a worktree parent) — if the current worktree's `git worktree list` already
+shows a non-worktree checkout on the main branch, prefer merging into that path directly
+over assuming one of the roots above.
 
 ## Prerequisites
 
@@ -33,7 +48,7 @@ Run this command from any git worktree:
 
 - `--cleanup` - Remove the current worktree after successful merge
 - `--dry-run` - Show what would be merged without actually doing it
-- `--main-path <path>` - Specify custom main repository path (default: ~/IdeaProjects)
+- `--main-path <path>` - Specify custom main repository path (default: first existing of ~/Programming, ~/WorkProjects, ~/IdeaProjects — see Main Repository Path Resolution)
 
 ## Example output
 

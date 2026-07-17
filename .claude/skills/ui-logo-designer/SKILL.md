@@ -239,22 +239,29 @@ Rank all candidates 1st to last. Return plain text.
 
 For each confirmed issue:
 
-**Geometry fix** (checkmark intersection, invisible element, aspect ratio problem): fix it directly by editing the SVG. Show your coordinate math in a `<!-- fix: ... -->` comment on the changed element. Example: `<!-- fix: upstroke tip moved from y=244 to y=215 to clear bar-2 bottom at y=248 -->`.
+**Geometry fix** (checkmark intersection, invisible element, aspect ratio problem): fix it directly by editing the SVG yourself. Show your coordinate math in a `<!-- fix: ... -->` comment on the changed element. Example: `<!-- fix: upstroke tip moved from y=244 to y=215 to clear bar-2 bottom at y=248 -->`.
 
-**Concept-level issue** (wrong shape, brand mismatch, irredeemably poor scalability): do NOT silently change the creative direction. Note it plainly when presenting to the user.
+**Concept-level issue** (wrong shape, brand mismatch, weak gestalt, poor scalability — anything the design-review agent scored low or flagged as "fix"): do NOT just note it and move on — auto-refine it now, before the user ever sees it. The user should not have to spend a round of feedback asking you to address something the critic agent already found.
+
+- For each concept scored **"fix"**: dispatch one `Task` agent (same mechanism as Phase 3's batch iterations) whose prompt is the base SVG plus the *exact* critique text from Step 3 as the brief to address. Run all of these in parallel, one per flagged concept, in the same message. Save each result as `logos/concepts/concept-N.svg` (overwrite in place — this is still pre-release polish, not a user-visible iteration yet).
+- For each concept scored **"kill"**: do not try to salvage it with a patch — the critic found it fundamentally off-brief, not just rough. Either (a) drop it from the set entirely, or (b) if the user asked for a specific count of concepts, replace it with a fresh concept from a genuinely different creative angle (dispatch a new Task agent with a new direction, not a variation of the killed one). Never silently present a "kill"-rated concept as-is.
+- For each concept scored **"keep"**: leave it untouched, or apply only the specific minor polish the critic called out (if any) — don't over-iterate something that already scored well.
+- After the auto-refine agents return, re-read the changed SVGs yourself and re-run the Step 2 geometry check on anything that changed (a refinement pass can introduce its own new geometry bugs — e.g. new elements running flush to a canvas edge). Fix directly as needed.
+- This auto-refine pass runs at most once per generation step. Do not loop indefinitely chasing a perfect score — one corrective pass, then present. Remaining subjective/taste-level notes (not objective scoring failures) are fine to surface to the user as discussion points, not defects to keep fixing.
 
 ### Step 5: Present to the user
 
-After all fixes are applied:
+After fixes and auto-refinement are applied:
 
-1. Generate `logos/preview.html` (see template below) with the corrected files
+1. Generate `logos/preview.html` (see template below) with the corrected/refined files
 2. Tell the user to open `logos/preview.html`
 3. Briefly describe each concept (1 sentence each)
 4. List any geometry fixes applied (one line each: *"Fixed: checkmark upstroke cleared bar-2 on concept-3"*)
-5. List any concept-level issues that need user input (one line each: *"Note: duffel aspect ratio (352×210) may not read well as a square app icon"*)
-6. Ask: "Which direction do you want to explore? Pick a number, or describe what you like/dislike."
+5. List any concept-level auto-refinements applied (one line each: *"Auto-refined: concept-2's gold accent moved from the outer border to the discovered interior mark, per the critic's accent-placement note"*) — this is disclosure of what already happened, not a request for the user to approve a fix first; the polished version is what's in the preview.
+6. List any concept that was dropped/replaced and why (one line each: *"Dropped concept-4 (killed: generic monogram, no brand connection) — replaced with a new abstract-symbol direction"*)
+7. Ask: "Which direction do you want to explore? Pick a number, or describe what you like/dislike."
 
-The same Steps 1–5 apply at the end of Phase 3 (Refine) after generating each new iteration batch, before presenting to the user.
+The same Steps 1–5 apply at the end of Phase 3 (Refine) after generating each new iteration batch, before presenting to the user — including the auto-refine sub-step for any concept-level issues the reviewer raises on an iteration.
 
 ---
 

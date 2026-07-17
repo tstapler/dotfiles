@@ -70,9 +70,9 @@ Verdicts:
 
    | Technology / Pattern | Skill | Focus areas |
    |---|---|---|
-   | Rust — general idioms | research agent | ownership & borrowing (prefer borrows over clones), `?` operator vs `unwrap`, `Into`/`From` conversions, iterator chaining over manual loops, `#[derive]` completeness |
-   | Rust — error handling | research agent | `thiserror` for library errors, `anyhow` for application errors, never use `.unwrap()` in library code, `Box<dyn Error>` only as last resort |
-   | Rust — async / Tokio | research agent | `async fn` in traits (RPITIT), `tokio::spawn` lifecycle, `select!` cancellation safety, avoiding blocking in async context (`spawn_blocking`), `Arc<Mutex<T>>` vs channels |
+   | Rust — general idioms | `rust-idioms` | wire vs domain type separation at adapter boundaries, newtype wrappers with complete `#[derive]` sets, iterator chains over manual loops, overly generic port trait bounds |
+   | Rust — error handling | `rust-idioms` | `thiserror` in port traits vs `anyhow` at binary boundary, no bare `String`/`Box<dyn Error>`, `.unwrap()`/`.expect()` scope discipline |
+   | Rust — async / Tokio | `rust-idioms` | `async fn` in traits vs `#[async_trait]` (dyn-compatibility), `Rc<RefCell<T>>` vs `Arc<Mutex<T>>` by runtime shape, `select!` cancel-safety, no blocking calls in async fn bodies |
    | Rust — unsafe | research agent | mandatory `// SAFETY:` comment on every `unsafe` block, minimize unsafe surface, prefer safe abstractions |
    | Rust — performance | research agent | zero-copy parsing, `Cow<str>` for optional ownership, avoid `Box<dyn Trait>` in hot paths, `#[inline]` only when benchmarked |
    | Rust — CLI (clap) | research agent | derive API vs builder API, subcommand structure |
