@@ -191,51 +191,108 @@ fi
 rm -f /tmp/.nvn_smoketest_health.txt
 
 echo
-echo "-- per-language LSP registration (needs real go.mod/tsconfig scratch dirs) --"
-echo "   (checks ACTUAL client attach, not just vim.lsp.is_enabled() —"
-echo "    is_enabled only proves the config is registered, not that the"
-echo "    server binary exists/attaches; see the --fresh comment above for"
-echo "    why that distinction bit us once already)"
+echo "-- per-language LSP: real cross-file attach + gd navigation --"
+echo "   (uses the fixture apps in tests/fixtures/ — real multi-module/"
+echo "    multi-package projects, not throwaway single-file stubs. Checks"
+echo "    ACTUAL client attach via vim.lsp.get_clients(), not just"
+echo "    vim.lsp.is_enabled() — is_enabled only proves the config is"
+echo "    registered, not that the server binary exists/attaches.)"
 
-probe_dir=$(mktemp -d)
-mkdir -p "$probe_dir/go" "$probe_dir/ts"
-cat > "$probe_dir/go/go.mod" <<'EOF'
-module smoketest
-
-go 1.21
-EOF
-echo 'package main' > "$probe_dir/go/main.go"
-echo '{}' > "$probe_dir/ts/package.json"
-echo 'const x = 1;' > "$probe_dir/ts/main.ts"
-echo 'def f(): pass' > "$probe_dir/probe.py"
-echo 'fn main() {}' > "$probe_dir/probe.rs"
+FIXTURES="$NVIM_CONFIG_DIR/tests/fixtures"
 
 lsp_probe=$(cat <<EOF
-local function attach_check(file, name)
-  vim.cmd("edit " .. file)
-  local bufnr = vim.api.nvim_get_current_buf()
-  local attached = vim.wait(10000, function()
+-- IMPORTANT: open each file with :edit exactly ONCE. A redundant :edit on
+-- an already-open buffer (even the same unmodified file) was found to
+-- detach the LSP client from that buffer — the client re-attaches to the
+-- NEW buffer instance via LspAttach, but not within a few seconds, so an
+-- immediately-following vim.lsp.buf.definition() call silently no-ops.
+-- Confirmed empirically: wait_attach()+gd_to() as two separate functions
+-- that each called :edit on the same file intermittently broke gd; folding
+-- file-open into one open_once() call fixed it reliably.
+local function open_once(file)
+  if vim.api.nvim_buf_get_name(0) ~= file then
+    vim.cmd("edit " .. file)
+  end
+  return vim.api.nvim_get_current_buf()
+end
+
+local function wait_client(bufnr, name, timeout, settle)
+  local attached = vim.wait(timeout or 10000, function()
     return #vim.lsp.get_clients({ bufnr = bufnr, name = name }) > 0
   end, 200)
-  print(name .. "=" .. tostring(attached))
+  print(name .. "_attached=" .. tostring(attached))
+  -- vtsls/rust-analyzer report "attached" before their project/workspace
+  -- graph is fully loaded — an immediate gd right after attach can silently
+  -- return nothing even though the same request succeeds a few seconds
+  -- later. gopls/basedpyright didn't need this at all; rust-analyzer's
+  -- first-ever cold index of a workspace needed ~20s beyond attach,
+  -- confirmed empirically (the raw LSP request itself was always correct —
+  -- this is purely "give it time to finish indexing", not a config bug).
+  vim.wait(settle or 2000)
+  return attached
 end
-attach_check("$probe_dir/go/main.go", "gopls")
-attach_check("$probe_dir/probe.py", "basedpyright")
-attach_check("$probe_dir/probe.py", "ruff")
-attach_check("$probe_dir/ts/main.ts", "vtsls")
+
+local function gd(bufnr, line, col, expect_suffix, label)
+  vim.api.nvim_set_current_buf(bufnr)
+  vim.api.nvim_win_set_cursor(0, { line, col })
+  vim.lsp.buf.definition()
+  vim.wait(5000)
+  local landed = vim.api.nvim_buf_get_name(0)
+  local ok = landed:sub(-#expect_suffix) == expect_suffix
+  print(label .. "_gd=" .. tostring(ok) .. " landed=" .. landed)
+end
+
+local go_buf = open_once("$FIXTURES/go/app/main.go")
+wait_client(go_buf, "gopls", 15000)
+gd(go_buf, 13, 12, "lib/greet.go", "go")
+
+local py_buf = open_once("$FIXTURES/python/fixture_app/main.py")
+wait_client(py_buf, "basedpyright", 15000)
+wait_client(py_buf, "ruff", 15000)
+gd(py_buf, 10, 10, "lib.py", "python")
+
+local ts_buf = open_once("$FIXTURES/typescript/packages/app/src/main.ts")
+wait_client(ts_buf, "vtsls", 15000)
+local ts_clients = vim.lsp.get_clients({ bufnr = ts_buf })
+if ts_clients[1] then
+  local root = ts_clients[1].config.root_dir or ""
+  local nearest = root:sub(-#("typescript/packages/app")) == "typescript/packages/app"
+  print("vtsls_root_is_nearest_package=" .. tostring(nearest) .. " root=" .. root)
+end
+gd(ts_buf, 7, 12, "lib/src/index.ts", "typescript")
+
+-- rust-analyzer (via rustaceanvim) tends to be slower to attach on a fresh
+-- workspace (compiles deps for its own analysis) — generous timeout.
+local rust_buf = open_once("$FIXTURES/rust/app/src/main.rs")
+wait_client(rust_buf, "rust-analyzer", 45000, 20000)
+gd(rust_buf, 8, 14, "lib/src/lib.rs", "rust")
 EOF
 )
 lsp_out=$(nv -c "lua $lsp_probe" -c 'qa')
-rm -rf "$probe_dir"
 
-for pair in "gopls:Go" "basedpyright:Python" "ruff:Python (ruff)" "vtsls:TypeScript"; do
+for pair in "gopls:Go" "basedpyright:Python" "ruff:Python (ruff)" "vtsls:TypeScript" "rust-analyzer:Rust"; do
   name="${pair%%:*}"; label="${pair##*:}"
-  if echo "$lsp_out" | grep -q "${name}=true"; then
+  if echo "$lsp_out" | grep -q "${name}_attached=true"; then
     ok "$label LSP ($name) actually attaches"
   else
-    bad "$label LSP ($name) actually attaches" "no client attached within 10s — server binary may not be installed (run --fresh, or check :Mason). raw: $lsp_out"
+    bad "$label LSP ($name) actually attaches" "no client attached — server binary may not be installed (run --fresh, or check :Mason)"
   fi
 done
+
+for pair in "go:Go" "python:Python" "typescript:TypeScript" "rust:Rust"; do
+  name="${pair%%:*}"; label="${pair##*:}"
+  if echo "$lsp_out" | grep -q "${name}_gd=true"; then
+    ok "$label: gd jumps to the correct cross-file/cross-module definition"
+  else
+    bad "$label: gd jumps to the correct cross-file/cross-module definition" "$(echo "$lsp_out" | grep "${name}_gd=")"
+  fi
+done
+
+if echo "$lsp_out" | grep -q "vtsls_root_is_nearest_package=true"; then
+  ok "TypeScript: vtsls root_dir resolves to nearest package, not monorepo top"
+else
+  bad "TypeScript: vtsls root_dir resolves to nearest package, not monorepo top" "$(echo "$lsp_out" | grep "vtsls_root_is_nearest_package=")"
+fi
 # rustaceanvim manages rust-analyzer itself (not via vim.lsp.enable), so it's
 # not checked the same way — confirmed present as a plugin spec instead.
 if grep -q "mrcjkb/rustaceanvim" "$NVIM_CONFIG_DIR/lua/tstapler/plugins/lang/rust.lua" 2>/dev/null; then
