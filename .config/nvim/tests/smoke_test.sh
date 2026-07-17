@@ -53,7 +53,22 @@ if [ "$FRESH" = 1 ]; then
   # exposes no single blocking "wait for everything" command, so a bounded
   # `sleep` is the pragmatic (not perfectly deterministic) way to give those
   # a chance to finish before quitting; bump this if it's still noisy.
-  out=$(nv -c 'Lazy! sync' -c 'TSUpdateSync' -c 'sleep 20' -c 'qa')
+  #
+  # IMPORTANT: mason-lspconfig.nvim's `ensure_installed` deliberately does
+  # NOT auto-install when Neovim is running --headless (see its own
+  # features/ensure_installed.lua: `if not platform.is_headless and
+  # #ensure_installed > 0 then ...`). Confirmed empirically: after a headless
+  # fresh install, all four LSP server binaries (gopls/basedpyright/ruff/
+  # vtsls) were absent from mason/bin even though ensure_installed listed all
+  # four correctly — only mason-nvim-dap's tools (delve/debugpy/codelldb) had
+  # installed, since that installer has no such guard. In real interactive
+  # use this is a non-issue (first real `nvn` launch installs them fine) —
+  # but headless verification needs an explicit :MasonInstall to actually
+  # exercise "do the LSP servers install", or every fresh-install check here
+  # would silently pass with zero LSP servers present.
+  out=$(nv -c 'Lazy! sync' -c 'TSUpdateSync' \
+    -c 'MasonInstall gopls basedpyright ruff vtsls' \
+    -c 'sleep 30' -c 'qa')
   if echo "$out" | grep -qE 'Error detected|stack traceback|Failed to load|E5108|E5113'; then
     bad "fresh install: zero errors" "$(echo "$out" | grep -iE 'error|traceback' | grep -v remote: | head -3)"
   else
@@ -177,6 +192,10 @@ rm -f /tmp/.nvn_smoketest_health.txt
 
 echo
 echo "-- per-language LSP registration (needs real go.mod/tsconfig scratch dirs) --"
+echo "   (checks ACTUAL client attach, not just vim.lsp.is_enabled() —"
+echo "    is_enabled only proves the config is registered, not that the"
+echo "    server binary exists/attaches; see the --fresh comment above for"
+echo "    why that distinction bit us once already)"
 
 probe_dir=$(mktemp -d)
 mkdir -p "$probe_dir/go" "$probe_dir/ts"
@@ -192,15 +211,18 @@ echo 'def f(): pass' > "$probe_dir/probe.py"
 echo 'fn main() {}' > "$probe_dir/probe.rs"
 
 lsp_probe=$(cat <<EOF
-vim.cmd("edit $probe_dir/go/main.go")
-vim.cmd("edit $probe_dir/probe.py")
-vim.cmd("edit $probe_dir/ts/main.ts")
-vim.cmd("edit $probe_dir/probe.rs")
-vim.wait(300)
-print("gopls=" .. tostring(vim.lsp.is_enabled("gopls")))
-print("basedpyright=" .. tostring(vim.lsp.is_enabled("basedpyright")))
-print("ruff=" .. tostring(vim.lsp.is_enabled("ruff")))
-print("vtsls=" .. tostring(vim.lsp.is_enabled("vtsls")))
+local function attach_check(file, name)
+  vim.cmd("edit " .. file)
+  local bufnr = vim.api.nvim_get_current_buf()
+  local attached = vim.wait(10000, function()
+    return #vim.lsp.get_clients({ bufnr = bufnr, name = name }) > 0
+  end, 200)
+  print(name .. "=" .. tostring(attached))
+end
+attach_check("$probe_dir/go/main.go", "gopls")
+attach_check("$probe_dir/probe.py", "basedpyright")
+attach_check("$probe_dir/probe.py", "ruff")
+attach_check("$probe_dir/ts/main.ts", "vtsls")
 EOF
 )
 lsp_out=$(nv -c "lua $lsp_probe" -c 'qa')
@@ -209,9 +231,9 @@ rm -rf "$probe_dir"
 for pair in "gopls:Go" "basedpyright:Python" "ruff:Python (ruff)" "vtsls:TypeScript"; do
   name="${pair%%:*}"; label="${pair##*:}"
   if echo "$lsp_out" | grep -q "${name}=true"; then
-    ok "$label LSP ($name) registers"
+    ok "$label LSP ($name) actually attaches"
   else
-    bad "$label LSP ($name) registers" "$lsp_out"
+    bad "$label LSP ($name) actually attaches" "no client attached within 10s — server binary may not be installed (run --fresh, or check :Mason). raw: $lsp_out"
   fi
 done
 # rustaceanvim manages rust-analyzer itself (not via vim.lsp.enable), so it's
