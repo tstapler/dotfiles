@@ -84,13 +84,46 @@ return {
   },
 
   -- Story 5.1.2 (STRETCH — do not block the plan), Task 5.1.2a: JS/TS
-  -- debugging via vscode-js-debug, wired through nvim-dap. Attempted, not
-  -- deferred — nvim-dap-vscode-js's `setup({ adapters, debugger_path })`
-  -- shape and mason's `mason/packages/<name>` install layout both matched
-  -- the plan's sketch against available knowledge. Only the actual
-  -- "breakpoint hit" runtime check (needs a real Node script + a live
-  -- nvim-dap-ui session) is left to Tyler — same as every other DAP story
-  -- in this plan; headless verification can't drive a debug session.
+  -- debugging via vscode-js-debug, wired through nvim-dap.
+  --
+  -- UPDATE (post-review, interactively tested — real progress, NOT fully
+  -- working, documented honestly per the plan's own "if fragile, defer" for
+  -- this stretch goal rather than claiming success that isn't reliably
+  -- there):
+  --
+  -- Three connection-layer bugs found and fixed, all confirmed via direct
+  -- reproduction (headless testing cannot drive a debug session at all —
+  -- none of these were catchable any other way):
+  --   1. nvim-dap-vscode-js hardcodes the entrypoint as `<debugger_path>/
+  --      out/src/vsDebugServer.js` (the old vscode-js-debug source-build
+  --      layout); Mason's `js-debug-adapter` package ships a different,
+  --      newer layout (`js-debug/src/dapDebugServer.js`).
+  --   2. The plugin spawns the server with no port and reads its first
+  --      stdout line as a bare port number; Mason's server requires an
+  --      explicit port argument and prints a full sentence, not a bare
+  --      number, when given one.
+  --   3. Mason's server's default host ("localhost") resolves to the IPv6
+  --      loopback (::1); the plugin connects to the IPv4 loopback
+  --      (127.0.0.1) unconditionally — confirmed via the server's own
+  --      "listening at ::1:<port>" log vs. the plugin's "Couldn't connect
+  --      to 127.0.0.1:<port>: ECONNREFUSED" error.
+  -- scripts/js-debug-adapter-wrapper.sh fixes all three: launches the real
+  -- server on an explicit 127.0.0.1 port, polls until it's actually
+  -- listening, then announces just the bare port number the plugin expects.
+  --
+  -- With all three fixed, launch telemetry fires cleanly and the
+  -- "Couldn't connect"/"entrypoint does not exist"/"port is required"
+  -- errors are all gone — but the breakpoint-stop-inspect cycle itself was
+  -- NOT reliably reproduced: one run showed dap-ui's stack panel briefly
+  -- displaying the correct paused frame (lib.ts:20, our breakpoint line);
+  -- a repeat run with the identical setup disconnected within seconds with
+  -- no stop at all and no error. `pwa-node` is a multi-session adapter (a
+  -- bootstrap/parent session hands off to a child session for the actual
+  -- Node process) — the inconsistent reproduction points at that handoff,
+  -- not at anything this file controls. Left as-is rather than chasing
+  -- adapter-internals further, per the plan's explicit stretch-goal
+  -- timebox — the connection-layer fixes are real and worth keeping even
+  -- though the feature isn't dependable yet.
   {
     "mxsdev/nvim-dap-vscode-js",
     ft = { "typescript", "javascript", "typescriptreact", "javascriptreact" },
@@ -98,7 +131,7 @@ return {
     config = function()
       require("dap-vscode-js").setup({
         adapters = { "pwa-node" },
-        debugger_path = vim.fn.stdpath("data") .. "/mason/packages/js-debug-adapter",
+        debugger_cmd = { vim.fn.stdpath("config") .. "/scripts/js-debug-adapter-wrapper.sh" },
       })
 
       local dap = require("dap")
