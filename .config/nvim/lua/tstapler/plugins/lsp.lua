@@ -23,9 +23,19 @@ local reserve = require("tstapler.util").reserve
 -- <leader>fs / <leader>fS are ALREADY reserved by plugins/finder.lua (Phase
 -- 1 fzf-lua spec deliberately pre-reserved them for this exact story) — do
 -- NOT reserve() them again here, only bind them with raw vim.keymap.set
--- below. gd / gy are new in this story, so they get reserve()'d once.
+-- below. gd / gy / <leader>cr / <leader>cf / <leader>ci are new in this
+-- story, so they get reserve()'d once.
+--
+-- <leader>c* here is the "code" leader group (leader_groups.lua) — rename,
+-- format, and inlay-hint toggle are genuinely LSP-dependent (no-op without
+-- an attached client), so they're bound buffer-locally via LspAttach like
+-- gd/gy, not as always-present global binds. Diagnostic navigation/float
+-- (<leader>cd, [d/]d) are NOT LSP-specific — vim.diagnostic works without
+-- any client attached — so those live in keymaps.lua as plain global binds
+-- instead, not gated behind this autocmd.
 local function on_lsp_attach(args)
   local bufnr = args.buf
+  local client = vim.lsp.get_client_by_id(args.data.client_id)
 
   local function opts(desc)
     return { buffer = bufnr, desc = desc }
@@ -41,6 +51,19 @@ local function on_lsp_attach(args)
   vim.keymap.set("n", "<leader>fS", function()
     require("fzf-lua").lsp_live_workspace_symbols()
   end, opts("LSP: workspace symbols"))
+
+  vim.keymap.set("n", "<leader>cr", vim.lsp.buf.rename, opts("LSP: rename"))
+  vim.keymap.set("n", "<leader>cf", function()
+    vim.lsp.buf.format({ async = true })
+  end, opts("LSP: format buffer"))
+
+  if client and client:supports_method("textDocument/inlayHint") then
+    vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
+    vim.keymap.set("n", "<leader>ci", function()
+      local enabled = vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr })
+      vim.lsp.inlay_hint.enable(not enabled, { bufnr = bufnr })
+    end, opts("LSP: toggle inlay hints"))
+  end
 end
 
 return {
@@ -84,12 +107,17 @@ return {
     "neovim/nvim-lspconfig",
     config = function()
       -- ux.md §2: enable diagnostics explicitly rather than relying on
-      -- Neovim's own defaults.
-      vim.diagnostic.config({ virtual_text = true, signs = true })
+      -- Neovim's own defaults. virtual_text=false here: plugins/diagnostics.lua
+      -- (tiny-inline-diagnostic.nvim) owns the actual inline rendering — see
+      -- that file for why this key can't be safely set from two places.
+      vim.diagnostic.config({ virtual_text = false, signs = true })
 
       reserve("n", "gd")
       reserve("n", "gy")
       -- <leader>fs / <leader>fS already reserved by plugins/finder.lua.
+      reserve("n", "<leader>cr")
+      reserve("n", "<leader>cf")
+      reserve("n", "<leader>ci")
 
       vim.api.nvim_create_autocmd("LspAttach", {
         group = vim.api.nvim_create_augroup("tstapler-lsp-attach", { clear = true }),

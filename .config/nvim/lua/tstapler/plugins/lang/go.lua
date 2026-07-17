@@ -85,6 +85,19 @@ return {
             staticcheck = true,
             usePlaceholders = true,
             completeUnimported = true,
+            -- gopls defaults every inlay hint category to off (unlike
+            -- basedpyright, which defaults most to on) — the client-side
+            -- vim.lsp.inlay_hint.enable() call in plugins/lsp.lua is a
+            -- necessary but not sufficient condition; nothing renders
+            -- unless the server is also told which categories to emit.
+            hints = {
+              assignVariableTypes = true,
+              compositeLiteralFields = true,
+              constantValues = true,
+              functionTypeParameters = true,
+              parameterNames = true,
+              rangeVariableTypes = true,
+            },
           },
         },
         root_markers = { "go.work", "go.mod", ".git" },

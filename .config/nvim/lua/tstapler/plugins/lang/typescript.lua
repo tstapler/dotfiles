@@ -50,6 +50,29 @@ return {
           local root = vim.fs.root(fname, { "tsconfig.json", "package.json" })
           on_dir(root)
         end,
+        settings = {
+          -- vtsls/tsserver defaults parameterNames to "none" (unlike
+          -- basedpyright, which defaults most hints on) — "literals" only
+          -- hints call args that are literal values (numbers/strings/bools),
+          -- which is the least noisy non-off setting; "all" hints every
+          -- positional argument and gets loud fast.
+          typescript = {
+            inlayHints = {
+              parameterNames = { enabled = "literals" },
+              variableTypes = { enabled = true },
+              propertyDeclarationTypes = { enabled = true },
+              functionLikeReturnTypes = { enabled = true },
+            },
+          },
+          javascript = {
+            inlayHints = {
+              parameterNames = { enabled = "literals" },
+              variableTypes = { enabled = true },
+              propertyDeclarationTypes = { enabled = true },
+              functionLikeReturnTypes = { enabled = true },
+            },
+          },
+        },
       })
       vim.lsp.enable("vtsls")
     end,
