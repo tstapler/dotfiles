@@ -306,6 +306,10 @@ stapler-scripts/litellm-proxy/.claude/settings.local.json
 # nvim smoke-test startup baseline — machine-specific timing, not portable
 .config/nvim/tests/.startup_baseline_ms
 
+# delve's compiled temp binary when `dlv debug` runs without --output
+# (interactive DAP testing on the go fixture leaves these behind)
+.config/nvim/tests/fixtures/go/**/__debug_bin*
+
 # Node.js dependencies (skills with bundled executors)
 node_modules/
 .claude/skills/**/.temp*

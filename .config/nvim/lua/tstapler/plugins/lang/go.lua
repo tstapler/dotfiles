@@ -121,6 +121,21 @@ return {
   -- (pitfalls.md §2, Domain Glossary "DAP adapter") — GUI-launched Neovim
   -- instances don't reliably inherit a shell-configured PATH, so a bare
   -- command name silently fails to find the adapter in that context.
+  -- UPDATE (post-review, breakpoint-verified interactively — full success,
+  -- no config changes needed for the debug flow itself; one usability note
+  -- worth flagging): the <leader>dc config picker offers nvim-dap-go's own
+  -- "Delve: Debug" entry FIRST, which launches with `program =
+  -- "${workspaceFolder}"`. In a go.work multi-module layout where main.go
+  -- lives in a subdirectory (not the workspace root — e.g. this repo's own
+  -- tests/fixtures/go/app/main.go under tests/fixtures/go/go.work), that
+  -- entry fails immediately ("Error on launch: Failed to launch") because
+  -- ${workspaceFolder} isn't itself a buildable package. This file's own
+  -- "Debug (dlv)" entry below (and mason-nvim-dap's auto-generated "Debug")
+  -- both use `program = "${file}"` instead, which resolves to the actually-
+  -- open file's package and works correctly. Not fixed here — nvim-dap-go's
+  -- default is reasonable for single-module repos, which is still the
+  -- common case — just worth knowing which entry to pick if a go.work
+  -- multi-module launch mysteriously fails instantly.
   {
     "leoluz/nvim-dap-go",
     ft = "go",

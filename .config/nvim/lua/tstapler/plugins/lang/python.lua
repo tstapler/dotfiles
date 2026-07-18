@@ -100,6 +100,33 @@ return {
       local dap_python = require("dap-python")
       dap_python.setup(debugpy_path)
 
+      -- UPDATE (post-review, breakpoint-verified interactively): dap-python's
+      -- built-in "file"/"file:args" configs (just registered above by
+      -- setup()) launch via `program = "${file}"` — direct script execution,
+      -- NOT `python -m` — which only adds the script's OWN directory to
+      -- sys.path. Any project using absolute intra-package imports (e.g.
+      -- `from mypkg.sub import x` executed from a script living inside
+      -- mypkg itself) hits `ModuleNotFoundError` unless the project root is
+      -- also on PYTHONPATH. Confirmed empirically: the Python fixture's
+      -- main.py (`from fixture_app.lib import ...`) failed exactly this way
+      -- until this fix — headless testing couldn't have caught it, since it
+      -- only ever checked LSP attach/gd, never actually ran a debug session.
+      -- Patch every config setup() just registered to add the project root
+      -- (nearest pyproject.toml/setup.py/.git — the same root_markers
+      -- basedpyright already uses) to PYTHONPATH, so the default "file"
+      -- launch works for package-style projects without Tyler needing to
+      -- discover or hand-pick a different config each time.
+      for _, cfg in ipairs(require("dap").configurations.python or {}) do
+        if not cfg.env then
+          cfg.env = function()
+            local bufdir = vim.fn.expand("%:p:h")
+            local root = vim.fs.root(bufdir, { "pyproject.toml", "setup.py", "setup.cfg", ".git" }) or bufdir
+            local existing = vim.env.PYTHONPATH
+            return { PYTHONPATH = existing and (root .. ":" .. existing) or root }
+          end
+        end
+      end
+
       -- Venv resolution for the debuggee interpreter (NOT the debugpy
       -- adapter interpreter above, which always runs from mason's own
       -- venv). `resolve_python` is dap-python's own documented extension
