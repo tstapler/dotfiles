@@ -67,7 +67,7 @@ if [ "$FRESH" = 1 ]; then
   # exercise "do the LSP servers install", or every fresh-install check here
   # would silently pass with zero LSP servers present.
   out=$(nv -c 'Lazy! sync' -c 'TSUpdateSync' \
-    -c 'MasonInstall gopls basedpyright ruff vtsls' \
+    -c 'MasonInstall gopls basedpyright ruff vtsls jdtls kotlin-language-server java-debug-adapter java-test' \
     -c 'sleep 30' -c 'qa')
   if echo "$out" | grep -qE 'Error detected|stack traceback|Failed to load|E5108|E5113'; then
     bad "fresh install: zero errors" "$(echo "$out" | grep -iE 'error|traceback' | grep -v remote: | head -3)"
@@ -266,11 +266,21 @@ gd(ts_buf, 7, 12, "lib/src/index.ts", "typescript")
 local rust_buf = open_once("$FIXTURES/rust/app/src/main.rs")
 wait_client(rust_buf, "rust-analyzer", 45000, 20000)
 gd(rust_buf, 8, 14, "lib/src/lib.rs", "rust")
+
+-- jdtls is the slowest of all six (JVM startup + Gradle project import) —
+-- generous timeout, same reasoning as rust-analyzer above.
+local java_buf = open_once("$FIXTURES/java/src/main/java/com/example/fixture/Main.java")
+wait_client(java_buf, "jdtls", 60000, 5000)
+gd(java_buf, 10, 25, "fixture/Lib.java", "java")
+
+local kotlin_buf = open_once("$FIXTURES/kotlin/src/main/kotlin/com/example/fixture/Main.kt")
+wait_client(kotlin_buf, "kotlin_language_server", 45000, 5000)
+gd(kotlin_buf, 8, 14, "fixture/Lib.kt", "kotlin")
 EOF
 )
 lsp_out=$(nv -c "lua $lsp_probe" -c 'qa')
 
-for pair in "gopls:Go" "basedpyright:Python" "ruff:Python (ruff)" "vtsls:TypeScript" "rust-analyzer:Rust"; do
+for pair in "gopls:Go" "basedpyright:Python" "ruff:Python (ruff)" "vtsls:TypeScript" "rust-analyzer:Rust" "jdtls:Java" "kotlin_language_server:Kotlin"; do
   name="${pair%%:*}"; label="${pair##*:}"
   if echo "$lsp_out" | grep -q "${name}_attached=true"; then
     ok "$label LSP ($name) actually attaches"
@@ -279,7 +289,7 @@ for pair in "gopls:Go" "basedpyright:Python" "ruff:Python (ruff)" "vtsls:TypeScr
   fi
 done
 
-for pair in "go:Go" "python:Python" "typescript:TypeScript" "rust:Rust"; do
+for pair in "go:Go" "python:Python" "typescript:TypeScript" "rust:Rust" "java:Java" "kotlin:Kotlin"; do
   name="${pair%%:*}"; label="${pair##*:}"
   if echo "$lsp_out" | grep -q "${name}_gd=true"; then
     ok "$label: gd jumps to the correct cross-file/cross-module definition"
