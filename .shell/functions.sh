@@ -1,9 +1,7 @@
 # Return the path to the local Logseq wiki (personal-wiki repo)
 function logseq_path {
   local default="$HOME/Documents/personal-wiki/logseq"
-  if [[ -d "$default" ]]; then
-    echo "$default"
-  elif [[ -n "$LOGSEQ_PATH" ]]; then
+  if [[ -n "$LOGSEQ_PATH" ]]; then
     echo "$LOGSEQ_PATH"
   else
     echo "$default"
@@ -13,9 +11,7 @@ function logseq_path {
 # Return the root of the personal-wiki repo
 function wiki_path {
   local default="$HOME/Documents/personal-wiki"
-  if [[ -d "$default" ]]; then
-    echo "$default"
-  elif [[ -n "$WIKI_PATH" ]]; then
+  if [[ -n "$WIKI_PATH" ]]; then
     echo "$WIKI_PATH"
   else
     echo "$default"
@@ -124,4 +120,54 @@ check_multi_arch(){
 	# architecture field.
 	echo "Detected ELF files compiled for the following architectures:"
   find $image_name | xargs -n 300 file | awk -F',' '/ELF/{ print $2 }' | sort -u
+}
+
+# Echo the ~/code/<host>/<owner>/<repo> path a git URL would clone to,
+# without touching the filesystem. Shared by tyclone and repo_dir below.
+function _repo_code_dir {
+  local url=$1
+  local stripped=${url%.git}
+  local host owner repo
+
+  case "$stripped" in
+    git@*|ssh://git@*)
+      # scp-like syntax: git@host:owner/repo
+      local hostpart=${stripped#*@}
+      host=${hostpart%%:*}
+      local path=${hostpart#*:}
+      owner=${path%/*}
+      repo=${path##*/}
+      ;;
+    *://*)
+      # scheme://host/owner/repo
+      local path=${stripped#*://}
+      host=${path%%/*}
+      path=${path#*/}
+      owner=${path%/*}
+      repo=${path##*/}
+      ;;
+    *)
+      echo "_repo_code_dir: unrecognized git URL: $url" >&2
+      return 1
+      ;;
+  esac
+
+  echo "$HOME/code/$host/$owner/$repo"
+}
+
+# Print the ~/code/<host>/<owner>/<repo> path a git URL would clone to.
+function repo_dir {
+  _repo_code_dir "$1"
+}
+
+# Clone a repo into ~/code/<host>/<owner>/<repo>, creating the host/owner
+# directories as needed, then cd into the new clone.
+function tyclone {
+  local url=$1
+  shift
+  local dest
+  dest=$(_repo_code_dir "$url") || return
+
+  mkdir -p "$(dirname "$dest")"
+  git clone "$url" "$dest" "$@" && cd "$dest"
 }
