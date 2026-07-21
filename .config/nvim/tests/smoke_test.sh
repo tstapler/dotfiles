@@ -328,7 +328,18 @@ local function gd(bufnr, line, col, expect_suffix, label)
         local results, err = vim.lsp.buf_request_sync(bufnr, "textDocument/definition", params, 8000)
         local f = io.open("/tmp/.nvn_gd_debug_" .. label .. ".log", "w")
         if f then
-          f:write("result:\n" .. vim.inspect(results) .. "\nerr:\n" .. vim.inspect(err))
+          -- 5 straight real CI runs came back with the identical
+          -- `result = {}` regardless of wait time or CPU contention fixes
+          -- — that determinism rules out a plain timing race. The next
+          -- candidate: root_dir resolved too narrow (e.g. just app/
+          -- instead of the Cargo workspace root containing lib/), so the
+          -- server never indexes the target crate at all, no matter how
+          -- long it runs. Dump it directly instead of guessing again.
+          f:write(
+            "root_dir: " .. tostring(clients[1].config.root_dir)
+            .. "\nresult:\n" .. vim.inspect(results)
+            .. "\nerr:\n" .. vim.inspect(err)
+          )
           f:close()
         end
       end)
