@@ -72,16 +72,20 @@ if [ "$FRESH" = 1 ]; then
   # This whole command's output only exists in $out — nothing streams to the
   # terminal/CI log live (it's fully captured via command substitution) —
   # so on failure there is otherwise NO way to see what actually happened
-  # beyond whatever grep excerpt gets printed below. Confirmed the hard way
-  # on a real CI run: a `grep -A5` excerpt around the matched error banner
-  # showed only unrelated concurrent install-progress lines, not the
-  # error's own content, because $out interleaves multiple async
-  # processes (Lazy sync, TSUpdate, Mason installs) and the actual cause
-  # could be anywhere in it. Always save the full capture so a real
-  # investigation is possible without re-running.
+  # beyond whatever excerpt gets printed below. This took TWO wrong guesses
+  # to get right on real CI runs: a `grep -A5` excerpt showed unrelated
+  # concurrent install-progress lines instead of the error's own content,
+  # and a plain `tail -80` of the whole capture turned out to just be the
+  # tail of an unrelated, benign `go install` verbose package-compilation
+  # log (gopls building itself from source) that happened to be the last
+  # substantial output before the error — nowhere near the actual match.
+  # Locate the match by LINE NUMBER and window around THAT specific line
+  # instead of guessing at a static offset.
   echo "$out" > /tmp/.nvn_fresh_install_full.log
   if echo "$out" | grep -qE 'Error detected|stack traceback|Failed to load|E5108|E5113'; then
-    bad "fresh install: zero errors" "$(tail -80 /tmp/.nvn_fresh_install_full.log)"
+    match_line=$(grep -nE 'Error detected|stack traceback|Failed to load|E5108|E5113' /tmp/.nvn_fresh_install_full.log | head -1 | cut -d: -f1)
+    window_start=$((match_line > 15 ? match_line - 15 : 1))
+    bad "fresh install: zero errors" "$(sed -n "${window_start},$((match_line + 40))p" /tmp/.nvn_fresh_install_full.log)"
   else
     ok "fresh install: zero errors"
   fi
@@ -251,6 +255,28 @@ local function gd(bufnr, line, col, expect_suffix, label)
   local landed = vim.api.nvim_buf_get_name(0)
   local ok = landed:sub(-#expect_suffix) == expect_suffix
   print(label .. "_gd=" .. tostring(ok) .. " landed=" .. landed)
+  if not ok then
+    -- On failure, dump the RAW LSP response directly — this distinguishes
+    -- "the server hadn't finished indexing yet" (empty/nil result, a
+    -- timing problem — bump the wait_client settle window) from "the
+    -- server answered correctly but vim.lsp.buf.definition() didn't
+    -- navigate" (a real client-side bug, e.g. the redundant-:edit-detaches-
+    -- the-client class of bug found earlier this session — see open_once()
+    -- above). Guessing between these from pass/fail alone wasted three real
+    -- CI round-trips on a different check; do this properly from the start.
+    local clients = vim.lsp.get_clients({ bufnr = bufnr })
+    local client_names = {}
+    for _, c in ipairs(clients) do
+      table.insert(client_names, c.name)
+    end
+    print(label .. "_gd_debug_clients=" .. table.concat(client_names, ","))
+    if clients[1] then
+      local params = vim.lsp.util.make_position_params(bufnr, clients[1].offset_encoding)
+      local results, err = vim.lsp.buf_request_sync(bufnr, "textDocument/definition", params, 8000)
+      print(label .. "_gd_debug_raw_result=" .. vim.inspect(results))
+      print(label .. "_gd_debug_raw_err=" .. vim.inspect(err))
+    end
+  end
 end
 
 local go_buf = open_once("$FIXTURES/go/app/main.go")
@@ -325,7 +351,7 @@ for pair in "go:Go" "python:Python" "typescript:TypeScript" "rust:Rust" "java:Ja
   if echo "$lsp_out" | grep -q "${name}_gd=true"; then
     ok "$label: gd jumps to the correct cross-file/cross-module definition"
   else
-    bad "$label: gd jumps to the correct cross-file/cross-module definition" "$(echo "$lsp_out" | grep "${name}_gd=")"
+    bad "$label: gd jumps to the correct cross-file/cross-module definition" "$(echo "$lsp_out" | grep "${name}_gd")"
   fi
 done
 
