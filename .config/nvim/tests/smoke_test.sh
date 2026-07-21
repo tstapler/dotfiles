@@ -256,7 +256,7 @@ local function open_once(file)
   return vim.api.nvim_get_current_buf()
 end
 
-local function wait_client(bufnr, name, timeout, settle)
+local function wait_client(bufnr, name, timeout, settle, wait_idle)
   local attached = vim.wait(timeout or 10000, function()
     return #vim.lsp.get_clients({ bufnr = bufnr, name = name }) > 0
   end, 200)
@@ -269,6 +269,25 @@ local function wait_client(bufnr, name, timeout, settle)
   -- confirmed empirically (the raw LSP request itself was always correct —
   -- this is purely "give it time to finish indexing", not a config bug).
   vim.wait(settle or 2000)
+  -- 8 real CI runs on rust-analyzer specifically: attached, correct
+  -- root_dir, analyzerStatus reports a healthy loaded crate graph — but gd
+  -- still deterministically empty regardless of any fixed settle delay.
+  -- "crate graph loaded" (cargo metadata) and "fully indexed" (crate
+  -- def-map / name resolution, needed for cross-crate go-to-def) are two
+  -- separate async stages; the fixed settle can't distinguish "still
+  -- indexing" from "never going to resolve". client.progress.pending is
+  -- nvim's own tracking of in-flight $/progress operations (set on
+  -- "begin", cleared on "end" — see runtime/lua/vim/lsp/handlers.lua) —
+  -- poll it directly instead of guessing elapsed time a 5th way.
+  if wait_idle and attached then
+    local client = vim.lsp.get_clients({ bufnr = bufnr, name = name })[1]
+    if client then
+      local idle = vim.wait(timeout or 10000, function()
+        return next(client.progress.pending) == nil
+      end, 300)
+      print(name .. "_progress_idle=" .. tostring(idle))
+    end
+  end
   return attached
 end
 
@@ -329,10 +348,10 @@ local function gd(bufnr, line, col, expect_suffix, label)
         -- CI run #11 refuted the root_dir hypothesis — it resolves to the
         -- correct Cargo workspace root in CI too, identical to local. 6
         -- straight real CI runs now: attached client, correct root_dir,
-        -- zero error, deterministic `result = {}` regardless of wait time,
+        -- zero error, deterministic "result = {}" regardless of wait time,
         -- retries, or freed-up CPU. Next real signal: rust-analyzer's own
-        -- status. `rust-analyzer/analyzerStatus` is a custom request that
-        -- reports whether its internal `cargo metadata`-based crate graph
+        -- status. rust-analyzer/analyzerStatus is a custom request that
+        -- reports whether its internal cargo-metadata-based crate graph
         -- actually loaded — if cargo/rustc weren't resolvable on PATH from
         -- wherever headless nvim spawned rust-analyzer, the server still
         -- attaches and answers requests, just with an empty/broken crate
@@ -407,7 +426,7 @@ gd(ts_buf, 7, 12, "lib/src/index.ts", "typescript")
 -- already passed almost every time.
 --
 -- UPDATE (4 real CI runs later): even 120s attach + 60s settle + 5x6s
--- retry still came back with a genuine `result = {}` from rust-analyzer
+-- retry still came back with a genuine "result = {}" from rust-analyzer
 -- itself (proven via the file-based raw-response dump) — the server
 -- answers but hasn't indexed yet, every single time, no matter how long
 -- we wait. On CI's 2-core runner, gopls/basedpyright/ruff/vtsls are all
@@ -429,7 +448,7 @@ local rust_buf = open_once("$FIXTURES/rust/app/src/main.rs")
 -- still resident from earlier in this same probe — cumulative resource
 -- pressure on a constrained runner, not just cold-network latency. Matching
 -- jdtls's generous budget since that coped fine at this position.
-wait_client(rust_buf, "rust-analyzer", 120000, 60000)
+wait_client(rust_buf, "rust-analyzer", 120000, 60000, true)
 gd(rust_buf, 8, 14, "lib/src/lib.rs", "rust")
 
 -- jdtls is the slowest of all six (JVM startup + Gradle project import,
