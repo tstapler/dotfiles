@@ -1,2 +1,19 @@
 #!/usr/bin/env sh
-$HOME/dotfiles/stapler-scripts/set_git_ssh
+
+# Set the appropriate SSH identity based on repository. Redirect stdin from
+# /dev/null so it can't consume the ref list git feeds a pre-push hook — the
+# pre-push.d drop-ins below rely on that stdin.
+$HOME/dotfiles/stapler-scripts/set_git_ssh </dev/null
+
+# Run any locally-installed drop-in pre-push checks. Mirrors the pre-commit
+# template's drop-in loop; sourced so a drop-in can `exit` to abort the push.
+# git invokes this hook as `pre-push <remote-name> <remote-url>` with the ref
+# updates on stdin — both are visible to the sourced drop-ins.
+for hook in "$HOME/.config/git-hooks/pre-push.d"/*.sh; do
+    [ -f "$hook" ] && . "$hook"
+done
+
+# Succeed unless a drop-in above explicitly `exit`ed non-zero. Without this,
+# an empty pre-push.d leaves the loop's failed `[ -f ]` test as the hook's
+# exit status, which would abort every push.
+exit 0

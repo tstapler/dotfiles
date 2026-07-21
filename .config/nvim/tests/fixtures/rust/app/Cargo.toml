@@ -1,0 +1,7 @@
+[package]
+name = "fixture-app"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+fixture-lib = { path = "../lib" }

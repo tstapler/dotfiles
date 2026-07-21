@@ -1,0 +1,19 @@
+---
+# Each entry is a glob matched against directories (shell-style, `*` may
+# appear in multiple path segments). Any matched directory that contains a
+# `.cfgcaddy.yml` and/or `bootstrap/tasks.yml` gets picked up automatically —
+# see bootstrap/roles/overlays/tasks/main.yml.
+#
+# The default below assumes the `~/code/<host>/<owner>/<repo>` layout. To
+# adopt this role without that convention, override with your own layout,
+# e.g. a flat `~/WorkProjects/*` directory of repos:
+#
+#   overlay_scan_globs:
+#     - "{{ ansible_facts['env']['HOME'] }}/WorkProjects/*"
+#
+# or a single fixed overlay directory:
+#
+#   overlay_scan_globs:
+#     - "{{ ansible_facts['env']['HOME'] }}/ndotfiles"
+overlay_scan_globs:
+  - "{{ ansible_facts['env']['HOME'] }}/code/*/*/*"

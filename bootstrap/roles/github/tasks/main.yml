@@ -58,17 +58,28 @@
     PATH: "{{ brew_prefix }}/bin:{{ ansible_facts['env']['PATH'] }}"
   tags: [github]
 
-- name: Require primary gh authentication
-  fail:
+- name: Re-check primary GitHub authentication
+  command: gh auth status
+  register: github_auth
+  failed_when: false
+  changed_when: false
+  environment:
+    PATH: "{{ brew_prefix }}/bin:{{ ansible_facts['env']['PATH'] }}"
+  tags: [github]
+
+- name: Warn if primary gh authentication is not set up
+  debug:
     msg: |
       GitHub CLI is not authenticated and github_op_token_path is not set.
-      Either run:
+      SSH keys were still generated, but registering them with GitHub
+      (gh ssh-key add) will be skipped, so private/personal repo access over
+      SSH won't work until you either:
         gh auth login
       or set github_op_token_path to your 1Password token path (e.g. op://Personal/GitHub/token)
       then re-run the playbook.
+      Public github.com repos remain reachable over HTTPS without any of this.
   when:
     - github_auth.rc != 0
-    - github_op_token_path == ""
   tags: [github]
 
 # ── gh CLI authentication — personal account (FBG) ───────────────────────
@@ -93,12 +104,14 @@
     PATH: "{{ brew_prefix }}/bin:{{ ansible_facts['env']['PATH'] }}"
   tags: [github]
 
-- name: Require personal gh authentication
-  fail:
+- name: Warn if personal gh authentication is not set up
+  debug:
     msg: |
       Personal GitHub account '{{ github_personal_user }}' is not authenticated
       and github_personal_op_token_path is not set.
-      Either run:
+      SSH key was still generated, but registering it with GitHub
+      (gh ssh-key add) will be skipped, so personal repo access over SSH
+      won't work until you either:
         gh auth login
       and sign in with your personal account, or set github_personal_op_token_path
       (e.g. op://Personal/GitHub Personal/token) then re-run the playbook.
@@ -121,6 +134,7 @@
     'already' not in (github_add_primary.stderr | lower) and
     'already' not in (github_add_primary.stdout | lower) and
     'admin:public_key' not in github_add_primary.stderr
+  when: github_auth.rc == 0
   environment:
     PATH: "{{ brew_prefix }}/bin:{{ ansible_facts['env']['PATH'] }}"
   tags: [github]
@@ -155,7 +169,9 @@
     'already' not in (github_add_personal.stderr | lower) and
     'already' not in (github_add_personal.stdout | lower) and
     'admin:public_key' not in github_add_personal.stderr
-  when: github_personal_user != ""
+  when:
+    - github_personal_user != ""
+    - github_personal_token.rc == 0
   environment:
     PATH: "{{ brew_prefix }}/bin:{{ ansible_facts['env']['PATH'] }}"
     GH_TOKEN: "{{ github_personal_token.stdout | trim }}"
