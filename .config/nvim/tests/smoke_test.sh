@@ -70,7 +70,11 @@ if [ "$FRESH" = 1 ]; then
     -c 'MasonInstall gopls basedpyright ruff vtsls jdtls kotlin-language-server java-debug-adapter java-test' \
     -c 'sleep 30' -c 'qa')
   if echo "$out" | grep -qE 'Error detected|stack traceback|Failed to load|E5108|E5113'; then
-    bad "fresh install: zero errors" "$(echo "$out" | grep -iE 'error|traceback' | grep -v remote: | head -3)"
+    # Show context AROUND the actual matched error banner, not an unrelated
+    # broad `grep -i error` — that previously showed misleading excerpts
+    # (e.g. Go package paths containing the substring "errors") instead of
+    # the real error text, confirmed the hard way on a real CI run.
+    bad "fresh install: zero errors" "$(echo "$out" | grep -A5 -E 'Error detected|stack traceback|Failed to load|E5108|E5113' | grep -v remote: | head -20)"
   else
     ok "fresh install: zero errors"
   fi
@@ -236,7 +240,7 @@ local function gd(bufnr, line, col, expect_suffix, label)
   vim.api.nvim_set_current_buf(bufnr)
   vim.api.nvim_win_set_cursor(0, { line, col })
   vim.lsp.buf.definition()
-  vim.wait(5000)
+  vim.wait(10000)
   local landed = vim.api.nvim_buf_get_name(0)
   local ok = landed:sub(-#expect_suffix) == expect_suffix
   print(label .. "_gd=" .. tostring(ok) .. " landed=" .. landed)
@@ -263,18 +267,31 @@ gd(ts_buf, 7, 12, "lib/src/index.ts", "typescript")
 
 -- rust-analyzer (via rustaceanvim) tends to be slower to attach on a fresh
 -- workspace (compiles deps for its own analysis) — generous timeout.
+--
+-- UPDATE (post-review, real-CI-verified): these timeouts were tuned on a
+-- local dev machine that had already run this same fixture many times
+-- (warm rustup/cargo/gradle caches, fast local disk). The FIRST real
+-- GitHub Actions run reproduced real failures here that never happened
+-- locally — rust gd and java gd both failed even though their LSP clients
+-- had already attached, because CI's network-bound cold downloads
+-- (crates.io, Maven Central, GitHub release assets, no warm caches at all)
+-- are meaningfully slower than anything tested locally. Bumped generously
+-- rather than precisely — CI is the one place this genuinely needs slack,
+-- and a few extra seconds of headroom costs nothing when the check
+-- already passed almost every time.
 local rust_buf = open_once("$FIXTURES/rust/app/src/main.rs")
-wait_client(rust_buf, "rust-analyzer", 45000, 20000)
+wait_client(rust_buf, "rust-analyzer", 90000, 45000)
 gd(rust_buf, 8, 14, "lib/src/lib.rs", "rust")
 
--- jdtls is the slowest of all six (JVM startup + Gradle project import) —
--- generous timeout, same reasoning as rust-analyzer above.
+-- jdtls is the slowest of all six (JVM startup + Gradle project import,
+-- itself needing a cold Maven Central round-trip in CI) — generous
+-- timeout, same reasoning as rust-analyzer above.
 local java_buf = open_once("$FIXTURES/java/src/main/java/com/example/fixture/Main.java")
-wait_client(java_buf, "jdtls", 60000, 5000)
+wait_client(java_buf, "jdtls", 120000, 40000)
 gd(java_buf, 10, 25, "fixture/Lib.java", "java")
 
 local kotlin_buf = open_once("$FIXTURES/kotlin/src/main/kotlin/com/example/fixture/Main.kt")
-wait_client(kotlin_buf, "kotlin_language_server", 45000, 5000)
+wait_client(kotlin_buf, "kotlin_language_server", 90000, 30000)
 gd(kotlin_buf, 8, 14, "fixture/Lib.kt", "kotlin")
 EOF
 )
