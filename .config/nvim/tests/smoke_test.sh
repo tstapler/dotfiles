@@ -372,6 +372,22 @@ gd(ts_buf, 7, 12, "lib/src/index.ts", "typescript")
 -- rather than precisely — CI is the one place this genuinely needs slack,
 -- and a few extra seconds of headroom costs nothing when the check
 -- already passed almost every time.
+--
+-- UPDATE (4 real CI runs later): even 120s attach + 60s settle + 5x6s
+-- retry still came back with a genuine `result = {}` from rust-analyzer
+-- itself (proven via the file-based raw-response dump) — the server
+-- answers but hasn't indexed yet, every single time, no matter how long
+-- we wait. On CI's 2-core runner, gopls/basedpyright/ruff/vtsls are all
+-- still attached and doing their own background work at this point,
+-- competing for the same two cores rust-analyzer needs to index. Stop
+-- them before starting rust — those checks already ran and recorded
+-- their pass/fail, so there's nothing left for them to do.
+for _, name in ipairs({ "gopls", "basedpyright", "ruff", "vtsls" }) do
+  for _, c in ipairs(vim.lsp.get_clients({ name = name })) do
+    c:stop(true)
+  end
+end
+vim.wait(2000)
 local rust_buf = open_once("$FIXTURES/rust/app/src/main.rs")
 -- UPDATE (2nd real-CI-run data point): 90s/45s was still not enough — attach
 -- passed but gd (needing actual project indexing, not just the client
