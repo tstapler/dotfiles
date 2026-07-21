@@ -1,0 +1,81 @@
+name: Neovim Config
+
+on:
+  push:
+    paths:
+      - '.config/nvim/**'
+      - '.github/workflows/nvim.yml'
+  pull_request:
+    paths:
+      - '.config/nvim/**'
+      - '.github/workflows/nvim.yml'
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      NVIM_APPNAME: nvim-next
+    steps:
+      - uses: actions/checkout@v4
+
+      # Pinned to the exact version ADR-001 targets (project_plans/
+      # neovim-hardening/decisions/ADR-001-neovim-version-treesitter-branch.md)
+      # — nvim-treesitter's `master` branch this config relies on only loads
+      # on this line, not on newer Neovim releases.
+      - name: Install Neovim 0.11.6
+        run: |
+          curl -LO https://github.com/neovim/neovim/releases/download/v0.11.6/nvim-linux-x86_64.tar.gz
+          tar xzf nvim-linux-x86_64.tar.gz
+          echo "$PWD/nvim-linux-x86_64/bin" >> "$GITHUB_PATH"
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 'stable'
+
+      # rust-analyzer via rustup, NOT mason (pitfalls.md §2, Pattern
+      # Decisions "rust-analyzer install") — toolchain-matched, not
+      # version-drifted from whatever mason last pinned.
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rust-analyzer
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      # No gradlew wrapper is checked into the java/kotlin fixtures — jdtls'
+      # and kotlin-language-server's Gradle Tooling API integration needs a
+      # system `gradle` on PATH to import the project.
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.3.1'
+
+      # Mirrors the local dev setup (Task 1.1.1c): NVIM_APPNAME=nvim-next
+      # isolation, pointed at the checked-out .config/nvim tree.
+      - name: Set up NVIM_APPNAME=nvim-next isolation
+        run: ln -s "$GITHUB_WORKSPACE/.config/nvim" "$HOME/.config/nvim-next"
+
+      # --fresh is deliberate, not just "thorough": this repo's history
+      # includes several bugs (mason-lspconfig skipping ensure_installed
+      # under --headless, a stale jdtls client racing the real one, a
+      # mason-registry sync race) that ONLY reproduced on a genuinely cold
+      # install — a CI runner IS a cold install every time, so this is the
+      # cheapest place to keep catching that whole bug class continuously.
+      - name: Run nvim config smoke test
+        run: .config/nvim/tests/smoke_test.sh --fresh
