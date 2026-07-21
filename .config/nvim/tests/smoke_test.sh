@@ -301,13 +301,20 @@ local function gd(bufnr, line, col, expect_suffix, label)
       -- first arg is a WINDOW id on this Neovim version, not a bufnr — we
       -- were passing bufnr (e.g. 7), which doesn't resolve to any window
       -- ("Invalid window id: 7"). gd() already made this buffer current in
-      -- window 0 above, so pass 0 (current window) instead.
+      -- window 0 above, so pass 0 (current window) instead. Fixed for run
+      -- #6 — but run #6 (and #7 with 'more' disabled) both showed the dump
+      -- landing as a bare "{" with nothing after: the print()/message
+      -- system itself drops multi-line content in headless mode somewhere
+      -- past the first line, independent of 'more'. Stop routing this
+      -- through print() at all — write it straight to a file instead.
       local dump_ok, dump_err = pcall(function()
         local params = vim.lsp.util.make_position_params(0, clients[1].offset_encoding)
         local results, err = vim.lsp.buf_request_sync(bufnr, "textDocument/definition", params, 8000)
-        local result_str = vim.inspect(results)
-        print(label .. "_gd_debug_raw_result=" .. result_str:sub(1, 2000))
-        print(label .. "_gd_debug_raw_err=" .. vim.inspect(err))
+        local f = io.open("/tmp/.nvn_gd_debug_" .. label .. ".log", "w")
+        if f then
+          f:write("result:\n" .. vim.inspect(results) .. "\nerr:\n" .. vim.inspect(err))
+          f:close()
+        end
       end)
       if not dump_ok then
         print(label .. "_gd_debug_dump_failed=" .. tostring(dump_err))
@@ -388,7 +395,11 @@ for pair in "go:Go" "python:Python" "typescript:TypeScript" "rust:Rust" "java:Ja
   if echo "$lsp_out" | grep -q "${name}_gd=true"; then
     ok "$label: gd jumps to the correct cross-file/cross-module definition"
   else
-    bad "$label: gd jumps to the correct cross-file/cross-module definition" "$(echo "$lsp_out" | grep "${name}_gd")"
+    debug_file="/tmp/.nvn_gd_debug_${name}.log"
+    diag="$(echo "$lsp_out" | grep "${name}_gd")"
+    [ -f "$debug_file" ] && diag="$diag
+$(cat "$debug_file")"
+    bad "$label: gd jumps to the correct cross-file/cross-module definition" "$diag"
   fi
 done
 
