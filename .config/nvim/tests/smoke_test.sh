@@ -289,14 +289,14 @@ local function gd(bufnr, line, col, expect_suffix, label)
     end
     print(label .. "_gd_debug_clients=" .. table.concat(client_names, ","))
     if clients[1] then
-      -- CI run #4 showed the clients= line print but NOT this one — no
-      -- error surfaced elsewhere in the chunk (later checks still ran), so
-      -- something about this specific print silently ate itself. Wrap in
-      -- pcall and cap the inspected string length as a defensive guess
-      -- (huge vim.inspect() output is the only plausible culprit) rather
-      -- than leave a second CI round-trip with zero new data.
+      -- CI run #4 showed the clients= line print but NOT this one; run #5
+      -- (after wrapping in pcall) revealed why: make_position_params()'s
+      -- first arg is a WINDOW id on this Neovim version, not a bufnr — we
+      -- were passing bufnr (e.g. 7), which doesn't resolve to any window
+      -- ("Invalid window id: 7"). gd() already made this buffer current in
+      -- window 0 above, so pass 0 (current window) instead.
       local dump_ok, dump_err = pcall(function()
-        local params = vim.lsp.util.make_position_params(bufnr, clients[1].offset_encoding)
+        local params = vim.lsp.util.make_position_params(0, clients[1].offset_encoding)
         local results, err = vim.lsp.buf_request_sync(bufnr, "textDocument/definition", params, 8000)
         local result_str = vim.inspect(results)
         print(label .. "_gd_debug_raw_result=" .. result_str:sub(1, 2000))
