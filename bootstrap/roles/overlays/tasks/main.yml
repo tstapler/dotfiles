@@ -1,0 +1,72 @@
+---
+# ── Generic overlay discovery ────────────────────────────────────────────────
+# Any directory matched by `overlay_scan_globs` (see defaults/main.yml) that
+# ships its own `.cfgcaddy.yml` and/or `bootstrap/tasks.yml` gets wired up
+# automatically:
+#   - `.cfgcaddy.yml`      -> `cfgcaddy link -c <dir>/.cfgcaddy.yml -y`
+#   - `bootstrap/tasks.yml` -> include_tasks, with `overlay_dir` passed in
+# This repo never names the overlay directly — it only knows the glob
+# pattern — so overlay repos (e.g. an employer-specific dotfiles overlay)
+# never need to be referenced from this repo's git history. Inert if
+# nothing matches.
+
+- name: Expand overlay_scan_globs into candidate directories
+  # ansible.builtin.find can't expand a pattern with `*` in more than one
+  # path segment (e.g. "code/*/*/*") — it only globs
+  # filenames within a single fixed parent directory. Native shell globbing
+  # handles multi-segment `*` correctly, so shell out instead.
+  shell: |
+    set -eu
+    for pattern in {{ overlay_scan_globs | map('quote') | join(' ') }}; do
+      for d in $pattern; do
+        if [ -d "$d" ]; then
+          echo "$d"
+        fi
+      done
+    done
+  args:
+    executable: /bin/bash
+  register: overlay_dirs_raw
+  changed_when: false
+  tags: [overlays]
+
+- name: Record discovered overlay directories
+  set_fact:
+    overlay_dirs: "{{ overlay_dirs_raw.stdout_lines | unique }}"
+  tags: [overlays]
+
+- name: Check each overlay directory for .cfgcaddy.yml
+  stat:
+    path: "{{ item }}/.cfgcaddy.yml"
+  loop: "{{ overlay_dirs }}"
+  register: overlay_cfgcaddy_stats
+  tags: [overlays]
+
+- name: Check each overlay directory for bootstrap/tasks.yml
+  stat:
+    path: "{{ item }}/bootstrap/tasks.yml"
+  loop: "{{ overlay_dirs }}"
+  register: overlay_bootstrap_stats
+  tags: [overlays]
+
+- name: Link overlays that ship their own .cfgcaddy.yml
+  command: cfgcaddy link -c "{{ item.item }}/.cfgcaddy.yml" -y
+  loop: "{{ overlay_cfgcaddy_stats.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+  when: item.stat.exists
+  register: overlay_cfgcaddy_link
+  changed_when: "'Linked' in overlay_cfgcaddy_link.stdout"
+  environment:
+    PATH: "{{ ansible_facts['env']['HOME'] }}/.local/bin:{{ brew_prefix }}/bin:{{ ansible_facts['env']['HOME'] }}/.asdf/bin:{{ ansible_facts['env']['HOME'] }}/.asdf/shims:/opt/homebrew/bin:/home/linuxbrew/.linuxbrew/bin:{{ ansible_facts['env']['PATH'] }}"
+  tags: [overlays]
+
+- name: Run bootstrap/tasks.yml for overlays that ship one
+  include_tasks: "{{ item.item }}/bootstrap/tasks.yml"
+  loop: "{{ overlay_bootstrap_stats.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+  when: item.stat.exists
+  vars:
+    overlay_dir: "{{ item.item }}"
+  tags: [overlays]

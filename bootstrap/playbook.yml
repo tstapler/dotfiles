@@ -36,6 +36,8 @@
     - claude
     - homebrew
     - dotfiles
+    - role: overlays
+      tags: [overlays]
     - llm-sync
     - shell
     - asdf
