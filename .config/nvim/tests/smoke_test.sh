@@ -326,19 +326,41 @@ local function gd(bufnr, line, col, expect_suffix, label)
       local dump_ok, dump_err = pcall(function()
         local params = vim.lsp.util.make_position_params(0, clients[1].offset_encoding)
         local results, err = vim.lsp.buf_request_sync(bufnr, "textDocument/definition", params, 8000)
+        -- CI run #11 refuted the root_dir hypothesis — it resolves to the
+        -- correct Cargo workspace root in CI too, identical to local. 6
+        -- straight real CI runs now: attached client, correct root_dir,
+        -- zero error, deterministic `result = {}` regardless of wait time,
+        -- retries, or freed-up CPU. Next real signal: rust-analyzer's own
+        -- status. `rust-analyzer/analyzerStatus` is a custom request that
+        -- reports whether its internal `cargo metadata`-based crate graph
+        -- actually loaded — if cargo/rustc weren't resolvable on PATH from
+        -- wherever headless nvim spawned rust-analyzer, the server still
+        -- attaches and answers requests, just with an empty/broken crate
+        -- graph, which would produce exactly this symptom.
+        local status_results = vim.lsp.buf_request_sync(
+          bufnr, "rust-analyzer/analyzerStatus", { textDocument = params.textDocument }, 5000
+        )
+        -- Locally this is a 40KB+ blob (confirmed) — the useful part
+        -- ("Workspaces:\nLoaded N packages...") is always the header, so
+        -- cap it instead of dumping the whole thing into the CI log.
+        local status_str = "no status client response"
+        if status_results then
+          for _, r in pairs(status_results) do
+            if r.result then
+              status_str = tostring(r.result):sub(1, 1500)
+              break
+            elseif r.err then
+              status_str = "err: " .. vim.inspect(r.err)
+            end
+          end
+        end
         local f = io.open("/tmp/.nvn_gd_debug_" .. label .. ".log", "w")
         if f then
-          -- 5 straight real CI runs came back with the identical
-          -- `result = {}` regardless of wait time or CPU contention fixes
-          -- — that determinism rules out a plain timing race. The next
-          -- candidate: root_dir resolved too narrow (e.g. just app/
-          -- instead of the Cargo workspace root containing lib/), so the
-          -- server never indexes the target crate at all, no matter how
-          -- long it runs. Dump it directly instead of guessing again.
           f:write(
             "root_dir: " .. tostring(clients[1].config.root_dir)
             .. "\nresult:\n" .. vim.inspect(results)
             .. "\nerr:\n" .. vim.inspect(err)
+            .. "\nanalyzerStatus:\n" .. status_str
           )
           f:close()
         end
