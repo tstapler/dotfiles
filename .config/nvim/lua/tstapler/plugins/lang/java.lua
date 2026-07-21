@@ -43,7 +43,21 @@ return {
           local workspace_dir = vim.fn.stdpath("data") .. "/jdtls-workspace/" .. project_name
 
           local mason_registry = require("mason-registry")
-          local jdtls_path = mason_registry.get_package("jdtls"):get_install_path()
+          -- Mirrors the pcall guard below for java-debug-adapter/java-test:
+          -- mason-registry's in-memory index isn't guaranteed synced with
+          -- disk yet the moment this fires (early, off the very first
+          -- java buffer's FileType event) — get_package() itself can throw
+          -- if the package hasn't registered yet on a fresh install, not
+          -- just is_installed() returning stale data. Guard it the same way.
+          local jdtls_ok, jdtls_pkg = pcall(mason_registry.get_package, "jdtls")
+          if not jdtls_ok then
+            vim.notify(
+              "jdtls package not found in mason-registry — install may still be indexing",
+              vim.log.levels.WARN
+            )
+            return
+          end
+          local jdtls_path = jdtls_pkg:get_install_path()
 
           -- java-debug-adapter + java-test bundles unlock DAP and the
           -- test-runner integration inside jdtls itself, if installed.

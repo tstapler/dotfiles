@@ -151,8 +151,18 @@ return {
       -- `cwd` opt instead of relying on that flag at all, so this doesn't
       -- depend on which poetry CLI version/flag-order Tyler has installed.
       local function run(cmd, cwd)
+        -- Bounded wait: poetry/pipenv can hang (first-run cache rebuild,
+        -- keyring prompt), and with no timeout that freezes Neovim's main
+        -- loop with no cancel path. SystemObj:wait() takes the timeout as
+        -- a positional arg to :wait(), not a field in vim.system()'s opts
+        -- table (verified against Neovim's own runtime/lua/vim/_system.lua:
+        -- `function SystemObj:wait(timeout)`). On timeout, _system.lua's
+        -- _on_exit() remaps the result to code=124 (see its `state.done ==
+        -- 'timeout'` branch) rather than raising — so the existing
+        -- `result.code ~= 0` check below already treats a timeout as a
+        -- failure, same as any other non-zero exit.
         local ok, result = pcall(function()
-          return vim.system(cmd, { cwd = cwd, text = true }):wait()
+          return vim.system(cmd, { cwd = cwd, text = true }):wait(5000)
         end)
         if not ok or result.code ~= 0 then
           return nil

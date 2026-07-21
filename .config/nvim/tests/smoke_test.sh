@@ -31,6 +31,7 @@ done
 
 PASS=0
 FAIL=0
+KNOWN=0
 FAILED_NAMES=()
 
 ok()   { PASS=$((PASS+1)); printf '  \033[32mPASS\033[0m  %s\n' "$1"; }
@@ -39,7 +40,7 @@ bad()  { FAIL=$((FAIL+1)); FAILED_NAMES+=("$1"); printf '  \033[31mFAIL\033[0m  
 # visible (doesn't silently disappear like a deleted check would) but
 # doesn't fail the job. See the Rust gd KNOWN_LIMITATIONS entry below for
 # why this exists instead of just fixing the underlying check.
-known() { printf '  \033[33mKNOWN\033[0m  %s\n' "$1"; [ -n "${2:-}" ] && printf '        %s\n' "$2"; }
+known() { KNOWN=$((KNOWN+1)); printf '  \033[33mKNOWN\033[0m  %s\n' "$1"; [ -n "${2:-}" ] && printf '        %s\n' "$2"; }
 
 nv() { nvim --headless "$@" 2>&1; }
 
@@ -126,9 +127,18 @@ else
   ok "no comma mapleader anywhere in tree"
 fi
 
-opts=$(nv -c 'set number? mouse? undofile? inccommand?' -c 'qa')
-if echo "$opts" | grep -q "number" && echo "$opts" | grep -q "mouse=a" \
-  && echo "$opts" | grep -q "undofile" && echo "$opts" | grep -q "inccommand=nosplit"; then
+# NOTE: `:set X?` prints OFF booleans as `noX` (e.g. `nonumber`), which
+# contains the substring `number` — a plain `grep -q` for the option name
+# would pass whether the option is on or off. Print exact key=value lines
+# via lua instead and exact-match (`grep -qx`) so this actually asserts the
+# option's real value, not just its name's presence in the output. Strip
+# \r: headless nvim's print() output is CR LF-terminated, and plain GNU
+# grep (unlike some grep replacements) does NOT treat \r as a line-ending
+# character, so an exact match against a \r-suffixed line would otherwise
+# always fail even when the value is correct.
+opts=$(nv -c 'lua print("number="..tostring(vim.o.number)); print("mouse="..vim.o.mouse); print("undofile="..tostring(vim.o.undofile)); print("inccommand="..vim.o.inccommand)' -c 'qa' | tr -d '\r')
+if echo "$opts" | grep -qx "number=true" && echo "$opts" | grep -qx "mouse=a" \
+  && echo "$opts" | grep -qx "undofile=true" && echo "$opts" | grep -qx "inccommand=nosplit"; then
   ok "options match legacy .vimrc values"
 else
   bad "options match legacy .vimrc values" "$opts"
@@ -136,9 +146,13 @@ fi
 
 tmp_go=$(mktemp --suffix=.go)
 echo 'package main' > "$tmp_go"
-indent=$(nvim --headless "$tmp_go" -c 'setlocal tabstop? shiftwidth? expandtab?' -c 'qa' 2>&1)
+# Same substring-match trap as above (expandtab's off form is
+# `noexpandtab`, which contains `expandtab`) — use exact lua-printed
+# key=value lines + exact match here too. Same \r-stripping as above is
+# needed for the same reason (headless print() output is CRLF-terminated).
+indent=$(nvim --headless "$tmp_go" -c 'lua print("tabstop="..tostring(vim.bo.tabstop)); print("shiftwidth="..tostring(vim.bo.shiftwidth)); print("expandtab="..tostring(vim.bo.expandtab))' -c 'qa' 2>&1 | tr -d '\r')
 rm -f "$tmp_go"
-if echo "$indent" | grep -q "tabstop=2" && echo "$indent" | grep -q "shiftwidth=2" && echo "$indent" | grep -q "expandtab"; then
+if echo "$indent" | grep -qx "tabstop=2" && echo "$indent" | grep -qx "shiftwidth=2" && echo "$indent" | grep -qx "expandtab=true"; then
   ok "go filetype: tabstop=2 expandtab"
 else
   bad "go filetype: tabstop=2 expandtab" "$indent"
@@ -228,6 +242,21 @@ else
 fi
 rm -f /tmp/.nvn_smoketest_health.txt
 
+# DAP (breakpoints/launch/step) coverage note: this script has zero
+# automated checks that actually launch a debug session for ANY of the 6
+# languages (Go/Python/TypeScript/Rust/Java/Kotlin). The one DAP-adjacent
+# check below only greps go.lua's source for a hardcoded adapter path —
+# that proves the config exists, not that a debug session actually works.
+# All 6 languages' DAP support is verified interactively only, the same
+# "document the gap honestly rather than fake automated coverage" call
+# already made in lang/typescript.lua (js-debug DAP) and lang/kotlin.lua
+# (DAP left unimplemented) — headless Neovim has no TTY/interactive
+# session to drive a real breakpoint/launch/step cycle through (dap-ui
+# panels, stdin-driven REPL-like flows, etc. don't function meaningfully
+# headless the way `<leader>db`-style interactive workflows need), so
+# there is no reliable headless equivalent to write. See
+# tests/fixtures/typescript/dap-demo/ for a fixture built specifically for
+# manual DAP verification (not exercised by this script).
 echo
 echo "-- per-language LSP: real cross-file attach + gd navigation --"
 echo "   (uses the fixture apps in tests/fixtures/ — real multi-module/"
@@ -583,7 +612,11 @@ else
 fi
 
 echo
-echo "== ${PASS} passed, ${FAIL} failed =="
+if [ "$KNOWN" -gt 0 ]; then
+  echo "== ${PASS} passed, ${FAIL} failed, ${KNOWN} known-limitation =="
+else
+  echo "== ${PASS} passed, ${FAIL} failed =="
+fi
 if [ "$FAIL" -gt 0 ]; then
   printf 'Failed: %s\n' "${FAILED_NAMES[*]}"
   exit 1

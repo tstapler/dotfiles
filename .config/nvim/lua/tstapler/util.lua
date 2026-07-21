@@ -25,23 +25,6 @@ function M.map(mode, lhs, rhs, opts)
   vim.keymap.set(mode, lhs, rhs, opts)
 end
 
---- Convenience wrapper for binding several lhs -> rhs pairs in one mode at once.
---- tbl accepts either shape per entry:
----   [lhs] = rhs                       -- opts defaults to {}
----   [lhs] = { rhs, opts = {...} }     -- explicit opts
----   [lhs] = { rhs, {...} }            -- opts as second positional element
----@param mode string
----@param tbl table<string, string|function|table>
-function M.map_group(mode, tbl)
-  for lhs, v in pairs(tbl) do
-    if type(v) == "table" and (v[1] or v.rhs) then
-      M.map(mode, lhs, v[1] or v.rhs, v.opts or v[2] or {})
-    else
-      M.map(mode, lhs, v, {})
-    end
-  end
-end
-
 --- Reserve a (mode, lhs) pair in the same collision table as map(), without
 --- calling vim.keymap.set. For lazy.nvim `keys = {...}` force-load specs whose
 --- actual bind happens later (inside the plugin's own config), so those binds
