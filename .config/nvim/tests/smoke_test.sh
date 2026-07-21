@@ -373,10 +373,29 @@ local function gd(bufnr, line, col, expect_suffix, label)
             end
           end
         end
+        -- Run #13's "rust-analyzer_progress_idle=" print() line never made
+        -- it into the CI log at all, alongside every other plain _attached=
+        -- line — turns out this whole session's "print() output vanishes
+        -- in CI" mystery was never nvim's message system or 'more': GitHub
+        -- Actions' own log capture collapses \r-based line overwrites
+        -- (headless nvim's message redraw uses them), while bash's own
+        -- $(...) capture sees the untouched raw bytes fine — which is
+        -- exactly why the PASS/FAIL logic (grepping that raw $lsp_out
+        -- variable) has been correct the whole time even when the CI log
+        -- I can read looked broken. Route this through the file dump too.
+        local progress_pending = "unknown"
+        if clients[1].progress and clients[1].progress.pending then
+          local tokens = {}
+          for token, title in pairs(clients[1].progress.pending) do
+            table.insert(tokens, tostring(token) .. "=" .. tostring(title))
+          end
+          progress_pending = #tokens == 0 and "none (idle)" or table.concat(tokens, ", ")
+        end
         local f = io.open("/tmp/.nvn_gd_debug_" .. label .. ".log", "w")
         if f then
           f:write(
             "root_dir: " .. tostring(clients[1].config.root_dir)
+            .. "\nprogress_pending: " .. progress_pending
             .. "\nresult:\n" .. vim.inspect(results)
             .. "\nerr:\n" .. vim.inspect(err)
             .. "\nanalyzerStatus:\n" .. status_str
