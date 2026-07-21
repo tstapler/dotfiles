@@ -275,10 +275,26 @@ end
 local function gd(bufnr, line, col, expect_suffix, label)
   vim.api.nvim_set_current_buf(bufnr)
   vim.api.nvim_win_set_cursor(0, { line, col })
-  vim.lsp.buf.definition()
-  vim.wait(10000)
-  local landed = vim.api.nvim_buf_get_name(0)
-  local ok = landed:sub(-#expect_suffix) == expect_suffix
+  -- CI's real raw-LSP dump (run #8) proved the rust-analyzer failure here
+  -- was a genuine timing race, not a client bug or config mistake: the
+  -- server answered with zero error but result = {} — it just hadn't
+  -- finished indexing this workspace yet, despite wait_client()'s fixed
+  -- settle delay already having elapsed. A single settle-then-try can't
+  -- reliably distinguish "will never resolve" from "resolves 2s later" —
+  -- retry the actual navigation attempt (the real signal we care about)
+  -- instead of guessing a bigger fixed delay a 4th time.
+  local ok, landed
+  for _ = 1, 5 do
+    vim.lsp.buf.definition()
+    vim.wait(6000)
+    landed = vim.api.nvim_buf_get_name(0)
+    ok = landed:sub(-#expect_suffix) == expect_suffix
+    if ok then
+      break
+    end
+    vim.api.nvim_set_current_buf(bufnr)
+    vim.api.nvim_win_set_cursor(0, { line, col })
+  end
   print(label .. "_gd=" .. tostring(ok) .. " landed=" .. landed)
   if not ok then
     -- On failure, dump the RAW LSP response directly — this distinguishes
