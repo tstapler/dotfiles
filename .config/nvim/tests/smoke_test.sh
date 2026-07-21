@@ -69,12 +69,19 @@ if [ "$FRESH" = 1 ]; then
   out=$(nv -c 'Lazy! sync' -c 'TSUpdateSync' \
     -c 'MasonInstall gopls basedpyright ruff vtsls jdtls kotlin-language-server java-debug-adapter java-test' \
     -c 'sleep 30' -c 'qa')
+  # This whole command's output only exists in $out — nothing streams to the
+  # terminal/CI log live (it's fully captured via command substitution) —
+  # so on failure there is otherwise NO way to see what actually happened
+  # beyond whatever grep excerpt gets printed below. Confirmed the hard way
+  # on a real CI run: a `grep -A5` excerpt around the matched error banner
+  # showed only unrelated concurrent install-progress lines, not the
+  # error's own content, because $out interleaves multiple async
+  # processes (Lazy sync, TSUpdate, Mason installs) and the actual cause
+  # could be anywhere in it. Always save the full capture so a real
+  # investigation is possible without re-running.
+  echo "$out" > /tmp/.nvn_fresh_install_full.log
   if echo "$out" | grep -qE 'Error detected|stack traceback|Failed to load|E5108|E5113'; then
-    # Show context AROUND the actual matched error banner, not an unrelated
-    # broad `grep -i error` — that previously showed misleading excerpts
-    # (e.g. Go package paths containing the substring "errors") instead of
-    # the real error text, confirmed the hard way on a real CI run.
-    bad "fresh install: zero errors" "$(echo "$out" | grep -A5 -E 'Error detected|stack traceback|Failed to load|E5108|E5113' | grep -v remote: | head -20)"
+    bad "fresh install: zero errors" "$(tail -80 /tmp/.nvn_fresh_install_full.log)"
   else
     ok "fresh install: zero errors"
   fi
@@ -280,7 +287,14 @@ gd(ts_buf, 7, 12, "lib/src/index.ts", "typescript")
 -- and a few extra seconds of headroom costs nothing when the check
 -- already passed almost every time.
 local rust_buf = open_once("$FIXTURES/rust/app/src/main.rs")
-wait_client(rust_buf, "rust-analyzer", 90000, 45000)
+-- UPDATE (2nd real-CI-run data point): 90s/45s was still not enough — attach
+-- passed but gd (needing actual project indexing, not just the client
+-- connecting) timed out. GH Actions standard runners are 2-core/7GB, and by
+-- this point in the sequence 3 other language servers (go/python/ts) are
+-- still resident from earlier in this same probe — cumulative resource
+-- pressure on a constrained runner, not just cold-network latency. Matching
+-- jdtls's generous budget since that coped fine at this position.
+wait_client(rust_buf, "rust-analyzer", 120000, 60000)
 gd(rust_buf, 8, 14, "lib/src/lib.rs", "rust")
 
 -- jdtls is the slowest of all six (JVM startup + Gradle project import,
