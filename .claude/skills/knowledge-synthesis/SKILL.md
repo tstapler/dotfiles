@@ -81,10 +81,20 @@ Use 3-7 tags per note:
 - Both supporting and critical perspectives
 - Comprehensive coverage of major aspects
 
+## Wiki Root Resolution
+
+Never hardcode a wiki path — it differs per machine. Resolve it fresh each time:
+
+1. If `$WIKI_PATH` is set in the environment, use it as the wiki root.
+2. Else, if a `wiki_path` shell function is available (defined in dotfiles' `.shell/functions.sh`), run it (`wiki_path`) and use its output as the root.
+3. Else, fall back to `~/Documents/personal-wiki` if it exists, then `~/Documents/notes`.
+4. **The `pages/` and `journals/` hierarchy is always relative to the resolved root — never assume an extra `logseq/` nesting.** Some machines' graphs put content directly at `<root>/pages/` and `<root>/journals/`; others nest it at `<root>/logseq/pages/` and `<root>/logseq/journals/` (e.g. a graph opened as `~/Documents/personal-wiki/logseq`). Check which one actually exists (`Glob`) before writing — don't guess. If it's a brand-new graph with neither present, create `<root>/pages/` and `<root>/journals/` directly (no `logseq/` nesting) unless the user says otherwise.
+5. Do this resolution once per session and reuse the result — don't re-resolve per page.
+
 ## File Locations
 
-- **Pages**: `/logseq/pages/*.md`
-- **Journals**: `/logseq/journals/YYYY_MM_DD.md`
+- **Pages**: `<resolved root>/pages/*.md` (or `<resolved root>/logseq/pages/*.md` if that's the layout already in use on this machine — see Wiki Root Resolution above)
+- **Journals**: `<resolved root>/journals/YYYY_MM_DD.md` (or `.../logseq/journals/...`, same caveat)
 
 ---
 
@@ -113,11 +123,11 @@ For referenced books, create dedicated pages:
 
 For physical products, parts, and retailers encountered during research (e.g. home project planning, purchases):
 
-**Check first, don't duplicate.** Before creating a page, `Grep`/`Glob` `logseq/pages/` for an existing page on that retailer/product/part. If one exists, read it and only append genuinely new information (a better price, a new source, a caveat) — never write a redundant duplicate page. Skip creating a page at all for one-off consumables (a single tube of caulk) that won't recur across future research.
+**Check first, don't duplicate.** Before creating a page, `Grep`/`Glob` the resolved `pages/` directory (see Wiki Root Resolution) for an existing page on that retailer/product/part. If one exists, read it and only append genuinely new information (a better price, a new source, a caveat) — never write a redundant duplicate page. Skip creating a page at all for one-off consumables (a single tube of caulk) that won't recur across future research.
 
 Create a page when the retailer/product/part is distinctive and likely to come up again:
-- **Retailer pages** (`logseq/pages/<Retailer Name>.md`): what they carry, price positioning, any recurring pros/cons noted across projects.
-- **Product/part pages** (`logseq/pages/<Product Name>.md`): core definition, price/quality tier, why recommended (or not), at least one **source URL** — never state a price or quality claim without attribution.
+- **Retailer pages** (`<pages dir>/<Retailer Name>.md`): what they carry, price positioning, any recurring pros/cons noted across projects.
+- **Product/part pages** (`<pages dir>/<Product Name>.md`): core definition, price/quality tier, why recommended (or not), at least one **source URL** — never state a price or quality claim without attribution.
 - Link every product page to its retailer (`[[Retailer]]`) and to related products/concepts.
 - Tags: `#[[Products]]`, plus a category tag (e.g. `#[[Home Improvement]]`, `#[[Tools]]`).
 - Link back to the context that surfaced it (e.g. a house/location page, project page) so the page is discoverable from both directions.
