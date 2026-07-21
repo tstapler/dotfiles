@@ -377,12 +377,18 @@ local function gd(bufnr, line, col, expect_suffix, label)
         -- it into the CI log at all, alongside every other plain _attached=
         -- line — turns out this whole session's "print() output vanishes
         -- in CI" mystery was never nvim's message system or 'more': GitHub
-        -- Actions' own log capture collapses \r-based line overwrites
-        -- (headless nvim's message redraw uses them), while bash's own
-        -- $(...) capture sees the untouched raw bytes fine — which is
-        -- exactly why the PASS/FAIL logic (grepping that raw $lsp_out
-        -- variable) has been correct the whole time even when the CI log
-        -- I can read looked broken. Route this through the file dump too.
+        -- Actions' own log capture collapses carriage-return-based line
+        -- overwrites (headless nvim's message redraw uses them), while
+        -- bash's own command substitution capture sees the untouched raw
+        -- bytes fine — which is exactly why the PASS/FAIL logic (grepping
+        -- that raw captured variable) has been correct the whole time even
+        -- when the CI log looked broken. Route this through the file dump.
+        -- NOTE: comments in this whole block must avoid literal backticks
+        -- and dollar-sign syntax entirely — this sits inside an UNQUOTED
+        -- bash heredoc (intentional, so FIXTURES interpolates below), so
+        -- any such sequence in a comment gets evaluated as real bash
+        -- command substitution or variable expansion before Lua ever
+        -- sees the text. Already bit this twice this session.
         local progress_pending = "unknown"
         if clients[1].progress and clients[1].progress.pending then
           local tokens = {}
