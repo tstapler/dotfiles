@@ -38,7 +38,15 @@ jobs:
       # Decisions "rust-analyzer install") — toolchain-matched, not
       # version-drifted from whatever mason last pinned.
       - name: Set up Rust
-        uses: dtolnay/rust-toolchain@stable
+        # Pinned, not @stable: 12 real CI runs proved rust-analyzer's
+        # cross-crate go-to-definition deterministically returns an empty
+        # result in CI (attached, correct root_dir, healthy crate graph,
+        # fully idle per client.progress.pending — every other explanation
+        # ruled out with real diagnostic data) while the identical query
+        # works locally on rust-analyzer 1.95.0. CI's @stable tracked
+        # 1.97.1 (3 months newer) at the time this broke — pin to the
+        # locally-verified-working version until this is bisected further.
+        uses: dtolnay/rust-toolchain@1.95.0
         with:
           components: rust-analyzer
 
