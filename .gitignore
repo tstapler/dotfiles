@@ -303,6 +303,26 @@ stapler-scripts/litellm-proxy/.litellm.pid
 .idea/copilot.data.migration.*.xml
 stapler-scripts/litellm-proxy/.claude/settings.local.json
 
+# nvim smoke-test startup baseline — machine-specific timing, not portable
+.config/nvim/tests/.startup_baseline_ms
+
+# delve's compiled temp binary when `dlv debug` runs without --output
+# (interactive DAP testing on the go fixture leaves these behind)
+.config/nvim/tests/fixtures/go/**/__debug_bin*
+
+# Gradle/Eclipse/kotlin-language-server build and tooling state left behind
+# by running/debugging the java and kotlin fixtures
+.config/nvim/tests/fixtures/java/.gradle/
+.config/nvim/tests/fixtures/java/build/
+.config/nvim/tests/fixtures/java/bin/
+.config/nvim/tests/fixtures/java/.settings/
+.config/nvim/tests/fixtures/java/.classpath
+.config/nvim/tests/fixtures/java/.project
+.config/nvim/tests/fixtures/kotlin/.gradle/
+.config/nvim/tests/fixtures/kotlin/build/
+.config/nvim/tests/fixtures/kotlin/.kotlin/
+.config/nvim/tests/fixtures/kotlin/kls_database.db
+
 # Node.js dependencies (skills with bundled executors)
 node_modules/
 .claude/skills/**/.temp*

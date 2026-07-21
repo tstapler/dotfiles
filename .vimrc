@@ -7,6 +7,8 @@
 "      |__/                         |_|
 "
 
+" plain-vim fallback only; Neovim is configured in .config/nvim/
+
 " Options {{{
 
 "Vim not vi
@@ -119,14 +121,8 @@ if isdirectory(expand("~/.vim/local"))
 endif
 
 " Plugin Manager {{{
-if filereadable(expand("~/.vimrc.dein"))
-   \ && (has("nvim") || version > 703)
-  source ~/.vimrc.dein
-else
-  colorscheme slate
-endif
-                                                          
-" End Plugin Manager }}}                                  
+colorscheme slate
+" End Plugin Manager }}}
                                                           
 " Autocommands {{{                                        
 
