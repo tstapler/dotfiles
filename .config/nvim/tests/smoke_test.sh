@@ -66,26 +66,44 @@ if [ "$FRESH" = 1 ]; then
   # but headless verification needs an explicit :MasonInstall to actually
   # exercise "do the LSP servers install", or every fresh-install check here
   # would silently pass with zero LSP servers present.
+  # `sleep 30` was a blind guess at how long Mason's background installs take
+  # — too short once jdtls/kotlin-language-server/java-debug-adapter/java-test
+  # (JVM-sized downloads) joined the list: CI runs showed jdtls/kotlin still
+  # not on disk 30s later ("no client attached — server binary may not be
+  # installed"). Poll mason-registry's own is_installed() per package instead,
+  # bounded at 180s total, so the wait is only as long as it needs to be.
+  wait_installs='local reg = require("mason-registry")
+    local pkgs = { "gopls", "basedpyright", "ruff", "vtsls", "jdtls", "kotlin-language-server", "java-debug-adapter", "java-test" }
+    local deadline = vim.uv.now() + 180000
+    while vim.uv.now() < deadline do
+      local all_done = true
+      for _, name in ipairs(pkgs) do
+        local ok, pkg = pcall(reg.get_package, name)
+        if not ok or not pkg:is_installed() then
+          all_done = false
+          break
+        end
+      end
+      if all_done then break end
+      vim.wait(3000)
+    end'
   out=$(nv -c 'Lazy! sync' -c 'TSUpdateSync' \
     -c 'MasonInstall gopls basedpyright ruff vtsls jdtls kotlin-language-server java-debug-adapter java-test' \
-    -c 'sleep 30' -c 'qa')
+    -c "lua $wait_installs" -c 'qa')
   # This whole command's output only exists in $out — nothing streams to the
   # terminal/CI log live (it's fully captured via command substitution) —
   # so on failure there is otherwise NO way to see what actually happened
-  # beyond whatever excerpt gets printed below. This took TWO wrong guesses
-  # to get right on real CI runs: a `grep -A5` excerpt showed unrelated
-  # concurrent install-progress lines instead of the error's own content,
-  # and a plain `tail -80` of the whole capture turned out to just be the
-  # tail of an unrelated, benign `go install` verbose package-compilation
-  # log (gopls building itself from source) that happened to be the last
-  # substantial output before the error — nowhere near the actual match.
-  # Locate the match by LINE NUMBER and window around THAT specific line
-  # instead of guessing at a static offset.
+  # beyond whatever excerpt gets printed below. Locating a generic "Error
+  # detected while processing command line:" prefix and windowing around
+  # it (two prior attempts, plus a naive tail) kept missing: Lazy!/
+  # TSUpdateSync/MasonInstall all write async progress into the same message
+  # buffer concurrently, so the actual error CODE ends up lines away from its
+  # own generic header, buried in unrelated interleaved install-progress
+  # noise. Grep for the error code token itself instead of the header — it's
+  # emitted as one atomic write, so it survives the interleaving intact.
   echo "$out" > /tmp/.nvn_fresh_install_full.log
-  if echo "$out" | grep -qE 'Error detected|stack traceback|Failed to load|E5108|E5113'; then
-    match_line=$(grep -nE 'Error detected|stack traceback|Failed to load|E5108|E5113' /tmp/.nvn_fresh_install_full.log | head -1 | cut -d: -f1)
-    window_start=$((match_line > 15 ? match_line - 15 : 1))
-    bad "fresh install: zero errors" "$(sed -n "${window_start},$((match_line + 40))p" /tmp/.nvn_fresh_install_full.log)"
+  if echo "$out" | grep -qE 'E[0-9]{3,5}:|stack traceback'; then
+    bad "fresh install: zero errors" "$(grep -nE 'E[0-9]{3,5}:|stack traceback' /tmp/.nvn_fresh_install_full.log | head -20)"
   else
     ok "fresh install: zero errors"
   fi
@@ -271,10 +289,22 @@ local function gd(bufnr, line, col, expect_suffix, label)
     end
     print(label .. "_gd_debug_clients=" .. table.concat(client_names, ","))
     if clients[1] then
-      local params = vim.lsp.util.make_position_params(bufnr, clients[1].offset_encoding)
-      local results, err = vim.lsp.buf_request_sync(bufnr, "textDocument/definition", params, 8000)
-      print(label .. "_gd_debug_raw_result=" .. vim.inspect(results))
-      print(label .. "_gd_debug_raw_err=" .. vim.inspect(err))
+      -- CI run #4 showed the clients= line print but NOT this one — no
+      -- error surfaced elsewhere in the chunk (later checks still ran), so
+      -- something about this specific print silently ate itself. Wrap in
+      -- pcall and cap the inspected string length as a defensive guess
+      -- (huge vim.inspect() output is the only plausible culprit) rather
+      -- than leave a second CI round-trip with zero new data.
+      local dump_ok, dump_err = pcall(function()
+        local params = vim.lsp.util.make_position_params(bufnr, clients[1].offset_encoding)
+        local results, err = vim.lsp.buf_request_sync(bufnr, "textDocument/definition", params, 8000)
+        local result_str = vim.inspect(results)
+        print(label .. "_gd_debug_raw_result=" .. result_str:sub(1, 2000))
+        print(label .. "_gd_debug_raw_err=" .. vim.inspect(err))
+      end)
+      if not dump_ok then
+        print(label .. "_gd_debug_dump_failed=" .. tostring(dump_err))
+      end
     end
   end
 end
