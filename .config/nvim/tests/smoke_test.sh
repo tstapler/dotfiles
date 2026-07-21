@@ -234,6 +234,13 @@ echo "    registered, not that the server binary exists/attaches.)"
 FIXTURES="$NVIM_CONFIG_DIR/tests/fixtures"
 
 lsp_probe=$(cat <<EOF
+-- CI run #6 showed WHY the rust gd raw-result dump was landing empty even
+-- after fixing its earlier bugs: 'more' triggers a --More-- prompt once a
+-- message spans enough screen lines, and headless Neovim silently drops
+-- everything past that point instead of blocking (no TTY to advance it).
+-- rust-analyzer's definition response, vim.inspect()'d, is comfortably
+-- past that line count. Disable it for this whole probe.
+vim.o.more = false
 -- IMPORTANT: open each file with :edit exactly ONCE. A redundant :edit on
 -- an already-open buffer (even the same unmodified file) was found to
 -- detach the LSP client from that buffer — the client re-attaches to the
