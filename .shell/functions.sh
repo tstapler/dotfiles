@@ -1,6 +1,6 @@
-# Return the path to the local Logseq wiki (personal-wiki repo)
+# Return the path to the local Logseq graph (override with $LOGSEQ_PATH)
 function logseq_path {
-  local default="$HOME/Documents/personal-wiki/logseq"
+  local default="$HOME/Documents/notes"
   if [[ -n "$LOGSEQ_PATH" ]]; then
     echo "$LOGSEQ_PATH"
   else
