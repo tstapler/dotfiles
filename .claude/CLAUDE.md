@@ -47,6 +47,11 @@ Orient yourself before acting. Avoid reading a file in full unless the entire fi
 - Prefer `Edit` / `Write` tools for file changes
 - Use the serena MCP server for complex multi-file structural edits when available
 
+## Repo Placement
+
+- New clones go under `~/code/<host>/<owner>/<repo>` (e.g. `~/code/github.com/tstapler/dotfiles`)
+- Use `tyclone <url>` (defined in `~/dotfiles/.shell/functions.sh`) to clone into that layout automatically; `repo_dir <url>` prints the resulting path without cloning
+- Existing repos outside this layout (e.g. `~/dotfiles` itself) are left in place — this convention only applies going forward, not as a retroactive migration
 
 ---
 
@@ -89,3 +94,4 @@ MDD uses two stores. **Do not confuse them:**
 ---
 
 @~/.claude/RTK.md
+@~/.claude/CLAUDE.local.md
