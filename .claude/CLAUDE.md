@@ -43,10 +43,7 @@ Before reading code, orient with cheap tools first — do not read entire files 
 
 Orient yourself before acting. Avoid reading a file in full unless the entire file is relevant.
 
-## Code Editing
-
-- Prefer `Edit` / `Write` tools for file changes
-- Use the serena MCP server for complex multi-file structural edits when available
+Use the serena MCP server for complex multi-file structural edits when available.
 
 ## Engineering Discipline
 
@@ -64,41 +61,9 @@ Orient yourself before acting. Avoid reading a file in full unless the entire fi
 
 ---
 
-## Manifest-Driven Development (MDD) Workflow
+## Stapler-Driven Development (SDD) Workflow
 
-For non-trivial features, follow these phases in order. Each produces an artifact the next phase requires. Directory conventions: `@docs/plans/README.md`.
-
-### Two Artifact Layers
-
-MDD uses two stores. **Do not confuse them:**
-
-| Layer | Location | Phases | Contents |
-|---|---|---|---|
-| **Spec** | `docs/plans/<project>/` | 1–4 (pre-code) | requirements.md, research/, plan.md, validation.md |
-| **ADRs** | `docs/adr/` in target repo | 3 (planning) | ADR-NNN-*.md |
-| **Execution** | `docs/tasks/{feature}.md` in target repo | 5–6 (in-code) | Implementation Plan, bug tracking |
-
-`/plan:feature` bridges them — it reads `docs/plans/` and writes `docs/tasks/`.
-
-### Phase Gates
-
-| Phase | Command | Input | Output | Location |
-|---|---|---|---|---|---|
-| **1. Ideation** | `/plan:mdd-start` | User's idea | `requirements.md` | `docs/plans/<project>/` |
-| **2. Research** | `/research-workflow` | `requirements.md` | `research/*.md` | `docs/plans/<project>/research/` |
-| **3. Planning** | `/plan:feature` or `/handy:plan` | requirements + research | `plan.md` + ADRs (via `/plan:adr`) | `docs/plans/<project>/implementation/` + `docs/adr/` (target repo) |
-| **4. Validation** | `/quality:test-planner` | `plan.md` | `validation.md` | `docs/plans/<project>/implementation/` |
-| **5. Implementation** | `/code:implement` | plan + validation | Code + tests | Target repo |
-| **6. QA** | `/quality:does-it-work`, `/code:review` | Implementation | Sign-off | Target repo |
-
-### Rules
-
-- **Fresh session before Phase 5** — planning context degrades implementation quality
-- **Never skip phases** — each artifact is the required input for the next
-- **Research in parallel** — spawn agents for: stack, features, architecture, pitfalls
-- **Validation before code** — `validation.md` maps test coverage to requirements before writing a line
-- **Session hygiene** — run `/knowledge:extract-learnings` at session end to capture instincts
-- **Context health** — run `/meta:context-audit` to check token budget
+For non-trivial features, use `/sdd:full` (or the `sdd` agent) to run the complete 7-phase workflow end to end — ideate → research → plan → validate → implement → verify → ship — with parallel agents at each phase and a fresh session before implementation. For a task that fits in one context window, use `/sdd:quick`; for a bug fix, `/sdd:fix-bug`. Check progress with `/sdd:status`; individual phases (`/sdd:1-ideate` … `/sdd:7-ship`, `/sdd:adr`) are also invocable standalone. Artifacts land in `project_plans/<project>/`. Full docs: `.claude/skills/sdd/skills/`.
 
 ---
 
