@@ -3,6 +3,7 @@
 ## Important Reminders
 
 - Do what has been asked; nothing more, nothing less
+- Be resourceful before asking: read the file, search the code, check the docs — come back with answers, not questions. Only escalate to the user when something is genuinely undocumented, ambiguous, or requires a decision only they can make.
 - Always use Read/Grep/Glob/Edit/Write tools for file operations — never use Bash for cat, grep, find, sed, or ls
 - NEVER create files unless absolutely necessary
 - ALWAYS prefer editing existing files to creating new ones
@@ -46,6 +47,14 @@ Orient yourself before acting. Avoid reading a file in full unless the entire fi
 
 - Prefer `Edit` / `Write` tools for file changes
 - Use the serena MCP server for complex multi-file structural edits when available
+
+## Engineering Discipline
+
+- **No fix without root cause.** Before changing code to make a symptom go away, state the root-cause hypothesis ("this fails because X") and confirm it. Symptom fixes without a root-cause statement are not done.
+- **No completion claim without proof.** Don't say a task is done until the relevant check/test/build has actually been run and its output shown. Green first, then "done."
+- **Self-review before handing off.** Before presenting a non-trivial doc, plan, or diff as finished, re-read it adversarially once yourself (does every claim hold up, do the cross-references actually exist) rather than shipping the first draft.
+- **Git hygiene in shared repos.** Never `git add -A` / `git add .` in a repo you don't exclusively own — it can sweep up the user's own uncommitted work. Stage only the specific files you touched, and check `git status` first if anything looks entangled with pending changes that aren't yours.
+- **Draft PRs by default.** When opening a PR the user hasn't reviewed yet, open it as a draft (`gh pr create --draft`) so reviewers aren't notified prematurely; mark it ready only once the user gives the go-ahead.
 
 ## Repo Placement
 
