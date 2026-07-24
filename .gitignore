@@ -344,3 +344,8 @@ uploads/
 
 # Scratch browser/gh search dumps captured during ad-hoc research (root-level only)
 /gh_*.md
+
+# Accidental nested jj repos (e.g. `jj git init` run from the wrong cwd) —
+# these confuse tooling that walks the tree expecting one repo boundary.
+# See stapler-scripts/ark-mod-manager/ incident, 2026-07-24.
+**/.jj/
