@@ -341,3 +341,6 @@ node_modules/
 # Personal data emitted by the wardrobe-receipt-cataloger skill
 .claude/skills/wardrobe-receipt-cataloger/receipts.json
 uploads/
+
+# Scratch browser/gh search dumps captured during ad-hoc research (root-level only)
+/gh_*.md

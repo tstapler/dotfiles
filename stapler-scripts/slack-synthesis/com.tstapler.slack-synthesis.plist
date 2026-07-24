@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Installed by install.sh, which substitutes __RUN_SH__ / __LOG__. Do not load this file directly. -->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.tstapler.slack-synthesis</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/zsh</string>
+        <string>__RUN_SH__</string>
+        <string>--yesterday</string>
+    </array>
+
+    <!-- Fire at 09:10 local each day; missed runs (asleep/off) fire on next wake and backfill. -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>9</integer>
+        <key>Minute</key>
+        <integer>10</integer>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>StandardOutPath</key>
+    <string>__LOG__</string>
+    <key>StandardErrorPath</key>
+    <string>__LOG__</string>
+</dict>
+</plist>

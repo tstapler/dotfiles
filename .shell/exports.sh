@@ -146,8 +146,11 @@ pathadd "$HOME/.yarn/bin"
 pathadd "$HOME/.config/yarn/global/node_modules/.bin"
 pathadd "$HOME/.poetry/bin"
 
-# Personal wiki root (used by knowledge synthesis commands)
-export PERSONAL_WIKI="$HOME/Documents/personal-wiki"
+# Personal wiki / Logseq graph root (used by knowledge synthesis commands).
+# The graph moved from ~/Documents/personal-wiki/logseq to ~/Documents/notes.
+# LOGSEQ_PATH is the path-agnostic lookup honored by logseq_path() and skills.
+export LOGSEQ_PATH="$HOME/Documents/notes"
+export PERSONAL_WIKI="$LOGSEQ_PATH"
 
 # Export the path that we have updated via pathadd
 export PATH="$PATH"
