@@ -34,6 +34,28 @@ git submodule update --init cfgcaddy 2>/dev/null || true
 cd "$DOTFILES_DIR/bootstrap"
 ansible-galaxy collection install -r requirements.yml --timeout 30
 
+# Mitogen keeps one Python interpreter alive across tasks instead of
+# ansible-core forking a fresh one per task — a real speedup even for this
+# connection: local playbook. ansible-core 2.20 (this repo's version) has
+# been supported since mitogen 0.3.33 (2025-11-22); verify
+# https://github.com/mitogen-hq/mitogen/releases before bumping ansible if
+# this floor version ever needs to move. Installed with `pip --target` into a
+# plain directory (not a venv, not ansible's own Homebrew Cellar site-packages)
+# so it survives `brew upgrade ansible` untouched and isn't wiped by Homebrew.
+# Wired in via env vars here rather than bootstrap/ansible.cfg so a bare
+# `ansible-playbook playbook.yml` (no run.sh) still works unmodified — as of
+# ansible-core 2.19, third-party strategy plugins are deprecated (a
+# [DEPRECATION WARNING] prints, no removal date announced yet); if ansible-core
+# ever removes them outright, deleting this block is the only revert needed.
+MITOGEN_DIR="$HOME/.local/share/mitogen"
+if [ ! -d "$MITOGEN_DIR/ansible_mitogen" ]; then
+  echo "Installing Mitogen for Ansible..."
+  python3 -m pip install --quiet --target "$MITOGEN_DIR" "mitogen>=0.3.33"
+fi
+export ANSIBLE_STRATEGY=mitogen_linear
+export ANSIBLE_STRATEGY_PLUGINS="$MITOGEN_DIR/ansible_mitogen/plugins/strategy"
+export PYTHONPATH="$MITOGEN_DIR${PYTHONPATH:+:$PYTHONPATH}"
+
 # Auto-detect FBG work machine by hostname prefix; skip if tags already specified
 FBG_ARGS=()
 if [[ "$*" != *"--tags"* && "$*" != *"--skip-tags"* ]]; then

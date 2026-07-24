@@ -33,16 +33,41 @@ Each `_inject_secrets` call:
 
 ---
 
+## Skip manual sign-in: CLI biometric unlock (recommended)
+
+Manual `eval $(op signin)` creates an `OP_SESSION` token scoped to the current
+shell that expires after 30 minutes idle — every new terminal needs its own
+sign-in. The 1Password desktop app has a CLI integration that replaces this
+entirely: any `op` command (including the `op whoami`/`op inject` calls above)
+authenticates via a system auth prompt (fingerprint or password) instead of a
+session token, and it works automatically in every new shell.
+
+One-time setup (GUI-only, not scriptable):
+1. Open and unlock the 1Password desktop app.
+2. Settings > Developer > **Integrate with 1Password CLI**.
+3. On Linux, set your user's system authentication method to fingerprint or
+   password in your system settings. i3 doesn't ship a PolKit agent, which
+   this requires — the `secrets` Ansible role installs and autostarts
+   `lxqt-policykit` for this.
+
+With this on, `local.sh` needs nothing extra — the existing `op whoami` check
+just triggers the prompt on first use per shell. `eval $(op signin)` still
+works and is useful for headless/non-interactive sessions (SSH without a
+display) where a biometric prompt can't be shown.
+
+---
+
 ## New machine rollout
 
 ### Prerequisites
 - 1Password CLI (`brew install 1password-cli`)
 - 1Password desktop app signed into `my.1password.com` (tystapler@gmail.com)
+- Recommended: [CLI biometric unlock](#skip-manual-sign-in-cli-biometric-unlock-recommended) turned on, to skip step 1 below
 
 ### Steps
 
 ```bash
-# 1. Sign in
+# 1. Sign in (skip if biometric unlock is on — see above)
 eval "$(op signin --account my.1password.com)"
 
 # 2. Pull the FBG secrets template from 1Password

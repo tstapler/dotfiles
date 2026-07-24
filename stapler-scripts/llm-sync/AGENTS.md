@@ -40,3 +40,40 @@ uv run main.py --help
 - **Agents:** `~/.gemini/config/agents/<name>.md`
 - **Plugins:** `~/.gemini/config/plugins/<name>/` (containing `plugin.json`, `skills/`, `hooks.json`)
 - **MCP Config:** `~/.gemini/antigravity-cli/mcp_config.json`
+
+## Adding a new MCP server
+
+MCP servers are sourced from `src/sources/mcp_config.py` (`McpConfigSource`), which
+merges two files and hands the result to every target (Claude's `~/.claude.json`,
+Antigravity's `mcp_config.json`, etc.) in one pass:
+
+| File | Tracked | Use for |
+|------|---------|---------|
+| `.config/mcp/mcp-servers.json` (repo root) | yes | Servers every machine should get — checked in, universal |
+| `~/.config/mcp/mcp-servers.local.json` | **no** (gitignored) | Machine-specific servers — secrets, tools only some machines have installed |
+
+Both use the same schema, keyed by server name under `mcpServers`:
+
+```json
+{
+  "mcpServers": {
+    "some-server": {
+      "command": "npx",
+      "args": ["-y", "@some/mcp-package"],
+      "env": { "SOME_API_KEY": "${SOME_API_KEY}" }
+    }
+  }
+}
+```
+
+- stdio transport: `command` + `args` + `env`. HTTP transport: `type: "http"` + `url` instead.
+- `disabled: true` turns an entry off without deleting it.
+- Any other key (e.g. `_fork`, `_requires`) is ignored by the loader — use it as inline documentation for the entry (provenance, prerequisites, why it might fail on some machines).
+- A server that depends on something not every machine has (an app, an env var, a binary on PATH) doesn't need special-casing — it just fails to start on machines without the dependency, the same way `brave-search` above silently needs `BRAVE_API_KEY`. Put it in the global file if most machines should still attempt it; put it in the local file if it's truly one-machine-only.
+
+After editing either file, propagate with:
+
+```bash
+make llm-sync
+# or: uv run --directory stapler-scripts/llm-sync main.py --force
+```

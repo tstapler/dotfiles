@@ -3,6 +3,7 @@
 # Private taps (fanatics-gaming/tap, tstapler/stelekit) are intentionally excluded
 # because they require SSH key setup which happens after bootstrap.
 
+cask "1password-cli"  # op CLI; ships as a cask upstream but is CLI-only, required by secrets role
 brew "ansible"
 brew "asdf"          # required by asdf role
 brew "bat"

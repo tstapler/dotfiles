@@ -204,6 +204,8 @@ exec --no-startup-id blueman
 exec --no-startup-id nm-applet
 exec_always --no-startup-id setcursor
 exec --no-startup-id dbus-launch --auto-syntax
+# PolKit auth agent — i3 doesn't ship one; required for 1Password CLI biometric unlock
+exec --no-startup-id /usr/bin/lxqt-policykit-agent
 
 # Comptom Composer (Smooth Transitions)
 exec compton -f

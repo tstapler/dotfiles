@@ -52,6 +52,12 @@
         "@playwright/mcp@latest"
       ],
       "env": {}
+    },
+    "1password": {
+      "command": "1password-mcp",
+      "args": [],
+      "_requires": "1Password desktop app installed natively (not Flatpak/Snap) with Settings > Developer > 'Integrate with MCP clients' turned on. after-install.sh symlinks the binary to /usr/local/bin. Fails to start (command not found) on machines without the app — same graceful-failure pattern as brave-search needing BRAVE_API_KEY.",
+      "env": {}
     }
   }
 }
