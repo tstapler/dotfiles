@@ -35,13 +35,42 @@ Three-phase maintenance workflow: root cause → fix → verify.
    Run the relevant test(s) using the appropriate test command for the stack.
    Show the full output. Only claim the bug is fixed after seeing green.
 
-6. **Update the bug document** in `docs/bugs/open/` → move to `docs/bugs/resolved/`.
+6. **Phase D — Reflect (fix the class, not the instance).**
 
-7. Output:
+   A regression test proves *this* bug won't come back. It doesn't prove the *shape* of bug
+   won't recur elsewhere. Before closing out, apply the `quality:reflect-and-fix` taxonomy to
+   the root cause you found in Phase A:
+
+   - Classify it: Semantic/Intent, Framework Pattern Misuse, API Contract Gap, Type Safety
+     Gap, Integration Gap, or Dependency/Build Gap.
+   - Ask: what's the *earliest* point on the enforcement ladder (compile-time type →
+     lint/static → unit test → integration test → checklist) that would have caught this?
+     If the Phase B regression test is already the earliest achievable level, say so and move
+     on — don't manufacture enforcement for its own sake.
+   - If a type change, lint rule, or ast-grep/semgrep pattern could have caught it earlier
+     than a runtime test, implement that too (invoke `quality:reflect-and-fix` for the full
+     4-phase version if the bug is non-trivial; apply the ladder inline if it's a quick call).
+   - **Recurring-shape check**: is this the Nth bug with the same underlying pattern — e.g.
+     "a spawn call silently no-ops instead of erroring," "a sweep meant to catch dead state
+     excludes the exact case it should catch," "an event is lost across a restart with no
+     catch-up path"? If so, this is a systemic gap, not an isolated bug — the fix must close
+     the whole class (e.g. a shared helper with the invariant enforced once, a lint rule
+     banning the unsafe pattern repo-wide, a structural test asserting the sweep's exclusion
+     guard can't self-defeat) rather than patching this one call site. Say explicitly in the
+     bug doc which recurring shape this is, so a future bug-fix or audit doesn't re-derive it
+     as new.
+
+7. **Update the bug document** in `docs/bugs/open/` → move to `docs/bugs/resolved/`, including
+   the Phase D classification and any recurring-shape note.
+
+8. Output:
    ```
    ✅ Bug fixed and verified
 
    Root cause: <one sentence>
    Fix: <one sentence>
    Regression test: <test name>
+   Systemic fix: <enforcement added beyond the regression test, or "none needed — test is the
+     earliest achievable level">
+   Recurring shape: <name of the pattern if this is the Nth instance, or "none identified">
    ```

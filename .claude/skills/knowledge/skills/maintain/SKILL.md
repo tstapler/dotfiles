@@ -109,6 +109,52 @@ category:: Person
 
 ---
 
+### Phase 2.5: Content Recovery (Deletion Audit)
+
+**When to run**: Weekly and monthly modes. Skip for `today quick` — too slow.
+
+Recover journal content that was silently dropped during device-to-device merges. The primary failure mode is the auto-sync choosing the "shorter" device version, dropping AI synthesis entries or multi-line notes added on the other device.
+
+#### Step 1: Dry-run preview
+
+```bash
+uv run logseq-audit auto-fix --dry-run --quiet --min-lines 2 2>&1 | head -100
+```
+
+**Filter out false positives before restoring**. Three categories to skip:
+
+| Pattern | Why it's a false positive |
+|---------|--------------------------|
+| Lines where the current file has a `[[wiki-linked]]` version | Wiki-linking edits look like deletions of the plain-text original |
+| Single incomplete sentences ("I'm reading the book.", "- it's [[") | Speech-to-text intermediate saves that were later refined |
+| Synthesis activity logs (>50 lines with `**Context**`, `**Key Findings**`) | Intentional moves to dedicated zettel pages — check `logseq/pages/` before restoring |
+
+#### Step 2: Restore
+
+```bash
+uv run logseq-audit auto-fix --quiet --min-lines 2
+```
+
+After running, manually revert any false positives the tool restored (wiki-link regressions, duplicate synthesis logs). Use `git diff` to review before committing.
+
+#### Step 3: Review and commit
+
+```bash
+git diff --stat HEAD
+# Inspect changed files; revert false positives if any
+git add logseq/journals/
+git commit -m "Recover journal content lost in device merges"
+```
+
+**Performance note**: Full scan takes 5–10 minutes on repos with 10k+ commits. The `--quiet` flag suppresses the progress bar. Without `--full-scan`, the tool uses cached audit state from prior runs — much faster on repeat runs.
+
+**Known merge failure modes** (for context when reviewing dry-run output):
+1. **List-position conflict** — both devices append bullets to the same list; merge picks one tail, drops the other
+2. **Large-block displacement** — 500+ line synthesis block on one device doesn't appear in the merge result
+3. **Speech-to-text refinement collision** — phone commits a raw version, desktop commits an edited version, merge loses one
+
+---
+
 ### Phase 3: Content Creation (Claude Agents)
 
 Launch Claude agents for knowledge synthesis and topic expansion.
@@ -365,20 +411,21 @@ When `--auto-remediate` is enabled:
 ```
 **Duration**: 2-5 minutes
 **Focus**: Clear synthesis backlog
+**Skips**: Content recovery (too slow)
 
 ### Weekly (Comprehensive)
 ```bash
 /knowledge/maintain week comprehensive --auto-remediate
 ```
-**Duration**: 10-20 minutes
-**Focus**: Full maintenance with automated fixes
+**Duration**: 15-25 minutes
+**Focus**: Full maintenance with automated fixes + content recovery
 
 ### Monthly (Deep Clean)
 ```bash
 /knowledge/maintain month comprehensive --auto-remediate
 ```
-**Duration**: 30-60 minutes
-**Focus**: Comprehensive cleanup, expansion, health restoration
+**Duration**: 40-70 minutes
+**Focus**: Comprehensive cleanup, expansion, health restoration + full deletion audit
 
 ---
 

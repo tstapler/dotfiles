@@ -54,6 +54,20 @@ Every note should include:
 6. **Significance** - Why it matters
 7. **Related Topics** - `#[[Tag1]] #[[Tag2]]`
 
+## Atomicity — Keep Notes Small
+
+One page = one concept, one fact-set, or one point-in-time snapshot. This is the difference between a wiki that stays useful and a pile of sprawling documents that get stale and unreadable.
+
+**Split, don't accumulate.** If a page starts covering more than one distinct concept, or mixes durable facts with numbers that will change (a balance, a market estimate, a return calculation), split it *before* it grows further — don't wait for a cleanup pass:
+- **Static facts** (a purchase, a decision, a one-time event) → their own page, written once.
+- **Time-varying data** (account balances, valuations, running totals) → a **dated snapshot page** (`<Topic> Snapshot - YYYY-MM-DD.md` or `<Topic> - YYYY-MM-DD.md`), never edited after the fact — a new snapshot gets a new page, linked in order from a `## Snapshots` list on the hub page. See `Financial Snapshot - 2026-06-23.md` for the pattern already in use in this wiki.
+- **General, reusable concepts** (a tax rule, a financial framework, a methodology) → their own page, separate from any specific person/property/event that happens to illustrate it. The specific instance links to the concept page as a worked example; the concept page doesn't hold the instance's numbers.
+- **A hub/index page** ties the pieces together: a couple of sentences of orientation plus a `## Related Pages` (and `## Snapshots`, if applicable) list with one-line descriptions — it should not itself contain the detailed content.
+
+**When asked to "add" analysis to an existing page**, check first whether the addition is really a new atomic note that should link back, rather than a new section bolted onto the existing page. A page that's accumulated several unrelated `## Section` headers over a session is a signal it should have been split as you went.
+
+**Test before you write**: could this page's title alone tell someone what's on it, without opening it? If the honest title would need "and" or "part 2" to cover the contents, split it.
+
 ## Linking Strategy
 
 | Type | Format | Examples |
