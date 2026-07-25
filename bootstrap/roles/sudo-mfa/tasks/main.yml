@@ -1,0 +1,38 @@
+---
+- name: Install PAM MFA packages (Arch)
+  pacman:
+    name:
+      - pam-u2f
+      - libpam-google-authenticator
+      - libfido2
+    state: present
+  become: true
+  when: ansible_facts['os_family'] == "Archlinux"
+  tags: [sudo-mfa]
+
+- name: Install /etc/pam.d/sudo with optional TOTP/YubiKey MFA
+  copy:
+    src: sudo.pam
+    dest: /etc/pam.d/sudo
+    owner: root
+    group: root
+    mode: "0644"
+    backup: true
+  become: true
+  when: ansible_facts['os_family'] == "Archlinux"
+  tags: [sudo-mfa]
+
+- name: Print MFA enrollment instructions
+  debug:
+    msg: |
+      sudo now accepts EITHER your password, a registered YubiKey touch, or a TOTP code.
+      A backup of the previous /etc/pam.d/sudo was saved alongside it.
+
+      Enroll TOTP (per-user, interactive — run yourself):
+        google-authenticator
+      Then scan the QR into 1Password (or any authenticator app).
+
+      Enroll a YubiKey later, once you have one (per-user, interactive):
+        pamu2fcfg > ~/.config/Yubico/u2f_keys
+  when: ansible_facts['os_family'] == "Archlinux"
+  tags: [sudo-mfa]

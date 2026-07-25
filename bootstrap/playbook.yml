@@ -32,21 +32,20 @@
       when: ansible_facts['hostname'] | lower is match('^fbg-.*')
       tags: [always]
 
+  # dotfiles, overlays, fonts, asdf, llm-sync: ported to bootstrap-pyinfra/ and
+  # removed from here (2026-07-24) — see bootstrap-pyinfra/README.md.
   roles:
     - claude
     - homebrew
-    - dotfiles
-    - role: overlays
-      tags: [overlays]
-    - llm-sync
     - shell
-    - asdf
     - nix
     - secrets
-    - fonts
     - github
     - role: fbg
       tags: [fbg]
     - role: ssh-bastion-client
       tags: [ssh-bastion-client]
-      when: bastion_host | default('', true) | length > 0
+      when: bastion_host | default('') | length > 0
+    - role: sudo-mfa
+      tags: [sudo-mfa]
+      when: sudo_mfa_enabled | default(false) | bool

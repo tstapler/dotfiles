@@ -1,0 +1,27 @@
+[project]
+name = "bootstrap-pyinfra"
+version = "0.1.0"
+description = "Strangler-fig port of bootstrap/ (Ansible) to pyinfra — see README.md for per-role migration status"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "pyinfra>=3.9,<4",
+]
+
+[tool.mypy]
+strict = true
+ignore_missing_imports = true
+# pyinfra's @operation/@deploy decorators rewrite function signatures (inject
+# a `name` kwarg), which produces false-positive strict-mode errors on the
+# decorated functions themselves — a known, accepted pyinfra limitation
+# (github.com/pyinfra-dev/pyinfra/issues/476, #439), not something to chase.
+
+[tool.ruff]
+line-length = 88
+target-version = "py314"
+
+[dependency-groups]
+dev = [
+    "mypy>=2.3.0",
+    "ruff>=0.16.0",
+]

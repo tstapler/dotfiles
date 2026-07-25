@@ -1,0 +1,10 @@
+#%PAM-1.0
+# sudo accepts ANY ONE of: password, a registered YubiKey touch, or a TOTP code.
+# Enroll per-user (interactive, run manually — not via ansible):
+#   google-authenticator                       # TOTP
+#   pamu2fcfg > ~/.config/Yubico/u2f_keys       # YubiKey/FIDO2
+auth		sufficient	pam_u2f.so cue nouserok
+auth		sufficient	pam_google_authenticator.so
+auth		include		system-auth
+account		include		system-auth
+session		include		system-auth
