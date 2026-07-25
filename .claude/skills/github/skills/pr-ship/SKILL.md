@@ -108,6 +108,8 @@ prompt: |
 
   If a scoped command is too complex to derive, fall back to the full test suite. If it fails: delegate to a fresh agent with failing test output. After agent returns, re-run the failing tests to verify — not the full suite, just the specific failing ones. Mark `[x]` only after the re-run passes.
 
+  **Good Samaritan rule**: fix any failing or flaky test you encounter here, even if it's unrelated to this PR's changes and not this PR's fault. Leaving a known-broken or flaky test for someone else to hit isn't shipping — include it in the same delegated fix, and log it separately in the Decision Log as a pre-existing failure fixed in passing.
+
   ### Gate 2 — Code Review (changed files only)
 
   Only run if `[ ]` and Gates 1a+1b are `[x]`.
@@ -203,7 +205,7 @@ prompt: |
       --jq '.[] | select(.conclusion == "failure") | .databaseId'
     gh run view <RUN_ID> --log-failed
     ```
-    Delegate to a fresh agent with the exact error lines. Agent commits locally. Then re-run Gate 3 (address any new comments), then push again and set a ScheduleWakeup.
+    Delegate to a fresh agent with the exact error lines. Apply the same Good Samaritan rule as Gate 1b: fix flaky or pre-existing CI failures too, not just failures caused by this PR's diff. Agent commits locally. Then re-run Gate 3 (address any new comments), then push again and set a ScheduleWakeup.
 
   ### Gate 5 — Merge Conflicts
 
