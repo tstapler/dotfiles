@@ -119,6 +119,7 @@ When a code reviewer uses severity labels, handle them as follows:
 - Before merge to main
 
 ### Process
+0. **Lens check first.** Before dispatching, enumerate the review dimensions this change *demands* — not just correctness/tests/security, but commonly-missed ones: **multi-tenant / authz-scoping** (does a list/query/filter API leak across tenants/users when the filter is empty or absent?), **error-contract vs. callers** (did a return/error contract change break how callers branch?), **behavioral equivalence vs. the thing being replaced** (compare method-by-method semantics), **resource/credential lifecycle** (cached tokens/clients outliving validity), and **backward/forward compatibility**. Make sure the requested review covers them, and add a targeted reviewer for any the default review would miss. A review is only as good as its lens composition — a missing lens is a silent blind spot, not a clean review.
 1. Get git SHAs: `BASE_SHA=$(git rev-parse HEAD~1)` and `HEAD_SHA=$(git rev-parse HEAD)`
 2. Dispatch code-reviewer subagent via Agent tool with: WHAT_WAS_IMPLEMENTED, PLAN_OR_REQUIREMENTS, BASE_SHA, HEAD_SHA, DESCRIPTION
 3. Act on feedback using severity labels: fix BLOCKER/CRITICAL immediately, track MAJOR, note NIT

@@ -46,6 +46,17 @@ Store as `DIFF_SUMMARY`. Inject it at the top of every agent prompt below.
 
 These flags determine which agents launch in Step 1.
 
+**Lens check (dimension coverage) — do this before Step 1.** The five dimensions above are a *starter set, not a ceiling.* A review is only as good as its lens composition, so explicitly ask what dimensions THIS change demands that the standard agents may not cover, and launch a targeted reviewer (or widen an agent's scope) for any that are missing. From the diff, check for these commonly-missed lenses:
+
+- **Multi-tenant / authz-scoping** — any list/query/filter/search API: does an *empty or absent* filter leak across tenants/users? Is per-tenant scoping enforced server-side, or must the caller apply it? This is the single most common blind spot on list APIs — add a dedicated reviewer when the change touches one.
+- **Error-contract vs. callers** — if a return/error contract changed (now errors where it returned a value, or vice versa), does it break how existing callers branch on it? Grep the call sites.
+- **Behavioral equivalence vs. the thing being replaced** — if this reimplements or swaps out an existing component, compare method-by-method against the original's *semantics*, not just abstract correctness.
+- **Resource / credential lifecycle** — cached clients/tokens/connections that outlive their validity; goroutine/FD leaks; unbounded retries.
+- **Backward / forward compatibility** — wire formats, serialized/persisted data, public APIs.
+- **Operational / rollback** — is the change safely revertible; does it fail closed?
+
+If a demanded lens isn't among the five, launch an extra targeted reviewer for it in Step 1 (same prompt shape as the Security agent: "Review ONLY &lt;lens&gt; in this diff"). Record any dimension you deliberately skip, and why.
+
 ---
 
 ### Step 1: Parallel Agent Invocation
@@ -516,6 +527,17 @@ Store as `DIFF_SUMMARY`. Inject at the top of every agent prompt in Step 1.
 - `HAS_SECURITY_SENSITIVE`: true if the diff touches auth/crypto/input-handling code (files/functions with names containing: auth, login, password, token, session, encrypt, decrypt, hash, secret, credential, permission, role, sanitize, validate, csrf; or imports of crypto/jwt/bcrypt libraries).
 
 These flags determine which agents launch in Step 1.
+
+**Lens check (dimension coverage) — do this before Step 1.** The five dimensions above are a *starter set, not a ceiling.* A review is only as good as its lens composition, so explicitly ask what dimensions THIS change demands that the standard agents may not cover, and launch a targeted reviewer (or widen an agent's scope) for any that are missing. From the diff, check for these commonly-missed lenses:
+
+- **Multi-tenant / authz-scoping** — any list/query/filter/search API: does an *empty or absent* filter leak across tenants/users? Is per-tenant scoping enforced server-side, or must the caller apply it? This is the single most common blind spot on list APIs — add a dedicated reviewer when the change touches one.
+- **Error-contract vs. callers** — if a return/error contract changed (now errors where it returned a value, or vice versa), does it break how existing callers branch on it? Grep the call sites.
+- **Behavioral equivalence vs. the thing being replaced** — if this reimplements or swaps out an existing component, compare method-by-method against the original's *semantics*, not just abstract correctness.
+- **Resource / credential lifecycle** — cached clients/tokens/connections that outlive their validity; goroutine/FD leaks; unbounded retries.
+- **Backward / forward compatibility** — wire formats, serialized/persisted data, public APIs.
+- **Operational / rollback** — is the change safely revertible; does it fail closed?
+
+If a demanded lens isn't among the five, launch an extra targeted reviewer for it in Step 1 (same prompt shape as the Security agent: "Review ONLY &lt;lens&gt; in this diff"). Record any dimension you deliberately skip, and why.
 
 ---
 
