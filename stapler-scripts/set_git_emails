@@ -39,5 +39,12 @@ fi
 if [ -n "$RESOLVED_EMAIL" ]; then
   export GIT_AUTHOR_EMAIL="$RESOLVED_EMAIL"
   export GIT_COMMITTER_EMAIL="$GIT_AUTHOR_EMAIL"
-  git config --local user.email "$GIT_AUTHOR_EMAIL"
+  # Only persist when config doesn't already resolve to this address. Writing an
+  # identical value would still pin it into .git/config, and local config
+  # outranks global — so the repo would silently stop tracking any later change
+  # to the global/included identity. Skipping keeps config authoritative and this
+  # hook a backstop for what config can't express.
+  if [ "$(git config --get user.email)" != "$GIT_AUTHOR_EMAIL" ]; then
+    git config --local user.email "$GIT_AUTHOR_EMAIL"
+  fi
 fi

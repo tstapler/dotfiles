@@ -62,6 +62,17 @@ git-fetch-with-cli = true
 # machines; on personal machines the file is absent and this is a no-op.
 [includeIf "gitdir:~/WorkProjects/"]
 	path = ~/.gitconfig.fbg
+# Generic hand-off for machine-local overlays to contribute their own git config
+# (chiefly per-employer identity, keyed on remote URL rather than directory).
+# The overlay repo owns the file and its contents; this repo only owns the one
+# unconditional include, so no org-specific pattern lands in this public history.
+# Absent on machines with no overlay linked, where git treats it as a no-op.
+#
+# It must be an include rather than a hook: git resolves the commit author BEFORE
+# running pre-commit, so a hook that sets user.email only affects the NEXT
+# commit. Config is read at commit time, so it is correct on the first one.
+[include]
+	path = ~/.gitconfig.overlay
 [credential]
 	helper = !gh auth git-credential
 [machete]
