@@ -11,6 +11,33 @@ export GIT_AUTHOR_NAME="Tyler Stapler"
 export GIT_COMMITTER_NAME=$GIT_AUTHOR_NAME
 git config --local user.name "$GIT_AUTHOR_NAME"
 
-export GIT_AUTHOR_EMAIL=$(get_git_email "$ORIGIN_URL")
-export GIT_COMMITTER_EMAIL=$GIT_AUTHOR_EMAIL
-git config --local user.email "$GIT_AUTHOR_EMAIL"
+# get_git_email prints nothing when it has no rule for this remote. Writing
+# anything in that case is what silently rewrote work commits to the personal
+# address, and it also destroyed a deliberate `git config user.email` — so on
+# "no opinion" we write NOTHING and let git resolve the identity normally
+# (local, then global). Only when no email is resolvable at all do we write a
+# last-resort default, so a commit can still be made.
+#
+# Deliberately not `git config user.email` as the fallback source: that returns
+# the *effective* value including global, and persisting it locally would pin
+# every unrecognized repo to today's global address, so a later global change
+# would stop propagating to it.
+#
+# NOTE ON REACH: this script cannot fix the identity of the commit that
+# triggered it. Git resolves the author before running pre-commit, so a
+# `git config --local` here only takes effect from the NEXT commit. Anything
+# that must be right on the first commit belongs in config —
+# `includeIf "hasconfig:remote.*.url:<glob>"` — not in a hook. The exports below
+# are likewise ineffective for the commit itself (a hook is a child process of
+# `git commit` and cannot mutate its parent's environment); they exist only for
+# callers that source this script in-process.
+RESOLVED_EMAIL=$(get_git_email "$ORIGIN_URL")
+if [ -z "$RESOLVED_EMAIL" ] && [ -z "$(git config user.email)" ]; then
+  RESOLVED_EMAIL=$(get_git_email_default)
+fi
+
+if [ -n "$RESOLVED_EMAIL" ]; then
+  export GIT_AUTHOR_EMAIL="$RESOLVED_EMAIL"
+  export GIT_COMMITTER_EMAIL="$GIT_AUTHOR_EMAIL"
+  git config --local user.email "$GIT_AUTHOR_EMAIL"
+fi

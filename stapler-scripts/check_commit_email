@@ -17,6 +17,12 @@ COMMIT_EMAIL=$(git config user.email)
 ORIGIN_URL=$(git ls-remote --get-url 'origin')
 EXPECTED_EMAIL=$(get_git_email "$ORIGIN_URL")
 
+# Empty means get_git_email has no rule for this remote — nothing to enforce.
+# Without this, every unrecognized repo would fail the check outright.
+if [ -z "$EXPECTED_EMAIL" ]; then
+    exit 0
+fi
+
 if [ "$COMMIT_EMAIL" != "$EXPECTED_EMAIL" ]; then
     echo "Error: Repository requires email ($EXPECTED_EMAIL)"
     echo "Current email is set to: $COMMIT_EMAIL"
