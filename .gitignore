@@ -10,7 +10,9 @@ stapler-scripts/vaping-at-home/config.yaml
 
 #Python Files
 ###################
-env
+# Anchored: a bare `env` matches anything named "env" at ANY depth, including
+# legitimate source directories like vendor/github.com/google/cel-go/common/env/.
+/env
 .ropeproject
 
 #Compiled source #
@@ -260,14 +262,18 @@ celerybeat.pid
 # SageMath parsed files
 *.sage.py
 
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
+# Environments — anchored to the repo root on purpose. Unanchored `env/`/`ENV/`
+# match at ANY depth, and because macOS sets core.ignorecase=true the `ENV/`
+# entry also matches a lowercase `env/`. That silently excluded
+# vendor/github.com/google/cel-go/common/env/ from a Go vendor tree and broke
+# CI with a missing package. A virtualenv lives at the project root, so anchor.
+/.env
+/.venv
+/env/
+/venv/
+/ENV/
+/env.bak/
+/venv.bak/
 
 # Spyder project settings
 .spyderproject
