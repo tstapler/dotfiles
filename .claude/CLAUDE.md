@@ -53,6 +53,18 @@ Use the serena MCP server for complex multi-file structural edits when available
 - **Git hygiene in shared repos.** Never `git add -A` / `git add .` in a repo you don't exclusively own — it can sweep up the user's own uncommitted work. Stage only the specific files you touched, and check `git status` first if anything looks entangled with pending changes that aren't yours.
 - **Draft PRs by default.** When opening a PR the user hasn't reviewed yet, open it as a draft (`gh pr create --draft`) so reviewers aren't notified prematurely; mark it ready only once the user gives the go-ahead.
 
+## Evidence and Claims
+
+Do not overclaim. Every factual statement — in chat, code comments, commit messages, PR bodies, docs, or notes — carries a source the reader can check, **and a hyperlink or path wherever one exists**: a PR/issue URL, `repo/path/file.ext:42`, a doc or dashboard URL, or the exact command and its output. Naming a source without a link pushes verification back onto the reader.
+
+- **Run it, don't read it.** Before asserting that code, a query, or a config does something, execute it and show the output. Reading it is a hypothesis; running it is evidence.
+- **Recount every number.** Panel counts, file counts, "N of M", "all X pass" — derive them with a command, never from memory or estimate.
+- **Rationales need citations too.** An explanation of *why* something is done ("split this way to stay under the limit") is as falsifiable as a fact, and is a common place to invent one.
+- **Consistent-with is not because-of.** For causal claims, say which one the evidence supports. If the data needed to establish causation is gone (log retention, an expired window), say so explicitly.
+- **Scope a replacement claim.** Retiring a wrong explanation doesn't license a loose new one — state which symptom the new evidence actually covers.
+- **Label confidence:** VERIFIED (source opened / command run — cite it) vs INFERRED / UNVERIFIED. Never relay another tool's or agent's synthesis as established fact without opening the primary source.
+- **When you can't cite it, name the gap** rather than smoothing it into the narrative. The tidier story is the one to go re-check.
+
 ## Repo Placement
 
 - New clones go under `~/code/<host>/<owner>/<repo>` (e.g. `~/code/github.com/tstapler/dotfiles`)
