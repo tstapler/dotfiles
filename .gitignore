@@ -16,6 +16,12 @@ env
 #Compiled source #
 ###################
 *.com
+# ...but never the *directories* named like hostnames. `*.com` matches dirs too,
+# which silently excludes newly-vendored Go deps under vendor/github.com/,
+# vendor/cloud.google.com/, etc. Already-tracked files are unaffected, so the
+# breakage is partial and invisible until CI fails on a missing package.
+# (Cost us a red build on tn-titus-fleet-management#366, 2026-07-27.)
+!*.com/
 *.class
 *.dll
 *.exe
