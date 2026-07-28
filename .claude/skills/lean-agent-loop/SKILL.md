@@ -116,6 +116,29 @@ Max 10 findings. Truncate with {"truncated": true} if more exist.
 
 ---
 
+## Degraded modes — the loop still runs
+
+Parallelism is an optimization. **The loop's value is independent, unanchored perspectives; that value does not depend on them running at the same time.** So a constraint on *how* agents run is never a reason to skip the loop and report the work as unreviewed.
+
+Pick the highest tier available:
+
+| Tier | When | How |
+|---|---|---|
+| **A. Parallel background** (default) | Normal | One agent per lens in a single message. |
+| **B. Parallel foreground** | Background execution unavailable | Same launch, `run_in_background: false`. Slower wall-clock, identical coverage. |
+| **C. Serial** | Only one agent may run at a time | Launch lens 1, collect, launch lens 2, collect, … Same lenses, same prompts, same rounds. Costs wall-clock, **loses nothing** — each agent is independent by construction, so serializing them changes only the schedule. |
+| **D. Self-serial** | No subagents at all | Run each lens yourself as a **separate, self-contained pass**: state the lens, re-read the artifact from scratch under only that lens, write findings to its temp file, then *clear the lens from mind* before the next. Weaker than B/C — you cannot truly unanchor from your own prior findings — so label the result `SELF-SERIAL (not independently reviewed)` and say how many lenses ran. |
+
+**Rules that hold in every tier:**
+
+- **Never report "the loop could not run" as a terminal state.** Drop a tier and say which tier ran. `"Review: tier C serial, 4 lenses, 2 rounds"` is a result; `"subagents were unavailable"` is not.
+- **If the blocker is permission rather than capability — ask.** A harness rule like *"do not spawn agents unless the user requested it"* is a request for consent, not a statement that the loop is impossible. The correct response is one sentence asking for it, not a disclaimer that the artifact went unreviewed. Treating a permission boundary as an availability limit is how a review silently becomes optional.
+- **Serial mode does not license merging lenses.** The "one mega-agent" anti-pattern below still applies: a single agent asked to check five things checks none of them well. In tier C you run five agents one after another, not one agent five times as long.
+- **Round 2 is not optional in any tier.** The highest-yield finding is repeatedly a defect *in a round-1 fix*. If wall-clock forces a cut, cut the number of lenses, never the number of rounds.
+- **Say which tier ran, in the artifact** — the PR body, the doc, the handoff. A reader's trust in "reviewed" should be calibrated to what actually happened.
+
+---
+
 ## Worked Example: Code Review Fix Cycle
 
 ```
