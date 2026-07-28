@@ -318,6 +318,85 @@ for RUN_ID in $(gh run list --workflow pages.yml --status success --limit 20 \
 done
 ```
 
+### Trigger Filters That Silently Skip Work
+
+A `branches:` filter on `pull_request` filters the **base** branch, not the head. Any PR based on another PR's branch — i.e. every branch in a stacked PR series except the bottom one — matches nothing and gets **no checks at all**. Not a failure, not a skipped run: an empty check list, which reads as "nothing to report".
+
+```yaml
+# WRONG — a stacked PR (base = another feature branch) runs nothing
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+# CORRECT — every PR runs regardless of base; push stays on main so a branch
+# with an open PR isn't built twice for the same commit
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+```
+
+The symptom to watch for: `gh pr checks <n>` printing `no checks reported on the '<branch>' branch` on a PR you expected to be green. Treat an *empty* check list as a red flag, never as a pass — and be careful with automation that reads "0 failures" as success.
+
+Pair the unfiltered trigger with a concurrency group, because a stack rebases constantly and each push obsoletes the run before it:
+
+```yaml
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  # Exempt the default branch so a push there always produces a complete result
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+```
+
+### Adopting a Linter or Type Checker That Already Fails: Ratchet, Don't Suppress
+
+Adding `mypy`, a stricter ruff ruleset, or any new checker to an existing codebase usually surfaces hundreds of pre-existing violations. The two obvious moves are both wrong:
+
+- **Gate on exit code** → CI is permanently red, so everyone learns to ignore it.
+- **`continue-on-error: true`** → the check is decorative. It can never fail, so it never catches anything. This is worse than not adding it, because the job's green tick implies coverage that doesn't exist.
+
+Use a committed baseline count instead. New violations fail; the existing backlog is tolerated; the number only goes down.
+
+```yaml
+- name: mypy (must not exceed baseline)
+  run: |
+    set -uo pipefail
+    baseline=$(tr -dc '0-9' < .mypy-error-baseline)
+    output=$(uv run mypy src 2>&1 || true)
+    echo "$output" | tail -40
+    if printf '%s\n' "$output" | grep -q '^Success: no issues found'; then
+      count=0
+    else
+      count=$(printf '%s\n' "$output" | sed -n 's/^Found \([0-9]\{1,\}\) error.*/\1/p' | tail -1)
+    fi
+    # An unparseable result must fail, not silently pass as 0
+    if [ -z "$count" ]; then
+      echo "::error::could not parse an error count out of mypy's output"; exit 1
+    fi
+    if [ "$count" -gt "$baseline" ]; then
+      echo "::error::errors rose from $baseline to $count"; exit 1
+    fi
+    if [ "$count" -lt "$baseline" ]; then
+      echo "::notice::errors fell to $count — lower .mypy-error-baseline to lock it in"
+    fi
+```
+
+Three details that matter more than the arithmetic:
+
+- **Parse failure must fail the job.** If the tool crashes or changes its summary line, an unguarded `count=""` compares as 0 and passes forever — the same silent-pass failure as `continue-on-error`.
+- **Tell the reader when the count drops.** A ratchet nobody tightens is just a high-water mark.
+- **Say how to retire it.** Document that the job should be deleted and replaced with a plain exit-code gate once the baseline reaches 0.
+
+Dry-run every branch of a shell step locally before committing it — baseline exceeded, equal, below, clean-success output, and garbage output. A CI step is code, and it is the code you are least likely to notice is broken, because its failure mode is passing.
+
+### Don't Put Interpreter-Independent Checks in a Version Matrix
+
+A lint or format job whose result cannot vary by interpreter (ruff with `target-version` pinned in config, a YAML validator, a shell linter) does not belong inside a `matrix.python-version`. Six identical runs, six times the minutes, and six identical failures to read. Give it one job.
+
+Conversely, when *adding* a version to a matrix, run the suite on it locally first. Adding a version that fails turns a green gate red on arrival and trains people to merge past it.
+
 ### Separate Concerns in Monolithic Jobs
 
 A job that does fdroid indexing + demo artifact retrieval + npm build + content merge + Pages deployment has five failure domains. A failure in npm build blocks the fdroid index from publishing even though it succeeded. Split into separate jobs:
@@ -449,6 +528,12 @@ Manual checks:
 - [ ] Artifact upload paths documented if consumed by another workflow
 - [ ] `continue-on-error` not doubled with `|| true`
 - [ ] `workflow_call` callers restricted if the workflow accesses signing secrets
+- [ ] No `branches:` filter on `pull_request` unless stacked PRs are meant to be skipped
+- [ ] `concurrency` group set, with the default branch exempt from cancellation
+- [ ] A newly-added checker gates on a ratchet or exit code — never `continue-on-error`
+- [ ] Every shell step's failure branches dry-run locally, including unparseable input
+- [ ] Interpreter-independent checks live outside the version matrix
+- [ ] Any version added to a matrix verified green locally first
 
 ---
 

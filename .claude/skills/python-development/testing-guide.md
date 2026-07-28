@@ -162,6 +162,61 @@ asyncio_default_fixture_loop_scope = "function"   # pytest-asyncio >=0.24 warns 
 
 ---
 
+## Verifying the Test, Not Just the Code
+
+A passing regression test is not evidence. The question is whether it **could fail
+for the reason the bug exists**. Ask it explicitly, because the answer is often no
+and nothing warns you.
+
+Break the fix and re-run. If the suite still passes, the test is decoration:
+
+```bash
+cp src/pkg/module.py /tmp/module.orig      # never revert via git — see below
+# ...edit the fix out, or invert it...
+pytest -q --tb=no                          # compare failure count to the baseline
+cp -f /tmp/module.orig src/pkg/module.py
+```
+
+Record the numbers, because "the tests pass" and "removing the fix fails 3 tests"
+are different claims:
+
+| mutant | failures |
+|---|---|
+| baseline (unmodified) | 2 (both pre-existing) |
+| the original bug reintroduced | 5 |
+| the guard applied unconditionally | 4 |
+
+Failures this catches, all real:
+
+- **A test that cannot bind.** An assertion that a styling range stays inside its
+  paragraph, written against a fixture where the range was *already* inside it, so
+  deleting the bound changed nothing. It read like coverage and was not.
+- **A gate tested in one direction only.** Tests proved a guard blocked the bad
+  input; replacing the condition with `if True:` — blocking *everything*, breaking
+  the feature — left the suite green. Assert that the good case still gets through.
+- **An invariant test over a derived value.** `assert CREATABLE <= set(MAP)` cannot
+  fail when `CREATABLE` is computed from `MAP`. Pin the literal.
+- **A mock that cannot represent the bug.** A fix preserving a symlink, tested
+  against a `dict[str, bytes]` filesystem fake that has no symlinks. Use
+  `tmp_path` and `os.lstat` for anything about file identity, mode, or links.
+- **Environment-dependent rendering.** An assertion on Rich/Click `--help` output
+  that passed locally and failed on every Python version in CI, because CI forces
+  colour and Rich then interleaves ANSI escapes inside option names. Pin
+  `NO_COLOR`, `TERM` and `COLUMNS` in the invocation and strip escapes before
+  asserting — assert the text, not the terminal.
+
+Two mechanics worth internalising:
+
+- **Never mutate via `git checkout -- <file>` to revert.** It discards *all*
+  uncommitted work in that file, including the fix you are testing. Copy to `/tmp`
+  and restore from the copy.
+- `cp` is commonly aliased to `cp -i`, which **hangs waiting for confirmation** in
+  a non-interactive shell. Use `command cp -f`.
+
+Prefer encoding the rule in an executable model over asserting an arithmetic
+result. A model of the API's documented constraints fails for *any* wrong
+implementation, where `assert index == 12` only fails for the one you thought of.
+
 ## Property-Based Testing with Hypothesis
 
 Use Hypothesis for **invariants** (properties that hold for all inputs), not specific cases.
