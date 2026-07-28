@@ -58,6 +58,9 @@ links:
     os: "Linux Darwin"
   - src: .config/ssq-hooks
     os: "Linux Darwin"
+  - src: .config/finicky/finicky.js
+    dest: .config/finicky/finicky.js
+    os: "Darwin"
 
 ignore:
   # Globbing patterns to ignore when

@@ -379,6 +379,8 @@ cask "dash"
 cask "dbeaver-community"
 # Voice and text chat software
 cask "discord"
+# Utility for customizing which browser to start
+cask "finicky"
 # Web browser
 cask "firefox"
 # Screenshot software with built-in annotation tools
