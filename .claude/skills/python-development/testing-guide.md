@@ -171,11 +171,29 @@ and nothing warns you.
 Break the fix and re-run. If the suite still passes, the test is decoration:
 
 ```bash
-cp src/pkg/module.py /tmp/module.orig      # never revert via git — see below
+command cp -f src/pkg/module.py /tmp/module.orig   # never revert via git — see below
 # ...edit the fix out, or invert it...
-pytest -q --tb=no                          # compare failure count to the baseline
-cp -f /tmp/module.orig src/pkg/module.py
+pytest -q --tb=no                                 # compare to the baseline count
+command cp -f /tmp/module.orig src/pkg/module.py
+grep -n 'MUTANT' src/pkg/module.py                # MUST be empty — see below
 ```
+
+**One mutant per command, and verify the restore.** If the test run is killed —
+a tool timeout, a cancelled cell, Ctrl-C — the restore line never executes, and
+the mutant is still in the working tree. Every subsequent "restore" in a loop
+then copies the *mutated* file as its pristine baseline, so one interrupted run
+silently poisons the whole campaign.
+
+That failure is easy to miss because it looks like success: later mutants report
+plausible failure counts, and the leftover edit rides into the commit. Guard it
+three ways:
+
+- Mark every mutation with a searchable token (`# MUTANT`) and `grep` for it after
+  each one *and* before committing. A mutation with no marker is undetectable.
+- Run mutants in separate commands rather than one long loop, so a kill can only
+  strand the one you can see.
+- Re-run the suite once more after the campaign and compare to the baseline. If
+  it does not match, something is still mutated.
 
 Record the numbers, because "the tests pass" and "removing the fix fails 3 tests"
 are different claims:
@@ -204,8 +222,14 @@ Failures this catches, all real:
   colour and Rich then interleaves ANSI escapes inside option names. Pin
   `NO_COLOR`, `TERM` and `COLUMNS` in the invocation and strip escapes before
   asserting — assert the text, not the terminal.
+- **A test that reaches past the code path the bug lives in.** A helper called the
+  new pure function directly, so a mutant that disabled the function's *call site*
+  in the public entry point survived. The bug's symptom was what the entry point
+  wrote to disk; nothing asserted that. **A surviving mutant is a map to a path
+  your tests never enter** — before dismissing one as equivalent, check whether it
+  is telling you the tests bypass the code under test.
 
-Two mechanics worth internalising:
+Three mechanics worth internalising:
 
 - **Never mutate via `git checkout -- <file>` to revert.** It discards *all*
   uncommitted work in that file, including the fix you are testing. Copy to `/tmp`

@@ -341,6 +341,21 @@ on:
 
 The symptom to watch for: `gh pr checks <n>` printing `no checks reported on the '<branch>' branch` on a PR you expected to be green. Treat an *empty* check list as a red flag, never as a pass — and be careful with automation that reads "0 failures" as success.
 
+**An empty check list also happens after retargeting a stacked PR.** Merging the branch below and then rebasing + force-pushing the one above can leave the PR with **no run at all** for its new head SHA — the force-push landed while the old base still existed, and changing the base with `gh pr edit --base main` fires `edited`, which triggers nothing. The PR shows `mergeable=MERGEABLE` and zero checks, which is exactly the shape that reads as "green" to a human skimming.
+
+Two ways out, and the choice matters:
+
+```bash
+# Get a real run against the exact SHA (this is why workflow_dispatch is worth having)
+gh workflow run CI --ref <branch>
+gh run list --branch <branch> --limit 1 --json headSha,conclusion
+
+# ...or make the pull_request event fire again, so the PR itself carries checks
+gh pr close <n> && gh pr reopen <n>
+```
+
+`workflow_dispatch` runs against the *branch*, not the PR's merge ref, so it does not prove the merge result — say which one you verified. Close/reopen gives you genuine PR checks but is noisier. Either is fine; merging on an empty list is not.
+
 Pair the unfiltered trigger with a concurrency group, because a stack rebases constantly and each push obsoletes the run before it:
 
 ```yaml
