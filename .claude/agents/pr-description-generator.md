@@ -85,7 +85,22 @@ When details are missing or unclear, ask the user:
 
 ### **Phase 3: Structure the Description**
 
-Generate a PR description with these sections:
+**First, size the description to the change.** The section template below is the shape for a
+substantive PR, not a floor every PR must clear. Verbose justification on a small change wastes
+reviewer attention and is read as noise.
+
+| Change | Description |
+|---|---|
+| One-line, config value, dependency bump, typo, mechanical refactor | **1–3 sentences, no headings.** What changed and why. Nothing else. |
+| Single-purpose fix or small feature | Summary + why, and Testing only if non-obvious. 2–4 short paragraphs. |
+| Behavioural change, new surface, migration, anything risky or hard to reverse | The full template below. |
+
+Add a section only when a reviewer of *this* change would otherwise have to ask for it. Investigation
+detail a reviewer can skip — reproduction steps, dead ends, build numbers, log excerpts — goes in a
+follow-up PR **comment**, not the body, and never in the diff. Prefer omitting a heading to filling it
+with "N/A" or restating the diff.
+
+For a substantive PR, generate these sections:
 
 ```markdown
 ## Summary

@@ -65,6 +65,15 @@ Do not overclaim. Every factual statement — in chat, code comments, commit mes
 - **Label confidence:** VERIFIED (source opened / command run — cite it) vs INFERRED / UNVERIFIED. Never relay another tool's or agent's synthesis as established fact without opening the primary source.
 - **When you can't cite it, name the gap** rather than smoothing it into the narrative. The tidier story is the one to go re-check.
 
+### Proportionality
+
+The rigor above is constant. How much of it belongs **inside the artifact** is not — scale that to the change's consequence. Verbose justification on a small change reads as noise to a reviewer, and it ages badly: build numbers, timelines, and log excerpts are stale within a week.
+
+- **Comments explain the code, not the investigation.** If a comment is longer than the code it annotates, cut it. Keep only the *why* a future reader needs in order not to re-litigate the value; the evidence trail belongs elsewhere.
+- **Put the detail where it is cheap to skip.** Diff → smallest. PR body → a few sentences. Reproduction steps, dead ends, stale-able specifics → a PR comment or your notes, which a reviewer can ignore.
+- **Scale structure to the diff.** A one-line or mechanical change gets a sentence or two, not a multi-heading template. Add a section only when a reviewer would otherwise have to ask for it.
+- **The test:** would a reviewer of *this* change have asked for this paragraph? If not, delete it. Being right is not a licence to be long.
+
 ## Repo Placement
 
 - New clones go under `~/code/<host>/<owner>/<repo>` (e.g. `~/code/github.com/tstapler/dotfiles`)
