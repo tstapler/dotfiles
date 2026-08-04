@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Bootstrap the Ansible playbook. Called by install.sh or directly.
-# Usage: ./bootstrap/run.sh [--tags homebrew,dotfiles,shell,secrets]
+# Usage: ./bootstrap/run.sh [--tags homebrew,shell,secrets]
 
 set -euo pipefail
 

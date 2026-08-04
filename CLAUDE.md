@@ -11,16 +11,19 @@ file is the orientation map for working in the repo.
    then hands off to `bootstrap/run.sh`.
 2. **`bootstrap/run.sh`** → **`bootstrap/playbook.yml`** — installs Homebrew,
    then runs the Ansible roles in `bootstrap/roles/*` in order (see the
-   playbook for the current sequence: `claude`, `homebrew`, `dotfiles`,
-   `overlays`, `llm-sync`, `shell`, `asdf`, `nix`, `secrets`, `fonts`,
-   `github`, `fbg` (work-only), `ssh-bastion-client`, `sudo-mfa`).
+   playbook for the current sequence: `claude`, `homebrew`, `shell`, `nix`,
+   `secrets`, `github`, `fbg` (work-only), `ssh-bastion-client`,
+   `sudo-mfa`). `dotfiles`, `overlays`, `llm-sync`, `asdf`, and `fonts` have
+   been ported to **`bootstrap-pyinfra/`** (see its `main.py`) and removed
+   from here; `claude` and `homebrew` still run from both during the
+   in-flight migration.
 3. **`Brewfile`** (macOS, casks allowed) / **`Brewfile.linux`** (Linuxbrew;
    GUI-only casks are excluded, but CLI-only casks like `1password-cli` work
    fine since Homebrew Cask on Linux just installs the binary artifact) —
    consumed by the `homebrew` role via `brew bundle`.
 4. **`cfgcaddy/`** — git submodule, the actual symlinking tool. `.cfgcaddy.yml`
    at repo root declares every dotfile → `$HOME` symlink, including OS-specific
-   targets (`os: "Linux Darwin"` etc.). The `dotfiles` Ansible role invokes it.
+   targets (`os: "Linux Darwin"` etc.). The `dotfiles` pyinfra deploy invokes it.
 5. **`.claude/`** — this directory *is* `~/.claude` (symlinked in via
    cfgcaddy): agents, commands, skills, plugins, and both this file's sibling
    `.claude/CLAUDE.md` (Claude Code's own operating instructions, distinct
