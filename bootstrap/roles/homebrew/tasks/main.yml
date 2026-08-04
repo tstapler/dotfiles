@@ -48,12 +48,18 @@
   tags: [homebrew]
 
 - name: Trust all taps in Brewfile (Homebrew 4.x security model)
+  # A `tap` line may pin an explicit URL (only tstapler/stapler-squad and
+  # tstapler/stelekit do). Trusting the bare name, then having `brew bundle`
+  # re-tap under the URL-qualified identity, leaves that identity untrusted —
+  # pass the URL through so the trusted identity matches what bundle installs.
   shell: |
-    {
-      grep -E '^tap ' {{ homebrew_brewfile_path }} | sed -E 's/^tap "([^"]+)".*/\1/'
-      grep -E '^(brew|cask) ' {{ homebrew_brewfile_path }} | sed -E 's/^(brew|cask) "([^"]+)".*/\2/' | \
-        grep -E '^[^/]+/[^/]+/[^/]+' | awk -F'/' '{print $1 "/" $2}'
-    } | sort -u | while read -r tap; do
+    grep -E '^tap ' {{ homebrew_brewfile_path }} | sed -E 's/^tap "([^"]+)"(, "([^"]+)")?.*/\1 \3/' | \
+    while read -r tap url; do
+      {{ brew_prefix }}/bin/brew trust --tap "$tap" ${url:+"$url"} 2>/dev/null || true
+    done
+    grep -E '^(brew|cask) ' {{ homebrew_brewfile_path }} | sed -E 's/^(brew|cask) "([^"]+)".*/\2/' | \
+      grep -E '^[^/]+/[^/]+/[^/]+' | awk -F'/' '{print $1 "/" $2}' | sort -u | \
+    while read -r tap; do
       {{ brew_prefix }}/bin/brew trust --tap "$tap" 2>/dev/null || true
     done
   changed_when: false
@@ -63,9 +69,9 @@
 
 - name: Add all taps from Brewfile
   shell: |
-    grep -E '^tap ' {{ homebrew_brewfile_path }} | sed -E 's/^tap "([^"]+)".*/\1/' | \
-    while read -r tap; do
-      {{ brew_prefix }}/bin/brew tap "$tap" 2>/dev/null || true
+    grep -E '^tap ' {{ homebrew_brewfile_path }} | sed -E 's/^tap "([^"]+)"(, "([^"]+)")?.*/\1 \3/' | \
+    while read -r tap url; do
+      {{ brew_prefix }}/bin/brew tap "$tap" ${url:+"$url"} 2>/dev/null || true
     done
   changed_when: false
   environment:
