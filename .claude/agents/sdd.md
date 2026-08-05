@@ -501,7 +501,7 @@ technology-specific patterns. Build a technology surface map.
 **Step 2:** For each technology in the surface map, select the review approach:
 
 Technology → Subagent type mapping (check this first):
-- Go (general idioms, concurrency, testing): `go-development`
+- Go (general idioms, concurrency, testing): `golang-development`
 - Go performance hot paths: `go:optimize`
 - Go + go-git/VCS: `code-go-git`
 - TypeScript/React/Next.js: `ui-react-best-practices`

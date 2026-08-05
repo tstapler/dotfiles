@@ -79,7 +79,7 @@ Read the system-reminder for the authoritative live list. Use this catalog for s
 | `type-driven-design` | Encoding invariants into the type system: NewType, smart constructors, sum types, refinement types, parse-don't-validate |
 | `python-development` | Python standards: uv, type annotations, pytest, Pydantic, async, hexagonal, structlog |
 | `code-spring-boot` | Spring Boot Java: layering, testing, security, data access |
-| `go-development` | Go idioms, error handling, interfaces, testing |
+| `golang-development` | Go idioms, error handling, interfaces, testing |
 | `code-refactoring` | Large structural refactors via `ast-grep` (scope) + `gritql` (transformation) with quality gates |
 | `code-ast-grep` | Structural code search — find all usages of a pattern across files |
 | `code-gritql` | Automated multi-file code transformations (renames, API migrations, bulk modernization) |
@@ -127,7 +127,7 @@ Read the system-reminder for the authoritative live list. Use this catalog for s
 |-------|------|
 | `rust-profiling` | Rust flamegraphs, samply, perf, heaptrack — data collection |
 | `rust-perf-tuning` | Rust optimization: allocations, hot loops, rayon, SIMD, LTO/PGO — applies fixes from profiling data |
-| `go-profiling` | Go pprof, flamegraphs, benchmark analysis |
+| `golang-profiling` | Go pprof, flamegraphs, benchmark analysis |
 | `jvm-performance` | JVM heap, GC, threading, JIT tuning |
 | `jfr-profiling` | Java Flight Recorder analysis |
 
@@ -184,7 +184,7 @@ These skills frequently appear together — use these as a quick matching guide:
 | Configuration / secrets | `security-review` |
 | Large refactors | `code-refactoring`, `code-ast-grep`, `code-review` |
 | New feature implementation | `code-architecture-best-practices`, `security-review`, `code-review` |
-| Performance-critical code | `rust-profiling` / `go-profiling` / `jvm-performance` (pick by language) |
+| Performance-critical code | `rust-profiling` / `golang-profiling` / `jvm-performance` (pick by language) |
 | Docker / containers | `infra-docker-build-test`, `security-review` |
 | CI/CD pipelines | `github-actions-debugging`, `infra-docker-build-test` |
 | Prompt / agent design | `meta-prompt-engineering`, `meta-context-engineering`, `meta-model-selection` |

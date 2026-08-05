@@ -1,5 +1,5 @@
 ---
-name: go-profiling
+name: golang-profiling
 description: Profile Go processes using pprof. Covers CPU, memory, goroutine, and mutex profiles; flamegraph visualization; collapsed-stacks output for LLM analysis; and benchmark profiling.
 ---
 
@@ -218,7 +218,7 @@ go tool pprof -http=:8081 -diff_base=baseline.prof current.prof
 
 ---
 
-> For fixing hotspots identified in the profile, apply the `go-development` skill for idiomatic optimizations.
+> For fixing hotspots identified in the profile, apply the `golang-development` skill for idiomatic optimizations.
 
 ## Step 6 — Interpreting Results
 
@@ -344,7 +344,7 @@ Trace viewer tabs:
 
 | Skill | When to apply |
 |-------|--------------|
-| `go-development` | Apply idiomatic Go fixes after identifying hotspots |
+| `golang-development` | Apply idiomatic Go fixes after identifying hotspots |
 | `github-actions-debugging` | Debug CI failures in profiling or benchmark workflows |
 | `infra-docker-build-test` | Profile a Go service running inside a container |
 

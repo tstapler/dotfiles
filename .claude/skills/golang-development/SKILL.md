@@ -1,6 +1,6 @@
 ---
-name: go-development
-description: Apply idiomatic, well-structured Go development practices. Use when writing, reviewing, or refactoring Go code. Covers error handling, interfaces, concurrency, testing, naming, project structure, type-system maximization (generics, embedding, iota, receivers), primitive-obsession fixes, and anti-patterns based on Effective Go, Go Code Review Comments, and Go Proverbs.
+name: golang-development
+description: Apply idiomatic, well-structured Go development practices. Use when writing, reviewing, or refactoring Go code. Covers Go Proverbs, concurrency fundamentals, type-system maximization (generics, embedding, iota, receivers), primitive-obsession fixes, and anti-patterns based on Effective Go, Go Code Review Comments, and Go Proverbs. For error handling, naming, interfaces/structs, project layout, testing, and design patterns, see the dedicated `golang-error-handling`, `golang-naming`, `golang-structs-interfaces`, `golang-project-layout`, `golang-testing`, and `golang-design-patterns` skills.
 paths: "**/*.go"
 ---
 
@@ -289,125 +289,10 @@ func ParseConfig(path string) (*Config, error) {
 
 ---
 
-## Error Handling
-
-Always return errors as the last value. Use early returns — no `else` after an `if err != nil` block.
-
-```go
-f, err := os.Open(path)
-if err != nil {
-    return fmt.Errorf("open config %s: %w", path, err)
-}
-defer f.Close()
-```
-
-- Wrap with `%w` to preserve chain: `fmt.Errorf("read user %d: %w", id, err)`
-- Inspect with `errors.Is(err, ErrNotFound)` and `errors.As(err, &target)`
-- Sentinel errors for expected conditions: `var ErrNotFound = errors.New("not found")`
-- Custom error types implement `Error() string` and optionally `Unwrap() error`
-- Error strings: lowercase, no trailing punctuation, include context
-- Never silently drop errors — `_ = f.Close()` requires a documented reason
-
-### Domain Error Taxonomies (Sealed-Interface Pattern)
-
-A sentinel error is one value; a custom error type is one shape. Neither gives you a *closed,
-enumerable set* of domain errors the way a sealed class hierarchy does. Go's closest
-equivalent — the same technique the standard library uses to seal `go/ast`'s `Expr`/`Stmt`
-interfaces — is an interface with an unexported marker method, so only types in this package
-can implement it:
-
-```go
-type DomainError interface {
-    error
-    domainError() // unexported — only this package can seal the set
-}
-
-type NotFoundError struct{ ID string }
-func (e *NotFoundError) Error() string { return fmt.Sprintf("not found: %s", e.ID) }
-func (e *NotFoundError) domainError()  {}
-
-type ConflictError struct{ Reason string }
-func (e *ConflictError) Error() string { return fmt.Sprintf("conflict: %s", e.Reason) }
-func (e *ConflictError) domainError()  {}
-```
-
-Callers get a real taxonomy to switch over instead of stringly-typed error checks:
-
-```go
-switch e := err.(type) {
-case *NotFoundError:
-    return http.StatusNotFound
-case *ConflictError:
-    return http.StatusConflict
-default:
-    return http.StatusInternalServerError
-}
-```
-
-**Limitation to know**: unlike a sealed class's `when`, Go's type switch is not
-compiler-enforced exhaustive — adding a new `DomainError` implementation later won't fail the
-build anywhere a case was missed. Two ways to close that gap:
-- A `default: panic(...)` converts a missed case into a loud runtime failure instead of a
-  silent fallthrough — not compile-time, but fails fast.
-- If the taxonomy is really a fixed set of *codes* rather than error types carrying different
-  data, model it as an `iota` enum instead (see "Maximizing Go's Type System" below) and run
-  the `exhaustive` linter (see "Tooling" below) — that one genuinely enforces switch
-  exhaustiveness at CI time, the closest Go gets to sealed-class guarantees.
-
----
-
-## Interfaces
-
-- **Don't design with interfaces, discover them** (Rob Pike) — start concrete; extract an interface only when a second real implementation exists or is imminent, not for hypothetical future flexibility
-- Define interfaces in the **consuming** package, not the producer
-- Keep interfaces small (1–3 methods): `Reader`, `Writer`, `Closer`
-- Single-method interfaces use the `-er` suffix: `Stringer`, `Formatter`
-- Verify interface satisfaction at compile time: `var _ io.Writer = (*MyType)(nil)`
-- Avoid `interface{}` / `any` unless truly necessary
-
-```go
-// Good: small interface defined where it's used
-type Fetcher interface {
-    Fetch(ctx context.Context, id string) (*Item, error)
-}
-```
-
----
-
-## Naming
-
-| Context | Convention | Example |
-|---------|-----------|---------|
-| Packages | lowercase, single word | `bufio`, `httputil` |
-| Exported | PascalCase | `ServeHTTP`, `ParseURL` |
-| Unexported | camelCase | `maxRetries`, `parseToken` |
-| Acronyms | consistent casing | `userID`, `HTTPServer`, `xmlParser` |
-| Receivers | 1–2 letters, consistent | `c` for Client, `f` for File |
-| Loop vars | scope-proportional | `i` for 2 lines; `index` for 20 lines |
-
-- Avoid `util`, `common`, `helpers`, `misc` package names
-- Avoid `me`, `this`, `self` as receiver names
-- Be consistent — if any method uses `*T`, all should use `*T`
-
----
-
-## Project Structure
-
-```
-cmd/myapp/main.go       # Thin entry point, delegates to internal/
-internal/               # Private code — compiler enforces no external import
-  app/                  # Application logic
-  store/                # Data access
-pkg/                    # Public library code (only if genuinely reusable)
-go.mod
-go.sum
-```
-
-- `cmd/` should be minimal — delegate to `internal/`
-- `internal/` enforces boundaries; the compiler prevents external imports
-- Don't create `pkg/` unless you have genuine external consumers
-
----
+> For error creation/wrapping/inspection conventions, apply the `golang-error-handling` skill.
+> For interface and struct design, apply the `golang-structs-interfaces` skill.
+> For naming conventions, apply the `golang-naming` skill.
+> For project/directory layout, apply the `golang-project-layout` skill.
 
 ## Concurrency
 
@@ -448,42 +333,7 @@ if err := eg.Wait(); err != nil { return err }
 
 ---
 
-## Testing
-
-Table-driven tests are the Go standard:
-```go
-func TestParse(t *testing.T) {
-    tests := []struct {
-        name    string
-        input   string
-        want    int
-        wantErr bool
-    }{
-        {"valid", "42", 42, false},
-        {"invalid", "abc", 0, true},
-    }
-    for _, tt := range tests {
-        t.Run(tt.name, func(t *testing.T) {
-            got, err := Parse(tt.input)
-            if (err != nil) != tt.wantErr {
-                t.Fatalf("wantErr=%v, got err=%v", tt.wantErr, err)
-            }
-            if got != tt.want {
-                t.Errorf("got %d, want %d", got, tt.want)
-            }
-        })
-    }
-}
-```
-
-- `t.Run` for subtests — run individually with `go test -run TestParse/valid`
-- `t.Cleanup` for resource teardown (works correctly with `t.Parallel`)
-- `t.Helper()` in assertion helpers so errors point to the caller's line
-- `t.TempDir()` for temporary files — auto-cleaned after test
-- Always `go test -race ./...` to catch data races
-- Prefer stdlib `testing` over testify for simple assertions
-
----
+> For table-driven tests, testify, mocking, and test naming, apply the `golang-testing` skill.
 
 ## Anti-Patterns to Avoid
 
@@ -529,7 +379,7 @@ it's the fastest way to catch this drift before it compounds.
 
 ---
 
-> For CPU and memory performance analysis, apply the `go-profiling` skill.
+> For CPU and memory performance analysis, apply the `golang-profiling` skill.
 
 ## Tooling (Run Before Every Commit)
 
@@ -545,19 +395,9 @@ Recommended golangci-lint linters: `staticcheck`, `gosimple`, `govet`, `errcheck
 
 ---
 
-## Design Patterns
-
-When structuring Go code, apply patterns from the `design-patterns` skill. Key patterns most relevant to Go:
-
-- **Repository** — data access abstraction; define interface in domain, implement in infrastructure
-- **Service Layer** — orchestrate use cases; no business logic here, that belongs in domain objects
-- **Value Object** — immutable domain concepts (`Money`, `EmailAddress`) with value semantics
-- **Domain Model vs Transaction Script** — rich domain model for complex logic; transaction script for simple CRUD
-- **Middleware / Decorator** — cross-cutting concerns (logging, auth, caching) via `func(Handler) Handler`
-- **Strategy** — swappable algorithms via function types, not one-method interfaces
-- **Functional Options** — preferred Go form of Builder for structs with many optional fields
-
-Avoid applying patterns for their own sake — use them when the recurring problem they solve is actually present.
+> For Repository, Service Layer, Middleware/Decorator, Strategy, Functional Options, and other
+> Go-idiomatic design patterns, apply the `golang-design-patterns` skill (and `design-patterns`
+> for the underlying GoF/PoEAA theory).
 
 ---
 
@@ -863,7 +703,13 @@ multiple functions, `nil` pointer panics from missing construction checks.
 
 | Skill | When to apply |
 |-------|--------------|
-| `go-profiling` | Profile CPU, memory, goroutines, or benchmark a Go binary |
+| `golang-error-handling` | Error creation, wrapping, and inspection conventions |
+| `golang-naming` | Naming conventions for packages, types, and identifiers |
+| `golang-structs-interfaces` | Interface and struct design |
+| `golang-project-layout` | Project and directory layout |
+| `golang-testing` | Table-driven tests, testify, mocking, test naming |
+| `golang-design-patterns` | Repository, Service Layer, Strategy, Functional Options, and other Go-idiomatic patterns |
+| `golang-profiling` | Profile CPU, memory, goroutines, or benchmark a Go binary |
 | `code-refactoring` | Structural refactors after identifying anti-patterns |
 | `code-debugging` | Systematic investigation of a Go bug or panic |
 | `security-review` | OWASP audit or secrets scan on Go code |

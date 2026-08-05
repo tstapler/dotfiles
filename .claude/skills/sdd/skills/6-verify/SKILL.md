@@ -52,10 +52,10 @@ Verdicts:
 
    | Technology / Pattern | Skill | Focus areas |
    |---|---|---|
-   | Go — general idioms | `go-development` | error wrapping (errors.Is/As), interface sizing (accept interfaces, return structs), naming (receiver names, unexported fields), zero-value usability |
-   | Go — concurrency | `go-development` | goroutine lifecycle, context cancellation propagation, channel directionality, sync.Mutex vs sync.RWMutex, double-checked locking anti-patterns, goroutine leak detection |
+   | Go — general idioms | `golang-development` | error wrapping (errors.Is/As), interface sizing (accept interfaces, return structs), naming (receiver names, unexported fields), zero-value usability |
+   | Go — concurrency | `golang-development` | goroutine lifecycle, context cancellation propagation, channel directionality, sync.Mutex vs sync.RWMutex, double-checked locking anti-patterns, goroutine leak detection |
    | Go — performance hot paths | `go:optimize` | alloc-free hot paths (AllocsPerRun), sync.Pool usage, map pre-allocation, early-return guards before heap allocs, avoid string([]byte) in loops |
-   | Go — testing | `go-development` | table-driven tests, t.Helper() usage, testify assert vs require, subtests (t.Run), avoiding global state in tests |
+   | Go — testing | `golang-development` | table-driven tests, t.Helper() usage, testify assert vs require, subtests (t.Run), avoiding global state in tests |
    | Go — ORM / database (ent) | research agent | see Rust section below for how to invoke the research fallback |
    | Go — RPC / ConnectRPC | research agent | idem |
    | Go — go-git / VCS ops | `code-go-git` | per-repo `sync.Mutex` (NOT RWMutex) covering full iterator lifetime; never cache `CommitIter` or `*Worktree`; `wt.Status()` is concurrency-unsafe and pathologically slow on large repos |
@@ -352,7 +352,7 @@ Verdicts:
 ### Technology Surface
 | Technology | Files | Review approach |
 |---|---|---|
-| Go | scanner.go, vcsreader.go | go-development skill |
+| Go | scanner.go, vcsreader.go | golang-development skill |
 | TypeScript/React | DormantBranchCard.tsx | ui-react-best-practices skill |
 | Protobuf | unfinished.proto | research agent → checklist |
 

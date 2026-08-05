@@ -1,12 +1,12 @@
 ---
-name: go-concurrency
-description: Choose and apply the right Go concurrency primitive — channels, mutexes, atomics, copy-on-write, singleflight, and lock-free data structures. Use when designing concurrent access to shared state, diagnosing lock contention (paired with go-profiling), choosing between sync.RWMutex and atomic.Pointer copy-on-write, evaluating concurrent map options (sync.Map vs xsync.MapOf), implementing singleflight request coalescing, or reaching for a lock-free queue/ring-buffer library. Covers stdlib sync/atomic, golang.org/x/sync, puzpuzpuz/xsync, Workiva/go-datastructures, and golang-design/lockfree.
+name: golang-concurrency
+description: Choose and apply the right Go concurrency primitive — channels, mutexes, atomics, copy-on-write, singleflight, and lock-free data structures. Use when designing concurrent access to shared state, diagnosing lock contention (paired with golang-profiling), choosing between sync.RWMutex and atomic.Pointer copy-on-write, evaluating concurrent map options (sync.Map vs xsync.MapOf), implementing singleflight request coalescing, or reaching for a lock-free queue/ring-buffer library. Covers stdlib sync/atomic, golang.org/x/sync, puzpuzpuz/xsync, Workiva/go-datastructures, and golang-design/lockfree.
 paths: "**/*.go"
 ---
 
 # Go Concurrency
 
-A decision framework for concurrent access to shared state in Go, plus the specific libraries and data structures worth reaching for. Pairs with `go-development` (general idiom) and `go-profiling` (proving contention is real before fixing it).
+A decision framework for concurrent access to shared state in Go, plus the specific libraries and data structures worth reaching for. Pairs with `golang-development` (general idiom) and `golang-profiling` (proving contention is real before fixing it).
 
 ---
 
@@ -422,7 +422,7 @@ A lock-free queue passes items between producers and consumers. It is **not** a 
 
 Don't guess at contention — prove it first:
 
-1. `go-profiling` skill → capture `mutex` and `block` pprof profiles under load.
+1. `golang-profiling` skill → capture `mutex` and `block` pprof profiles under load.
 2. `go tool pprof -top -cum mutex.prof` — find which call path holds locks waiters queue behind.
 3. Identify the rung: single value (2), read-mostly struct (3), concurrent map (5), or queue (7)?
 4. Apply the narrowest fix. Re-profile to confirm contention moved.
@@ -485,6 +485,6 @@ for _, req := range requests {
 
 | Skill | When to apply |
 |---|---|
-| `go-development` | General idiomatic Go — this skill assumes that baseline |
-| `go-profiling` | Capture and read CPU/mutex/block profiles before picking a concurrency fix |
+| `golang-development` | General idiomatic Go — this skill assumes that baseline |
+| `golang-profiling` | Capture and read CPU/mutex/block profiles before picking a concurrency fix |
 | `code-refactoring` | Structural changes once the concurrency fix is chosen |
