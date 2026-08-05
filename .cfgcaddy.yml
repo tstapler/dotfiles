@@ -56,6 +56,8 @@ links:
     os: "Linux Darwin"
   - src: .claude/skills-index.md
     os: "Linux Darwin"
+  - src: .claude/hooks/cmdcrush-wrap.sh
+    os: "Linux Darwin"
   - src: .config/ssq-hooks
     os: "Linux Darwin"
   - src: .config/finicky/finicky.js
