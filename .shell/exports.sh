@@ -7,6 +7,9 @@ pathadd() {
     fi
 }
 
+# Add Rust/cargo-installed binaries (e.g. stapler-mcp, self-built rtk fork) to PATH
+pathadd "$HOME/.cargo/bin"
+
 # Add Dart pub files to PATH
 pathadd "$HOME/.pub-cache/bin"
 
@@ -23,6 +26,10 @@ HOMEBREW_PATH="/opt/homebrew/bin/"
 if [[ -d "$HOMEBREW_PATH" ]]; then
   pathadd "$HOMEBREW_PATH"
 fi
+
+# Self-built/self-managed binaries in ~/.local/bin should shadow Homebrew
+# equivalents (e.g. a self-built rtk instead of the upstream bottle).
+PATH="$LOCAL_BIN:$PATH"
 
 # Add Android Home to Path
 if [[ -d /opt/android-sdk ]]; then

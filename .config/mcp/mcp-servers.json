@@ -11,39 +11,12 @@
         "BRAVE_API_KEY": "${BRAVE_API_KEY}"
       }
     },
-    "read-website-fast": {
-      "command": "npm",
-      "args": [
-        "exec",
-        "--yes",
-        "--",
-        "git+https://github.com/tstapler/mcp-read-website-fast"
-      ],
-      "_fork": "https://github.com/tstapler/mcp-read-website-fast",
+    "stapler-mcp": {
+      "command": "stapler-mcp",
+      "args": [],
+      "_fork": "https://github.com/tstapler/stapler-mcp",
+      "_supersedes": "read-website-fast, website-downloader, docs-mcp-server -- one shared native daemon (thin stdio client per session) instead of a fresh npx/uvx process tree per subagent. Requires `cargo install --path crates/cli` from the stapler-mcp repo so `stapler-mcp` resolves on PATH; BRAVE_API_KEY must also be set for brave_web_search since the daemon inherits it from whichever thin client first spawns it.",
       "env": {}
-    },
-    "website-downloader": {
-      "command": "uvx",
-      "args": [
-        "--from",
-        "git+https://github.com/tstapler/mcp-website-downloader.git",
-        "mcp-website-downloader"
-      ],
-      "_fork": "https://github.com/tstapler/mcp-website-downloader",
-      "env": {}
-    },
-    "docs": {
-      "command": "npm",
-      "args": [
-        "exec",
-        "--yes",
-        "--",
-        "git+https://github.com/tstapler/docs-mcp-server"
-      ],
-      "_fork": "https://github.com/tstapler/docs-mcp-server",
-      "env": {
-        "DOCS_MCP_STORE_PATH": "~/.local/share/docs-mcp-server"
-      }
     },
     "playwright": {
       "command": "npx",
