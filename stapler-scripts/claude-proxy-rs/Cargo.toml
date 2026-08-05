@@ -3,6 +3,10 @@ name = "claude-proxy-rs"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+name = "claude_proxy_rs"
+path = "src/lib.rs"
+
 [[bin]]
 name = "claude-proxy-rs"
 path = "src/main.rs"
@@ -10,6 +14,10 @@ path = "src/main.rs"
 [[bin]]
 name = "mcp-proxy"
 path = "src/bin/mcp-proxy/main.rs"
+
+[[bin]]
+name = "cmdcrush"
+path = "src/bin/cmdcrush/main.rs"
 
 [dependencies]
 axum = { version = "0.8", features = ["macros"] }

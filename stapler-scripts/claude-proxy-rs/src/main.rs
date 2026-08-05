@@ -4,7 +4,6 @@
 //! reads config, constructs the axum router, and serves until SIGTERM/SIGINT.
 
 mod auth;
-mod compression;
 mod config;
 mod dashboard;
 mod fallback;
@@ -19,6 +18,8 @@ use std::collections::VecDeque;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
+
+use claude_proxy_rs::compression;
 
 use axum::{
     body::Bytes,
