@@ -232,7 +232,7 @@ if __name__ == "__main__":
 | Skill | When to apply |
 |---|---|
 | `architecture-best-practices` | The principle framework (SOLID/DDD/Clean Architecture) this analysis prioritizes work for |
-| `go-development` | Idiomatic Go patterns to apply once a hotspot is identified |
+| `golang-development` | Idiomatic Go patterns to apply once a hotspot is identified |
 | `code-ast-grep` | Deeper `sg` pattern syntax for the structural-query half of axis 1 |
 | `code-refactoring` | Executing the fix once a target is chosen |
 | `type-driven-design` | If a hotspot's root cause is primitive obsession / missing invariant encoding, not just size |

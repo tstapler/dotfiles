@@ -424,6 +424,6 @@ func Register(eventType string, h EventHandler) { handlers[eventType] = h }
 | `type-driven-design` | Encoding pattern invariants (Value Objects, sum types, smart constructors) in the type system |
 | `code-spring-boot` | Spring Boot / Java implementations of PoEAA and GoF patterns |
 | `code-architecture-best-practices` | SOLID principles, Clean Architecture, module boundary enforcement |
-| `go-development` | Go-idiomatic pattern implementations (functional options, channels, interfaces) |
+| `golang-development` | Go-idiomatic pattern implementations (functional options, channels, interfaces) |
 | `code-refactoring` | Migrating from anti-patterns (Transaction Script → Domain Model) using ast-grep |
 | `code-review` | Reviewing pattern usage and identifying anti-patterns in PRs |
