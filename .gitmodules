@@ -2,3 +2,7 @@
 	path = cfgcaddy
 	url = https://github.com/tstapler/cfgcaddy
 	branch = master
+[submodule ".claude/skills/pdf-proof"]
+	path = .claude/skills/pdf-proof
+	url = https://github.com/tstapler/pdf-proof.git
+	branch = main
