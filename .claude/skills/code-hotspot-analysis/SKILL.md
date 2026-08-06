@@ -213,6 +213,90 @@ if __name__ == "__main__":
 4. Cross-reference axis 1's static coupling against axis 2's temporal coupling for the same files/packages — agreement between them (a file that's both structurally central AND a temporal hotspot) is your highest-confidence target.
 5. Hand the ranked list to `architecture-review` (`--target=class:X`/`--target=package:Y`, targeted not `--depth=deep` full-codebase) for the principle-level "why is this bad and how do we fix it" analysis. Don't run a full SOLID/DDD sweep uniformly across a whole codebase when you have a ranked list telling you where the actual pain is.
 6. If a fix is warranted, hand it to `find-refactor-candidates`/`code-refactoring` — informed by which axis flagged it (a static-coupling problem wants an interface/boundary extraction; a temporal-coupling problem across packages wants investigating whether a shared concept should be extracted into its own type/package).
+7. After fixing (or instead of fixing, if the finding is a "watch this" not a "fix this now") wire the same complexity/size metrics into CI as a regression gate — see **CI Enforcement** below for per-language tooling. The goal is the hotspot never re-forms silently; a one-time analysis without a standing gate just delays the next audit finding the same file again.
+
+## CI Enforcement — Per-Language Reference
+
+Once a hotspot is found (or fixed), the durable follow-up is a CI check that catches the same shape — a file or function crossing a size/complexity threshold — before it grows back. Three principles hold across every language below, learned the hard way running this end-to-end on a Go repo (session/backlog_lifecycle.go: 4930 lines → split, then gated):
+
+1. **Scope thresholds to this repo's own measured average**, not a textbook default. Pull the average from axis 1's complexity tool (e.g. `gocyclo -avg`) and set the gate threshold well above it (5-10x) — the goal is "catch things this bad," not "enforce a style preference."
+2. **Scope enforcement to new/changed code only**, not the whole repo at once. A repo with an existing hotspot almost always has dozens of other pre-existing violations elsewhere; enabling a new gate unscoped fails CI for everyone immediately on unrelated code. Every ecosystem below has a diff-aware mode for exactly this (VCS-diff/new-code-period/changed-files) — use it instead of hand-writing a grandfather list of exclusions, which rots and needs manual upkeep. Confirm this by actually running the tool in diff-scoped mode against the *fixing* PR's own diff before merging — the fix should introduce zero new violations, not just "look better."
+3. **A refactor that moves code into new files can trip its own gate.** If the fix splits one file into several, most VCS diff tools don't recognize this as a rename (especially "split into 3 files" — there's no 1:1 target for a rename detector to match). Every line in the new files reads as newly-added, so pre-existing complexity that moved verbatim gets flagged as if it were just introduced. Handle this explicitly at the specific declaration (a targeted suppression comment naming the origin and a follow-up, e.g. Go's `//nolint:gocognit // relocated verbatim by the <file> split, see <PR>`) — never respond by widening the gate's scope or grandfathering the whole file, which would also hide genuinely new debt landing in the same file later.
+
+### Go
+
+`golangci-lint` (already the linter in most Go repos) has all four metrics as bundled linters — no extra tool install needed beyond what axis 1 already uses for ad-hoc analysis:
+
+| Metric | Linter | Settings |
+|---|---|---|
+| Cyclomatic complexity | `gocyclo` | `min-complexity: 25` (repo avg × ~10) |
+| Cognitive complexity | `gocognit` | `min-complexity: 40` |
+| Function length | `funlen` | `lines: 150`, `statements: 100`, `ignore-comments: true` |
+| File length | `revive` (`file-length-limit` rule) | `max: 1000`, `skipComments: true`, `skipBlankLines: true` |
+
+```yaml
+# .golangci.yml (v2 schema) — settings live here regardless of how the linter gets enabled
+linters:
+  settings:
+    gocyclo: {min-complexity: 25}
+    gocognit: {min-complexity: 40}
+    funlen: {lines: 150, statements: 100, ignore-comments: true}
+    revive:
+      rules:
+        - name: file-length-limit
+          arguments: [{max: 1000, skipComments: true, skipBlankLines: true}]
+```
+
+**New-code-only scoping**: do NOT add these four to `linters.enable:` in the shared config — that makes every local `golangci-lint run` / `make lint` fail on pre-existing repo-wide debt. Instead enable them only in a dedicated CI step via `--enable`, paired with `golangci-lint-action`'s `only-new-issues: true` (or CLI `--new-from-merge-base=<base-branch>` if not using the Action):
+
+```yaml
+# .github/workflows/lint.yml — separate step, not folded into the main lint step
+- uses: golangci/golangci-lint-action@v7
+  with:
+    args: --timeout=3m --max-issues-per-linter=0 --max-same-issues=0 --enable=gocyclo,gocognit,funlen,revive
+    only-new-issues: true   # scopes to the PR's diff — pre-existing repo debt doesn't block
+```
+
+**Go-specific gotchas hit running this**:
+- `golangci-lint`'s default `--max-issues-per-linter=50` silently truncates results below what you'd expect — always pass `--max-issues-per-linter=0 --max-same-issues=0` when auditing the *true* violation count (a first pass without these flags underreported `gocognit` findings by 17 in one run, with no error or warning that truncation happened).
+- `revive`'s `file-length-limit` rule requires `revive` itself to be in the enabled linters list — configuring it under `settings.revive.rules` alone, without enabling `revive`, silently does nothing.
+- Passing `--config <path outside the repo>` (e.g. a scratch `/tmp/test.yml`) can break golangci-lint's relative-path computation when the config also has a pre-existing `exclusions.paths: ["^\\.\\."]`-style pattern — it can end up matching every file and silently excluding 100% of issues with no error. Always validate new config changes via auto-discovery (`cd <repo root> && golangci-lint run`, no `--config` flag) before trusting a result.
+- `//nolint:` directives must be the *last* line of the comment block immediately before the declaration — `gofmt` will reflow/reject a doc comment that has prose after the `//nolint:` line.
+- `gocyclo -avg` (used in axis 1) gives the repo-wide baseline to calibrate `min-complexity` against — don't guess a threshold.
+
+### TypeScript / JavaScript
+
+ESLint's built-in `complexity` and `max-lines`/`max-lines-per-function`/`max-depth`/`max-params` rules cover cyclomatic complexity, file length, and function length without a plugin. Cognitive complexity needs `eslint-plugin-sonarjs`'s `sonarjs/cognitive-complexity` rule.
+
+```json
+// .eslintrc — new-code-only equivalent: run only against files changed in the diff
+{
+  "rules": {
+    "complexity": ["error", 25],
+    "max-lines": ["error", 1000],
+    "max-lines-per-function": ["error", 150],
+    "sonarjs/cognitive-complexity": ["error", 40]
+  }
+}
+```
+
+Scope to changed files the same way this repo's own `lint.yml` already scopes ESLint's `no-100vh` check: `git diff --name-only "$BASE_SHA"...HEAD -- '**.ts' '**.tsx' | xargs npx eslint`, falling back to a full-repo run only on push-to-main (no PR base to diff against). `reviewdog` is a ready-made alternative if you want inline PR annotations instead of a hand-rolled diff filter.
+
+### Python
+
+`radon cc`/`radon mi` compute cyclomatic complexity and a maintainability index per function/file; `xenon` wraps `radon` with pass/fail exit codes for CI (`xenon --max-absolute B --max-modules A --max-average A .`). Cognitive complexity needs the `flake8-cognitive-complexity` plugin. File length isn't natively covered by any of these — `pylint`'s `too-many-lines` message (default 1000) is the standard choice.
+
+New-code-only scoping: none of these tools have a native diff mode — wrap with the changed-file list (`git diff --name-only <base>...HEAD -- '*.py'`) passed as explicit file args, same pattern as the TS section above.
+
+### Java / Kotlin
+
+This ecosystem's tooling is the most mature here because SonarQube popularized "New Code" as a first-class quality-gate concept — if the repo already runs SonarQube/SonarCloud, its built-in Cognitive Complexity metric + "New Code" period setting *is* the new-code-only scoping mechanism, no extra wiring needed.
+
+Without SonarQube: PMD (`CyclomaticComplexity`, `CognitiveComplexity`, `ExcessiveMethodLength`, `ExcessiveClassLength` rules) or Checkstyle (`CyclomaticComplexity`, `MethodLength`, `FileLength` modules) for Java; `detekt` (`ComplexMethod`, `LongMethod`, `LargeClass` rules) for Kotlin. All three support a changed-file list via their respective CLI file-args, same diff-scoping pattern as above.
+
+### Rust
+
+`cargo clippy`'s `clippy::cognitive_complexity` lint (allow-by-default, needs `#![warn(clippy::cognitive_complexity)]` or `-W`) covers cognitive complexity directly. No mainstream dedicated file-length gate exists; `tokei`/`scc` give line counts you can threshold in a CI script if needed. Diff-scoping: `cargo clippy` doesn't have a native changed-files mode — `reviewdog`'s clippy integration is the standard way to get diff-scoped annotations instead of a repo-wide gate.
 
 ## When NOT to Use This
 
