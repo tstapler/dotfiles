@@ -46,7 +46,8 @@ struct Cli {
     #[arg(long)]
     stats: bool,
 
-    /// Below this combined byte size, output is passed through unchanged.
+    /// Below this combined byte size, skip archiving the original output to
+    /// disk (compression still runs — it's never worse than the input).
     #[arg(long, default_value_t = 1000)]
     floor_bytes: usize,
 
@@ -253,7 +254,7 @@ fn tool_result_text(content: &Value) -> Option<String> {
 /// Scan every `*.jsonl` transcript under `dir`, run each recorded tool
 /// output through the same `compress_text` pipeline `cmdcrush` applies live,
 /// and report the aggregate savings. Never modifies anything it reads.
-fn run_history_stats(dir: &Path, floor_bytes: usize, max_lines: usize, top_n: usize) {
+fn run_history_stats(dir: &Path, max_lines: usize, top_n: usize) {
     let pattern = format!("{}/**/*.jsonl", dir.display());
     let paths: Vec<PathBuf> = match glob::glob(&pattern) {
         Ok(g) => g.filter_map(Result::ok).collect(),
@@ -285,12 +286,8 @@ fn run_history_stats(dir: &Path, floor_bytes: usize, max_lines: usize, top_n: us
             for text in extract_tool_results(&line) {
                 blob_count += 1;
                 let before = text.len();
-                let (after, method) = if before < floor_bytes {
-                    (before, "below-floor".to_string())
-                } else {
-                    let (compressed, method) = compress_text(&text, max_lines);
-                    (compressed.len(), method)
-                };
+                let (compressed, method) = compress_text(&text, max_lines);
+                let after = compressed.len();
 
                 total_before += before as u64;
                 total_after += after as u64;
@@ -445,7 +442,7 @@ fn main() {
             let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
             PathBuf::from(home).join(".claude/projects")
         });
-        run_history_stats(&dir, cli.floor_bytes, cli.max_lines, cli.top);
+        run_history_stats(&dir, cli.max_lines, cli.top);
         return;
     }
 
@@ -522,14 +519,11 @@ fn main() {
     let stderr_text = stderr_text.unwrap();
 
     let total_before = stdout_bytes.len() + stderr_bytes.len();
-    if total_before < cli.floor_bytes {
-        print_result(cli.stats, &metrics, &cmd_label, "combined", total_before, total_before, "below-floor");
-        print!("{stdout_text}");
-        eprint!("{stderr_text}");
-        std::io::stdout().flush().ok();
-        std::io::stderr().flush().ok();
-        finish(metrics, status.code().unwrap_or(1));
-    }
+    // Compression always runs — every stage already guards against making
+    // output bigger, so there's no correctness reason to skip small output.
+    // `floor_bytes` only gates archiving: writing a file to disk isn't worth
+    // it to save a few hundred bytes.
+    let below_floor = total_before < cli.floor_bytes;
 
     let original_for_archive;
     let final_output;
@@ -558,7 +552,7 @@ fn main() {
         original_for_archive = merged.into_bytes();
         final_output = compressed;
 
-        if !cli.no_archive && final_output.len() < original_for_archive.len() {
+        if !cli.no_archive && !below_floor && final_output.len() < original_for_archive.len() {
             match archive_original(&original_for_archive, &archive_dir) {
                 Ok(path) => eprintln!("cmdcrush: original archived at {}", path.display()),
                 Err(e) => eprintln!("cmdcrush: failed to archive original: {e}"),
@@ -584,7 +578,7 @@ fn main() {
         print_result(cli.stats, &metrics, &cmd_label, "stdout", stdout_text.len(), compressed_stdout.len(), &out_method);
         print_result(cli.stats, &metrics, &cmd_label, "stderr", stderr_text.len(), compressed_stderr.len(), &err_method);
 
-        if !cli.no_archive {
+        if !cli.no_archive && !below_floor {
             if compressed_stdout.len() < stdout_text.len() {
                 if let Ok(path) = archive_original(stdout_text.as_bytes(), &archive_dir) {
                     eprintln!("cmdcrush: original stdout archived at {}", path.display());
