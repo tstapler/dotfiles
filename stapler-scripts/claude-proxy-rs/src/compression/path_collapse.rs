@@ -33,6 +33,13 @@ fn longest_common_dir_prefix<'a>(lines: &[&'a str], indices: &[usize]) -> &'a st
             }
             common += 1;
         }
+        // Two distinct multi-byte characters can share leading bytes before
+        // diverging (e.g. box-drawing characters in `tree`-style output), so
+        // the byte-level match point isn't guaranteed to land on a char
+        // boundary in `prefix` — back off until it does before slicing.
+        while common > 0 && !prefix.is_char_boundary(common) {
+            common -= 1;
+        }
         prefix = &prefix[..common];
         if prefix.is_empty() {
             return "";
@@ -108,5 +115,19 @@ mod tests {
     fn no_collapse_when_paths_diverge() {
         let text = "/a/b/x.rs:1\n/c/d/y.rs:2\n/e/f/z.rs:3\n/g/h/w.rs:4\n/i/j/v.rs:5";
         assert_eq!(collapse_common_prefix(text), text);
+    }
+
+    #[test]
+    fn does_not_panic_on_multibyte_divergence() {
+        // Box-drawing characters share leading UTF-8 bytes before diverging
+        // mid-character — the byte-level common-prefix scan must not stop at
+        // a non-char-boundary offset when slicing.
+        let text = "/repo/├── a.rs:1\n\
+                     /repo/└── b.rs:2\n\
+                     /repo/├── c.rs:3\n\
+                     /repo/├── d.rs:4\n\
+                     /repo/├── e.rs:5";
+        // Must not panic; the exact collapsing behavior isn't the point here.
+        let _ = collapse_common_prefix(text);
     }
 }

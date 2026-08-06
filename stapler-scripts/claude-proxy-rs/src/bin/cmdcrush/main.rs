@@ -14,6 +14,7 @@
 //! output (the common case), it is compressed and printed to its own fd
 //! exactly as before.
 
+use std::collections::HashMap;
 use std::io::{BufRead, BufReader, Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Command as Proc, Stdio};
@@ -25,6 +26,7 @@ use clap::Parser;
 use opentelemetry::metrics::{Counter, Histogram, MeterProvider as _};
 use opentelemetry::KeyValue;
 use opentelemetry_sdk::metrics::{PeriodicReader, SdkMeterProvider};
+use serde_json::Value;
 use sha2::{Digest, Sha256};
 
 use claude_proxy_rs::compression::{
@@ -61,8 +63,24 @@ struct Cli {
     #[arg(long, default_value_t = 400)]
     max_lines: usize,
 
+    /// Instead of running a command, scan existing Claude Code conversation
+    /// transcripts and report how many bytes the compression pipeline would
+    /// have saved on their recorded tool outputs, had it been run inline.
+    #[arg(long)]
+    history_stats: bool,
+
+    /// Root directory to scan for `*.jsonl` transcripts (used only with
+    /// `--history-stats`). Defaults to `~/.claude/projects`.
+    #[arg(long)]
+    history_dir: Option<PathBuf>,
+
+    /// Number of largest individual savings to list in the `--history-stats`
+    /// report.
+    #[arg(long, default_value_t = 10)]
+    top: usize,
+
     /// Command (and its arguments) to run.
-    #[arg(trailing_var_arg = true, required = true, num_args = 1..)]
+    #[arg(trailing_var_arg = true, num_args = 0..)]
     command: Vec<String>,
 }
 
@@ -175,6 +193,162 @@ fn first_word(script: &str) -> String {
     }
 }
 
+/// One tool-output blob pulled out of a transcript, plus what compressing it
+/// would have done.
+struct HistoryEntry {
+    source: String,
+    before: usize,
+    after: usize,
+    method: String,
+}
+
+/// Pull the text of every `tool_result` block out of a single JSONL
+/// transcript line, if that line is a `user` message carrying tool results.
+/// Claude Code stores `content` either as a bare string or as a list of
+/// content blocks (`{"type": "tool_result", "content": ...}` where the inner
+/// `content` is itself a string or a list of `{"type": "text", "text": ...}`
+/// blocks) — both shapes are handled.
+fn extract_tool_results(line: &str) -> Vec<String> {
+    let Ok(value) = serde_json::from_str::<Value>(line) else {
+        return Vec::new();
+    };
+    if value.get("type").and_then(Value::as_str) != Some("user") {
+        return Vec::new();
+    }
+    let Some(content) = value.pointer("/message/content") else {
+        return Vec::new();
+    };
+    let Some(blocks) = content.as_array() else {
+        return Vec::new();
+    };
+
+    blocks
+        .iter()
+        .filter(|b| b.get("type").and_then(Value::as_str) == Some("tool_result"))
+        .filter_map(|b| b.get("content"))
+        .filter_map(tool_result_text)
+        .collect()
+}
+
+/// Flatten a `tool_result` block's `content` field (string, or list of
+/// `{"type": "text", "text": ...}` blocks) into plain text.
+fn tool_result_text(content: &Value) -> Option<String> {
+    if let Some(s) = content.as_str() {
+        return Some(s.to_string());
+    }
+    let blocks = content.as_array()?;
+    let text: String = blocks
+        .iter()
+        .filter(|b| b.get("type").and_then(Value::as_str) == Some("text"))
+        .filter_map(|b| b.get("text").and_then(Value::as_str))
+        .collect::<Vec<_>>()
+        .join("\n");
+    if text.is_empty() {
+        None
+    } else {
+        Some(text)
+    }
+}
+
+/// Scan every `*.jsonl` transcript under `dir`, run each recorded tool
+/// output through the same `compress_text` pipeline `cmdcrush` applies live,
+/// and report the aggregate savings. Never modifies anything it reads.
+fn run_history_stats(dir: &Path, floor_bytes: usize, max_lines: usize, top_n: usize) {
+    let pattern = format!("{}/**/*.jsonl", dir.display());
+    let paths: Vec<PathBuf> = match glob::glob(&pattern) {
+        Ok(g) => g.filter_map(Result::ok).collect(),
+        Err(e) => {
+            eprintln!("cmdcrush: invalid history dir pattern {pattern}: {e}");
+            std::process::exit(1);
+        }
+    };
+
+    if paths.is_empty() {
+        eprintln!("cmdcrush: no transcripts found under {}", dir.display());
+        std::process::exit(1);
+    }
+
+    let mut total_before: u64 = 0;
+    let mut total_after: u64 = 0;
+    let mut blob_count: u64 = 0;
+    // method -> (before, after, count)
+    let mut by_method: HashMap<String, (u64, u64, u64)> = HashMap::new();
+    let mut top_savings: Vec<HistoryEntry> = Vec::new();
+
+    for path in &paths {
+        let Ok(file) = std::fs::File::open(path) else {
+            continue;
+        };
+        let reader = BufReader::new(file);
+        for (lineno, line) in reader.lines().enumerate() {
+            let Ok(line) = line else { continue };
+            for text in extract_tool_results(&line) {
+                blob_count += 1;
+                let before = text.len();
+                let (after, method) = if before < floor_bytes {
+                    (before, "below-floor".to_string())
+                } else {
+                    let (compressed, method) = compress_text(&text, max_lines);
+                    (compressed.len(), method)
+                };
+
+                total_before += before as u64;
+                total_after += after as u64;
+                let entry = by_method.entry(method.clone()).or_insert((0, 0, 0));
+                entry.0 += before as u64;
+                entry.1 += after as u64;
+                entry.2 += 1;
+
+                if before > after {
+                    top_savings.push(HistoryEntry {
+                        source: format!("{}:{}", path.display(), lineno + 1),
+                        before,
+                        after,
+                        method,
+                    });
+                }
+            }
+        }
+    }
+
+    top_savings.sort_by_key(|e| std::cmp::Reverse(e.before - e.after));
+    top_savings.truncate(top_n);
+
+    let pct = if total_before == 0 {
+        0.0
+    } else {
+        100.0 * (1.0 - total_after as f64 / total_before as f64)
+    };
+    let tokens_saved = (total_before.saturating_sub(total_after)) as f64 / 4.0;
+
+    println!("cmdcrush history-stats — scanned {} transcript(s) under {}", paths.len(), dir.display());
+    println!("tool-output blobs examined: {blob_count}");
+    println!(
+        "bytes: {total_before} -> {total_after} ({pct:.1}% saved, ~{tokens_saved:.0} tokens at 4 bytes/token)"
+    );
+    println!();
+    println!("by method:");
+    let mut methods: Vec<_> = by_method.into_iter().collect();
+    methods.sort_by_key(|(_, (before, after, _))| std::cmp::Reverse(before.saturating_sub(*after)));
+    for (method, (before, after, count)) in methods {
+        let mpct = if before == 0 {
+            0.0
+        } else {
+            100.0 * (1.0 - after as f64 / before as f64)
+        };
+        println!("  {method:<20} {count:>6} blobs   {before:>10} -> {after:>10} bytes  ({mpct:.1}% saved)");
+    }
+
+    if !top_savings.is_empty() {
+        println!();
+        println!("top {} individual savings:", top_savings.len());
+        for e in &top_savings {
+            let saved = e.before - e.after;
+            println!("  {saved:>8} bytes saved  [{}]  {}", e.method, e.source);
+        }
+    }
+}
+
 /// Persist the original bytes so a human can retrieve them later, keyed by
 /// a short sha256 prefix. Returns the archive path on success.
 fn archive_original(bytes: &[u8], dir: &Path) -> std::io::Result<PathBuf> {
@@ -265,10 +439,20 @@ fn finish(metrics: Option<Metrics>, code: i32) -> ! {
 
 fn main() {
     let cli = Cli::parse();
-    let (program, args) = cli
-        .command
-        .split_first()
-        .expect("clap requires at least one command argument");
+
+    if cli.history_stats {
+        let dir = cli.history_dir.clone().unwrap_or_else(|| {
+            let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
+            PathBuf::from(home).join(".claude/projects")
+        });
+        run_history_stats(&dir, cli.floor_bytes, cli.max_lines, cli.top);
+        return;
+    }
+
+    let Some((program, args)) = cli.command.split_first() else {
+        eprintln!("cmdcrush: no command given (or pass --history-stats)");
+        std::process::exit(2);
+    };
     let cmd_label = command_label(program, args);
     let metrics = init_metrics();
 
