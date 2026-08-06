@@ -22,6 +22,7 @@ use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
 
+use chrono::{DateTime, Utc};
 use clap::Parser;
 use opentelemetry::metrics::{Counter, Histogram, MeterProvider as _};
 use opentelemetry::KeyValue;
@@ -79,6 +80,26 @@ struct Cli {
     /// report.
     #[arg(long, default_value_t = 10)]
     top: usize,
+
+    /// Instead of running a command, scan existing Claude Code conversation
+    /// transcripts and report per-session token usage broken down by model
+    /// (Opus/Sonnet/Haiku/etc.), most recent first.
+    #[arg(long)]
+    model_stats: bool,
+
+    /// Only include sessions with activity in this many past hours (used
+    /// only with `--model-stats`).
+    #[arg(long, default_value_t = 168)]
+    since_hours: i64,
+
+    /// Only include sessions that used a model whose name contains this
+    /// substring, e.g. `opus` (used only with `--model-stats`).
+    #[arg(long = "model")]
+    model_filter: Option<String>,
+
+    /// Max number of sessions to list in the `--model-stats` report.
+    #[arg(long, default_value_t = 30)]
+    sessions: usize,
 
     /// Command (and its arguments) to run.
     #[arg(trailing_var_arg = true, num_args = 0..)]
@@ -346,6 +367,164 @@ fn run_history_stats(dir: &Path, max_lines: usize, top_n: usize) {
     }
 }
 
+/// Per-model token totals accumulated for one session.
+#[derive(Default)]
+struct ModelUsage {
+    input: u64,
+    output: u64,
+    cache_creation: u64,
+    cache_read: u64,
+    messages: u64,
+}
+
+impl ModelUsage {
+    fn total(&self) -> u64 {
+        self.input + self.output + self.cache_creation + self.cache_read
+    }
+}
+
+/// One conversation session's model usage, keyed by session id.
+struct SessionUsage {
+    session_id: String,
+    cwd: String,
+    last_ts: DateTime<Utc>,
+    per_model: HashMap<String, ModelUsage>,
+}
+
+impl SessionUsage {
+    fn total_tokens(&self) -> u64 {
+        self.per_model.values().map(ModelUsage::total).sum()
+    }
+}
+
+/// Scan every `*.jsonl` transcript under `dir` and report, per session, how
+/// many tokens went to each model (Opus/Sonnet/Haiku/etc.) — the same data
+/// Claude Code already records in each assistant message's `usage` block,
+/// just aggregated by session instead of left scattered across files. Never
+/// modifies anything it reads.
+fn run_model_stats(dir: &Path, since_hours: i64, model_filter: Option<&str>, limit: usize) {
+    let pattern = format!("{}/**/*.jsonl", dir.display());
+    let paths: Vec<PathBuf> = match glob::glob(&pattern) {
+        Ok(g) => g.filter_map(Result::ok).collect(),
+        Err(e) => {
+            eprintln!("cmdcrush: invalid history dir pattern {pattern}: {e}");
+            std::process::exit(1);
+        }
+    };
+
+    if paths.is_empty() {
+        eprintln!("cmdcrush: no transcripts found under {}", dir.display());
+        std::process::exit(1);
+    }
+
+    let mut sessions: HashMap<String, SessionUsage> = HashMap::new();
+
+    for path in &paths {
+        let Ok(file) = std::fs::File::open(path) else {
+            continue;
+        };
+        let reader = BufReader::new(file);
+        for line in reader.lines() {
+            let Ok(line) = line else { continue };
+            let Ok(value) = serde_json::from_str::<Value>(&line) else { continue };
+            if value.get("type").and_then(Value::as_str) != Some("assistant") {
+                continue;
+            }
+            let Some(model) = value.pointer("/message/model").and_then(Value::as_str) else {
+                continue;
+            };
+            if model == "<synthetic>" {
+                continue;
+            }
+            let Some(ts) = value.get("timestamp").and_then(Value::as_str) else {
+                continue;
+            };
+            let Ok(ts) = DateTime::parse_from_rfc3339(ts) else {
+                continue;
+            };
+            let ts = ts.with_timezone(&Utc);
+
+            let session_id = value
+                .get("sessionId")
+                .and_then(Value::as_str)
+                .unwrap_or_else(|| path.to_str().unwrap_or("unknown"))
+                .to_string();
+            let cwd = value.get("cwd").and_then(Value::as_str).unwrap_or("").to_string();
+            let usage = value.pointer("/message/usage");
+            let get_u64 = |key: &str| usage.and_then(|u| u.get(key)).and_then(Value::as_u64).unwrap_or(0);
+
+            let session = sessions.entry(session_id.clone()).or_insert_with(|| SessionUsage {
+                session_id,
+                cwd: cwd.clone(),
+                last_ts: ts,
+                per_model: HashMap::new(),
+            });
+            if ts > session.last_ts {
+                session.last_ts = ts;
+                session.cwd = cwd;
+            }
+            let entry = session.per_model.entry(model.to_string()).or_default();
+            entry.input += get_u64("input_tokens");
+            entry.output += get_u64("output_tokens");
+            entry.cache_creation += get_u64("cache_creation_input_tokens");
+            entry.cache_read += get_u64("cache_read_input_tokens");
+            entry.messages += 1;
+        }
+    }
+
+    let cutoff = Utc::now() - chrono::Duration::hours(since_hours);
+    let mut shown: Vec<&SessionUsage> = sessions
+        .values()
+        .filter(|s| s.last_ts >= cutoff)
+        .filter(|s| match model_filter {
+            Some(f) => s.per_model.keys().any(|m| m.to_lowercase().contains(&f.to_lowercase())),
+            None => true,
+        })
+        .collect();
+    shown.sort_by_key(|s| std::cmp::Reverse(s.last_ts));
+    let omitted = shown.len().saturating_sub(limit);
+    shown.truncate(limit);
+
+    println!(
+        "cmdcrush model-stats — {} session(s) with activity in the last {since_hours}h under {}",
+        shown.len(),
+        dir.display()
+    );
+    if let Some(f) = model_filter {
+        println!("filtered to sessions using a model matching {f:?}");
+    }
+    println!();
+
+    for s in &shown {
+        let mut models: Vec<_> = s.per_model.iter().collect();
+        models.sort_by_key(|(_, u)| std::cmp::Reverse(u.total()));
+        let total = s.total_tokens();
+        println!(
+            "{}  session {}  ({})",
+            s.last_ts.format("%Y-%m-%d %H:%M:%S UTC"),
+            s.session_id,
+            s.cwd
+        );
+        for (model, usage) in models {
+            let pct = if total == 0 { 0.0 } else { 100.0 * usage.total() as f64 / total as f64 };
+            println!(
+                "    {model:<24} {:>12} tokens ({pct:>5.1}%)  [{} msgs, in={} out={} cache_w={} cache_r={}]",
+                usage.total(),
+                usage.messages,
+                usage.input,
+                usage.output,
+                usage.cache_creation,
+                usage.cache_read
+            );
+        }
+    }
+
+    if omitted > 0 {
+        println!();
+        println!("... {omitted} more session(s) omitted (raise --sessions to see them)");
+    }
+}
+
 /// Persist the original bytes so a human can retrieve them later, keyed by
 /// a short sha256 prefix. Returns the archive path on success.
 fn archive_original(bytes: &[u8], dir: &Path) -> std::io::Result<PathBuf> {
@@ -437,12 +616,19 @@ fn finish(metrics: Option<Metrics>, code: i32) -> ! {
 fn main() {
     let cli = Cli::parse();
 
-    if cli.history_stats {
-        let dir = cli.history_dir.clone().unwrap_or_else(|| {
+    let default_history_dir = || {
+        cli.history_dir.clone().unwrap_or_else(|| {
             let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
             PathBuf::from(home).join(".claude/projects")
-        });
-        run_history_stats(&dir, cli.max_lines, cli.top);
+        })
+    };
+
+    if cli.history_stats {
+        run_history_stats(&default_history_dir(), cli.max_lines, cli.top);
+        return;
+    }
+    if cli.model_stats {
+        run_model_stats(&default_history_dir(), cli.since_hours, cli.model_filter.as_deref(), cli.sessions);
         return;
     }
 
