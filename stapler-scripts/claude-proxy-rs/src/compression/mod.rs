@@ -6,14 +6,20 @@
 //! tool-pair orphan guard, Rewind marker injection, and Rewind tool injection.
 
 pub mod code_compressor;
+pub mod diff_compactor;
 pub mod engine;
+pub mod line_truncate;
+pub mod path_collapse;
 pub mod rewind;
 pub mod smart_crusher;
 pub mod text_compressor;
 
 // Re-exports for convenient use from other modules.
 pub use code_compressor::CodeCompressor;
+pub use diff_compactor::{compact_diff, is_diff};
 pub use engine::{CompressionConfig, CompressionEngine, CompressionStats};
+pub use line_truncate::truncate_lines;
+pub use path_collapse::collapse_common_prefix;
 pub use rewind::RewindStore;
 pub use smart_crusher::SmartCrusher;
 pub use text_compressor::TextCompressor;

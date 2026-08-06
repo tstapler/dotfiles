@@ -27,7 +27,9 @@ use opentelemetry::KeyValue;
 use opentelemetry_sdk::metrics::{PeriodicReader, SdkMeterProvider};
 use sha2::{Digest, Sha256};
 
-use claude_proxy_rs::compression::TextCompressor;
+use claude_proxy_rs::compression::{
+    collapse_common_prefix, compact_diff, is_diff, truncate_lines, TextCompressor,
+};
 
 mod metrics_store;
 use metrics_store::SqliteMetricsExporter;
@@ -53,6 +55,11 @@ struct Cli {
     /// Directory to archive originals into (default: a temp dir).
     #[arg(long)]
     archive_dir: Option<PathBuf>,
+
+    /// After other compression, cap output to this many lines total (head +
+    /// tail), eliding the middle. 0 disables truncation.
+    #[arg(long, default_value_t = 400)]
+    max_lines: usize,
 
     /// Command (and its arguments) to run.
     #[arg(trailing_var_arg = true, required = true, num_args = 1..)]
@@ -88,21 +95,84 @@ fn spawn_reader<R: Read + Send + 'static>(
     })
 }
 
-/// Try to compress `text`: JSON is minified (key order may change — `Value`
-/// uses a `BTreeMap` without the `preserve_order` feature — but structure
-/// and content survive intact, unlike running line-oriented log heuristics
-/// over it, which can delete lines that happen to repeat in valid JSON and
-/// corrupt the syntax). Anything else goes through `TextCompressor`.
-fn compress_text(text: &str) -> (String, &'static str) {
+/// Route `text` through the compressor(s) suited to its shape, then apply a
+/// final head/tail cap. Content routing mirrors headroom's "SmartCrusher"
+/// idea (dispatch by detected content type rather than one generic pass over
+/// everything): JSON gets minified verbatim, unified diffs get hunk-aware
+/// compaction, path-heavy output gets its common directory prefix collapsed,
+/// and everything else gets the general-purpose `TextCompressor`. Every
+/// stage is a no-op (returns its input unchanged) when it wouldn't shrink
+/// the text, so composing them can only ever reduce size.
+fn compress_text(text: &str, max_lines: usize) -> (String, String) {
     if let Ok(value) = serde_json::from_str::<serde_json::Value>(text.trim()) {
         if let Ok(minified) = serde_json::to_string(&value) {
             if minified.len() < text.len() {
-                return (minified, "json-minify");
+                return (minified, "json-minify".to_string());
             }
         }
-        return (text.to_string(), "json-noop");
+        return (text.to_string(), "json-noop".to_string());
     }
-    (TextCompressor::new().compress(text), "text")
+
+    let (mut compressed, mut method) = if is_diff(text) {
+        (compact_diff(text), "diff".to_string())
+    } else {
+        (TextCompressor::new().compress(text), "text".to_string())
+    };
+
+    if !is_diff(text) {
+        let collapsed = collapse_common_prefix(&compressed);
+        if collapsed.len() < compressed.len() {
+            compressed = collapsed;
+            method = "path-collapse".to_string();
+        }
+    }
+
+    if max_lines > 0 {
+        let head = max_lines / 2;
+        let tail = max_lines - head;
+        let truncated = truncate_lines(&compressed, head, tail);
+        if truncated.len() < compressed.len() {
+            compressed = truncated;
+            method = format!("{method}+truncated");
+        }
+    }
+
+    (compressed, method)
+}
+
+/// The metrics `command` attribute should name the tool the user actually
+/// ran, not the shell that ran it — the hook always wraps the real command
+/// as `bash -c '<real command>'` (see `~/.claude/hooks/cmdcrush-wrap.sh`), so
+/// `program` here is unconditionally `"bash"` and would make every row in
+/// the stats DB indistinguishable by command otherwise.
+fn command_label(program: &str, args: &[String]) -> String {
+    let is_shell = matches!(program, "bash" | "sh" | "zsh" | "dash");
+    if is_shell {
+        if let Some(pos) = args.iter().position(|a| a == "-c") {
+            if let Some(script) = args.get(pos + 1) {
+                return first_word(script);
+            }
+        }
+    }
+    program.to_string()
+}
+
+/// First real command token in a shell script fragment: skips leading
+/// `FOO=bar` env assignments and a leading `sudo`.
+fn first_word(script: &str) -> String {
+    let mut tokens = script.split_whitespace();
+    let mut word = tokens.next().unwrap_or("");
+    while !word.is_empty() && word.contains('=') && !word.starts_with('-') {
+        word = tokens.next().unwrap_or("");
+    }
+    if word == "sudo" {
+        word = tokens.next().unwrap_or("sudo");
+    }
+    if word.is_empty() {
+        "unknown".to_string()
+    } else {
+        word.to_string()
+    }
 }
 
 /// Persist the original bytes so a human can retrieve them later, keyed by
@@ -199,6 +269,7 @@ fn main() {
         .command
         .split_first()
         .expect("clap requires at least one command argument");
+    let cmd_label = command_label(program, args);
     let metrics = init_metrics();
 
     let mut child = Proc::new(program)
@@ -268,7 +339,7 @@ fn main() {
 
     let total_before = stdout_bytes.len() + stderr_bytes.len();
     if total_before < cli.floor_bytes {
-        print_result(cli.stats, &metrics, program, "combined", total_before, total_before, "below-floor");
+        print_result(cli.stats, &metrics, &cmd_label, "combined", total_before, total_before, "below-floor");
         print!("{stdout_text}");
         eprint!("{stderr_text}");
         std::io::stdout().flush().ok();
@@ -298,8 +369,8 @@ fn main() {
                 }
             }
         }
-        let (compressed, method) = compress_text(&merged);
-        print_result(cli.stats, &metrics, program, "merged", merged.len(), compressed.len(), method);
+        let (compressed, method) = compress_text(&merged, cli.max_lines);
+        print_result(cli.stats, &metrics, &cmd_label, "merged", merged.len(), compressed.len(), &method);
         original_for_archive = merged.into_bytes();
         final_output = compressed;
 
@@ -316,18 +387,18 @@ fn main() {
         // Only one stream had output — compress and print it to its own fd,
         // same contract as before.
         let (compressed_stdout, out_method) = if has_stdout {
-            compress_text(&stdout_text)
+            compress_text(&stdout_text, cli.max_lines)
         } else {
-            (String::new(), "n/a")
+            (String::new(), "n/a".to_string())
         };
         let (compressed_stderr, err_method) = if has_stderr {
-            compress_text(&stderr_text)
+            compress_text(&stderr_text, cli.max_lines)
         } else {
-            (String::new(), "n/a")
+            (String::new(), "n/a".to_string())
         };
 
-        print_result(cli.stats, &metrics, program, "stdout", stdout_text.len(), compressed_stdout.len(), out_method);
-        print_result(cli.stats, &metrics, program, "stderr", stderr_text.len(), compressed_stderr.len(), err_method);
+        print_result(cli.stats, &metrics, &cmd_label, "stdout", stdout_text.len(), compressed_stdout.len(), &out_method);
+        print_result(cli.stats, &metrics, &cmd_label, "stderr", stderr_text.len(), compressed_stderr.len(), &err_method);
 
         if !cli.no_archive {
             if compressed_stdout.len() < stdout_text.len() {
