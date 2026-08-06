@@ -19,11 +19,18 @@ use std::path::{Path, PathBuf};
 use std::process::{Command as Proc, Stdio};
 use std::sync::mpsc;
 use std::thread;
+use std::time::Duration;
 
 use clap::Parser;
+use opentelemetry::metrics::{Counter, Histogram, MeterProvider as _};
+use opentelemetry::KeyValue;
+use opentelemetry_sdk::metrics::{PeriodicReader, SdkMeterProvider};
 use sha2::{Digest, Sha256};
 
 use claude_proxy_rs::compression::TextCompressor;
+
+mod metrics_store;
+use metrics_store::SqliteMetricsExporter;
 
 #[derive(Parser)]
 #[command(
@@ -109,7 +116,59 @@ fn archive_original(bytes: &[u8], dir: &Path) -> std::io::Result<PathBuf> {
     Ok(path)
 }
 
-fn print_result(stats: bool, label: &str, before: usize, after: usize, method: &str) {
+/// OTel metrics pipeline that persists to `metrics_store`'s SQLite exporter
+/// instead of a network collector — cmdcrush is a one-shot CLI with no
+/// collector to talk to. Always built; `--stats` only controls the extra
+/// stderr diagnostic line in `print_result`.
+struct Metrics {
+    provider: SdkMeterProvider,
+    invocations: Counter<u64>,
+    bytes_before: Histogram<u64>,
+    bytes_after: Histogram<u64>,
+}
+
+fn init_metrics() -> Option<Metrics> {
+    let db_path = metrics_store::default_db_path();
+    let exporter = match SqliteMetricsExporter::open(&db_path) {
+        Ok(e) => e,
+        Err(e) => {
+            eprintln!("cmdcrush: failed to open stats db at {}: {e}", db_path.display());
+            return None;
+        }
+    };
+    let reader = PeriodicReader::builder(exporter)
+        .with_interval(Duration::from_secs(3600))
+        .build();
+    let provider = SdkMeterProvider::builder().with_reader(reader).build();
+    let meter = provider.meter("cmdcrush");
+    Some(Metrics {
+        invocations: meter.u64_counter("cmdcrush.invocations").build(),
+        bytes_before: meter.u64_histogram("cmdcrush.bytes_before").build(),
+        bytes_after: meter.u64_histogram("cmdcrush.bytes_after").build(),
+        provider,
+    })
+}
+
+fn print_result(
+    stats: bool,
+    metrics: &Option<Metrics>,
+    program: &str,
+    label: &str,
+    before: usize,
+    after: usize,
+    method: &str,
+) {
+    if let Some(m) = metrics {
+        let attrs = [
+            KeyValue::new("command", program.to_string()),
+            KeyValue::new("label", label.to_string()),
+            KeyValue::new("method", method.to_string()),
+        ];
+        m.invocations.add(1, &attrs);
+        m.bytes_before.record(before as u64, &attrs);
+        m.bytes_after.record(after as u64, &attrs);
+    }
+
     if !stats {
         return;
     }
@@ -121,12 +180,26 @@ fn print_result(stats: bool, label: &str, before: usize, after: usize, method: &
     eprintln!("cmdcrush: {label}: {before} -> {after} bytes via {method} ({pct:.1}% saved)");
 }
 
+/// Force a final export and shut down the meter provider so metrics survive
+/// this short-lived process exiting, then exit with `code`.
+fn finish(metrics: Option<Metrics>, code: i32) -> ! {
+    if let Some(m) = metrics {
+        // `shutdown()` already flushes pending telemetry — calling
+        // `force_flush()` first would export the same data twice.
+        if let Err(e) = m.provider.shutdown() {
+            eprintln!("cmdcrush: failed to flush stats: {e}");
+        }
+    }
+    std::process::exit(code);
+}
+
 fn main() {
     let cli = Cli::parse();
     let (program, args) = cli
         .command
         .split_first()
         .expect("clap requires at least one command argument");
+    let metrics = init_metrics();
 
     let mut child = Proc::new(program)
         .args(args)
@@ -188,19 +261,19 @@ fn main() {
         }
         std::io::stdout().write_all(&stdout_bytes).ok();
         std::io::stderr().write_all(&stderr_bytes).ok();
-        std::process::exit(status.code().unwrap_or(1));
+        finish(metrics, status.code().unwrap_or(1));
     }
     let stdout_text = stdout_text.unwrap();
     let stderr_text = stderr_text.unwrap();
 
     let total_before = stdout_bytes.len() + stderr_bytes.len();
     if total_before < cli.floor_bytes {
-        print_result(cli.stats, "combined", total_before, total_before, "below-floor");
+        print_result(cli.stats, &metrics, program, "combined", total_before, total_before, "below-floor");
         print!("{stdout_text}");
         eprint!("{stderr_text}");
         std::io::stdout().flush().ok();
         std::io::stderr().flush().ok();
-        std::process::exit(status.code().unwrap_or(1));
+        finish(metrics, status.code().unwrap_or(1));
     }
 
     let original_for_archive;
@@ -226,7 +299,7 @@ fn main() {
             }
         }
         let (compressed, method) = compress_text(&merged);
-        print_result(cli.stats, "merged", merged.len(), compressed.len(), method);
+        print_result(cli.stats, &metrics, program, "merged", merged.len(), compressed.len(), method);
         original_for_archive = merged.into_bytes();
         final_output = compressed;
 
@@ -253,8 +326,8 @@ fn main() {
             (String::new(), "n/a")
         };
 
-        print_result(cli.stats, "stdout", stdout_text.len(), compressed_stdout.len(), out_method);
-        print_result(cli.stats, "stderr", stderr_text.len(), compressed_stderr.len(), err_method);
+        print_result(cli.stats, &metrics, program, "stdout", stdout_text.len(), compressed_stdout.len(), out_method);
+        print_result(cli.stats, &metrics, program, "stderr", stderr_text.len(), compressed_stderr.len(), err_method);
 
         if !cli.no_archive {
             if compressed_stdout.len() < stdout_text.len() {
@@ -275,5 +348,5 @@ fn main() {
         std::io::stderr().flush().ok();
     }
 
-    std::process::exit(status.code().unwrap_or(1));
+    finish(metrics, status.code().unwrap_or(1));
 }
