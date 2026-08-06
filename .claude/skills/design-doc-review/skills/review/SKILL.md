@@ -8,7 +8,7 @@ Coordinator for the design-doc-review pipeline. Runs each check as an independen
 
 **Target**: {{args}} — a file path to the design doc. If omitted, use the doc already in context.
 
-This skill does not invent checks — it dispatches to whatever lives under `design-doc-review/skills/*` other than itself. Today that's `outline` and `readability`. Adding a new check later (e.g. `evidence-quality`, `risk-completeness`) means adding one `skills/<name>/SKILL.md` following the same JSON-summary contract — no change needed here beyond adding it to the registry below.
+This skill does not invent checks — it dispatches to whatever lives under `design-doc-review/skills/*` other than itself. Today that's `outline`, `readability`, and `visuals`. Adding a new check later (e.g. `evidence-quality`, `risk-completeness`) means adding one `skills/<name>/SKILL.md` following the same JSON-summary contract — no change needed here beyond adding it to the registry below.
 
 ## Registry
 
@@ -16,6 +16,7 @@ This skill does not invent checks — it dispatches to whatever lives under `des
 |---|---|---|
 | Structure / topic coverage | `design-doc-review:outline` | Rarely — most gaps need author input (e.g. "what's the actual rollback plan"). Coordinator proposes a stub + a question, does not invent content. |
 | Prose / cognitive load | `design-doc-review:readability` | Yes — filler removal, hedge cleanup, front-loading, splitting mixed-purpose paragraphs are mechanical rewrites. |
+| Missing diagrams / comparison tables | `design-doc-review:visuals` | Rarely — coordinator can propose a mermaid/table skeleton with extracted axes, but correct diagram type and exact table columns need author confirmation; never auto-insert. |
 
 ## Phase 1 — Dispatch (parallel lean agents)
 
@@ -24,6 +25,7 @@ Launch one agent per registry row, **in a single message** (tier A, per lean-age
 ```
 Agent "outline": run design-doc-review:outline against <path>. Return only its JSON summary.
 Agent "readability": run design-doc-review:readability against <path>. Return only its JSON summary.
+Agent "visuals": run design-doc-review:visuals against <path>. Return only its JSON summary.
 ```
 
 If parallel dispatch is unavailable, drop to the next tier in lean-agent-loop's degraded-mode table (B: parallel foreground, C: serial, D: self-serial) and say which tier ran when you report results. Never report "skipped review" for a capability reason — only round-cap or genuine pass justifies stopping.
