@@ -1,4 +1,5 @@
-//! Native text compressor: ANSI strip, log dedup, blank line normalization.
+//! Native text compressor: CR-progress collapse, ANSI strip, log dedup,
+//! blank line normalization.
 //!
 //! Ports the observable compression behaviors from `compactor.py` / FusionEngine
 //! for plain text content blocks.  Operates entirely on `&str` → `String`.
@@ -30,7 +31,8 @@ impl TextCompressor {
     /// If the result would be longer than the input, the original is returned
     /// unchanged.
     pub fn compress(&self, text: &str) -> String {
-        let s = strip_ansi(text);
+        let s = collapse_carriage_returns(text);
+        let s = strip_ansi(&s);
         let s = dedup_consecutive_lines(&s);
         let s = normalize_blank_lines(&s);
         let s = dedup_log_timestamps(&s);
@@ -53,6 +55,27 @@ impl Default for TextCompressor {
 // ---------------------------------------------------------------------------
 // Transform helpers
 // ---------------------------------------------------------------------------
+
+/// Collapse `\r`-overwritten progress output (npm/pip/docker/curl-style
+/// progress bars) down to the last state a terminal would actually show.
+///
+/// Operates per `\n`-delimited line: within each line, everything before the
+/// last `\r`-separated segment was overwritten and never visible, so only
+/// the final non-empty segment survives. Lines with no `\r` pass through
+/// unchanged. This also normalizes stray CRLF line endings (a lone trailing
+/// `\r` on a line resolves to the segment before it).
+fn collapse_carriage_returns(text: &str) -> String {
+    text.split('\n')
+        .map(|line| {
+            if line.contains('\r') {
+                line.rsplit('\r').find(|seg| !seg.is_empty()).unwrap_or("")
+            } else {
+                line
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
+}
 
 /// Remove ANSI escape sequences.
 fn strip_ansi(text: &str) -> String {
@@ -182,6 +205,35 @@ fn dedup_log_timestamps(text: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn collapses_progress_bar() {
+        let input = "Downloading\r0%\r10%\r55%\r100%\ndone";
+        assert_eq!(collapse_carriage_returns(input), "100%\ndone");
+    }
+
+    #[test]
+    fn collapses_trailing_cr_without_final_segment() {
+        let input = "Downloading 100%\r\ndone";
+        assert_eq!(collapse_carriage_returns(input), "Downloading 100%\ndone");
+    }
+
+    #[test]
+    fn leaves_lines_without_cr_untouched() {
+        let input = "line one\nline two";
+        assert_eq!(collapse_carriage_returns(input), input);
+    }
+
+    #[test]
+    fn full_pipeline_shrinks_progress_bar_output() {
+        let bar: String = (0..=100).map(|p| format!("\rDownloading... {p}%")).collect();
+        let input = format!("{bar}\ndone");
+        let c = TextCompressor::new();
+        let result = c.compress(&input);
+        assert!(result.len() < input.len());
+        assert!(result.contains("Downloading... 100%"));
+        assert!(!result.contains("Downloading... 0%"));
+    }
 
     #[test]
     fn strips_ansi() {

@@ -30,8 +30,10 @@ use opentelemetry_sdk::metrics::{PeriodicReader, SdkMeterProvider};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 
+use claude_proxy_rs::compression::rewind::format_rewind_marker;
 use claude_proxy_rs::compression::{
-    collapse_common_prefix, compact_diff, is_diff, truncate_lines, TextCompressor,
+    collapse_common_prefix, compact_diff, compress_fenced_blocks, is_diff, truncate_lines,
+    SmartCrusher, TextCompressor,
 };
 
 mod metrics_store;
@@ -59,6 +61,12 @@ struct Cli {
     /// Directory to archive originals into (default: a temp dir).
     #[arg(long)]
     archive_dir: Option<PathBuf>,
+
+    /// Print the original (pre-compression) content archived under this hash
+    /// ID (as embedded in a `Retrieve: hash=...` marker) and exit. Looks in
+    /// `--archive-dir` (or its default) for `<hash>.orig`.
+    #[arg(long)]
+    retrieve: Option<String>,
 
     /// After other compression, cap output to this many lines total (head +
     /// tail), eliding the middle. 0 disables truncation.
@@ -145,6 +153,13 @@ fn spawn_reader<R: Read + Send + 'static>(
 /// the text, so composing them can only ever reduce size.
 fn compress_text(text: &str, max_lines: usize) -> (String, String) {
     if let Ok(value) = serde_json::from_str::<serde_json::Value>(text.trim()) {
+        if let Some(crushed) = SmartCrusher::new().compress(&value) {
+            if let Ok(serialized) = serde_json::to_string(&crushed) {
+                if serialized.len() < text.len() {
+                    return (serialized, "json-smart-crush".to_string());
+                }
+            }
+        }
         if let Ok(minified) = serde_json::to_string(&value) {
             if minified.len() < text.len() {
                 return (minified, "json-minify".to_string());
@@ -155,6 +170,13 @@ fn compress_text(text: &str, max_lines: usize) -> (String, String) {
 
     let (mut compressed, mut method) = if is_diff(text) {
         (compact_diff(text), "diff".to_string())
+    } else if let Some(code_compressed) = compress_fenced_blocks(text) {
+        let further = TextCompressor::new().compress(&code_compressed);
+        if further.len() < code_compressed.len() {
+            (further, "code-compress+text".to_string())
+        } else {
+            (code_compressed, "code-compress".to_string())
+        }
     } else {
         (TextCompressor::new().compress(text), "text".to_string())
     };
@@ -525,15 +547,17 @@ fn run_model_stats(dir: &Path, since_hours: i64, model_filter: Option<&str>, lim
     }
 }
 
-/// Persist the original bytes so a human can retrieve them later, keyed by
-/// a short sha256 prefix. Returns the archive path on success.
-fn archive_original(bytes: &[u8], dir: &Path) -> std::io::Result<PathBuf> {
+/// Persist the original bytes so they can be retrieved later (by a human via
+/// the printed path, or by the model via `--retrieve <hash>` against the
+/// `Retrieve: hash=...` marker appended to compressed output), keyed by a
+/// short sha256 prefix. Returns the archive path and hash ID on success.
+fn archive_original(bytes: &[u8], dir: &Path) -> std::io::Result<(PathBuf, String)> {
     std::fs::create_dir_all(dir)?;
     let digest = Sha256::digest(bytes);
     let hash = hex::encode(&digest[..8]);
     let path = dir.join(format!("{hash}.orig"));
     std::fs::write(&path, bytes)?;
-    Ok(path)
+    Ok((path, hash))
 }
 
 /// OTel metrics pipeline that persists to `metrics_store`'s SQLite exporter
@@ -632,6 +656,24 @@ fn main() {
         return;
     }
 
+    if let Some(hash) = &cli.retrieve {
+        let archive_dir = cli
+            .archive_dir
+            .clone()
+            .unwrap_or_else(|| std::env::temp_dir().join("cmdcrush"));
+        let path = archive_dir.join(format!("{hash}.orig"));
+        match std::fs::read(&path) {
+            Ok(bytes) => {
+                std::io::stdout().write_all(&bytes).ok();
+                return;
+            }
+            Err(e) => {
+                eprintln!("cmdcrush: failed to retrieve archive {}: {e}", path.display());
+                std::process::exit(1);
+            }
+        }
+    }
+
     let Some((program, args)) = cli.command.split_first() else {
         eprintln!("cmdcrush: no command given (or pass --history-stats)");
         std::process::exit(2);
@@ -711,9 +753,6 @@ fn main() {
     // it to save a few hundred bytes.
     let below_floor = total_before < cli.floor_bytes;
 
-    let original_for_archive;
-    let final_output;
-
     if mixed {
         // Rebuild in arrival order so the temporal relationship between the
         // two streams isn't silently discarded, tagging stderr lines since
@@ -735,12 +774,20 @@ fn main() {
         }
         let (compressed, method) = compress_text(&merged, cli.max_lines);
         print_result(cli.stats, &metrics, &cmd_label, "merged", merged.len(), compressed.len(), &method);
-        original_for_archive = merged.into_bytes();
-        final_output = compressed;
+        let original_for_archive = merged.into_bytes();
+        let mut final_output = compressed;
 
         if !cli.no_archive && !below_floor && final_output.len() < original_for_archive.len() {
             match archive_original(&original_for_archive, &archive_dir) {
-                Ok(path) => eprintln!("cmdcrush: original archived at {}", path.display()),
+                Ok((path, hash)) => {
+                    eprintln!("cmdcrush: original archived at {}", path.display());
+                    final_output.push('\n');
+                    final_output.push_str(&format_rewind_marker(
+                        original_for_archive.len(),
+                        final_output.len(),
+                        &hash,
+                    ));
+                }
                 Err(e) => eprintln!("cmdcrush: failed to archive original: {e}"),
             }
         }
@@ -750,12 +797,12 @@ fn main() {
     } else {
         // Only one stream had output — compress and print it to its own fd,
         // same contract as before.
-        let (compressed_stdout, out_method) = if has_stdout {
+        let (mut compressed_stdout, out_method) = if has_stdout {
             compress_text(&stdout_text, cli.max_lines)
         } else {
             (String::new(), "n/a".to_string())
         };
-        let (compressed_stderr, err_method) = if has_stderr {
+        let (mut compressed_stderr, err_method) = if has_stderr {
             compress_text(&stderr_text, cli.max_lines)
         } else {
             (String::new(), "n/a".to_string())
@@ -766,13 +813,25 @@ fn main() {
 
         if !cli.no_archive && !below_floor {
             if compressed_stdout.len() < stdout_text.len() {
-                if let Ok(path) = archive_original(stdout_text.as_bytes(), &archive_dir) {
+                if let Ok((path, hash)) = archive_original(stdout_text.as_bytes(), &archive_dir) {
                     eprintln!("cmdcrush: original stdout archived at {}", path.display());
+                    compressed_stdout.push('\n');
+                    compressed_stdout.push_str(&format_rewind_marker(
+                        stdout_text.len(),
+                        compressed_stdout.len(),
+                        &hash,
+                    ));
                 }
             }
             if compressed_stderr.len() < stderr_text.len() {
-                if let Ok(path) = archive_original(stderr_text.as_bytes(), &archive_dir) {
+                if let Ok((path, hash)) = archive_original(stderr_text.as_bytes(), &archive_dir) {
                     eprintln!("cmdcrush: original stderr archived at {}", path.display());
+                    compressed_stderr.push('\n');
+                    compressed_stderr.push_str(&format_rewind_marker(
+                        stderr_text.len(),
+                        compressed_stderr.len(),
+                        &hash,
+                    ));
                 }
             }
         }

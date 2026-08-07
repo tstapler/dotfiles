@@ -15,7 +15,7 @@ pub mod smart_crusher;
 pub mod text_compressor;
 
 // Re-exports for convenient use from other modules.
-pub use code_compressor::CodeCompressor;
+pub use code_compressor::{compress_fenced_blocks, CodeCompressor};
 pub use diff_compactor::{compact_diff, is_diff};
 pub use engine::{CompressionConfig, CompressionEngine, CompressionStats};
 pub use line_truncate::truncate_lines;

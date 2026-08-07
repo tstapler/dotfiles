@@ -11,7 +11,7 @@ use serde_json::{json, Value};
 use std::sync::Arc;
 use tracing::{debug, warn};
 
-use crate::compression::{RewindStore, TextCompressor};
+use crate::compression::{compress_fenced_blocks, RewindStore, TextCompressor};
 use crate::compression::rewind::{format_rewind_marker, REWIND_MARKER_PATTERN};
 
 // ---------------------------------------------------------------------------
@@ -210,7 +210,8 @@ impl CompressionEngine {
                     continue;
                 }
 
-                let compressed_text = self.text_compressor.compress(&text);
+                let code_compressed = compress_fenced_blocks(&text).unwrap_or(text.clone());
+                let compressed_text = self.text_compressor.compress(&code_compressed);
                 if compressed_text.len() < text.len() {
                     if let Some(t) = block.get_mut("text") {
                         *t = Value::String(compressed_text);

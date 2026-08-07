@@ -74,6 +74,16 @@ clap = { version = "4", features = ["derive"] }
 rusqlite = { version = "0.40.1", features = ["bundled"] }
 opentelemetry = "0.32.0"
 opentelemetry_sdk = { version = "0.32.1", features = ["metrics"] }
+tree-sitter = "0.26.11"
+tree-sitter-rust = "0.24.2"
+tree-sitter-python = "0.25.0"
+tree-sitter-javascript = "0.25.0"
+tree-sitter-typescript = "0.23.2"
+tree-sitter-go = "0.25.0"
+tree-sitter-bash = "0.25.1"
+tree-sitter-java = "0.23.5"
+tree-sitter-c = "0.24.2"
+tree-sitter-cpp = "0.23.4"
 
 [dev-dependencies]
 tempfile = "3"
