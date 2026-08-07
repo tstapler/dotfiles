@@ -63,6 +63,23 @@ built and evaluated:
    result side by side. A feature with low real-world impact is still worth
    shipping if it's cheap and safe, but say so plainly rather than
    overclaiming from the synthetic number.
+7. **Guard against regression with a checked-in test.**
+   `tests/compression_regression.rs` runs fixed fixtures (JSON array, fenced
+   code block, unified diff, CR progress bar, long unique text) through the
+   real `cmdcrush` binary and asserts both the never-worse invariant and a
+   minimum savings percentage per method. This runs in normal `cargo test`
+   (no network, no `#[ignore]`) — it exists specifically so a change that
+   silently breaks or weakens a compression stage fails CI, since
+   `--history-stats` alone depends on a live `~/.claude/projects` corpus that
+   isn't checked in and isn't run automatically.
+8. **Sanity-check fidelity with an LLM judge (manual only).**
+   `tests/e2e_fidelity_judge.rs` compresses a fixture, then asks the `claude`
+   CLI to compare original vs. compressed and report a 1-10 fidelity score
+   plus any specific lost details. `#[ignore]`d by default (network + tokens
+   + subjective); run manually with
+   `cargo test --test e2e_fidelity_judge -- --ignored --nocapture` and read
+   the printed verdicts — byte-count tests can't tell you *what* was lost,
+   only whether bytes shrank.
 
 ## Toolchain gotchas (this environment)
 
