@@ -169,7 +169,7 @@ prompt: |
   #### Thread Processing
 
   Use the `github-address-pr-comments` skill (`~/.claude/skills/github-address-pr-comments/SKILL.md`) to:
-  1. Fetch all unresolved threads (single GraphQL call)
+  1. Fetch all unresolved threads (single GraphQL call) — via the shared `~/.claude/scripts/pr-threads.py fetch` script, the same one Gate 4's staleness re-check and `/code:review` use, so all three stay in sync on one aggregation implementation instead of drifting.
   2. For each thread: fix/decline/defer per decision rules below
   3. Reply + resolve each thread
   4. Commit any code changes locally (do NOT push yet — push happens in Gate 4)
@@ -181,7 +181,7 @@ prompt: |
   - **Decline**: only if factually wrong or contradicts a documented design decision
   - **CHANGES_REQUESTED**: treat every item as blocking
 
-  Mark `[x]` when all threads are resolved or explicitly declined with a reply.
+  Mark `[x]` when all threads are resolved or explicitly declined with a reply. Record the check time in the state file as `Gate 3 last verified: <ISO8601 timestamp of this check>` — Gate 4 diffs against this, not a guess, to decide if anything new landed.
 
   ### Gate 4 — Remote CI
 
@@ -197,7 +197,14 @@ prompt: |
   ```
 
   - **Pending/in_progress**: use `ScheduleWakeup` (see Pacing section) and stop. Do not mark gate.
-  - **All success**: check for any new PR review comments added since the push (re-run Gate 3 check). If new unresolved threads exist, reset Gate 3 to `[ ]` and loop. Otherwise mark Gate 4 `[x]`.
+  - **All success**: re-run the Gate 3 staleness check using the **same shared script** `github-address-pr-comments` uses for thread fetching — this is the fix for a real incident where a bot comment landed after Gate 3's last check and the loop never re-polled GitHub because it trusted a stale "all green" state file:
+    ```bash
+    python3 ~/.claude/scripts/pr-threads.py summary \
+      --owner "$OWNER" --repo "$REPO_NAME" --pr "$PR" \
+      --since "<Gate 3 last verified timestamp from state file>" \
+      [--hostname <enterprise-host-if-applicable>]
+    ```
+    Read `new_since_count` from the JSON output — do not eyeball `unresolved_count` alone, since a thread can be unresolved-but-already-known. If `new_since_count > 0`, reset Gate 3 to `[ ]`, log the new thread count in Decision Log, and loop. If `new_since_count == 0`, mark Gate 4 `[x]`.
   - **Failing**: collect the logs:
     ```bash
     gh run list --branch $(git branch --show-current) \

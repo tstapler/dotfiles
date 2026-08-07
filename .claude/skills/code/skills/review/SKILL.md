@@ -68,6 +68,27 @@ If a demanded lens isn't among the five, launch an extra targeted reviewer for i
 
 ---
 
+### Step 0.5: Fetch Live PR Review Threads (if a PR exists)
+
+This diff review is blind to feedback that's already been posted on GitHub — a bot or human reviewer's outstanding comment shouldn't be re-flagged as new, and a real gap here is what let a `pr-ship` gate loop trust a stale "all resolved" snapshot after a bitbot comment landed later uncaught. Use the same shared script `github-address-pr-comments` and `github:pr-ship` use, so all three stay on one aggregation implementation:
+
+```bash
+PR=$(gh pr list --head "$(git branch --show-current)" --json number --jq '.[0].number')
+```
+
+If no open PR exists for the current branch, skip this step and note "No open PR — live thread check skipped" in the report.
+
+Otherwise:
+```bash
+REPO_NWO=$(gh repo view --json nameWithOwner --jq '.nameWithOwner')
+OWNER="${REPO_NWO%%/*}"; REPO_NAME="${REPO_NWO##*/}"
+python3 ~/.claude/scripts/pr-threads.py summary --owner "$OWNER" --repo "$REPO_NAME" --pr "$PR" [--hostname <enterprise-host-if-applicable>]
+```
+
+Store the `unresolved` array as `LIVE_THREADS`. Inject a summary of it into every Step 1 agent's prompt alongside `DIFF_SUMMARY` — e.g. "Known outstanding review threads: [file:line — one-line summary]. Do not re-report these as new findings; note in your output if your finding overlaps one." This keeps the diff-based agents from duplicating what's already tracked live on GitHub, and surfaces threads that predate this review run.
+
+---
+
 ### Step 1: Parallel Agent Invocation
 
 Launch only the relevant agents simultaneously based on the flags from Step 0. Each receives `DIFF_SUMMARY` from Step 0.
@@ -78,28 +99,29 @@ Launch only the relevant agents simultaneously based on the flags from Step 0. E
 - **Database Agent**: Launch only if `HAS_DB_CODE` is true. If false, record "Database: No SQL or ORM code in diff — skipped." and proceed.
 - **Security Agent**: Always launch (security issues can appear anywhere; OWASP checklist self-gates per category).
 
-**Testing Quality Agent**:
+**Testing Quality Agent**: dispatch by language rather than a fixed framework persona — detect the diff's primary language(s) from file extensions before building the prompt (`*.go` → Go, `*.java`/`*.kt` → JVM, etc.), and tell the agent which skill(s) to load for that language so review language matches the codebase instead of defaulting to JVM/Spring vocabulary.
+
 ```
 Agent(
-  subagent_type: "spring-boot-testing",
+  subagent_type: "testing-quality-master",
   description: "Review test quality in ${1:-.}",
   prompt: """
   CONTEXT: {DIFF_SUMMARY}
 
+  Before reviewing: identify the primary language/framework of the code under review, then invoke the Skill tool for the matching testing skill to load its language-specific idioms and checklists before evaluating — e.g. `golang-testing` for Go, `spring-boot-testing` for Java/Spring, or the closest equivalent for anything else. If no matching skill exists, proceed with your general language-agnostic principles alone and say so.
+
   Review tests in ${1:-.} using a checklist approach — evaluate every item even after finding issues in prior categories.
 
   Checklist:
-  1. Anti-patterns:
-     - Implementation coupling (mocking TransactionTemplate, ArgumentCaptor overuse)
+  1. Anti-patterns (apply the language-specific list from the loaded skill; if none, use these language-agnostic defaults):
+     - Implementation coupling (asserting on internals/private state instead of observable behavior)
      - Over-mocking internal collaborators
-     - Environment mismatches (H2 instead of PostgreSQL)
+     - Environment mismatches (fake/in-memory substitute diverging from production behavior, e.g. H2 instead of PostgreSQL)
      - Coverage theater (high line count, low behavior confidence)
      - Fragile tests that break on refactoring
+     - Copy-paste test clusters that should be table-driven / parameterized (the loaded skill should say what idiomatic parameterization looks like in this language)
 
-  2. ADR compliance:
-     - ADR-0016: Integration tests for persistence layer
-     - ADR-0017: PostgreSQL TestContainers configuration
-     - @AutoConfigureTestDatabase(replace = NONE) usage
+  2. Project/framework conventions from the loaded skill (e.g. ADR-0016/ADR-0017 + TestContainers for Spring; table-driven tests + `t.Run` subtests + `goleak` for Go) — flag deviations from the codebase's own established conventions, not just the skill's defaults.
 
   3. Test confidence:
      - Do tests verify behavior or implementation details?
@@ -123,6 +145,8 @@ Agent(
   description: "Review code quality in ${1:-.}",
   prompt: """
   CONTEXT: {DIFF_SUMMARY}
+
+  Before reviewing: identify the primary language/framework of the code under review, then invoke the Skill tool for the matching code-quality skill (e.g. `golang-code-style`, `golang-design-patterns`, `golang-safety` for Go; `spring-boot-java-development` for Java/Spring) to load its idioms before evaluating. If none matches, proceed on the checklist below alone.
 
   Review code in ${1:-.}. Use a checklist approach.
 
@@ -178,6 +202,8 @@ Agent(
   description: "Review architecture in ${1:-.}",
   prompt: """
   CONTEXT: {DIFF_SUMMARY}
+
+  Before reviewing: identify the primary language/framework of the code under review, then invoke the Skill tool for the matching architecture skill (e.g. `golang-project-layout`, `golang-design-patterns` for Go; `spring-boot-java-development` for Java/Spring) to load its conventions before evaluating. If none matches, proceed on the checklist below alone.
 
   Review architecture in ${1:-.}. Evaluate every checklist category.
 
@@ -395,6 +421,14 @@ Compile the final report after the skeptic pass.
 ## Dimensions Not Applicable
 
 - **Database**: No SQL or ORM code in diff — skipped.
+
+---
+
+## Live PR Review Threads (unresolved)
+
+- `path/file.ext:88` — @reviewer (opened [date]): one-line summary of the comment. Not yet addressed.
+
+(Omit this section entirely if Step 0.5 found no open PR or zero unresolved threads.)
 
 ---
 
