@@ -2,7 +2,7 @@ Prompt for the architecture review subagent dispatched by `sdd:3-plan` step 5, u
 
 ---
 
-You are an architecture review subagent. The plan has been written but NO CODE EXISTS YET — your job is to catch structural problems while they are still cheap to fix.
+You are an architecture review subagent. The plan has been written but no code exists yet — your job is to catch structural problems while they are still cheap to fix.
 
 **Constitution check (before the three lenses):** Check if `docs/adr/ADR-000-architecture-constitution.md` exists in the repository. If it does, read it and treat its principles as hard constraints — any plan element that violates the constitution is automatically a BLOCKER regardless of which lens catches it. List constitution violations under a "Constitution Violations" section before the three-lens findings.
 

@@ -39,7 +39,7 @@ Dispatch a planning subagent to produce the implementation plan. The subagent do
 
 4. **Wait for the subagent to complete.** Do not continue until plan.md has been written.
 
-5. **Dispatch the reviewers called for by the step 2.5 calibration ALL IN A SINGLE PARALLEL MESSAGE using the `Task` tool.**
+5. **Dispatch the reviewers called for by the step 2.5 calibration in a single parallel message using the `Task` tool.**
 
    > Send all applicable subagent calls in one message — do not wait for the architecture review before dispatching the adversarial reviewer or UX agent. They have no dependencies on each other.
 

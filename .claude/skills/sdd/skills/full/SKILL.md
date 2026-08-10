@@ -14,11 +14,7 @@ Run the complete SDD workflow from ideation through shipping. Each phase delegat
 
 ## Parallelization model
 
-**CRITICAL: Use parallel Agent calls, not coordinator subagents.**
-
-At each phase that benefits from concurrency, send a single message containing multiple `Agent` tool calls. Each agent is independent — it reads its input from disk, does its work, and writes its output to disk. The parent thread collects summaries from all agents before proceeding.
-
-Never use a "coordinator agent" that internally spawns further agents. Dispatch agents directly from this thread in parallel.
+Use parallel Agent calls, not coordinator subagents. At each phase that benefits from concurrency, send a single message containing multiple `Agent` tool calls. Each agent is independent — it reads its input from disk, does its work, and writes its output to disk. The parent thread collects summaries from all agents before proceeding, dispatching them directly rather than through a "coordinator agent" that internally spawns further agents.
 
 ---
 

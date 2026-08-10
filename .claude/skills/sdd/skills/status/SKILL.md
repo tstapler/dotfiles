@@ -38,7 +38,7 @@ Detect the current SDD phase by checking which artifacts exist, then tell the us
 - ❌ implementation/validation.md
 
 ### Session boundary
-⚠️  Phases 1–4 are planning. Open a FRESH SESSION before running /sdd:5-implement.
+⚠️  Phases 1–4 are planning. Open a fresh session before running /sdd:5-implement.
     Planning context degrades implementation quality.
 ```
 
