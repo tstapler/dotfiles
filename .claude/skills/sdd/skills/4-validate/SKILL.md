@@ -18,7 +18,17 @@ Dispatch a validation subagent to design the test suite. The subagent writes val
    - `project_plans/<PROJECT_NAME>/requirements.md`
    - `project_plans/<PROJECT_NAME>/design/ux.md` — if present, include in subagent prompt for UX acceptance test design; skip if absent
 
-3. **Dispatch THREE subagents in a single parallel message using the `Task` tool: the validation subagent, the pre-mortem subagent, AND the cross-artifact consistency subagent.**
+2.5. **Calibrate validation depth from the Complexity field in requirements.md**:
+   - **Complexity 1**: Dispatch the validation subagent only (1 test per requirement, skip the
+     unit+error+integration triad). Skip pre-mortem and cross-artifact-consistency subagents.
+     Skip the Product Triad Review gate (step 6).
+   - **Complexity 2**: Dispatch validation + pre-mortem. Skip cross-artifact-consistency unless
+     both design/ux.md and plan.md exist (terminology drift only matters with ≥2 artifacts to
+     drift between). Triad review still runs.
+   - **Complexity 3–4**: Current behavior — all three subagents + triad review.
+   - If no Complexity field found: treat as Complexity 2.
+
+3. **Dispatch subagents per the calibration above in a single parallel message using the `Task` tool** (at Complexity 3-4, all three: the validation subagent, the pre-mortem subagent, AND the cross-artifact consistency subagent).
 
    > Send all three calls in one message — they are independent and share only the plan.md / requirements.md inputs.
 

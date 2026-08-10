@@ -17,6 +17,19 @@ Dispatch a planning subagent to produce the implementation plan. The subagent do
    - `project_plans/<PROJECT_NAME>/requirements.md` — halt if missing
    - `project_plans/<PROJECT_NAME>/research/*.md` — warn if missing, continue with requirements only
 
+2.5. **Calibrate plan depth from the Complexity field in requirements.md**:
+   - **Complexity 1**: Omit Domain Glossary unless ≥2 new domain types are introduced. Mark
+     Migration Plan / Observability Plan / Risk Control as "N/A — complexity 1" without
+     elaboration. Dispatch only the adversarial reviewer (skip architecture-review and UX
+     subagents unless requirements.md explicitly names a user-facing surface). Repair loop
+     max: 2 iterations.
+   - **Complexity 2**: Full plan.md template. Dispatch adversarial reviewer always; dispatch
+     architecture-review only if the plan touches ≥3 files or introduces a new package/module
+     boundary. UX subagent only if user-facing. Repair loop max: 3 iterations.
+   - **Complexity 3–4**: Current behavior — all sections, all three reviewers, 5-iteration
+     repair loops.
+   - If no Complexity field found: treat as Complexity 2 (not 3-4).
+
 3. **Dispatch a planning subagent using the `Task` tool.**
 
    The subagent prompt must include:
@@ -230,7 +243,12 @@ Dispatch a planning subagent to produce the implementation plan. The subagent do
    >
    > **Step 1:** Identify all user-facing surfaces (screens, modals, flows, error states, empty states, loading states).
    >
-   > **Step 2:** For each surface, produce:
+   > For non-interactive surfaces (config files, log/CLI output, headless flags) — write a condensed
+   > entry: one representative code/output sample + 3-5 bullet acceptance criteria. Reserve the full
+   > wireframe + interaction-flow + error-state-table treatment for surfaces a user actually clicks
+   > or types into.
+   >
+   > **Step 2:** For each interactive surface, produce:
    > - An ASCII wireframe or flow diagram showing the layout and interaction model
    > - The interaction flow: what the user does and what the system responds with at each step
    > - Error and edge-case handling: what the user sees when something fails

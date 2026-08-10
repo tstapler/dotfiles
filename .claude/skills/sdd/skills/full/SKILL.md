@@ -28,7 +28,9 @@ Read `.claude/commands/sdd/1-ideate.md` and execute its instructions exactly.
 
 Orchestration addition: if `$ARGUMENTS[0]` was provided, use it as the project name and skip the project name question.
 
-After writing requirements.md, confirm with the user before proceeding:
+After writing requirements.md, check the Complexity field it derived. If Complexity is 1: stop and suggest `/sdd:quick` instead — "This scored Complexity 1 (bug fix / small refactor). /sdd:full's remaining phases (research/plan/validate/verify) are built for Complexity 2+ work and will produce more planning artifact than the task needs. Continue with /sdd:full anyway, or switch to /sdd:quick?" — then proceed per the user's choice.
+
+Otherwise, confirm with the user before proceeding:
 ```
 header: "Continue"
 question: "requirements.md written. Proceed with automated research, planning, and validation?"
@@ -39,38 +41,38 @@ options:
 
 ---
 
-## Phase 2 — Research (6 parallel Agent calls)
+## Phase 2 — Research (parallel Agent calls)
 
-Read `.claude/commands/sdd/2-research.md` for the full agent prompts and output file paths.
+Read `.claude/commands/sdd/2-research.md` for the full agent prompts, output file paths, and the complexity calibration in step 2.5 — that step decides how many of the 6 agents actually run, do not hardcode 6 here.
 
-Dispatch all 6 research agents in a **single parallel message** from this thread. Each agent reads requirements.md, does its research, writes its file, and returns a 3-bullet summary.
+Dispatch the calibrated set of research agents in a **single parallel message** from this thread. Each agent reads requirements.md, does its research, writes its file, and returns a 3-bullet summary.
 
-Wait for all 6 to complete. Do not re-read research files in full — use the summaries.
+Wait for all dispatched agents to complete. Do not re-read research files in full — use the summaries.
 
 ---
 
 ## Phase 3 — Plan (parallel Agent calls)
 
-Read `.claude/commands/sdd/3-plan.md` for the full planning, architecture review, adversarial review, and UX design agent prompts.
+Read `.claude/commands/sdd/3-plan.md` for the full planning, architecture review, adversarial review, and UX design agent prompts, and the complexity calibration in step 2.5 — that step decides which reviewers actually run and the repair-loop iteration cap, do not hardcode "all three" here.
 
 Orchestration:
 1. Dispatch the **planning/synthesis agent** first (it must write plan.md before reviewers can read it)
-2. Once plan.md exists, dispatch the **architecture review agent**, **adversarial reviewer agent**, and (for user-facing features) **UX design agent** all in a single parallel message
+2. Once plan.md exists, dispatch the reviewers called for by the calibration (adversarial reviewer always; architecture review and UX design only when the calibration says so) in a single parallel message
 3. If any reviewer returns BLOCKED: patch plan.md and re-run that reviewer only
-4. Do not proceed until all reviewers are CONCERNS or CLEAN
+4. Do not proceed until all dispatched reviewers are CONCERNS or CLEAN
 
 Wait for all to complete. Use summaries — do not re-read plan.md in full.
 
 ---
 
-## Phase 4 — Validate (three parallel Agent calls)
+## Phase 4 — Validate (parallel Agent calls)
 
-Read `.claude/commands/sdd/4-validate.md` for the full subagent prompts and readiness gate criteria.
+Read `.claude/commands/sdd/4-validate.md` for the full subagent prompts, readiness gate criteria, and the complexity calibration in step 2.5 — that step decides which of the validation/pre-mortem/cross-artifact-consistency agents actually run and whether the triad review gate applies, do not hardcode "three" here.
 
-Dispatch the **validation agent**, **pre-mortem agent**, and **cross-artifact consistency agent** in a single parallel message. Wait for all three to complete.
+Dispatch the calibrated set of agents in a single parallel message. Wait for all dispatched agents to complete.
 
 If the readiness gate returns FAIL: patch plan.md for P1 pre-mortem items, halt and surface remaining failures to the user. Do not proceed to Phase 5.
-If the triad review returns NOT READY: halt and tell the user which leg to fix first.
+If the triad review runs and returns NOT READY: halt and tell the user which leg to fix first.
 
 ---
 
