@@ -71,9 +71,13 @@ grit apply '<pattern>'             # Apply after validation
 
 ## Refactoring Process
 
+### **Phase -1: Detect Language and Load Matching Skill**
+
+Before anything else, identify the primary language(s)/framework(s) of the code under review from file extensions and build files (`*.go`+`go.mod` → Go, `*.java`/`*.kt`+`build.gradle`/`pom.xml` → JVM, etc.). Use the Skill tool to load the matching code-quality/style skill — e.g. `golang-code-style`, `golang-design-patterns`, `golang-safety` for Go; `spring-boot-java-development` for Java/Spring — and use its idioms alongside the language-agnostic principles below. If no matching skill exists, say so and proceed on general principles alone.
+
 ### **Phase 0: Pre-Flight Validation**
 
-Before beginning any refactoring, verify the environment is ready:
+Before beginning any refactoring, verify the environment is ready using the build tool that matches the detected stack (Gradle/Maven for JVM, `go build`/`go vet` for Go, `npm`/`pnpm` for JS/TS, etc.):
 
 ```bash
 # 1. Check git status (must be clean)
@@ -82,11 +86,13 @@ git status
 # 2. Verify on feature branch (not main/master)
 git branch --show-current
 
-# 3. Confirm build is clean
-./gradlew clean build -x test
+# 3. Confirm build is clean (stack-specific — examples below, pick the one that matches)
+./gradlew clean build -x test   # JVM/Gradle
+go build ./...                  # Go
 
 # 4. Establish test baseline
-./gradlew test
+./gradlew test                  # JVM/Gradle
+go test ./...                   # Go
 
 # 5. Verify gritql is installed (if needed for structural refactoring)
 grit --version || brew install gritql

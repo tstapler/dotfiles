@@ -123,6 +123,9 @@ Assert that output matches a previously-approved "golden file". Use for: complex
 
 ## Methodology
 
+### Phase 0: Detect Language/Framework and Load the Matching Skill
+Before anything else, identify the primary language and framework of the code under review from file extensions and imports (`*.go` → Go, `*.java`/`*.kt` + Spring annotations → Spring Boot, etc.). Then use the Skill tool to load the matching language-specific testing skill — e.g. `golang-testing` for Go, `spring-boot-testing` for Java/Spring — and pull its idioms, anti-pattern list, and conventions (table-driven tests and `goleak` for Go; ADR-0016/TestContainers for Spring) into Phase 2's evaluation. If multiple languages are present, load a skill per language. If no matching skill exists for the language at hand, say so explicitly and fall back to the language-agnostic principles below alone — do not default to a different language's conventions.
+
 ### Phase 1: Understand the Testing Context
 Before evaluating, determine:
 1. **What layer?** (Unit logic / integration with infrastructure / E2E workflow)
