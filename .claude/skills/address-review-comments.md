@@ -89,6 +89,13 @@ Read the file referenced in `path`. Focus on the lines around `line` (+/- 30 lin
 
 When accepting, make the code change using Edit/Write tools. Group related fixes in the same file together. After all fixes for a file are applied, move to the next file.
 
+**For "bug, logic error, or incorrect behavior" fixes specifically**, don't move on once the code compiles — confirm a test would actually catch a regression:
+
+- An existing test now exercises the changed path → run it, confirm it fails without your fix (temporarily revert, rerun, then reapply) and passes with it.
+- No existing test covers it → add one, and run the same revert-rerun check before moving to the next thread.
+
+This is not optional busywork: a docspan PR #69 review round shipped a residue-discard fix (docs_request_builder.py `_align_for_styling`) with zero test coverage — round 1 accepted the fix as complete, and round 2's independent reviewers only caught the gap by manually reverting the fix and finding the full suite still green. The revert-rerun check above is that same catch, done before the fix ships instead of by the next reviewer.
+
 ### Respond to the Thread
 
 Use `gh` REST API to reply:
