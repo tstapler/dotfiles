@@ -161,18 +161,23 @@ def attribute(path, stats, warnings):
                 name = c.get("name")
                 inp = c.get("input", {}) or {}
                 if name in ("Agent", "Task"):
-                    sub = inp.get("subagent_type") or "unknown"
+                    sub = inp.get("subagent_type")
+                    if not sub:
+                        # The Agent tool's own default: omitting
+                        # subagent_type runs the general-purpose agent —
+                        # not missing data.
+                        sub = "general-purpose" if name == "Agent" else "unknown"
+                        if sub == "unknown":
+                            warnings.append(
+                                {
+                                    "type": "unknown_subagent_type",
+                                    "path": path,
+                                    "line": line_no,
+                                    "detail": f"tool_use {c.get('id')} ({name}) had "
+                                    "no subagent_type in its input",
+                                }
+                            )
                     label = "agent:" + sub
-                    if sub == "unknown":
-                        warnings.append(
-                            {
-                                "type": "unknown_subagent_type",
-                                "path": path,
-                                "line": line_no,
-                                "detail": f"tool_use {c.get('id')} had no "
-                                "subagent_type in its input",
-                            }
-                        )
                     stats[label]["count"] += 1
                     if c.get("id"):
                         pending_agents[c["id"]] = label
