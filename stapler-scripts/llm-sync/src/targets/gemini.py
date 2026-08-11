@@ -12,6 +12,33 @@ console = Console()
 # https://github.com/google-gemini/gemini-cli/blob/main/docs/reference/configuration.md
 # Gemini uses .gemini/agents/*.md, .gemini/skills/*/SKILL.md, .gemini/commands/*.toml
 
+_ARGUMENTS_TOKEN = "$ARGUMENTS"
+
+
+def build_antigravity_skill_content(cmd: Command) -> str:
+    """Build SKILL.md content for a Claude command synced to Antigravity.
+
+    Antigravity skills are auto-triggered by relevance, not explicitly invoked
+    with positional arguments like Claude commands — there's no {{args}}-style
+    substitution target, so a bare $ARGUMENTS token would sync as dead text.
+    Warn during sync and annotate the file so it's visible later too.
+    """
+    content = cmd.content
+    if _ARGUMENTS_TOKEN in content:
+        console.print(
+            f"[yellow]Warning: command '{cmd.name}' uses $ARGUMENTS, which Antigravity "
+            "skills cannot receive (no invocation-time argument mechanism) — "
+            "annotating SKILL.md instead of silently dropping it[/yellow]"
+        )
+        content = (
+            "<!-- llm-sync: this command used $ARGUMENTS in Claude Code. Antigravity "
+            "skills have no invocation-time argument mechanism, so this text is inert "
+            "here — see AGENTS.md. -->\n\n" + content
+        )
+    frontmatter = {"name": cmd.name, "description": cmd.description}
+    fm_yaml = yaml.dump(frontmatter, sort_keys=False)
+    return f"---\n{fm_yaml}---\n\n{content}"
+
 
 class GeminiTarget(SyncTarget, SyncSource):
     def __init__(
@@ -236,9 +263,7 @@ class GeminiTarget(SyncTarget, SyncSource):
             flat_name = cmd.name.replace("/", "-").replace("\\", "-")
             skill_file = self.skills_dir / flat_name / "SKILL.md"
             if not skill_file.exists() or force:
-                frontmatter = {"name": cmd.name, "description": cmd.description}
-                fm_yaml = yaml.dump(frontmatter, sort_keys=False)
-                skill_content = f"---\n{fm_yaml}---\n\n{cmd.content}"
+                skill_content = build_antigravity_skill_content(cmd)
 
                 if dry_run:
                     console.print(f"[blue]Would write {skill_file} (antigravity)[/blue]")
@@ -275,9 +300,7 @@ class AntigravityTarget(GeminiTarget):
             flat_name = cmd.name.replace("/", "-").replace("\\", "-")
             skill_file = self.skills_dir / flat_name / "SKILL.md"
             if not skill_file.exists() or force:
-                frontmatter = {"name": cmd.name, "description": cmd.description}
-                fm_yaml = yaml.dump(frontmatter, sort_keys=False)
-                skill_content = f"---\n{fm_yaml}---\n\n{cmd.content}"
+                skill_content = build_antigravity_skill_content(cmd)
 
                 if dry_run:
                     console.print(f"[blue]Would write {skill_file} (antigravity command)[/blue]")
