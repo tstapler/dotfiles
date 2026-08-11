@@ -28,13 +28,66 @@ pub fn run_check(check: &Check, repo_root: &Path, file_path: &Path) -> anyhow::R
     let mut combined = String::from_utf8_lossy(&output.stdout).into_owned();
     combined.push_str(&String::from_utf8_lossy(&output.stderr));
 
+    let mut severity = check.severity;
+    let mut message = check.message.clone();
+
+    if !passed && severity == Severity::Blocking && check.command.contains("{file}") {
+        if let Some(false) = check_against_git_head(check, repo_root, file_path) {
+            severity = Severity::Advisory;
+            message = Some(format!(
+                "{} (downgraded: this violation predates your edits — already present in \
+                 the git HEAD version of this file)",
+                message.unwrap_or_default()
+            ));
+        }
+    }
+
     Ok(CheckResult {
         check_name: check.name.clone(),
-        severity: check.severity,
+        severity,
         passed,
         output: combined,
-        message: check.message.clone(),
+        message,
     })
+}
+
+/// Re-run `check` against the file's `git show HEAD:<relpath>` content to determine
+/// whether a current failure predates this session's edits. Returns `Some(true)` if the
+/// baseline also fails (pre-existing violation, not introduced by the current edit),
+/// `Some(false)` if the baseline passes (the edit genuinely introduced this failure), or
+/// `None` if the baseline can't be determined (untracked file, no HEAD, not a git repo,
+/// etc.) — callers should treat `None` as "can't tell, don't suppress."
+fn check_against_git_head(check: &Check, repo_root: &Path, file_path: &Path) -> Option<bool> {
+    let rel_path = relativize(repo_root, file_path);
+    let show = Command::new("git")
+        .args(["show", &format!("HEAD:{rel_path}")])
+        .current_dir(repo_root)
+        .output()
+        .ok()?;
+    if !show.status.success() {
+        return None;
+    }
+
+    let ext = file_path.extension().and_then(|e| e.to_str()).unwrap_or("");
+    let mut tmp_path = file_path.to_path_buf();
+    let tmp_name = format!(
+        ".kibitzer-head-{}{}",
+        std::process::id(),
+        if ext.is_empty() { String::new() } else { format!(".{ext}") }
+    );
+    tmp_path.set_file_name(tmp_name);
+    std::fs::write(&tmp_path, &show.stdout).ok()?;
+
+    let cmd_str = check.command.replace("{file}", &tmp_path.display().to_string());
+    let result = Command::new("sh")
+        .arg("-c")
+        .arg(&cmd_str)
+        .current_dir(repo_root)
+        .output();
+
+    let _ = std::fs::remove_file(&tmp_path);
+
+    result.ok().map(|out| out.status.success())
 }
 
 /// Run every check in `checks` that applies to `trigger` and whose scope matches

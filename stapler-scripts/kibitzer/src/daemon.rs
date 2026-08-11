@@ -145,9 +145,10 @@ fn handle_run_checks(
         return Ok(cached);
     }
 
-    let results = run_checks_for_trigger(&config.checks, trigger, &repo_root, file_path)?;
+    let mut results = run_checks_for_trigger(&config.checks, trigger, &repo_root, file_path)?;
 
     if let Ok(mut guard) = cache.lock() {
+        guard.apply_grace(&mut results, file_path, trigger);
         guard.put(file_path, &config_path, trigger, results.clone());
         let _ = guard.save(cache_path);
     }
@@ -212,5 +213,14 @@ pub fn run_checks_smart(cwd: &Path, file_path: &Path, trigger: &str) -> Result<V
     let Some((config, repo_root)) = find_config(cwd)? else {
         return Ok(Vec::new());
     };
-    run_checks_for_trigger(&config.checks, trigger, &repo_root, file_path)
+    let config_path = repo_root.join(CONFIG_DIR).join(CONFIG_FILENAME);
+    let mut results = run_checks_for_trigger(&config.checks, trigger, &repo_root, file_path)?;
+
+    let cache_path = default_cache_path();
+    let mut cache = Cache::load(&cache_path);
+    cache.apply_grace(&mut results, file_path, trigger);
+    cache.put(file_path, &config_path, trigger, results.clone());
+    let _ = cache.save(&cache_path);
+
+    Ok(results)
 }

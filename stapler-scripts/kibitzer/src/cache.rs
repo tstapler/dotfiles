@@ -7,6 +7,7 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
 use crate::check::CheckResult;
+use crate::config::Severity;
 
 /// A cheap fingerprint of a file's on-disk state, used to invalidate cache entries
 /// without hashing file contents.
@@ -45,6 +46,10 @@ struct CacheEntry {
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct Cache {
     entries: HashMap<String, CacheEntry>,
+    /// (file_path, check_name) pairs that have failed a blocking check at least once
+    /// under a live per-edit trigger without yet passing again — see `apply_grace`.
+    #[serde(default)]
+    grace_pending: HashMap<String, bool>,
 }
 
 impl Cache {
@@ -102,6 +107,37 @@ impl Cache {
                 results,
             },
         );
+    }
+
+    /// Give a first-time blocking failure one edit's grace before it actually blocks:
+    /// the first time a given (file, check) pair fails under a live per-edit trigger
+    /// (anything other than "batch"), downgrade it to advisory instead of blocking.
+    /// Only escalate back to blocking if it's *still* failing the next time this file
+    /// is checked — i.e. a multi-step edit (add a reference-style link use, then its
+    /// definition in a later edit) gets one edit's worth of slack to self-correct, but
+    /// a violation that never gets fixed still blocks on the very next touch. Batch
+    /// mode (pre-commit-style, not a live hook) always enforces immediately.
+    pub fn apply_grace(&mut self, results: &mut [CheckResult], file_path: &Path, trigger: &str) {
+        if trigger == "batch" {
+            return;
+        }
+        for result in results.iter_mut() {
+            if result.severity != Severity::Blocking {
+                continue;
+            }
+            let grace_key = format!("{}::{}", key(file_path), result.check_name);
+            if result.passed {
+                self.grace_pending.remove(&grace_key);
+                continue;
+            }
+            if self.grace_pending.insert(grace_key, true) != Some(true) {
+                result.severity = Severity::Advisory;
+                result.output.push_str(
+                    "\n[kibitzer] first occurrence this edit sequence — will block if still \
+                     failing on the next edit to this file",
+                );
+            }
+        }
     }
 }
 
