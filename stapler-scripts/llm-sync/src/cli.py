@@ -173,6 +173,23 @@ def sync_plugins(plugin_source: PluginSource, dry_run: bool, antigravity_dir: Op
 
     console.print(f"\n[bold]Installing {len(plugins)} plugin(s)...[/bold]")
 
+    if plugin_source.marketplace_plugin_dirs:
+        marketplace_dirs = {str(d) for d in plugin_source.marketplace_plugin_dirs}
+        marketplace_plugins = [
+            p for p in plugins
+            if p.source_dir and p.source_dir in marketplace_dirs
+        ]
+        if marketplace_plugins:
+            # Marketplace plugins have no per-project variant; always global.
+            installer = ClaudePluginInstaller(target_dir=Path.home() / ".claude")
+            console.print(f"[dim]Claude Global install (marketplace) -> {installer.target_dir}[/dim]")
+            installer.install_plugins(marketplace_plugins, dry_run=dry_run)
+
+            ag_target = (antigravity_dir or (Path.home() / ".gemini" / "antigravity-cli")) / "plugins"
+            ag_installer = AntigravityPluginInstaller(target_dir=ag_target)
+            console.print(f"[dim]Antigravity Global install (marketplace) -> {ag_installer.target_dir}[/dim]")
+            ag_installer.install_plugins(marketplace_plugins, dry_run=dry_run)
+
     if plugin_source.global_plugins_dir:
         global_plugins = [
             p for p in plugins
