@@ -163,7 +163,7 @@ Agent(
      - Naming clarity and consistency
      - DRY violations
      - Magic numbers/strings
-     - Comment quality (only WHY is needed; WHAT is noise)
+     - Comment quality (only WHY is needed; WHAT is noise). Flag ANY comment/doc-comment over 5 lines or spanning more than one paragraph as MAJOR, even if every line is WHY-content — a multi-paragraph comment is a sign the WHY should be split (root cause vs. accepted tradeoff vs. pointer to a test) or trimmed to the one fact a reviewer would actually ask for. Suggested fix must show the trimmed version, not just note the issue.
 
   3. Design patterns:
      - Inappropriate pattern usage
