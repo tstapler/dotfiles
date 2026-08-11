@@ -20,6 +20,7 @@ tap "synfinatic/aws-sso-cli"
 tap "terraform-linters/tap"
 tap "tilt-dev/tap"
 tap "tstapler/agrapha"
+tap "tstapler/kibitzer", "https://github.com/tstapler/kibitzer"
 tap "tstapler/stapler-squad", "https://github.com/tstapler/stapler-squad"
 tap "tstapler/stelekit", "https://github.com/tstapler/stelekit"
 tap "vectordotdev/brew"
@@ -351,6 +352,8 @@ brew "saulpw/vd/visidata"
 brew "stefanprodan/tap/timoni"
 # A dev environment as code for microservice apps
 brew "tilt-dev/tap/tilt"
+# Diff-aware code/doc inspection hook for Claude Code
+brew "tstapler/kibitzer/kibitzer"
 # Manage multiple AI terminal agents like Claude Code, Aider, Codex, OpenCode, and Amp.
 brew "tstapler/stapler-squad/stapler-squad"
 # Markdown-based outliner and note-taking app (Kotlin Multiplatform)
