@@ -15,6 +15,10 @@ from rich.console import Console
 console = Console()
 
 PLUGIN_MANIFEST = ".claude-plugin/plugin.json"
+# Marketplace plugin manifests are third-party content; a `name` containing a
+# path separator or ".." could otherwise escape the intended install directory
+# when used to build destination paths (see _load_plugin below).
+SAFE_PLUGIN_NAME_RE = re.compile(r'^[\w-]+(?:\.[\w-]+)*$')
 
 DEFAULT_INSTALLED_PLUGINS_FILE = Path.home() / ".claude" / "plugins" / "installed_plugins.json"
 DEFAULT_CLAUDE_SETTINGS_FILE = Path.home() / ".claude" / "settings.json"
@@ -170,7 +174,13 @@ class PluginSource:
             with open(manifest_path, "r", encoding="utf-8") as f:
                 manifest = json.load(f)
 
-            name = manifest.get("name", plugin_dir.name)
+            name = manifest.get("name") or plugin_dir.name
+            if not SAFE_PLUGIN_NAME_RE.match(name):
+                console.print(
+                    f"[red]Plugin manifest name '{name}' in {plugin_dir} contains "
+                    f"unsafe characters; using directory name '{plugin_dir.name}' instead[/red]"
+                )
+                name = plugin_dir.name
             description = manifest.get("description", "")
             version = manifest.get("version", "0.0.0")
 
@@ -198,6 +208,9 @@ class PluginSource:
             return commands
 
         for cmd_file in sorted(commands_dir.glob("**/*.md")):
+            if cmd_file.is_symlink():
+                console.print(f"[yellow]Skipping symlinked command {cmd_file}[/yellow]")
+                continue
             try:
                 content = cmd_file.read_text(encoding="utf-8")
                 description = self._extract_frontmatter_description(content)
@@ -218,6 +231,9 @@ class PluginSource:
             return skills
 
         for skill_file in sorted(skills_dir.glob("**/SKILL.md")):
+            if skill_file.is_symlink():
+                console.print(f"[yellow]Skipping symlinked skill {skill_file}[/yellow]")
+                continue
             try:
                 content = skill_file.read_text(encoding="utf-8")
                 description = self._extract_frontmatter_description(content)

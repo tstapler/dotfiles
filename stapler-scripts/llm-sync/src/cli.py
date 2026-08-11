@@ -274,6 +274,7 @@ def main():
         plugin_source = PluginSource(
             global_plugins_dir=args.plugins_global_dir,
             local_plugins_dir=args.plugins_local_dir,
+            claude_settings_file=args.claude_settings_file,
         )
         sync_plugins(plugin_source, args.dry_run, antigravity_dir=args.antigravity_dir)
 
