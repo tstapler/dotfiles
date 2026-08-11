@@ -136,3 +136,4 @@ esac
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 [[ ":$PATH:" != *":$HOME/.nopctl/bin:"* ]] && export PATH="$HOME/.nopctl/bin:${PATH}"
 [[ ":$PATH:" != *":$HOME/.local/bin:"* ]] && export PATH="$HOME/.local/bin:${PATH}"  # concur CLI
+[[ ":$PATH:" != *":$HOME/.nopctl/bin:"* ]] && export PATH="$HOME/.nopctl/bin:${PATH}"

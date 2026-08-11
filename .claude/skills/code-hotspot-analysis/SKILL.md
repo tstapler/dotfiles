@@ -205,6 +205,23 @@ if __name__ == "__main__":
 - Generated code (ORM mutation files, protobuf bindings) should be excluded from the **hotspot ranking** (a 23K-line generated file will top any line-count-based score meaninglessly) but *kept* in the **coupling data** — coupling between a generated file and its source (`.proto` ↔ `.pb.go`) is a legitimate, if uninteresting, confirmation signal, and coupling that flows *through* a generated file to other hand-written files is informative.
 - `line_counts` is a real but weak complexity proxy — prefer summing `gocyclo`/`gocognit` per-function output by file if that data is available from a parallel static-analysis pass (see axis 1 above); fall back to line count only when it isn't.
 
+## Inline Spot-Check (Before an Ordinary Edit)
+
+The full workflow below is a whole-codebase/whole-package audit — too heavy to run before every
+PR. For an ordinary edit to a file you didn't just create, run this 30-second version instead:
+
+```bash
+git log --oneline -20 -- <file>              # quick churn read — how often has this changed?
+gocyclo <file> | sort -rn | head -5           # or gocognit, scoped to just the function you're touching
+```
+
+If the file shows up frequently in the churn log *and* the function you're about to touch is
+already complex, treat it as a hotspot for this edit: reuse-check harder before adding logic (see
+`code-architecture-best-practices`'s Reuse Check), and consider whether the change is better
+scoped as a small extraction than another addition to an already-strained function. This doesn't
+replace the full audit below when a genuine architecture review is warranted — it's the cheap
+check that catches "you're about to make a known-bad file worse" during normal implementation.
+
 ## Workflow
 
 1. Run the static structural pass (goda/go-callvis/gocyclo/gocognit/goplantuml/ast-grep) — cheap, deterministic, no time window to pick.
@@ -315,8 +332,9 @@ Without SonarQube: PMD (`CyclomaticComplexity`, `CognitiveComplexity`, `Excessiv
 
 | Skill | When to apply |
 |---|---|
-| `architecture-best-practices` | The principle framework (SOLID/DDD/Clean Architecture) this analysis prioritizes work for |
-| `golang-development` | Idiomatic Go patterns to apply once a hotspot is identified |
+| `code-architecture-best-practices` | The principle framework (SOLID/DDD/Clean Architecture) this analysis prioritizes work for |
+| `golang-development` | Idiomatic Go practices and anti-patterns to apply once a hotspot is identified |
+| `golang-design-patterns` | Idiomatic Go constructor/resilience/architecture patterns for a Go hotspot's remediation |
 | `code-ast-grep` | Deeper `sg` pattern syntax for the structural-query half of axis 1 |
 | `code-refactoring` | Executing the fix once a target is chosen |
 | `type-driven-design` | If a hotspot's root cause is primitive obsession / missing invariant encoding, not just size |

@@ -364,3 +364,6 @@ uploads/
 # these confuse tooling that walks the tree expecting one repo boundary.
 # See stapler-scripts/ark-mod-manager/ incident, 2026-07-24.
 **/.jj/
+
+# skill_usage_report.py output — per-machine transcript analysis, not repo content
+.claude/skills/meta-skill-effectiveness-audit/reports/
