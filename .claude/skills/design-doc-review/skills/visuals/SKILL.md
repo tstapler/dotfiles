@@ -40,6 +40,14 @@ Both detectors are counting exercises: extract the axes from the prose and see i
 - [ ] **Back-reference tell**: doc contains phrases like "as noted above for Option A" or "unlike the previous approach" used to compare items → flag as comparison table candidate (back-referencing signals a relational structure prose is failing to hold).
 - [ ] **Malformed table** (inverse finding): an existing table has only 1 row or only 1 column of actual data → flag as "not two-dimensional, should be a list/bullets instead" (per Google dev-docs style: single-row/column tables aren't tables).
 
+## Section-scoped invocation (long docs)
+
+The coordinator (`design-doc-review:review`) may hand you one H2 section's text instead of the whole doc, for docs long enough that a single whole-doc pass loses precision. If invoked this way:
+
+- You'll be given a list of headings elsewhere in the doc that already contain a diagram or table (the coordinator extracts this by grepping the whole doc before dispatch, since you won't have it otherwise). Use that list to honor the "already-adequate diagrams" guardrail below — don't flag a flow your section describes if that list shows a diagram for it elsewhere.
+- Every other detector and guardrail applies to your section's text exactly as written below; you don't need whole-doc context for anything else this check does (N×M table detection, sequence/state/flowchart signals, and the density/malformed-table checks are all local to the text you were given).
+- Set `"section"` in each finding to the real heading you were given, not a placeholder.
+
 ## Severity
 
 | Severity | Meaning |

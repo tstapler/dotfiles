@@ -18,14 +18,38 @@ This skill does not invent checks — it dispatches to whatever lives under `des
 | Prose / cognitive load | `design-doc-review:readability` | Yes — filler removal, hedge cleanup, front-loading, splitting mixed-purpose paragraphs are mechanical rewrites. |
 | Missing diagrams / comparison tables | `design-doc-review:visuals` | Rarely — coordinator can propose a mermaid/table skeleton with extracted axes, but correct diagram type and exact table columns need author confirmation; never auto-insert. |
 
+## Phase 0 — Section split (long docs)
+
+A single agent reading an entire long doc for a section-local check loses precision — attention spreads thin and later sections get skimmed. Before dispatch, count lines. Under ~150 lines, skip this phase and dispatch each check whole-doc as in Phase 1.
+
+Over ~150 lines, split the body by H2 headings (`^## `). Not every check benefits equally from splitting:
+
+- **`outline` always runs whole-doc**, regardless of length. Its checks are global ("does a non-goals section exist *anywhere*", "does the functional spec trace to Layer 1 requirements stated elsewhere") — scoping it to one section would produce false `missing` findings for topics a *different* section covers.
+- **`readability` and `visuals` are section-local** and fan out one agent per H2 section on long docs:
+  - `readability`: one agent per section, each given only that section's text. Tell only the agent handling the doc's *first* section that it's first — the 30-second test and the missing-front-load check apply only there; a later section isn't a front-load violation for not re-stating a decision it was never supposed to front. Other agents run every other check normally.
+  - `visuals`: one agent per section, each given that section's text **plus** a coordinator-supplied list of headings elsewhere in the doc that already contain a diagram or table (grep `^```(mermaid|d2)`, `!\[`, or table-pipe rows across the whole doc first — same signal `scripts/doc_report.py`'s `diagram` property uses). Without that list, a per-section agent can't honor the "already-adequate diagram exists elsewhere in the doc" guardrail, since it never sees the rest of the doc.
+
+Merge each check's per-section results into the same JSON contract it already returns before moving to Phase 2: sum `count` across sections, concatenate `findings` (the section split already gives you a real heading for the `section` field — use it instead of `§N.M`), `status: "fail"` if any section reported `fail`.
+
 ## Phase 1 — Dispatch (parallel lean agents)
 
-Launch one agent per registry row, **in a single message** (tier A, per lean-agent-loop). Each agent prompt is exactly that check's own instructions plus the target path — do not summarize prior findings into the prompt; there are none yet on round 1.
+Launch one agent per registry row, **in a single message** (tier A, per lean-agent-loop) — or, for a doc split per Phase 0, one agent per (check, section) pair for `readability`/`visuals` plus one whole-doc agent for `outline`, all still in that same single message. Each agent prompt is exactly that check's own instructions plus its target (the whole doc, or one section plus the Phase 0 context noted above) — do not summarize prior findings into the prompt; there are none yet on round 1.
 
 ```
 Agent "outline": run design-doc-review:outline against <path>. Return only its JSON summary.
 Agent "readability": run design-doc-review:readability against <path>. Return only its JSON summary.
 Agent "visuals": run design-doc-review:visuals against <path>. Return only its JSON summary.
+```
+
+Split-doc example (readability only shown; visuals follows the same shape with the diagram-location list added):
+
+```
+Agent "readability:§Problem" (first section): run design-doc-review:readability against
+  the "## Problem" section of <path> below. This is the doc's first section — apply the
+  30-second test and missing-front-load check. <section text>
+Agent "readability:§Rollout": run design-doc-review:readability against the "## Rollout"
+  section of <path> below. This is not the doc's first section — skip the 30-second test
+  and missing-front-load check, apply everything else. <section text>
 ```
 
 If parallel dispatch is unavailable, drop to the next tier in lean-agent-loop's degraded-mode table (B: parallel foreground, C: serial, D: self-serial) and say which tier ran when you report results. Never report "skipped review" for a capability reason — only round-cap or genuine pass justifies stopping.

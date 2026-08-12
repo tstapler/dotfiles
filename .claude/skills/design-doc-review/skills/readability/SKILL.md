@@ -38,6 +38,14 @@ Adapted from `docs:review-clarity` (cognitive-load theory / decision-focused wri
 
 Read only the first screen (title, TL;DR/summary if present, first section). Can you state the decision being asked and the biggest risk? If not, that's the highest-priority finding — everything else is secondary until this passes.
 
+## Section-scoped invocation (long docs)
+
+The coordinator (`design-doc-review:review`) may hand you one H2 section's text instead of the whole doc, for docs long enough that a single whole-doc pass loses precision. If invoked this way:
+
+- You'll be told whether this is the doc's *first* section. If not, **skip the 30-Second Test and the missing-front-load check entirely** — they're about the doc's opening, not about every section restating a decision it was never meant to front. Run every other check normally against the section text you were given.
+- If you're the first section, run the 30-second test and front-load check as usual — they were designed around exactly this scope already.
+- Set `"section"` in each finding to the real heading you were given, not a placeholder.
+
 ## Severity
 
 | Severity | Meaning |
