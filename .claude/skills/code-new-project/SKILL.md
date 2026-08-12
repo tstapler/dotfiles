@@ -1,21 +1,61 @@
 ---
 name: code-new-project
-description: Bootstrap a new personal/side project using Tyler's researched default app stack (Angular, Rust+Axum, Connect-RPC/WebSocket, GCP Cloud Run, Neon+R2, OpenTofu). Runs a short decision interview to adapt the defaults (KMP-sharing frontend, Firebase migration, personal vs production scale) then scaffolds the full repo — build files, RPC/proto layer, multi-environment IaC (staging+prod), CD pipeline (Workload Identity Federation, build/push/deploy), local dev via Neon Local, sqlx migrations tooling, secrets/.env conventions, quality tooling, and CLAUDE.md/AGENTS.md referencing the /sdd:full, journeys-extract, and pm-brand-strategy skills for ongoing development. Use when starting a new personal project, asking "what stack should I use for this", or "bootstrap a new project".
+description: Bootstrap a new personal/side project using Tyler's researched default stacks — a full web app (Angular, Rust+Axum, Connect-RPC/WebSocket, GCP Cloud Run, Neon+R2, OpenTofu) or a library/CLI/MCP tool (Rust, clap, rmcp, cargo-dist, git-cliff, Homebrew tap — modeled on tstapler/kibitzer). Starts by asking which kind of project this is, then runs a short decision interview to adapt the defaults, then scaffolds the full repo. For web apps: build files, RPC/proto layer, multi-environment IaC (staging+prod), CD pipeline (Workload Identity Federation, build/push/deploy), local dev via Neon Local, sqlx migrations tooling, secrets/.env conventions, quality tooling. For lib/CLI/MCP tools: single- or multi-crate layout, clap/rmcp starter, cargo-dist release pipeline with a human-pushed-tag flow, git-cliff changelog, PR test-gate CI, Lefthook. Both paths generate CLAUDE.md/AGENTS.md referencing /sdd:full and other ongoing-development skills. Use when starting a new personal project, asking "what stack should I use for this", or "bootstrap a new project".
 ---
 
 # code-new-project
 
-Bootstraps a new project repo against Tyler's decided default app stack, after a short interview to check whether any of the stack's documented exception cases apply. The stack and its rationale come from a 2026 multi-agent research pass — see `reference.md` in this skill for the condensed decision matrix (originally synthesized to `logseq/pages/Personal App Stack (2026).md` in the personal-wiki repo, but this skill is self-contained and does not require that repo to be present).
+Bootstraps a new project repo against Tyler's decided default stack for the kind of project it is, after a short interview to check whether any documented exception cases apply. The web-app stack and its rationale come from a 2026 multi-agent research pass — see `reference.md` for the condensed decision matrix (originally synthesized to `logseq/pages/Personal App Stack (2026).md` in the personal-wiki repo, but this skill is self-contained and does not require that repo to be present). The library/CLI/MCP-tool stack is modeled directly on `tstapler/kibitzer` (which now itself has the CI test gate and README this skill originally added as fixes, not conventions — see `reference.md`).
 
 ## When to Use This Skill
 
 - Starting a brand-new personal/side project and want the stack decided already
+- Building a CLI tool, an MCP server, or a small Rust library/binary and want kibitzer-style release tooling (cargo-dist, git-cliff, Homebrew tap) without re-deriving it
 - Migrating an existing Firebase app and need the composed replacement (auth/storage/realtime)
-- Unsure whether a project's specifics (KMP sharing, real users, existing infra) should change the defaults
+- Unsure whether a project's specifics (KMP sharing, real users, existing infra, single- vs multi-crate) should change the defaults
 
 ## Workflow
 
-### 1. Run the decision interview
+### 0. Ask which kind of project this is
+
+Before anything else, ask via `AskUserQuestion`:
+
+- **Web app** (default for anything with a browser-facing UI and its own users/data) → go to step 1.
+- **Library / CLI / MCP tool** (a Rust binary, a CLI, an MCP server, something distributed via Homebrew/crates.io/npm rather than deployed) → skip to step 1b.
+
+If genuinely ambiguous (e.g. "a tool with a small web dashboard"), ask which surface is primary rather than guessing — the two paths produce very different repos and there's no supported hybrid scaffold.
+
+### 1b. Library/CLI/MCP tool: run the decision interview
+
+1. **Crate layout** — "Single binary crate (kibitzer-style — CLI/MCP/daemon all as clap subcommands in one crate, simplest), or a multi-crate workspace (stapler-mcp-style — separate `crates/cli` and `crates/core`, for projects that expect to add native bindings or a WASM target alongside the CLI)?"
+   - Single (default — most new CLI/MCP tools don't need the extra layers) → `--layout single`
+   - Multi → `--layout multi`; note that `crates/native`/`crates/wasm` are **not** auto-scaffolded (they're genuinely project-specific) — point at `tstapler/stapler-mcp`'s `crates/{cli,core,native,wasm}` as the reference layout to extend by hand
+2. **Publish targets** — "Where should releases publish to: Homebrew tap (default), crates.io, npm, or some combination?" → `--publish` (comma-separated)
+3. **GitHub username/org** for the Homebrew tap and repo links → `--github-user` (default `tstapler`)
+
+State the resulting stack back to the user in one short summary before scaffolding.
+
+### 2b. Scaffold the repo (library/CLI/MCP tool)
+
+```bash
+scripts/bootstrap.sh \
+  --dir <target-directory> \
+  --kind lib-cli-mcp \
+  [--layout single|multi] \
+  [--publish crates,npm,homebrew] \
+  [--github-user <github-username>]
+```
+
+The script:
+- Creates the Rust project (`Cargo.toml`, `rust-toolchain.toml` with clippy+rustfmt, `.gitignore`) — either a single binary crate (`src/main.rs`, clap subcommands `run`/`mcp`, `rmcp` dependency) or a `crates/{cli,core}` workspace
+- Adds `dist-workspace.toml` (cargo-dist config) and `cliff.toml` (git-cliff config, Conventional Commits, matches kibitzer's grouping) — **does not** write `.github/workflows/release.yml` itself, since that file is meant to be generated by `dist generate` against whatever `cargo-dist` version is actually installed; instead it writes `RELEASE.md` with the one-time `dist init`/`dist generate` steps and the **human-pushes-the-tag** rationale (a bot-authored `GITHUB_TOKEN` push can't trigger other `on: push` workflows, so release-please-style automation doesn't work here)
+- Adds `.github/workflows/ci.yml` — a PR/push test gate (fmt, clippy, test); this was originally a deliberate addition rather than something copied from kibitzer, because ungated CI looked like a gap rather than a convention worth repeating — kibitzer has since added the same job itself
+- Adds `lefthook.yml` (fmt + clippy pre-commit, test pre-push)
+- Generates `README.md` (install/usage/license — originally added as a gap fix; kibitzer has since added its own), `LICENSE` (MIT), `CLAUDE.md`, `AGENTS.md`
+
+After running, tell the user what still needs manual setup: `dist init` + `dist generate`, creating the Homebrew tap repo and/or crates.io/npm tokens per the chosen publish targets, and `cargo check` to confirm the scaffold builds (this skill's own smoke test validated TOML/YAML syntax of the generated files but could not run `cargo build` — no `cargo` binary was available in the environment used to author it; run it yourself before trusting the scaffold compiles).
+
+### 1. Run the decision interview (web app)
 
 Before scaffolding anything, ask via `AskUserQuestion` (do not skip — the answers change which templates get used):
 

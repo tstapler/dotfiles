@@ -1,0 +1,20 @@
+# cargo-dist config. This file is a starting point only — run `dist init`
+# (https://opensource.axo.dev/cargo-dist/) after scaffolding to regenerate it
+# against the cargo-dist version you actually install, then `dist generate`
+# to (re)write .github/workflows/release.yml. Hand-editing this file and not
+# regenerating the workflow is the most common way this drifts.
+[workspace]
+members = ["cargo:."]
+
+[dist]
+cargo-dist-version = "0.32.0"
+ci = "github"
+installers = ["shell", "homebrew"]
+tap = "{{GITHUB_USER}}/homebrew-tap"
+publish-jobs = ["homebrew"]
+targets = [
+  "aarch64-apple-darwin",
+  "x86_64-apple-darwin",
+  "x86_64-unknown-linux-gnu",
+  "aarch64-unknown-linux-gnu",
+]

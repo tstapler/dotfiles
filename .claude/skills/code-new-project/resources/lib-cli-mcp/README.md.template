@@ -1,0 +1,33 @@
+# {{PROJECT_NAME}}
+
+{{DESCRIPTION}}
+
+## Install
+
+```bash
+# Homebrew (once the tap is set up — see RELEASE.md)
+brew install {{GITHUB_USER}}/tap/{{PROJECT_NAME}}
+
+# From source
+cargo install --path .
+```
+
+## Usage
+
+```bash
+{{PROJECT_NAME}} run
+{{PROJECT_NAME}} mcp   # serve as an MCP server over stdio
+```
+
+## Development
+
+```bash
+lefthook install   # activate pre-commit/pre-push hooks
+cargo test --workspace
+```
+
+See `RELEASE.md` for how versions are cut and published.
+
+## License
+
+MIT — see `LICENSE`.

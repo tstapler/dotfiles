@@ -1,0 +1,7 @@
+//! Shared logic for {{PROJECT_NAME}} — kept independent of the CLI/MCP
+//! transport so it can also back a native or WASM binding later, following
+//! stapler-mcp's crates/{cli,core,native,wasm} layout.
+
+pub fn placeholder() -> &'static str {
+    "{{PROJECT_NAME}}-core"
+}

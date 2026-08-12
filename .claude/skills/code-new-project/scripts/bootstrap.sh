@@ -1,35 +1,49 @@
 #!/usr/bin/env bash
-# Scaffolds a new project against Tyler's default app stack.
+# Scaffolds a new project against Tyler's default stacks.
 # See ../SKILL.md for the decision interview this should follow, and
 # ../reference.md for the rationale behind each default.
 #
-# Usage:
+# Web app usage:
 #   bootstrap.sh --dir <target-directory> \
 #     [--frontend angular|compose-web] \
 #     [--firebase-migration] \
 #     [--realtime-sync] \
 #     [--skip-iac] \
 #     [--skip-rpc]
+#
+# Library/CLI/MCP tool usage (modeled on tstapler/kibitzer):
+#   bootstrap.sh --dir <target-directory> --kind lib-cli-mcp \
+#     [--layout single|multi] \
+#     [--publish crates,npm,homebrew] \
+#     [--github-user <github-username>]
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RESOURCES_DIR="$SCRIPT_DIR/../resources"
 
 TARGET_DIR=""
+KIND="web-app"
 FRONTEND="angular"
 FIREBASE_MIGRATION="false"
 REALTIME_SYNC="false"
 SKIP_IAC="false"
 SKIP_RPC="false"
+LAYOUT="single"
+PUBLISH="homebrew"
+GITHUB_USER="tstapler"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --dir) TARGET_DIR="$2"; shift 2 ;;
+    --kind) KIND="$2"; shift 2 ;;
     --frontend) FRONTEND="$2"; shift 2 ;;
     --firebase-migration) FIREBASE_MIGRATION="true"; shift ;;
     --realtime-sync) REALTIME_SYNC="true"; shift ;;
     --skip-iac) SKIP_IAC="true"; shift ;;
     --skip-rpc) SKIP_RPC="true"; shift ;;
+    --layout) LAYOUT="$2"; shift 2 ;;
+    --publish) PUBLISH="$2"; shift 2 ;;
+    --github-user) GITHUB_USER="$2"; shift 2 ;;
     *) echo "Unknown flag: $1" >&2; exit 1 ;;
   esac
 done
@@ -42,6 +56,94 @@ fi
 if [[ -e "$TARGET_DIR" && -n "$(ls -A "$TARGET_DIR" 2>/dev/null)" ]]; then
   echo "Refusing to scaffold into a non-empty existing directory: $TARGET_DIR" >&2
   exit 1
+fi
+
+if [[ "$KIND" == "lib-cli-mcp" ]]; then
+  PROJECT_NAME="$(basename "$TARGET_DIR")"
+  LIB_RESOURCES="$RESOURCES_DIR/lib-cli-mcp"
+  mkdir -p "$TARGET_DIR"/.github/workflows
+  cd "$TARGET_DIR"
+
+  echo "==> Rust project ($LAYOUT layout)"
+  cp "$LIB_RESOURCES/rust-toolchain.toml" rust-toolchain.toml
+  cp "$LIB_RESOURCES/gitignore.template" .gitignore
+
+  if [[ "$LAYOUT" == "multi" ]]; then
+    mkdir -p crates/cli/src crates/core/src
+    sed "s/{{PROJECT_NAME}}/${PROJECT_NAME}/g" "$LIB_RESOURCES/workspace-Cargo.toml.template" > Cargo.toml
+    sed "s/{{PROJECT_NAME}}/${PROJECT_NAME}/g" "$LIB_RESOURCES/core-Cargo.toml.template" > crates/core/Cargo.toml
+    sed "s/{{PROJECT_NAME}}/${PROJECT_NAME}/g" "$LIB_RESOURCES/core-lib.rs.template" > crates/core/src/lib.rs
+    sed "s/{{PROJECT_NAME}}/${PROJECT_NAME}/g" "$LIB_RESOURCES/cli-Cargo.toml.template" > crates/cli/Cargo.toml
+    sed "s/{{PROJECT_NAME}}/${PROJECT_NAME}/g" "$LIB_RESOURCES/cli-main.rs.template" > crates/cli/src/main.rs
+    echo "    Multi-crate workspace: crates/{cli,core}. Add crates/native or"
+    echo "    crates/wasm later only if this project actually needs native"
+    echo "    bindings or a WASM target — see tstapler/stapler-mcp's"
+    echo "    crates/{cli,core,native,wasm} as the reference layout; this"
+    echo "    script doesn't template those two since they're genuinely"
+    echo "    project-specific (which native runtime, which WASM target)."
+    CORE_CRATE_NOTE=" (see \`crates/core/\`)"
+  else
+    sed "s/{{PROJECT_NAME}}/${PROJECT_NAME}/g" "$LIB_RESOURCES/Cargo-single.toml.template" > Cargo.toml
+    mkdir -p src
+    sed "s/{{PROJECT_NAME}}/${PROJECT_NAME}/g" "$LIB_RESOURCES/main.rs.template" > src/main.rs
+    CORE_CRATE_NOTE=""
+  fi
+
+  echo "==> Release: cargo-dist + git-cliff, human-pushed tags (see RELEASE.md)"
+  sed "s/{{GITHUB_USER}}/${GITHUB_USER}/g" "$LIB_RESOURCES/dist-workspace.toml.template" > dist-workspace.toml
+  cp "$LIB_RESOURCES/cliff.toml" cliff.toml
+  sed "s/{{PROJECT_NAME}}/${PROJECT_NAME}/g; s/{{GITHUB_USER}}/${GITHUB_USER}/g" "$LIB_RESOURCES/RELEASE.md.template" > RELEASE.md
+  echo "    NOTE: .github/workflows/release.yml is NOT written by this script —"
+  echo "    run 'dist init' then 'dist generate' after scaffolding (see RELEASE.md)."
+  IFS=',' read -ra PUBLISH_TARGETS <<< "$PUBLISH"
+  for target in "${PUBLISH_TARGETS[@]}"; do
+    case "$target" in
+      crates) echo "    Publish target: crates.io — set a CARGO_REGISTRY_TOKEN repo secret." ;;
+      npm) echo "    Publish target: npm — set an NPM_TOKEN repo secret." ;;
+      homebrew) echo "    Publish target: Homebrew tap ${GITHUB_USER}/homebrew-tap — set a HOMEBREW_TAP_TOKEN repo secret." ;;
+      *) echo "    Unknown publish target: $target" >&2 ;;
+    esac
+  done
+
+  echo "==> CI: PR test gate (fmt/clippy/test) — separate from the tag-triggered release workflow"
+  cp "$LIB_RESOURCES/ci.yml" .github/workflows/ci.yml
+
+  echo "==> Pre-commit: Lefthook"
+  cp "$LIB_RESOURCES/lefthook.yml" lefthook.yml
+
+  echo "==> README.md, CLAUDE.md, AGENTS.md"
+  sed "s/{{PROJECT_NAME}}/${PROJECT_NAME}/g; s/{{GITHUB_USER}}/${GITHUB_USER}/g; s/{{DESCRIPTION}}/CLI \/ MCP tool./g" "$LIB_RESOURCES/README.md.template" > README.md
+  sed "s/{{LAYOUT}}/${LAYOUT}-crate/g; s|{{CORE_CRATE_NOTE}}|${CORE_CRATE_NOTE}|g" "$LIB_RESOURCES/CLAUDE.md.template" > CLAUDE.md
+  sed "s/{{LAYOUT}}/${LAYOUT}-crate/g; s|{{CORE_CRATE_NOTE}}|${CORE_CRATE_NOTE}|g" "$LIB_RESOURCES/AGENTS.md.template" > AGENTS.md
+
+  cat > LICENSE <<EOF
+MIT License
+
+Copyright (c) $(date +%Y 2>/dev/null || echo "2026") Tyler Stapler
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to
+deal in the Software without restriction, including without limitation the
+rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+sell copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+EOF
+
+  echo ""
+  echo "Done. Scaffolded into: $TARGET_DIR"
+  echo "Next: cd $TARGET_DIR && cargo check, then read RELEASE.md before your first tag."
+  exit 0
 fi
 
 mkdir -p "$TARGET_DIR"/{backend/api/src/{routes,db,domain},backend/migrator/src,backend/migrations,.github/workflows}
