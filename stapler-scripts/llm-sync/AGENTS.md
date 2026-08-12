@@ -37,6 +37,15 @@ uv run main.py --help
 ### Antigravity
 - **Customizations Root:** `~/.gemini/config` (global) or `.agents` (workspace)
 - **Skills:** `~/.gemini/config/skills/<name>/SKILL.md` (Note: commands sync as skills here)
+  - **`$ARGUMENTS` limitation:** Antigravity skills are auto-triggered by relevance,
+    not explicitly invoked with positional arguments the way Claude commands
+    (`/command args...`) are — there's no `{{args}}`-equivalent substitution target
+    (confirmed against antigravity.google/docs/skills). A Claude command whose
+    content uses `$ARGUMENTS` still syncs, but the token is inert once Antigravity
+    auto-triggers the skill. `build_antigravity_skill_content()` in
+    `src/targets/gemini.py` detects this, prints a sync-time warning, and prepends
+    an HTML-comment annotation to the written `SKILL.md` so the limitation is
+    visible on disk too, not just at sync time.
 - **Agents:** `~/.gemini/config/agents/<name>.md`
 - **Plugins:** `~/.gemini/config/plugins/<name>/` (containing `plugin.json`, `skills/`, `hooks.json`)
 - **MCP Config:** `~/.gemini/antigravity-cli/mcp_config.json`
