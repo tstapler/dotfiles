@@ -78,6 +78,14 @@ The rigor above is constant. How much of it belongs **inside the artifact** is n
 - **Scale structure to the diff.** A one-line or mechanical change gets a sentence or two, not a multi-heading template. Add a section only when a reviewer would otherwise have to ask for it.
 - **The test:** would a reviewer of *this* change have asked for this paragraph? If not, delete it. Being right is not a licence to be long.
 
+## Writing Style
+
+For grammar/word-level style, follow Pinker's *The Sense of Style* (general prose) and the
+[Google Developer Documentation Style Guide](https://developers.google.com/style) (technical
+writing: voice, tone, terminology) — not Strunk & White, whose grammar advice is
+[unreliable](https://www.chronicle.com/article/50-years-of-stupid-grammar-advice/) (misdiagnoses
+its own passive-voice examples).
+
 ## Repo Placement
 
 - New clones go under `~/code/<host>/<owner>/<repo>` (e.g. `~/code/github.com/tstapler/dotfiles`)
