@@ -99,6 +99,12 @@ with the unresolved list. Do not proceed to <next step>.
    | Rust — CLI (clap) | research agent | derive API vs builder API, subcommand structure |
    | Rust — WebAssembly (wasm-bindgen) | research agent | `JsValue` error handling, avoiding panics in WASM |
 
+   #### Node.js / JavaScript
+
+   | Technology / Pattern | Skill | Focus areas |
+   |---|---|---|
+   | Node.js — playwright-core wasm-bindgen glue | `js-playwright-wasm-glue` | error wrapping across the JS→Rust boundary (real `Error`/`JsError`, never a `{success:false}` sentinel), Playwright deprecations (`page.type()`, `page.accessibility`, `waitForTimeout`) and missing `close()` in try/finally, reaper `setInterval` unref+clearInterval discipline |
+
    #### Frontend
 
    | Technology / Pattern | Skill | Focus areas |

@@ -75,6 +75,10 @@ Transform high-level feature requests into actionable, well-architected implemen
 
 ## Planning Methodology
 
+### **Phase 0: Detect Language and Load Matching Skill**
+
+When planning touches an existing codebase, identify its primary language(s)/framework(s) first (file extensions, build files, imports). Use the Skill tool to load the matching architecture/style skill — e.g. `golang-project-layout`, `golang-design-patterns` for Go; `spring-boot-java-development` for Java/Spring — so the plan follows this codebase's actual idioms rather than defaulting to whichever language's conventions come to mind first. If no matching skill exists, proceed on the general principles below alone.
+
 ### **Phase 1: Discovery & Requirements Gathering**
 
 1. **Understand the Feature**

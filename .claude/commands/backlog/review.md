@@ -1,4 +1,4 @@
-Call request_review with item_id=a31407ce-29de-45d1-902e-c5a4026197d4 and a 2-3 sentence summary of what was built.
+Call request_review with item_id=b608ab1e-b86e-4130-8879-7328cd363063 and a 2-3 sentence summary of what was built.
 
 Do NOT end your session after this. Wait a bit, then call get_backlog_item (or /backlog/status) again — the verdict appears under "Latest Review Verdict" once the reviewer submits it.
 

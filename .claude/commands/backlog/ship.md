@@ -13,7 +13,7 @@ Steps:
    If review already returned PASS before you got here, skip this — running it again will fail (the    item is no longer `in_progress`), and there's nothing left for it to check.
 
 3. Report the PR back onto this backlog item — REQUIRED, do not skip:
-   Call the report_pr_created MCP tool with item_id=a31407ce-29de-45d1-902e-c5a4026197d4, pr_url=<the PR URL /github:pr-ship or gh pr create printed>, pr_number=<the PR number>, and summary=<2-3 sentences: what changed and why>.
+   Call the report_pr_created MCP tool with item_id=b608ab1e-b86e-4130-8879-7328cd363063, pr_url=<the PR URL /github:pr-ship or gh pr create printed>, pr_number=<the PR number>, and summary=<2-3 sentences: what changed and why>.
    You created this PR yourself — nothing else will ever report it back to the item record. Skipping this step leaves the item stuck in review with a real PR that is invisible to the reviewer and the operator.
 
 Note: if the repository has no GitHub remote, run `gh pr create` manually — do NOT use `--fill`, which

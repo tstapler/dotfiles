@@ -8,6 +8,20 @@ effort: high
 
 Apply these principles when designing systems, reviewing structure, or making architectural decisions.
 
+## Reuse Check (Do This First)
+
+Before writing new logic, search the codebase (`grep`/`ast-grep`) for an existing function or
+pattern that already does something similar — reuse it or extract a shared abstraction rather
+than reimplementing it per call site. This is the single highest-value check in this skill: the
+canonical failure mode it catches is the same bug-prone logic (e.g. a check-then-mutate ordering
+rule) getting copy-pasted across sibling functions, each with its own chance to get it wrong,
+instead of being centralized once. Do this check *before* design-pattern selection below, not
+after — a pattern applied to duplicated logic just formalizes the duplication.
+
+If the file you're about to edit is a known churn/complexity hotspot, run `code-hotspot-analysis`'s
+inline spot-check first — a file that already changes often and is already complex is exactly
+where uncaught duplication compounds fastest.
+
 ## Core Principles (Language-Agnostic)
 
 ### SOLID
@@ -340,3 +354,4 @@ Key integration points:
 | `code-spring-boot` | Spring Boot-specific layering, testing, and dependency injection patterns |
 | `code-refactoring` | Restructure existing code toward clean architecture boundaries |
 | `code-review` | Verify architectural decisions meet these principles before merging |
+| `code-hotspot-analysis` | Check whether a file is already a churn/complexity hotspot before a non-trivial edit |
