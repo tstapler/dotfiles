@@ -65,6 +65,10 @@ class MCPServer:
     type: Optional[str] = None
     url: Optional[str] = None
     disabled: bool = False
+    # Passthrough for target-specific fields the loader doesn't model
+    # explicitly (e.g. Claude Code's "enabled"/"zone"/"name" on gateway-
+    # proxied servers) so round-tripping through a target doesn't drop them.
+    extra: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass

@@ -254,6 +254,8 @@ def main():
     parser.add_argument("--opencode-dir", type=Path, help="Override base directory for OpenCode assets")
     parser.add_argument("--mcp-global-config", type=Path, help="Override global MCP servers JSON file")
     parser.add_argument("--mcp-local-config", type=Path, help="Override machine-local MCP servers JSON file")
+    parser.add_argument("--mcp-global-config-dir", type=Path, help="Override global MCP servers config.d directory")
+    parser.add_argument("--mcp-local-config-dir", type=Path, help="Override machine-local MCP servers config.d directory")
     parser.add_argument("--claude-settings-file", type=Path, help="Override path to ~/.claude/settings.json")
 
     # Plugin install
@@ -326,6 +328,8 @@ def main():
             mcp_source = McpConfigSource(
                 global_config_file=args.mcp_global_config,
                 local_config_file=args.mcp_local_config,
+                global_config_dir=args.mcp_global_config_dir,
+                local_config_dir=args.mcp_local_config_dir,
             )
             claude_settings = ClaudeSettingsTarget(settings_file=args.claude_settings_file)
             sync_mcp(mcp_source, claude_settings, args.dry_run)

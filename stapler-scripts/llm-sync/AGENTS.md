@@ -53,15 +53,28 @@ uv run main.py --help
 ## Adding a new MCP server
 
 MCP servers are sourced from `src/sources/mcp_config.py` (`McpConfigSource`), which
-merges two files and hands the result to every target (Claude's `~/.claude.json`,
-Antigravity's `mcp_config.json`, etc.) in one pass:
+merges a config.d-style layered set of sources and hands the result to every target
+(Claude's `~/.claude.json`, Antigravity's `mcp_config.json`, etc.) in one pass. Merge
+order (later wins on a name collision) is: global file, global config.d fragments
+(sorted by filename), local file, local config.d fragments (sorted by filename).
 
-| File | Tracked | Use for |
-|------|---------|---------|
+| Source | Tracked | Use for |
+|--------|---------|---------|
 | `.config/mcp/mcp-servers.json` (repo root) | yes | Servers every machine should get — checked in, universal |
+| `.config/mcp/mcp-servers.d/*.json` (repo root) | yes | Additional tracked fragments layered on top, e.g. contributed by a separate overlay repo (like `ndotfiles`) without editing the file above |
 | `~/.config/mcp/mcp-servers.local.json` | **no** (gitignored) | Machine-specific servers — secrets, tools only some machines have installed |
+| `~/.config/mcp/mcp-servers.local.d/*.json` | **no** (gitignored) | Additional machine-local fragments, same reasoning as the tracked config.d directory above |
 
-Both use the same schema, keyed by server name under `mcpServers`:
+The config.d directories exist so a second repo can contribute servers by adding its
+own file instead of editing a file another repo owns — the same "dedicated directory,
+file-by-file symlinks" pattern used elsewhere for cross-repo config (e.g. consolette's
+`conf.d`), rather than one repo owning a whole-directory symlink another repo can't
+add files into. `ndotfiles` uses this for a work-specific set of MCP servers
+(`.config/mcp/mcp-servers.d/50-work.json`) so they're tracked and survive this
+tool's full-replace write to `~/.claude.json`/`mcp_config.json`, instead of only
+existing as whatever `claude mcp add` happened to write on one machine.
+
+All sources use the same schema, keyed by server name under `mcpServers`:
 
 ```json
 {
@@ -77,10 +90,11 @@ Both use the same schema, keyed by server name under `mcpServers`:
 
 - stdio transport: `command` + `args` + `env`. HTTP transport: `type: "http"` + `url` instead.
 - `disabled: true` turns an entry off without deleting it.
-- Any other key (e.g. `_fork`, `_requires`) is ignored by the loader — use it as inline documentation for the entry (provenance, prerequisites, why it might fail on some machines).
-- A server that depends on something not every machine has (an app, an env var, a binary on PATH) doesn't need special-casing — it just fails to start on machines without the dependency, the same way `brave-search` above silently needs `BRAVE_API_KEY`. Put it in the global file if most machines should still attempt it; put it in the local file if it's truly one-machine-only.
+- Underscore-prefixed keys (e.g. `_fork`, `_requires`) are ignored by the loader — use them as inline documentation for the entry (provenance, prerequisites, why it might fail on some machines).
+- Any other key (e.g. Claude Code's `enabled`, `zone`, or a display `name` distinct from the server's key) is passed through as-is to `~/.claude.json` rather than dropped — the loader doesn't need to model every target-specific field to round-trip it.
+- A server that depends on something not every machine has (an app, an env var, a binary on PATH) doesn't need special-casing — it just fails to start on machines without the dependency, the same way `brave-search` above silently needs `BRAVE_API_KEY`. Put it in the global file/config.d if most machines should still attempt it; put it in the local file/config.d if it's truly one-machine-only.
 
-After editing either file, propagate with:
+After editing any of the files above, propagate with:
 
 ```bash
 make llm-sync

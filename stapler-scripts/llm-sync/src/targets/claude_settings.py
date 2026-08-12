@@ -31,13 +31,15 @@ class ClaudeSettingsTarget:
             if server.disabled:
                 continue
             if server.type == "http":
-                mcp_servers[server.name] = {"type": "http", "url": server.url}
+                entry = {"type": "http", "url": server.url}
             else:
-                mcp_servers[server.name] = {
+                entry = {
                     "command": server.command,
                     "args": server.args,
                     "env": server.env,
                 }
+            entry.update(server.extra)
+            mcp_servers[server.name] = entry
 
         if dry_run:
             console.print(
