@@ -51,8 +51,6 @@ Lightweight end-to-end workflow for tasks simple enough to complete in one conte
 
 5. **Verify.**
 
-   **Iron Law: No completion claim without running tests and showing output.**
-
    Run the relevant tests using the appropriate command for the stack. Show the output. Only claim success after seeing green.
 
    **For refactors only — architecture smell-check** (does not block, but must be acknowledged):

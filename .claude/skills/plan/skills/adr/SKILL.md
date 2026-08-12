@@ -4,7 +4,7 @@ description: Create a numbered ADR in docs/adr/ for a significant architectural 
 
 # Create ADR: Architecture Decision Record
 
-Creates `docs/adr/ADR-NNN-<title>.md`.
+Creates `docs/adr/ADR-NNN-<title>.md`. Scope: repo-wide, cross-cutting decisions about the dotfiles repo itself (tooling, infra, conventions) that outlive any single project_plans/ entry. For a decision internal to one SDD project's own implementation, use `/sdd:adr` instead, which writes to that project's `project_plans/<project>/decisions/`.
 
 Use when making a significant architectural choice during Phase 3 (Planning) or whenever a decision warrants documentation:
 - Choosing between two non-trivial approaches

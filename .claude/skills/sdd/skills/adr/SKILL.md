@@ -6,7 +6,7 @@ user-invocable: true
 
 # sdd:adr
 
-Write an Architecture Decision Record (ADR).
+Write an Architecture Decision Record (ADR) scoped to this SDD project — a decision internal to the thing being built (e.g. "use axum for claude-proxy-rs's HTTP server"). For a decision that's cross-cutting across the dotfiles repo itself (tooling, infra, conventions that outlive any one project_plans/ entry), use `/plan:adr` instead, which writes to the repo-wide `docs/adr/`.
 
 ## Instructions
 

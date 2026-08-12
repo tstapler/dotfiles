@@ -8,9 +8,9 @@ allowed-tools: Read, Write, AskUserQuestion, Bash
 
 Conduct a structured requirements interview and produce `requirements.md`.
 
-## HARD GATE
+## Requirements before solutioning
 
-**Do not discuss implementation approaches, technology choices, or architecture until `requirements.md` is written and confirmed by the user.** If you catch yourself proposing solutions during the interview, stop and ask another requirements question instead.
+Do not discuss implementation approaches, technology choices, or architecture until `requirements.md` is written and confirmed by the user. If you catch yourself proposing solutions during the interview, stop and ask another requirements question instead.
 
 ## Instructions
 
@@ -28,16 +28,9 @@ Conduct a structured requirements interview and produce `requirements.md`.
    - Likely users (often derivable from the codebase or request)
    - Tech stack constraints (don't ask what you can read)
 
-3. **Think about what's still unknown.**
+3. **Design each question for this specific project.**
 
-   Before asking any question, reason about:
-   - What information is genuinely missing that you cannot infer?
-   - Which gaps would most change the requirements or research direction if answered differently?
-   - What project-specific nuances (this stack, this team, this domain) make the standard questions poor fits?
-
-   From this reasoning, generate only the questions needed to fill real gaps. If context and the user's request already cover all the information goals, write `requirements.md` without asking anything. Every question must earn its place.
-
-4. **Design each question for this specific project.**
+   Before asking any question, identify what information is genuinely missing that you cannot infer, which gaps would most change the requirements or research direction if answered differently, and what project-specific nuances (this stack, this team, this domain) make the standard questions poor fits. Generate only the questions needed to fill those real gaps — if context and the user's request already cover all the information goals, write `requirements.md` without asking anything. Every question must earn its place.
 
    For each question you decide to ask:
    - Write the `header` (≤ 12 chars) as the information goal, not a generic category
@@ -48,9 +41,9 @@ Conduct a structured requirements interview and produce `requirements.md`.
 
    Example: instead of `"What are the hard constraints?"` with generic options, write `"This touches the payments service — are there PCI or SLA constraints that bound the approach?"` with options drawn from what you know about this codebase.
 
-5. **Ask questions one at a time** using `AskUserQuestion`, only for genuine gaps. Wait for each answer before asking the next. Do not batch. If there are no gaps, skip directly to step 7.
+4. **Ask questions one at a time** using `AskUserQuestion`, only for genuine gaps. Wait for each answer before asking the next. Do not batch. If there are no gaps, skip directly to step 6.
 
-6. **Information goals** — your questions must collectively cover these before you can write `requirements.md`. You decide which questions elicit which goals; some goals may be covered by one question, some by context alone.
+5. **Information goals** — your questions must collectively cover these before you can write `requirements.md`. You decide which questions elicit which goals; some goals may be covered by one question, some by context alone.
 
    **Always required:**
    - Problem statement (what breaks or is missing, for whom)
@@ -72,7 +65,7 @@ Conduct a structured requirements interview and produce `requirements.md`.
    - Users / consumers — infer from problem statement and codebase
    - Tech stack — read from the repo
 
-7. **Anti-rationalization check.** Before writing `requirements.md`, confirm:
+6. **Anti-rationalization check.** Before writing `requirements.md`, confirm:
    - You have a problem statement (not a solution statement)
    - The baseline is captured so success can be measured against it
    - The success metric describes a behavior change, not just delivery
@@ -85,7 +78,7 @@ Conduct a structured requirements interview and produce `requirements.md`.
      - **4** = Migration, compliance/security-critical, or cross-cutting change with Large appetite
    - **For complexity ≥ 3**: observability requirements and risk control decision are captured
 
-8. **Write `project_plans/<PROJECT_NAME>/requirements.md`:**
+7. **Write `project_plans/<PROJECT_NAME>/requirements.md`:**
 
 ```markdown
 # Requirements: <PROJECT_NAME>
@@ -145,7 +138,7 @@ Conduct a structured requirements interview and produce `requirements.md`.
 <unresolved questions for research phase>
 ```
 
-9. **After writing the file**, output:
+8. **After writing the file**, output:
    ```
    ✅ Phase 1 complete — requirements.md written to project_plans/<PROJECT_NAME>/
 

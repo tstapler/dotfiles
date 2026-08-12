@@ -18,7 +18,7 @@ Spawn 6 parallel subagents to research the problem — covering stack, features,
    - **Complexity 1** (quick task): run Agents 1, 4, 6 only (stack, pitfalls, build-vs-buy). Skip agents 2, 3, 5 unless requirements mention edge cases, architecture, or UX.
    - **Complexity 2–3** (feature / system design): run all 6 agents.
    - **Complexity 4** (high-stakes): run all 6 agents. In Agent 3's prompt, add: "Separately evaluate failure modes specific to the migration or compliance aspect."
-   - If no Complexity field found in requirements.md: default to all 6 agents.
+   - If no Complexity field found in requirements.md: treat as Complexity 2 (Agents 1, 4, 6 always; add 2, 3, 5 only if requirements mention edge cases, architecture, or UX).
 
 2.75. **Check for existing hotspot/architecture analysis before dispatching Agent 3.** Don't
    re-derive this yourself — delegate to the skills that own it:

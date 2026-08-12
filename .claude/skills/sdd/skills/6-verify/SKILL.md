@@ -21,6 +21,27 @@ Verdicts:
   ✅ PASS      → all layers clean → proceed to /sdd:7-ship
 ```
 
+## Repair loop procedure (shared by all three gates)
+
+Each of Layer 1+2, Layer 3, and Layer 4 below runs this same loop shape, parameterized by what it collects, what it hands the fix subagent, and what it re-checks:
+
+```
+ITERATION = 0, MAX = 5
+while (<condition>) and (ITERATION < MAX):
+  ITERATION++
+  1. Collect all open <items> — <collect fields>.
+  2. Spawn a fresh fix subagent (lean-agent-loop pattern):
+     - Provide: <provide inputs>
+     - Agent: <what it does>, commits (does NOT push)
+     - Agent returns: what was changed + commit SHA
+  3. Re-run: <re-run scope>.
+  4. Update the open list. Remove resolved items.
+
+If clean after loop: proceed to <next step>.
+If MAX reached with items remaining: stop — report "<label> STUCK after 5 iterations"
+with the unresolved list. Do not proceed to <next step>.
+```
+
 ## Instructions
 
 1. **Follow [SETUP.md](../skills/SETUP.md)** — identify PROJECT_NAME.
@@ -228,25 +249,14 @@ Verdicts:
    | SUGGEST / CONCERN findings | Apply inline if <30 min total; otherwise note as follow-up |
    | NITPICK findings | Note only; do not block |
 
-   **Repair loop** — run only if BLOCKER or MUST FIX findings exist:
-
-   ```
-   ITERATION = 0, MAX = 5
-   while (blockers_or_mustfix_remain) and (ITERATION < MAX):
-     ITERATION++
-     1. Collect all open BLOCKER + MUST FIX findings:
-        each entry = { file, line, severity, description, concrete fix }
-     2. Spawn a fresh fix subagent (lean-agent-loop pattern):
-        - Provide: finding list, full diff, repo path
-        - Agent: edits files, runs affected tests locally, commits (does NOT push)
-        - Agent returns: list of changes made + commit SHA
-     3. Re-run Layer 1 + Layer 2 agents scoped to only the files the fix agent touched.
-     4. Collect new findings. Remove items the fix agent resolved. Re-evaluate.
-
-   If clean after loop: proceed to Layer 3.
-   If MAX reached with blockers remaining: stop — report "Layer 1+2 STUCK after 5 iterations"
-   with the unresolved finding list. Do not proceed to Layer 3.
-   ```
+   **Repair loop** — run only if BLOCKER or MUST FIX findings exist. Apply the repair loop
+   procedure defined above, with:
+   - condition: `blockers_or_mustfix_remain`
+   - collect: all open BLOCKER + MUST FIX findings — `{ file, line, severity, description, concrete fix }`
+   - provide: finding list, full diff, repo path
+   - agent does: edits files, runs affected tests locally
+   - re-run: Layer 1 + Layer 2 agents scoped to only the files the fix agent touched
+   - next step: Layer 3 — label: "Layer 1+2"
 
 7. **Layer 3 — Correctness & Tests** (only if Layers 1 + 2 repair loop exited clean)
 
@@ -276,28 +286,15 @@ Verdicts:
       - Alert conditions defined in plan.md are wired (or explicitly deferred with a follow-up task created)
       If no Observability Plan exists in plan.md: note as a gap in the report but do not block.
 
-   **After running steps a–e, apply the Layer 3 repair loop (max 5 iterations) for any failing items:**
-
-   ```
-   ITERATION = 0, MAX = 5
-   while (unmet_criteria or test_failures or security_blockers or error_handling_gaps) and (ITERATION < MAX):
-     ITERATION++
-     1. Collect all open issues:
-        - Unmet acceptance criteria from plan.md (criterion text, what's missing)
-        - Failing tests (test name, failure output)
-        - Security CRITICAL/HIGH findings (file, description)
-        - Unhandled error paths (file:line, description)
-     2. Spawn a fresh fix subagent (lean-agent-loop pattern):
-        - Provide: issue list with exact locations, plan.md acceptance criteria, repo path
-        - Agent: implements missing pieces, fixes tests, commits (does NOT push)
-        - Agent returns: what was implemented/fixed + commit SHA
-     3. Re-run: test suite + re-check each acceptance criterion + re-check fixed security items.
-     4. Update open issue list. Remove resolved items.
-
-   If clean after loop: proceed to Layer 4.
-   If MAX reached with failures remaining: stop — report "Layer 3 STUCK after 5 iterations"
-   with the unresolved issue list. Do not proceed to Layer 4.
-   ```
+   **After running steps a–e, apply the repair loop procedure for any failing items, with:**
+   - condition: `unmet_criteria or test_failures or security_blockers or error_handling_gaps`
+   - collect: unmet acceptance criteria from plan.md (criterion text, what's missing); failing
+     tests (test name, failure output); security CRITICAL/HIGH findings (file, description);
+     unhandled error paths (file:line, description)
+   - provide: issue list with exact locations, plan.md acceptance criteria, repo path
+   - agent does: implements missing pieces, fixes tests
+   - re-run: test suite + re-check each acceptance criterion + re-check fixed security items
+   - next step: Layer 4 — label: "Layer 3"
 
 8. **Layer 4 — UX & Behavioral Verification** (only if Layer 3 repair loop exited clean)
 
@@ -329,26 +326,14 @@ Verdicts:
       - Keyboard navigation: Tab reaches all interactive elements
       - Console has no unhandled JS errors during the golden path
 
-   **After running steps a–c, apply the Layer 4 repair loop (max 5 iterations) for any FAIL criteria:**
-
-   ```
-   ITERATION = 0, MAX = 5
-   while (ux_criteria_failures or golden_path_errors) and (ITERATION < MAX):
-     ITERATION++
-     1. Collect all open UX failures:
-        - Each failing criterion (criterion text, observed vs. expected behavior)
-        - golden-path errors (step that failed, error message)
-     2. Spawn a fresh fix subagent (lean-agent-loop pattern):
-        - Provide: failure list, ux.md criteria, relevant component files, repo path
-        - Agent: implements UI fixes, commits (does NOT push)
-        - Agent returns: what was changed + commit SHA
-     3. Re-run quality:does-it-work + re-check each previously failing UX criterion.
-     4. Update failure list. Remove resolved items.
-
-   If clean after loop: proceed to step 9 (report).
-   If MAX reached with failures remaining: stop — report "Layer 4 STUCK after 5 iterations"
-   with the unresolved UX failures. Do not produce a PASS verdict.
-   ```
+   **After running steps a–c, apply the repair loop procedure for any FAIL criteria, with:**
+   - condition: `ux_criteria_failures or golden_path_errors`
+   - collect: each failing criterion (criterion text, observed vs. expected behavior);
+     golden-path errors (step that failed, error message)
+   - provide: failure list, ux.md criteria, relevant component files, repo path
+   - agent does: implements UI fixes
+   - re-run: `quality:does-it-work` + re-check each previously failing UX criterion
+   - next step: step 9 (report) — label: "Layer 4". If MAX is reached, do not produce a PASS verdict.
 
 9. **Output the verification report:**
 

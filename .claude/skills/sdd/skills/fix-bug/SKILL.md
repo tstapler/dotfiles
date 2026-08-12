@@ -13,9 +13,9 @@ Three-phase maintenance workflow: root cause → fix → verify.
 
 2. **Select the bug.** If an argument is provided, use it. Otherwise scan `docs/bugs/open/` and select the highest priority open bug.
 
-3. **Phase A — Root cause (do not skip).**
+3. **Phase A — Root cause.**
 
-   **Iron Law: No fix without root cause investigation first. Symptom fixes are failure.**
+   Investigate the root cause before proposing a fix — a fix aimed only at the symptom will resurface.
 
    Before proposing any fix:
    - Read the full error, stack trace, and surrounding context
@@ -30,10 +30,10 @@ Three-phase maintenance workflow: root cause → fix → verify.
 
 5. **Phase C — Verify.**
 
-   **Iron Law: No completion claim without running the test and showing the output.**
+   Claim the bug is fixed only after running the test and showing the passing output.
 
    Run the relevant test(s) using the appropriate test command for the stack.
-   Show the full output. Only claim the bug is fixed after seeing green.
+   Show the full output.
 
 6. **Phase D — Reflect (fix the class, not the instance).**
 

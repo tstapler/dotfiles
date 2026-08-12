@@ -1,5 +1,5 @@
 ---
-description: "Phase 5 — Execute plan via parallel worker subagents. START IN A FRESH SESSION."
+description: "Phase 5 — Execute plan via parallel worker subagents. Requires a fresh session (see below)."
 user-invocable: true
 effort: high
 allowed-tools: Read, Write, Edit, Bash, Agent, AskUserQuestion
@@ -13,7 +13,7 @@ Execute the implementation plan using parallel worker subagents dispatched direc
 
 If this session was used for planning (ideate/research/plan/validate), **stop now**.
 Close this session and open a new one, then run `/sdd:5-implement` again.
-Planning context degrades code generation quality — this is not optional.
+Planning context degrades code generation quality.
 
 ## Instructions
 
@@ -41,7 +41,7 @@ Planning context degrades code generation quality — this is not optional.
    > - `project_plans/<PROJECT_NAME>/design/ux.md` — read if this epic contains user-facing stories (skip otherwise)
    >
    > **Codebase orientation (before writing any code):**
-   > Understand the existing code context for this epic using context-efficient techniques — do NOT read entire files or directories blindly:
+   > Understand the existing code context for this epic using context-efficient techniques — do not read entire files or directories blindly:
    > - `Glob` to find files by pattern (e.g., `src/**/*.ts`, `**/*service*.go`)
    > - `sg --pattern '<pattern>' --lang <lang>` for structural code searches — finding existing function signatures, interface definitions, type declarations, or call sites. Use `sg` (ast-grep) instead of `grep` for code structure: it's syntax-aware and token-efficient. See `/code-ast-grep` for pattern syntax.
    > - `Grep` for text-based searches in configs, docs, or non-code files
@@ -54,14 +54,14 @@ Planning context degrades code generation quality — this is not optional.
    > 3. Run the tests for these specific files only — show output
    > 4. Fix any failures before moving to the next task
    >
-   > **Do NOT implement other epics.** Do NOT modify files outside the task's listed files.
+   > Stay within this epic's task files only — do not touch files outside your listed tasks or other epics' work.
    >
    > **Return:**
    > - Tasks completed (N/N)
    > - Test results (N passing, N failing)
    > - Any warnings or gaps found
 
-5. **Wait for all parallel workers to complete.** Do not start the next batch until all current workers have returned.
+5. **Wait for all parallel workers in this batch to complete before dispatching the next one.**
 
    **Worker failure recovery**:
    - If a worker returns with failing tests: run the worker repair loop (max 5 iterations):
