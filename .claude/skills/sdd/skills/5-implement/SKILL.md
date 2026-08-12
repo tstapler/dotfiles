@@ -29,7 +29,7 @@ Planning context degrades code generation quality.
    - Epics that write to the same file as another epic must run sequentially
    - Use the ASCII dependency diagram in plan.md as the authoritative source — do not re-derive it
 
-4. **Dispatch all independent epics in a single parallel message** using the `Agent` tool.
+4. **Dispatch all independent epics in a single parallel message** using the `Agent` tool with `subagent_type: "general-purpose"` (or another non-orchestrating type suited to the task) — never `subagent_type: "sdd"`. The `sdd` agent type runs multiple SDD phases internally, including implement; dispatching it as a "worker" makes it a coordinator agent that spawns further agents, which is the exact failure this step exists to prevent.
 
    Each worker agent receives this prompt template (fill in for each epic):
 

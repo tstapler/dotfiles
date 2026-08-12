@@ -16,6 +16,8 @@ Run the complete SDD workflow from ideation through shipping. Each phase delegat
 
 Use parallel Agent calls, not coordinator subagents. At each phase that benefits from concurrency, send a single message containing multiple `Agent` tool calls. Each agent is independent — it reads its input from disk, does its work, and writes its output to disk. The parent thread collects summaries from all agents before proceeding, dispatching them directly rather than through a "coordinator agent" that internally spawns further agents.
 
+**Concrete rule, not a vibe:** when choosing `subagent_type` for these Agent calls, never pass `sdd` — its own description offers to run multiple phases (including "implement" — i.e. Phase 5) internally, which makes it a coordinator agent even when dispatched as if it were one plain worker among several. Use `general-purpose` (or another non-orchestrating type suited to the task) for every worker. If a dispatched agent's result reports resuming into, or waiting on, another agent instead of returning a summary directly, that is the coordinator-recursion failure — stop, do not re-brief a fresh agent to continue it, and re-dispatch the work as a plain worker instead.
+
 ---
 
 ## Phase 1 — Ideate (this thread)
@@ -116,7 +118,7 @@ If not ready: stop here.
 
 Read `.claude/commands/sdd/5-implement.md` for the full worker agent prompt template, dependency diagram reading, failure recovery rules, and spec compliance sweep instructions.
 
-Dispatch workers directly from this thread in parallel — do not use a coordinator agent.
+Dispatch workers directly from this thread in parallel — do not use a coordinator agent. Per the Parallelization model above: `subagent_type` for each epic worker must not be `sdd`.
 
 ---
 
