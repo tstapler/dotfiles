@@ -226,7 +226,9 @@ Do NOT merge automatically — leave the final merge to the user.
 
 ## Pacing with ScheduleWakeup
 
-When Remote CI checks are still running:
+`ScheduleWakeup` is for waits on **state this session cannot observe directly** — Gate 4's remote CI is the only such wait in this loop. It is never for waiting on Gate 1b's test run or Gate 2's review/fix agents: those are dispatched with the `Agent` tool from this same session, and the harness notifies this thread automatically when they return. Block on the `Agent` call's result instead of scheduling a wakeup to poll for it — a `ScheduleWakeup` fired while an `Agent` call you dispatched is still outstanding is always wrong, regardless of delay length.
+
+For Gate 4's remote CI wait only:
 - Pending < 2 min → `delaySeconds: 90`
 - Pending 2–10 min → `delaySeconds: 270`
 - Pending > 10 min → `delaySeconds: 600`
