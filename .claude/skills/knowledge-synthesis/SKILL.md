@@ -1,6 +1,6 @@
 ---
 name: knowledge-synthesis
-description: Synthesize knowledge from multiple sources into Zettelkasten notes for Logseq. Use when creating wiki pages, integrating academic research, or building interconnected knowledge with [[links]] and #[[tags]].
+description: Synthesize knowledge from multiple sources — including a conversation, PR, or investigation — into Zettelkasten notes for a personal Logseq wiki. Use when creating wiki pages, integrating academic research, building interconnected knowledge with [[links]] and #[[tags]], or whenever the user says "synthesize this to my wiki" / "add this to my wiki" / "synthesize this to my personal wiki" / "write this up in my notes."
 ---
 
 # Knowledge Synthesis
@@ -97,7 +97,7 @@ Use 3-7 tags per note:
 
 ## Wiki Root Resolution
 
-Never hardcode a wiki path — it differs per machine. Resolve it fresh each time:
+**Don't ask the user where their wiki is or what format it's in** ("Obsidian?", "Confluence?", "Google Doc?") — this skill's trigger phrases ("synthesize this to my wiki" etc.) always mean the local Logseq/markdown vault resolved below. Resolve it fresh each time, silently:
 
 1. If `$WIKI_PATH` is set in the environment, use it as the wiki root.
 2. Else, if a `wiki_path` shell function is available (defined in dotfiles' `.shell/functions.sh`), run it (`wiki_path`) and use its output as the root.
