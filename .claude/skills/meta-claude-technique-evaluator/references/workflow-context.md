@@ -8,7 +8,7 @@ Reference for evaluating how new techniques fit the user's existing Claude Code 
 - **Shell**: zsh
 - **Package Manager**: Homebrew
 - **Python Tooling**: uv (package management), Pydantic (models), Typer (CLIs), pytest (testing)
-- **Version Control**: git + jj (Jujutsu), GitHub PRs via `gh` CLI
+- **Version Control**: git, GitHub PRs via `gh` CLI
 - **Wiki**: Logseq (Zettelkasten) at `~/Documents/personal-wiki/`
 
 ## Skills Library (`~/.claude/skills/`)
@@ -18,7 +18,7 @@ Reference for evaluating how new techniques fit the user's existing Claude Code 
 | Category | Skills |
 |----------|--------|
 | **Development** | `python-development`, `code-ast-grep`, `code-gritql`, `code-refactoring`, `code-java-api-discovery` |
-| **Version Control** | `git-worktrees`, `jj-version-control`, `github-pr` |
+| **Version Control** | `git-worktrees`, `github-pr` |
 | **Infrastructure** | `infra-homebrew`, `infra-testing`, `infra-docker-build-test`, `fbg-terraform-changes` |
 | **Documentation** | `knowledge-synthesis`, `knowledge-confluence-sync` |
 | **Debugging** | `code-root-cause-analysis`, `code-debugging`, `code-review` |
@@ -74,7 +74,7 @@ When evaluating a new technique, check these existing capabilities:
 - **Knowledge management** → `knowledge-synthesis` skill
 - **Code transformation** → `code-ast-grep` + `code-gritql` + `code-refactoring` skills
 - **Model selection** → `meta-model-selection` skill
-- **Git workflows** → `git-worktrees` + `jj-version-control` + `github-pr` skills
+- **Git workflows** → `git-worktrees` + `github-pr` skills
 - **Debugging** → `code-root-cause-analysis` skill
 - **Documentation sync** → `knowledge-confluence-sync` skill
 - **UI/Frontend** → `ui-design-system` + `ui-react-best-practices` + `ui-web-design-guidelines` skills

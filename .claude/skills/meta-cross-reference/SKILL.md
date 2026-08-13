@@ -118,7 +118,6 @@ Read the system-reminder for the authoritative live list. Use this catalog for s
 | `github-pr` | GitHub PR creation, review, CI status, gh CLI patterns |
 | `github-actions-debugging` | GitHub Actions workflow failure analysis: syntax errors, env issues, timeouts, permissions |
 | `github-address-pr-comments` | Systematically address open review comments on a PR |
-| `jj-version-control` | Jujutsu (jj) commits, rebases, bookmarks, revsets |
 | `sync-remotes` | Sync git remotes (fork → upstream, multi-remote push) |
 
 ### Language-Specific Performance

@@ -300,4 +300,3 @@ You: I need to work on authentication feature
 |-------|--------------|
 | `git-upstream-fork` | Upstream filtered changes from a worktree to a target repo |
 | `github-pr` | Open a PR after work in the worktree is complete |
-| `jj-version-control` | Use jj commits and bookmarks inside the worktree |

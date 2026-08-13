@@ -201,5 +201,4 @@ Produce a markdown document with these sections:
 | Skill | When to apply |
 |-------|--------------|
 | `git-worktrees` | Execute the merge plan in an isolated branch without disturbing the working tree |
-| `jj-version-control` | Manage diverged commits with jj rebase when the repo uses jj colocated mode |
 | `github-pr` | Create the pull request after the merge branch is clean and tests pass |

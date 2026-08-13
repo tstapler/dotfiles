@@ -343,4 +343,3 @@ gh pr diff <number> -- path/to/file.ts | head -100
 | `github-address-pr-comments` | Systematically resolve all open review threads |
 | `github-composite-actions` | Write or debug reusable actions in the repo |
 | `git-worktrees` | Isolate PR branch work without switching main checkout |
-| `jj-version-control` | Manage commits and bookmarks before pushing the PR |
