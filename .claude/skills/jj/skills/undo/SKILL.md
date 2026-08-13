@@ -141,7 +141,7 @@ jj op restore <operation-id> # Restore to exact state at that operation
 
 ## Common Undo Scenarios
 
-Use the **jj-stacked-pr** agent to handle:
+Follow this skill directly to handle:
 
 ### **1. Undo Last Commit**
 ```bash
@@ -414,7 +414,7 @@ jj op restore <latest-operation-id>
 
 ## Workflow
 
-Invoke the **jj-stacked-pr** agent to:
+Follow these steps:
 
 1. **Verify prerequisites** - Check jj installation
 2. **Analyze operation log** with `jj op log`
@@ -423,7 +423,7 @@ Invoke the **jj-stacked-pr** agent to:
 5. **Verify** the result with `jj log` and `jj status`
 6. **Continue work** with confidence
 
-The agent will ensure safe, correct undo operations using jj's operation log.
+This ensures safe, correct undo operations using jj's operation log.
 
 ---
 

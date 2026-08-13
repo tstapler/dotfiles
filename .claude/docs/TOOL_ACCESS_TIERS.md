@@ -243,7 +243,6 @@ Does the agent need to MODIFY files?
 ```yaml
 - jira-project-manager: [mcp__atlassian__*, TodoWrite, Read, Write, Edit]
 - pr-reviewer: [Read, Grep, Glob, MultiEdit, Edit, mcp__github__*, mcp__brave-search__*]
-- jj-stacked-pr: [Bash, Read, Write, Edit, Glob, Grep, TodoWrite, mcp__github__*]
 - pr-description-generator: [Read, Bash, Grep, Glob, mcp__github__*]
 ```
 

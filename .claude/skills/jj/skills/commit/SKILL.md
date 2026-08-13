@@ -145,7 +145,7 @@ When examining the working directory, look for these logical boundaries:
 
 ## Execution Process
 
-Use the **jj-stacked-pr** agent via the Task tool to:
+Follow this skill directly to:
 
 1. **Verify prerequisites** - Check jj installation
 2. **Run** `jj status` and `jj diff` to see all changes
@@ -235,5 +235,5 @@ Each commit is independently reviewable and represents one logical piece of func
 2. If yes: Run `jj git init --colocate` to initialize jj
 3. If no: User needs to initialize repository first
 
-Invoke the **jj-stacked-pr** agent now to analyze the working directory and create the appropriate granular commits.
+Analyze the working directory now and create the appropriate granular commits. For the git/GitHub-native equivalent (no jj), see the **git-stacked-prs** skill.
 

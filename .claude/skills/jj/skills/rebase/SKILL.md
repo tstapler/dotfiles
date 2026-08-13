@@ -121,7 +121,7 @@ Unlike git, jj rebasing is:
 
 ## Common Rebase Scenarios
 
-Use the **jj-stacked-pr** agent to handle:
+Follow this skill directly to handle:
 
 ### **1. Rebase Current Commit on Trunk**
 ```bash
@@ -267,7 +267,7 @@ jj commit -m "Resolved conflicts"
 
 ## Workflow
 
-Invoke the **jj-stacked-pr** agent to:
+Follow these steps:
 
 1. **Verify prerequisites** - Check jj installation
 2. **Analyze current state** with `jj log` and revsets

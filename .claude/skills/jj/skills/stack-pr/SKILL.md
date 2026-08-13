@@ -6,7 +6,7 @@ description: Create granular commits and stacked PRs using Jujutsu (jj) version 
 
 > **IMPORTANT**: This skill is for **Jujutsu (jj)** workflows only. If the user asked for a commit, branch, or PR without mentioning `jj`, stop and use the `git:commit` or `git:create-pr` skill instead.
 
-You are being invoked to help with Jujutsu (jj) stacked PR workflows. Use the **jj-stacked-pr** agent to provide specialized expertise in:
+You are being invoked to help with Jujutsu (jj) stacked PR workflows. Follow the steps below directly (for the git/GitHub-native equivalent workflow, see the **git-stacked-prs** skill instead) to provide specialized expertise in:
 - Creating granular, reviewable commits from large changes
 - Building stacked commit dependencies
 - Managing GitHub PRs for commit stacks
@@ -141,7 +141,7 @@ gh auth status
 
 ## Workflow
 
-Invoke the **jj-stacked-pr** agent using the Task tool to handle this request. The agent has deep expertise in:
+Handle this request directly, covering:
 - Jujutsu CLI operations (split, squash, rebase, etc.)
 - Stacked diff best practices
 - Revsets for commit queries
@@ -149,8 +149,6 @@ Invoke the **jj-stacked-pr** agent using the Task tool to handle this request. T
 - Granular commit crafting
 
 ## Expected Process
-
-The jj-stacked-pr agent will:
 
 1. **Verify prerequisites** - Check jj and gh installation
 2. **Analyze** the current state using `jj log` and `jj status`
@@ -459,7 +457,7 @@ jj git push --all --force
 
 ## Workflow Summary
 
-Invoke the **jj-stacked-pr** agent to handle any stacked PR workflow. The agent will:
+Handle any stacked PR workflow by following this skill directly:
 
 1. ✅ Verify all prerequisites (jj, gh, repository state)
 2. ✅ Analyze current state and plan approach
@@ -468,7 +466,5 @@ Invoke the **jj-stacked-pr** agent to handle any stacked PR workflow. The agent 
 5. ✅ Provide clear guidance and documentation
 6. ✅ Handle errors gracefully with actionable solutions
 
-The agent ensures your stacked PR workflow is smooth, safe, and follows best practices.
-
-Proceed by invoking the jj-stacked-pr agent with the Task tool.
+This ensures your stacked PR workflow is smooth, safe, and follows best practices. For the git/GitHub-native equivalent (no jj), use the **git-stacked-prs** skill instead.
 
