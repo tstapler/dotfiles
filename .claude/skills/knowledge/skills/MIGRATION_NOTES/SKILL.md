@@ -1,5 +1,5 @@
 ---
-description: 
+description: Knowledge Processing Architecture Migration Notes
 ---
 
 # Knowledge Processing Architecture Migration Notes

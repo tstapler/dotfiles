@@ -1,5 +1,5 @@
 ---
-description: 
+description: Analyze Claude Settings and Suggest Global Allows
 ---
 
 # Analyze Claude Settings and Suggest Global Allows

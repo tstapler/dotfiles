@@ -1,5 +1,5 @@
 ---
-description: 
+description: Knowledge Enrichment Orchestrator
 ---
 
 # Knowledge Enrichment Orchestrator

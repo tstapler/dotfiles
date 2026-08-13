@@ -1,5 +1,5 @@
 ---
-description: 
+description: Parallelization Examples and Patterns
 ---
 
 # Parallelization Examples and Patterns

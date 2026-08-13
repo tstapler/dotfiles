@@ -1,5 +1,5 @@
 ---
-description: 
+description: Knowledge Processing Architecture
 ---
 
 # Knowledge Processing Architecture

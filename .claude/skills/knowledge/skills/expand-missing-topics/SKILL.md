@@ -1,5 +1,5 @@
 ---
-description: 
+description: Expand Missing Topics Command
 ---
 
 # Expand Missing Topics Command
