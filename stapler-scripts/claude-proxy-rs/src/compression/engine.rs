@@ -11,7 +11,7 @@ use serde_json::{json, Value};
 use std::sync::Arc;
 use tracing::{debug, warn};
 
-use crate::compression::{compress_fenced_blocks, RewindStore, TextCompressor};
+use crate::compression::{compress_fenced_blocks, RewindStore, SmartCrusher, TextCompressor};
 use crate::compression::rewind::{format_rewind_marker, REWIND_MARKER_PATTERN};
 
 // ---------------------------------------------------------------------------
@@ -53,6 +53,7 @@ pub struct CompressionEngine {
     pub config: CompressionConfig,
     pub rewind_store: Arc<RewindStore>,
     text_compressor: TextCompressor,
+    smart_crusher: SmartCrusher,
 }
 
 // ---------------------------------------------------------------------------
@@ -86,6 +87,7 @@ impl CompressionEngine {
             config,
             rewind_store,
             text_compressor: TextCompressor::new(),
+            smart_crusher: SmartCrusher::new(),
         }
     }
 
@@ -166,7 +168,10 @@ impl CompressionEngine {
         //    - assistant messages: always compress text blocks
         //    - user messages: compress text blocks that are log-like
         //      (>20 lines OR contain ANSI escape codes)
-        //    - tool_use / tool_result blocks: pass through untouched
+        //    - tool_result blocks: run SmartCrusher on JSON-array content
+        //      (statistical field elision); pass through if not JSON or
+        //      not worth restructuring
+        //    - tool_use blocks: pass through untouched
         // ----------------------------------------------------------------
         let mut compressed_messages = original_messages.clone();
         let mut any_compressed = false;
@@ -190,7 +195,14 @@ impl CompressionEngine {
                     .unwrap_or("")
                     .to_string();
 
-                // Only compress text blocks; pass tool_use/tool_result through.
+                if block_type == "tool_result" {
+                    if try_smart_crush_tool_result(block, &self.smart_crusher) {
+                        any_compressed = true;
+                    }
+                    continue;
+                }
+
+                // Only compress text blocks; pass tool_use through untouched.
                 if block_type != "text" {
                     continue;
                 }
@@ -417,6 +429,44 @@ fn validate_tool_pairs(messages: &[Value]) -> (bool, Vec<String>) {
     (orphaned.is_empty(), orphaned)
 }
 
+/// Attempt SmartCrusher field-elision compression on a `tool_result` block's
+/// `content`, which is either a raw JSON string or an array of `text` blocks
+/// (each potentially holding JSON text). Mutates `block` in place and returns
+/// `true` if anything was compressed.
+fn try_smart_crush_tool_result(block: &mut Value, crusher: &SmartCrusher) -> bool {
+    let crush_str = |s: &str| -> Option<String> {
+        let parsed: Value = serde_json::from_str(s).ok()?;
+        let crushed = crusher.compress(&parsed)?;
+        let new_str = serde_json::to_string(&crushed).ok()?;
+        (new_str.len() < s.len()).then_some(new_str)
+    };
+
+    match block.get("content") {
+        Some(Value::String(s)) => {
+            let Some(new_str) = crush_str(s) else { return false };
+            block["content"] = Value::String(new_str);
+            true
+        }
+        Some(Value::Array(_)) => {
+            let mut changed = false;
+            if let Some(blocks) = block.get_mut("content").and_then(|c| c.as_array_mut()) {
+                for b in blocks.iter_mut() {
+                    if b.get("type").and_then(|t| t.as_str()) != Some("text") {
+                        continue;
+                    }
+                    let Some(text) = b.get("text").and_then(|t| t.as_str()) else { continue };
+                    if let Some(new_str) = crush_str(text) {
+                        b["text"] = Value::String(new_str);
+                        changed = true;
+                    }
+                }
+            }
+            changed
+        }
+        _ => false,
+    }
+}
+
 /// Return `true` if `text` looks like log output (>20 lines or contains ANSI).
 fn is_log_like(text: &str) -> bool {
     use once_cell::sync::Lazy;
@@ -441,6 +491,9 @@ fn inject_rewind_marker(msg: &mut Value, marker: &str, _msg_index: usize) {
                 }
             }
         }
+        // No existing text block (e.g. a tool_result-only compression) —
+        // append one so the marker stays discoverable/recoverable.
+        content.push(json!({"type": "text", "text": marker}));
     }
 }
 
@@ -463,5 +516,152 @@ fn inject_rewind_tool(request: &mut Value) {
         None => {
             request["tools"] = Value::Array(vec![rewind_tool_def()]);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn ci_checks_json(n: usize) -> String {
+        let items: Vec<Value> = (0..n)
+            .map(|i| {
+                json!({
+                    "name": "CI",
+                    "event": "push",
+                    "status": "completed",
+                    "conclusion": "success",
+                    "headSha": "18dd9e02c111210f107fa54f2588b27d32ce07e1",
+                    "url": format!("https://github.com/tstapler/dotfiles/actions/runs/{}", i),
+                })
+            })
+            .collect();
+        serde_json::to_string(&Value::Array(items)).unwrap()
+    }
+
+    #[test]
+    fn smart_crush_string_content_elides_constant_fields() {
+        let mut block = json!({
+            "type": "tool_result",
+            "tool_use_id": "toolu_1",
+            "content": ci_checks_json(6),
+        });
+        let crusher = SmartCrusher::new();
+        assert!(try_smart_crush_tool_result(&mut block, &crusher));
+        let new_content = block["content"].as_str().unwrap();
+        assert!(new_content.len() < ci_checks_json(6).len());
+        let parsed: Value = serde_json::from_str(new_content).unwrap();
+        assert_eq!(parsed["_elided_constant_fields"]["name"], "CI");
+    }
+
+    #[test]
+    fn smart_crush_array_content_elides_constant_fields() {
+        let mut block = json!({
+            "type": "tool_result",
+            "tool_use_id": "toolu_1",
+            "content": [{"type": "text", "text": ci_checks_json(6)}],
+        });
+        let crusher = SmartCrusher::new();
+        assert!(try_smart_crush_tool_result(&mut block, &crusher));
+        let text = block["content"][0]["text"].as_str().unwrap();
+        let parsed: Value = serde_json::from_str(text).unwrap();
+        assert_eq!(parsed["_elided_constant_fields"]["status"], "completed");
+    }
+
+    #[test]
+    fn smart_crush_no_op_on_plain_text_content() {
+        let mut block = json!({
+            "type": "tool_result",
+            "tool_use_id": "toolu_1",
+            "content": "(Bash completed with no output)",
+        });
+        let crusher = SmartCrusher::new();
+        assert!(!try_smart_crush_tool_result(&mut block, &crusher));
+        assert_eq!(block["content"], "(Bash completed with no output)");
+    }
+
+    #[tokio::test]
+    async fn compress_request_crushes_large_tool_result_json() {
+        let rewind_store = Arc::new(RewindStore::new().await);
+        let engine = CompressionEngine::new(CompressionConfig::default(), rewind_store).await;
+
+        let request = json!({
+            "model": "claude-test",
+            "messages": [
+                {
+                    "role": "assistant",
+                    "content": [
+                        {"type": "tool_use", "id": "toolu_1", "name": "gh_checks", "input": {}}
+                    ]
+                },
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_use_id": "toolu_1",
+                            "content": ci_checks_json(30),
+                        }
+                    ]
+                }
+            ]
+        });
+
+        let (compressed, stats) = engine.compress_request(request.clone()).await;
+        assert!(stats.compressed, "expected compression to trigger above the floor");
+        assert!(stats.bytes_after < stats.bytes_before);
+
+        // Tool pairing must survive: same tool_use_id, still present.
+        let user_content = &compressed["messages"][1]["content"];
+        assert_eq!(user_content[0]["tool_use_id"], "toolu_1");
+
+        // A Rewind marker must be discoverable even though the message had
+        // no pre-existing text block (pure tool_result compression).
+        let has_marker = user_content
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|b| {
+                b.get("type").and_then(|t| t.as_str()) == Some("text")
+                    && b.get("text")
+                        .and_then(|t| t.as_str())
+                        .is_some_and(|t| REWIND_MARKER_RE.is_match(t))
+            });
+        assert!(has_marker, "expected a Rewind marker block to be injected");
+
+        // Rewind tool must be injected so the marker is actionable.
+        let tools = compressed["tools"].as_array().unwrap();
+        assert!(tools.iter().any(|t| t["name"] == "rewind_retrieve"));
+    }
+
+    #[tokio::test]
+    async fn compress_request_leaves_small_non_json_tool_result_untouched() {
+        let rewind_store = Arc::new(RewindStore::new().await);
+        let engine = CompressionEngine::new(CompressionConfig::default(), rewind_store).await;
+
+        // Pad with an assistant text block so the request clears the floor,
+        // and keep tool_use/tool_result pairing valid; the tool_result
+        // itself is plain (non-JSON) text and must pass through untouched.
+        let request = json!({
+            "model": "claude-test",
+            "messages": [
+                {
+                    "role": "assistant",
+                    "content": [
+                        {"type": "tool_use", "id": "toolu_1", "name": "noop", "input": {}},
+                        {"type": "text", "text": "x".repeat(1500)}
+                    ]
+                },
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "tool_result", "tool_use_id": "toolu_1", "content": "ok"}
+                    ]
+                }
+            ]
+        });
+
+        let (compressed, _stats) = engine.compress_request(request).await;
+        assert_eq!(compressed["messages"][1]["content"][0]["content"], "ok");
     }
 }
