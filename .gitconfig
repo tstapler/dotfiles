@@ -12,7 +12,7 @@
 	browser = google-chrome-stable
 
 [push]
-	default = matching
+	default = simple
 
 [color]
 	ui = auto
