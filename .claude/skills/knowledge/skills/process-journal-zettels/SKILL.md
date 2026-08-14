@@ -303,7 +303,7 @@ For each topic in priority order:
    - Prioritize: Official documentation, technical blogs, academic papers, industry standards
 
    **Supplementary Research** - WebFetch:
-   - Use `mcp__read-website-fast__read_website` for deep content extraction
+   - Use `mcp__stapler-mcp__read_website` for deep content extraction
    - Target specific URLs from Brave Search results
    - Extract key definitions, examples, diagrams, code samples
    - Note source metadata (title, author, publication date)

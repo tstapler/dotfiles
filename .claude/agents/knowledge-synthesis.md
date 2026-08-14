@@ -99,7 +99,7 @@ Transform external information into **comprehensive daily synthesis notes** cons
 
 **Content Acquisition**:
 - **WebFetch**: Quick overview and initial understanding
-- **mcp__read-website-fast__read_website**: Complete content extraction
+- **mcp__stapler-mcp__read_website**: Complete content extraction
 - **mcp__brave-search__brave_web_search**: Find supporting/contradicting sources for comprehensive coverage
 
 **Check Existing Knowledge Base**:

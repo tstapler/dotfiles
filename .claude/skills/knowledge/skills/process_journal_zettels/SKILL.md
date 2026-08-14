@@ -34,7 +34,7 @@ For both explicit links and identified implicit topics, I'll:
 ### Phase 3: Content Generation Strategy
 Using the synthesize_knowledge approach, I'll:
 - **mcp__brave-search__brave_web_search**: Research each missing/incomplete topic for authoritative sources
-- **mcp__read-website-fast__read_website**: Extract detailed information from relevant sources
+- **mcp__stapler-mcp__read_website**: Extract detailed information from relevant sources
 - **WebFetch**: Gather additional context and perspectives
 - Plan comprehensive zettel structure for each missing page
 - Design linking strategy that connects to existing knowledge

@@ -516,7 +516,7 @@ if '[[Needs Research]]' in entry_content:
 - Include diverse perspectives
 - Document ALL tools used:
   - Web search queries (Brave Search, WebSearch, etc.)
-  - Websites read (mcp__read-website-fast__read_website, WebFetch)
+  - Websites read (mcp__stapler-mcp__read_website, WebFetch)
   - APIs accessed
 
 #### Valid Sources Section Example

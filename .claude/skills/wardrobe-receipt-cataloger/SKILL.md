@@ -112,14 +112,14 @@ For each item:
 ### 3a — Try to get the product image
 
 1. If `product_url` exists:
-   - Load: `ToolSearch: select:mcp__read-website-fast__read_website`
-   - Fetch the product page: `mcp__read-website-fast__read_website(url=product_url)`
+   - Load: `ToolSearch: select:mcp__stapler-mcp__read_website`
+   - Fetch the product page: `mcp__stapler-mcp__read_website(url=product_url)`
    - Extract the main product image URL from the page (look for `og:image` or primary product photo)
 2. If no image found from product page, search: `mcp__brave-search__brave_web_search` for `{brand} {product_name} {color} site:brand.com` to find a direct image URL
 
 ### 3b — Download the image
 
-Load: `ToolSearch: select:mcp__website-downloader__download_page`
+Load: `ToolSearch: select:mcp__stapler-mcp__fetch_page`
 
 - Save to: `logseq/assets/{brand-slug}-{product-slug}.jpg`
 - **Filename rules** (Android compatibility — NO `: * ? " < > | \`):

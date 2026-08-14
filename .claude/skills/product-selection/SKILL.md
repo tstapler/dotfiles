@@ -173,28 +173,28 @@ For **each** candidate, apply the `review-longevity-research` skill: search comm
 Use tools in this order when a domain blocks WebFetch:
 
 1. **`WebFetch`** — try first; fast and sufficient for accessible domains
-2. **`mcp__read-website-fast__read_website`** — try when WebFetch returns 403/429; often bypasses bot protection that blocks WebFetch. Save to `/tmp` if page is large.
-3. **Chrome MCP (`mcp__claude-in-chrome__navigate` + `mcp__claude-in-chrome__get_page_text`)** — last resort for pages that require JavaScript rendering or are behind login walls. Use when read-website-fast also fails. Load tools via ToolSearch before calling.
+2. **`mcp__stapler-mcp__read_website`** — try when WebFetch returns 403/429; often bypasses bot protection that blocks WebFetch. Save to `/tmp` if page is large.
+3. **Chrome MCP (`mcp__claude-in-chrome__navigate` + `mcp__claude-in-chrome__get_page_text`)** — last resort for pages that require JavaScript rendering or are behind login walls. Use when stapler-mcp also fails. Load tools via ToolSearch before calling.
 
 Never give up on a preferred retailer (Lowe's, Amazon) without trying all three tools.
 
 ### Critical Domain Routing
 
-**Try `mcp__read-website-fast__read_website` before giving up — may bypass bot protection:**
+**Try `mcp__stapler-mcp__read_website` before giving up — may bypass bot protection:**
 | Domain | WebFetch result | Fallback |
 |---|---|---|
-| lowes.com | 403 Forbidden — **preferred human link** | try read-website-fast, then Chrome MCP |
-| amazon.com | 500 / robot challenge — **preferred human link** | try read-website-fast, then Chrome MCP |
-| homedepot.com | 403 Forbidden | try read-website-fast |
-| wayfair.com | 429 / 403 | try read-website-fast |
-| walmart.com | Robot challenge | try read-website-fast |
-| signaturehardware.com | 403 Forbidden | try read-website-fast |
-| ferguson.com | Akamai bot | try read-website-fast |
-| fergusonhome.com | 403 Forbidden | try read-website-fast |
-| ebay.com | Timeout | try read-website-fast |
+| lowes.com | 403 Forbidden — **preferred human link** | try stapler-mcp, then Chrome MCP |
+| amazon.com | 500 / robot challenge — **preferred human link** | try stapler-mcp, then Chrome MCP |
+| homedepot.com | 403 Forbidden | try stapler-mcp |
+| wayfair.com | 429 / 403 | try stapler-mcp |
+| walmart.com | Robot challenge | try stapler-mcp |
+| signaturehardware.com | 403 Forbidden | try stapler-mcp |
+| ferguson.com | Akamai bot | try stapler-mcp |
+| fergusonhome.com | 403 Forbidden | try stapler-mcp |
+| ebay.com | Timeout | try stapler-mcp |
 | faucet.com | 404 (stale URL patterns) | re-search for updated URL |
 | faucetdirect.com | 404 (stale URL patterns) | re-search for updated URL |
-| build.com → fergusonhome.com | 403 Forbidden | try read-website-fast |
+| build.com → fergusonhome.com | 403 Forbidden | try stapler-mcp |
 
 Only mark a domain ⚠ browser only after all three fetch methods have failed.
 
@@ -252,10 +252,10 @@ For each candidate product:
 Try tools in order until one succeeds:
 ```
 1. WebFetch(url=image_url, prompt="Is this a valid accessible image? Return HTTP status and approximate file size in KB.")
-2. mcp__read-website-fast__read_website(url=image_url) — if WebFetch blocked
+2. mcp__stapler-mcp__read_website(url=image_url) — if WebFetch blocked
 3. Chrome MCP navigate + screenshot — if both above fail and domain is a preferred retailer
 ```
-**Interpreting results** (WebFetch/read-website-fast can't render binary images — binary saves are valid):
+**Interpreting results** (WebFetch/stapler-mcp can't render binary images — binary saves are valid):
 - Valid signal: Binary JPEG/PNG file saved, size **> 5KB** → confirmed working image
 - Invalid: HTTP 403 or 404 on all three tools → discard, find alternative
 - Ambiguous: File saved but < 3KB → likely a placeholder or error icon → discard
@@ -265,7 +265,7 @@ Try tools in order until one succeeds:
 Try tools in order:
 ```
 1. WebFetch(url=product_url, prompt="Return HTTP status and page title.")
-2. mcp__read-website-fast__read_website(url=product_url) — if WebFetch blocked
+2. mcp__stapler-mcp__read_website(url=product_url) — if WebFetch blocked
 3. Chrome MCP navigate — if both above fail; navigate and read page text
 ```
 - Success + matching page title → confirmed ✓

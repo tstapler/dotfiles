@@ -91,7 +91,7 @@ code-refactoring:
 ---
 
 ### Tier 4: Research + Filesystem
-**Tools**: `Read, Write, Edit, Grep, Glob, WebFetch, mcp__brave-search__*, mcp__read-website-fast__*`
+**Tools**: `Read, Write, Edit, Grep, Glob, WebFetch, mcp__brave-search__*, mcp__stapler-mcp__read_website`
 
 **Use Cases**:
 - External research
@@ -102,7 +102,7 @@ code-refactoring:
 **Example Agents**:
 ```yaml
 software-planner:
-  tools: [TodoWrite, Read, Grep, Glob, Bash, WebFetch, mcp__brave-search__brave_web_search, mcp__read-website-fast__read_website]
+  tools: [TodoWrite, Read, Grep, Glob, Bash, WebFetch, mcp__brave-search__brave_web_search, mcp__stapler-mcp__read_website]
 ```
 
 **Characteristics**:
@@ -182,7 +182,7 @@ pr-reviewer:
 |------|---------|------------|
 | `WebFetch` | Fetch web content | Low |
 | `mcp__brave-search__*` | Web search | Low |
-| `mcp__read-website-fast__*` | Fast web reading | Low |
+| `mcp__stapler-mcp__read_website` | Fast web reading | Low |
 
 ### MCP Integration Tools
 | Tool | Purpose | Risk Level |

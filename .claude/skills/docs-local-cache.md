@@ -3,7 +3,7 @@ name: docs-local-cache
 description: >
   Fetch official documentation for any library or tool, cache it locally in a versioned store, and
   search it offline. Prefers arabold/docs-mcp-server (MCP with SQLite + vector search) when
-  installed; falls back to llms.txt fetch or website-downloader for lightweight caching. Use
+  installed; falls back to llms.txt fetch or stapler-mcp for lightweight caching. Use
   instead of context7 or live web search when you need authoritative, offline, version-pinned docs.
   Invoke when asked to "look up docs for X", "cache docs for X", "search local docs", "add docs
   for X", or "update docs cache for X".
@@ -189,7 +189,7 @@ cat ~/.claude/docs/cache/index.json 2>/dev/null | python3 -m json.tool
 The `llms.txt` standard (<https://llmstxt.org>) — a concise, LLM-optimized doc summary many
 projects now publish at their docs root.
 
-Use `mcp__read-website-fast__read_website` to fetch:
+Use `mcp__stapler-mcp__read_website` to fetch:
 - `<docs-url>/llms.txt` — summary + links
 - `<docs-url>/llms-full.txt` — complete docs in one file
 
@@ -201,10 +201,10 @@ Use `mcp__read-website-fast__read_website` to fetch:
 
 | Priority | Method | When |
 |---|---|---|
-| 1 | `mcp__read-website-fast__read_website` on `/llms.txt` | Always try first |
-| 2 | `mcp__read-website-fast__read_website` on specific pages | For targeted queries |
-| 3 | `mcp__website-downloader__download_page` | Preserve HTML structure |
-| 4 | `mcp__website-downloader__download_website` | Full offline copy (slow) |
+| 1 | `mcp__stapler-mcp__read_website` on `/llms.txt` | Always try first |
+| 2 | `mcp__stapler-mcp__read_website` on specific pages | For targeted queries |
+| 3 | `mcp__stapler-mcp__fetch_page` | Preserve HTML structure |
+| 4 | `mcp__stapler-mcp__download_website` | Full offline copy (slow) |
 | 5 | `git clone --depth=1 <repo>` + copy `docs/` | Docs in GitHub repo |
 
 ### Step 4: Write metadata

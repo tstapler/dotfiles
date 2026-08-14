@@ -216,7 +216,7 @@ Please create a comprehensive Zettelkasten note on the topic: "$1"
 
 **Research Strategy:**
 - Use **WebFetch** for getting the general idea and overview of content from URLs
-- Use **mcp__read-website-fast__read_website** for complete, detailed content extraction from websites
+- Use **mcp__stapler-mcp__read_website** for complete, detailed content extraction from websites
 - Use **mcp__brave-search__brave_web_search** to find related materials, sources, and context
 - Combine multiple sources when beneficial for comprehensive coverage
 

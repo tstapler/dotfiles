@@ -37,7 +37,7 @@ Reference for evaluating how new techniques fit the user's existing Claude Code 
 
 - Tool priority table: dedicated tools over Bash
 - Skills auto-activation based on task context
-- MCP servers available (serena, read-website-fast)
+- MCP servers available (serena, stapler-mcp)
 - Model: Claude Opus 4.6 primary
 
 ## Python Monorepo (`~/Documents/personal-wiki/tools/`)

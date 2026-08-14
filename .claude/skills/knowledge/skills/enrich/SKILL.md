@@ -326,7 +326,7 @@ validation_results:
 - [[Dating Ball Glass Jars]] - MISSING SOURCES SECTION
   - Issue: No "## Sources" section found
   - Action: Add sources used during research
-  - Research tools used: mcp__brave-search__brave_web_search, mcp__read-website-fast__read_website
+  - Research tools used: mcp__brave-search__brave_web_search, mcp__stapler-mcp__read_website
   - Entry location: logseq/journals/2026_01_09.md:15
 
 ### Recommended Follow-Up

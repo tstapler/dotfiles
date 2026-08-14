@@ -1,21 +1,10 @@
 {
   "mcpServers": {
-    "brave-search": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-brave-search"
-      ],
-      "_fork": "exception: official @modelcontextprotocol Anthropic-maintained package",
-      "env": {
-        "BRAVE_API_KEY": "${BRAVE_API_KEY}"
-      }
-    },
     "stapler-mcp": {
       "command": "${HOME}/.cargo/bin/stapler-mcp",
       "args": [],
       "_fork": "https://github.com/tstapler/stapler-mcp",
-      "_supersedes": "read-website-fast, website-downloader, docs-mcp-server -- one shared native daemon (thin stdio client per session) instead of a fresh npx/uvx process tree per subagent. Requires `cargo install --path crates/cli` from the stapler-mcp repo. Uses an absolute path rather than relying on PATH resolution: the process that spawns MCP servers doesn't always inherit a shell profile that's run `pathadd \"$HOME/.cargo/bin\"` (see .shell/exports.sh), so the bare command name silently failed to resolve and the server never started. BRAVE_API_KEY must also be set for brave_web_search since the daemon inherits it from whichever thin client first spawns it.",
+      "_supersedes": "read-website-fast, website-downloader, docs-mcp-server, brave-search -- one shared native daemon (thin stdio client per session) instead of a fresh npx/uvx process tree per subagent. Requires `cargo install --path crates/cli` from the stapler-mcp repo. Uses an absolute path rather than relying on PATH resolution: the process that spawns MCP servers doesn't always inherit a shell profile that's run `pathadd \"$HOME/.cargo/bin\"` (see .shell/exports.sh), so the bare command name silently failed to resolve and the server never started. brave-search removed 2026-08-12: stapler-mcp's brave_web_search covers real usage; the official server's only extra capability (brave_local_search) saw ~zero use. Requires BRAVE_API_KEY in the environment of whichever thin client first spawns the daemon.",
       "env": {}
     },
     "playwright": {
@@ -29,7 +18,7 @@
     "1password": {
       "command": "1password-mcp",
       "args": [],
-      "_requires": "1Password desktop app installed natively (not Flatpak/Snap) with Settings > Developer > 'Integrate with MCP clients' turned on. after-install.sh symlinks the binary to /usr/local/bin. Fails to start (command not found) on machines without the app — same graceful-failure pattern as brave-search needing BRAVE_API_KEY.",
+      "_requires": "1Password desktop app installed natively (not Flatpak/Snap) with Settings > Developer > 'Integrate with MCP clients' turned on. after-install.sh symlinks the binary to /usr/local/bin. Fails to start (command not found) on machines without the app — same graceful-failure pattern as stapler-mcp needing BRAVE_API_KEY.",
       "env": {}
     }
   }

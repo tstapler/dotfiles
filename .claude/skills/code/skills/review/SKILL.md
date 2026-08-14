@@ -87,6 +87,14 @@ python3 ~/.claude/scripts/pr-threads.py summary --owner "$OWNER" --repo "$REPO_N
 
 Store the `unresolved` array as `LIVE_THREADS`. Inject a summary of it into every Step 1 agent's prompt alongside `DIFF_SUMMARY` — e.g. "Known outstanding review threads: [file:line — one-line summary]. Do not re-report these as new findings; note in your output if your finding overlaps one." This keeps the diff-based agents from duplicating what's already tracked live on GitHub, and surfaces threads that predate this review run.
 
+Also fetch check-run findings — bots like bitbot post mutation-testing gaps and risk assessments as a check run with `conclusion: neutral`, which never shows up in `reviewThreads` and doesn't fail the PR, so a "review comments" pass alone misses it (a real gap this skill had until it was caught reviewing PR #501):
+
+```bash
+python3 ~/.claude/scripts/pr-threads.py checkruns --owner "$OWNER" --repo "$REPO_NAME" --pr "$PR" [--hostname <enterprise-host-if-applicable>]
+```
+
+Store the `non_success` array as `LIVE_CHECKS`. Fold it into the same agent-prompt injection as `LIVE_THREADS`: a mutation-testing "potential gaps found" entry names the untested branch/behavior directly, so treat it as a pointer for the Testing Quality Agent rather than something to re-derive from scratch — and don't rely on `gh pr checks`' status column for this, it has been observed disagreeing with the check-run API's own `conclusion` field.
+
 ---
 
 ### Step 1: Parallel Agent Invocation
