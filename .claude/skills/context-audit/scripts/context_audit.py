@@ -98,12 +98,17 @@ def analyze(path):
             n_user += 1
         else:
             n_assistant += 1
-            usage = entry.get("message", {}).get("usage")
+            message = entry.get("message", {})
+            usage = message.get("usage")
+            # Synthetic assistant lines (e.g. Claude Code's internal
+            # summarization turns) don't reflect the real conversation's
+            # context size, so they'd corrupt "last usage wins" if counted.
+            is_synthetic = message.get("model") == "<synthetic>"
             # Each assistant turn's usage reflects the *entire* API call's
             # input (full context so far, not just what's new this turn), so
             # the last one in the transcript is the actual final context
             # size — summing across turns would double-count.
-            if isinstance(usage, dict):
+            if isinstance(usage, dict) and not is_synthetic:
                 last_usage = usage
 
         content = entry.get("message", {}).get("content")

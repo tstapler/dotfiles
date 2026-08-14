@@ -33,6 +33,9 @@ Two totals are reported, on different bases:
   output_tokens, cache_creation_input_tokens, cache_read_input_tokens}`) from
   the *last* assistant turn in the transcript. This is the current context
   window size. `None` if the transcript has no assistant `usage` data.
+  Assistant lines with `message.model == "<synthetic>"` (Claude Code's
+  internal summarization turns) are skipped since their usage doesn't
+  reflect the real conversation's context size.
 - **Estimated tokens** — the `len(text) // 4` heuristic, summed across every
   block in the *entire* transcript. This is what the category breakdown
   (thinking/text/tool_use/tool_results/attachments) and recommendation
