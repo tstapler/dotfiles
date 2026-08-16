@@ -219,6 +219,19 @@ with the unresolved list. Do not proceed to <next step>.
 
    ### Layer 2 — Architecture & Design Quality (always two agents, regardless of technology)
 
+   **Step 0: kibitzer mechanical pre-pass (optional, degrades gracefully)**
+   - If an MCP connection to `kibitzer` is available and the repo has a `.claude/inspect.json`:
+     call its `architecture_assessment` tool scoped (via `scope`) to the packages/modules
+     touched by the diff. This is a mechanical pre-pass, not a replacement for the
+     architecture-review agent below — it covers what's cheaply checkable (import cycles,
+     layering violations, coupling thresholds, a Mermaid dependency diagram), not qualitative
+     judgment (SOLID, testability, over-engineering).
+   - If the tool isn't reachable, or the repo has no `.claude/inspect.json`: skip this step
+     silently and proceed straight to the architecture-review agent with no pre-pass context.
+     Phase 6 must never fail or stall because kibitzer isn't set up.
+   - If it returns findings: pass its raw output (findings text + Mermaid diagram) into the
+     architecture-review agent's prompt below as grounding context.
+
    **Agent: Architecture review**
    - Use the `code-architecture-best-practices` subagent type
    - Prompt: "Review this implementation diff for architecture quality: SOLID violations,
@@ -226,8 +239,12 @@ with the unresolved list. Do not proceed to <next step>.
      over-engineering, testability of new components in isolation, and consistency with the
      existing architecture. Also read `project_plans/<PROJECT_NAME>/implementation/plan.md`
      to check whether the implementation matches the design intent.
+     [If Step 0 ran and returned findings, append:] Here's what kibitzer's mechanical
+     architecture_assessment found — verify these are real (don't take them on faith) and
+     assess what it can't check: `<kibitzer output>`.
      Diff: `<full diff>`"
-   - Output: BLOCKER / CONCERN / NITPICK findings with rationale
+   - Output: BLOCKER / CONCERN / NITPICK findings with rationale. A confirmed kibitzer
+     `import-cycles`/`layering` finding maps to BLOCKER; `coupling` findings map to CONCERN.
 
    **Agent: Refactor candidates**
    - Use the `code-refactoring` subagent type
