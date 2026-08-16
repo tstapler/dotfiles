@@ -63,10 +63,16 @@ Dispatch a validation subagent to design the test suite. The subagent writes val
    | 5 | No BLOCKER items remain in architecture-review.md (or file is absent) | |
    | 6 | For schema changes: Migration Plan section in plan.md defines reversibility + zero-downtime strategy | |
    | 7 | No P1 items remain open in pre-mortem.md (or file is absent) | |
+   | 8 | Architecture read of plan.md: no planned package would cycle-import an existing one; no planned module takes on more than one layer's responsibility | |
+
+   Criterion 8 is a plain LLM read, not a kibitzer invocation — no code exists yet at this
+   phase for kibitzer's `architecture_assessment` to analyze. It asks the same questions
+   kibitzer's `import-cycles`/`layering` checks enforce post-code (see phase 6's Layer 2
+   pre-pass), so a plan-time judgment call and the post-code mechanical check stay aligned.
 
    Verdict:
    - **PASS** — all criteria met → output summary and proceed.
-   - **CONCERNS** — criteria 2–3 have minor gaps → ask with `AskUserQuestion`: "Proceed despite gaps, or fix first?" Halt if user chooses to fix.
+   - **CONCERNS** — criteria 2–3 or 8 have gaps → ask with `AskUserQuestion`: "Proceed despite gaps, or fix first?" Halt if user chooses to fix.
    - **FAIL** — criterion 1, 4, or 7 not met → halt with a clear list of what's missing. For pre-mortem P1 items: patch plan.md with the prevention from pre-mortem.md, then proceed. User must resolve before running `/sdd:5-implement`.
 
 6. **Run the Product Triad Review gate** (skip entirely at Complexity 1, per step 2.5).
