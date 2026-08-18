@@ -22,9 +22,4 @@ datasources:
     uid: loki
     jsonData:
       maxLines: 1000
-      derivedFields:
-        - datasourceUid: prometheus
-          matcherRegex: "traceID=(\\w+)"
-          name: TraceID
-          url: "$${__value.raw}"
     version: 1

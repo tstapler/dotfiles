@@ -1,14 +1,12 @@
-.PHONY: all clean build run stop logs debug
+.PHONY: all clean build run up stop logs debug shell
 
-GATEWAY_IP := $(shell python3 get_gateway.py)
-CONTAINER_NAME := vaping-at-home-vaping-1
 PYTHON_FILES := pyproject.toml requirements.lock prometheus_plugin.py
 COMPOSE := $(shell if command -v docker-compose >/dev/null 2>&1; then echo "docker-compose"; else echo "docker compose"; fi)
 
 all: run
 
-config.yaml: config.yaml.template
-	sed 's/$${GATEWAY_IP}/$(GATEWAY_IP)/g' $< > $@
+config.yaml: config.yaml.template net_discovery.py generate_config.py
+	python3 generate_config.py
 
 build: config.yaml Dockerfile $(PYTHON_FILES)
 	$(COMPOSE) build

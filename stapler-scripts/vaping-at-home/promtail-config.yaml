@@ -6,7 +6,7 @@ positions:
   filename: /tmp/positions.yaml
 
 clients:
-  - url: http://localhost:3100/loki/api/v1/push
+  - url: http://loki:3100/loki/api/v1/push
 
 scrape_configs:
   # System logs (main system.log)
@@ -16,7 +16,7 @@ scrape_configs:
           - localhost
         labels:
           job: system_logs
-          __path__: /private/var/log/system.log*
+          __path__: /private/var/log/system.log
 
   # DHCP logs from system.log (macOS DHCP messages)
   - job_name: dhcp
@@ -25,15 +25,11 @@ scrape_configs:
           - localhost
         labels:
           job: dhcp_logs
-          __path__: /private/var/log/system.log*
+          __path__: /private/var/log/system.log
     pipeline_stages:
       - match:
-          selector: '{job="dhcp_logs"}'
-          stages:
-            - regex:
-                expression: '.*(?:DHCP|dhcp|bootpd).*'
-            - labels:
-                dhcp:
+          selector: '{job="dhcp_logs"} !~ "(?i)(DHCP|dhcp|bootpd)"'
+          action: drop
 
   # Network configuration logs
   - job_name: network_config
@@ -42,15 +38,11 @@ scrape_configs:
           - localhost
         labels:
           job: network_config
-          __path__: /private/var/log/system.log*
+          __path__: /private/var/log/system.log
     pipeline_stages:
       - match:
-          selector: '{job="network_config"}'
-          stages:
-            - regex:
-                expression: '.*(?:configd|networkd|Network|Interface|SCNetworkReachability).*'
-            - labels:
-                network:
+          selector: '{job="network_config"} !~ "(?i)(configd|networkd|Network|Interface|SCNetworkReachability)"'
+          action: drop
 
   # WiFi logs
   - job_name: wifi
@@ -59,7 +51,7 @@ scrape_configs:
           - localhost
         labels:
           job: wifi_logs
-          __path__: /private/var/log/wifi.log*
+          __path__: /private/var/log/wifi.log
 
   # Power Management logs (for sleep/wake events)
   - job_name: power_management
@@ -68,15 +60,11 @@ scrape_configs:
           - localhost
         labels:
           job: power_logs
-          __path__: /private/var/log/system.log*
+          __path__: /private/var/log/system.log
     pipeline_stages:
       - match:
-          selector: '{job="power_logs"}'
-          stages:
-            - regex:
-                expression: '.*(?:powerd|Sleep|Wake|hibernation|power).*'
-            - labels:
-                power:
+          selector: '{job="power_logs"} !~ "(?i)(powerd|Sleep|Wake|hibernation|power)"'
+          action: drop
 
   # Install logs (may contain network/system configuration changes)
   - job_name: install
@@ -85,4 +73,4 @@ scrape_configs:
           - localhost
         labels:
           job: install_logs
-          __path__: /private/var/log/install.log*
+          __path__: /private/var/log/install.log

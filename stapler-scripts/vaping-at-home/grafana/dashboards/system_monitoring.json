@@ -344,7 +344,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "1 - (node_memory_available_bytes / node_memory_total_bytes)",
+          "expr": "1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)",
           "legendFormat": "Memory Usage",
           "range": true,
           "refId": "A"

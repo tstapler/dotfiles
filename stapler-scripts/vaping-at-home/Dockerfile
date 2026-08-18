@@ -1,4 +1,4 @@
-FROM mirror.gcr.io/python:3.13-slim
+FROM mirror.gcr.io/python:3.13-slim AS builder
 
 RUN pip install uv
 
@@ -26,7 +26,19 @@ RUN git clone https://github.com/schweikert/fping.git \
     && cd .. \
     && rm -rf fping
 
-# Create non-root user
+# Create and activate virtual environment
+RUN python -m venv /app/.venv
+ENV PATH="/app/.venv/bin:$PATH"
+ENV VIRTUAL_ENV="/app/.venv"
+
+COPY pyproject.toml requirements.lock ./
+RUN uv pip install --no-cache -r requirements.lock
+
+FROM mirror.gcr.io/python:3.13-slim
+
+WORKDIR /app
+
+# Create non-root user and required directories
 RUN adduser \
     --disabled-password \
     --gecos "" \
@@ -34,24 +46,27 @@ RUN adduser \
     --shell "/sbin/nologin" \
     --uid "10001" \
     appuser \
-    && chown -R appuser:appuser /app
+    && mkdir -p /etc/vaping/plugins /var/run \
+    && chown -R appuser:appuser /etc/vaping /var/run /app
 
-# Create required directories first as root
-RUN mkdir -p /etc/vaping /var/run /app && \
-    chown -R appuser:appuser /etc/vaping /var/run /app
-
-# Create and activate virtual environment
-RUN python -m venv /app/.venv
+# setcap file capabilities survive a COPY --from between stages, so fping
+# keeps cap_net_raw without needing build tooling in the final image.
+COPY --from=builder /usr/local/sbin/fping /usr/local/sbin/fping
+COPY --from=builder --chown=appuser:appuser /app/.venv /app/.venv
 ENV PATH="/app/.venv/bin:$PATH"
 ENV VIRTUAL_ENV="/app/.venv"
-
-COPY --chown=appuser:appuser pyproject.toml requirements.lock ./
-RUN uv pip install --no-cache -r requirements.lock
 
 # Copy config file
 COPY --chown=appuser:appuser config.yaml /etc/vaping/config.yaml
 
-# Declare volumes after directory creation
-VOLUME ["/etc/vaping"]
+# vaping registers plugins eagerly on `import vaping.plugins`, so a plugin of
+# the same name dropped on VAPING_HOME/plugins never overrides the bundled
+# one (it's already in the registry by the time the search path is
+# consulted). Overwrite the installed package's copy directly instead.
+COPY --chown=appuser:appuser prometheus_plugin.py /tmp/prometheus_plugin.py
+RUN cp /tmp/prometheus_plugin.py "$(python -c 'import vaping.plugins.prometheus as m; print(m.__file__)')" \
+    && rm /tmp/prometheus_plugin.py
+
+USER appuser
 
 CMD ["sh", "-c", "cat /etc/vaping/config.yaml && echo '\n--- Starting Vaping ---\n' && vaping start --debug"]

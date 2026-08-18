@@ -26,7 +26,7 @@ class Prometheus(vaping.plugins.EmitBase):
         start_http_server(port)
 
     def emit(self, data):
-        raw_data = data.get("data")
+        raw_data = data.get("data") or []
 
         self.log.debug("data: " + str(raw_data))
         for host_data in raw_data:
@@ -40,5 +40,7 @@ class Prometheus(vaping.plugins.EmitBase):
                 max_latency.labels(host_name).observe(host_data.get("max"))
             if "avg" in host_data:
                 avg_latency.labels(host_name).observe(host_data.get("avg"))
-            sent_packets.labels(host_name).inc(host_data.get("cnt"))
-            packet_loss.labels(host_name).set(host_data.get("loss") * 100)
+            if "cnt" in host_data:
+                sent_packets.labels(host_name).inc(host_data.get("cnt"))
+            if "loss" in host_data:
+                packet_loss.labels(host_name).set(host_data.get("loss") * 100)
