@@ -9,6 +9,9 @@ scrape_configs:
 
   - job_name: 'node-exporter'
     static_configs:
-      - targets: ['node-exporter:9100']
+      # Native node_exporter running on the Mac host (brew services), not in
+      # Docker - Docker Desktop's LinuxKit VM has no visibility into the
+      # host's real network interfaces, only its own virtual ones.
+      - targets: ['host.docker.internal:9100']
         labels:
           instance: 'macos-host'

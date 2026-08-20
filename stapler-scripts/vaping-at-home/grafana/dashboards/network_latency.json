@@ -1,6 +1,44 @@
 {
   "annotations": {
-    "list": []
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": false,
+        "iconColor": "rgba(255, 0, 0, 1)",
+        "name": "Outage (manual)",
+        "type": "dashboard"
+      },
+      {
+        "datasource": { "type": "loki", "uid": "loki" },
+        "enable": true,
+        "iconColor": "rgba(255, 96, 96, 1)",
+        "name": "DHCP events",
+        "target": { "expr": "{job=\"dhcp_logs\"}", "refId": "Anno" }
+      },
+      {
+        "datasource": { "type": "loki", "uid": "loki" },
+        "enable": true,
+        "iconColor": "rgba(255, 178, 96, 1)",
+        "name": "Power/sleep-wake events",
+        "target": { "expr": "{job=\"power_logs\"}", "refId": "Anno" }
+      },
+      {
+        "datasource": { "type": "loki", "uid": "loki" },
+        "enable": true,
+        "iconColor": "rgba(96, 178, 255, 1)",
+        "name": "Wi-Fi events",
+        "target": { "expr": "{job=\"wifi_logs\"}", "refId": "Anno" }
+      },
+      {
+        "datasource": { "type": "loki", "uid": "loki" },
+        "enable": true,
+        "iconColor": "rgba(178, 96, 255, 1)",
+        "name": "Network config changes",
+        "target": { "expr": "{job=\"network_config\"}", "refId": "Anno" }
+      }
+    ]
   },
   "editable": true,
   "graphTooltip": 0,
@@ -189,6 +227,175 @@
         }
       ],
       "title": "Packet Loss Rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisLabel": "Latency (ms)",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 1,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": false
+          },
+          "mappings": [],
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 16 },
+      "id": 3,
+      "options": {
+        "legend": {
+          "calcs": ["mean", "max"],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "mtr_hop_average_latency_milliseconds",
+          "legendFormat": "{{hop_index}}: {{hop}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Path to 8.8.8.8 by Hop (fping_mtr)",
+      "description": "Ordered hop-by-hop latency. A jump that starts at a specific hop and holds for all later hops points at that hop (often the ISP edge); loss/latency only on the very first hop points at the local network instead.",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisLabel": "Loss %",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 1,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": false
+          },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 24 },
+      "id": 4,
+      "options": {
+        "legend": {
+          "calcs": ["mean", "max"],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "mtr_hop_packet_loss",
+          "legendFormat": "{{hop_index}}: {{hop}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Path to 8.8.8.8 Loss by Hop (fping_mtr)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisLabel": "Resolution time (ms)",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 1,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": false
+          },
+          "mappings": [],
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 32 },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": ["mean", "max"],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "rate(average_latency_milliseconds_sum{host=~\"google.com|cloudflare.com|github.com\"}[5m]) / rate(average_latency_milliseconds_count{host=~\"google.com|cloudflare.com|github.com\"}[5m])",
+          "legendFormat": "{{host}}",
+          "refId": "A"
+        }
+      ],
+      "title": "DNS Resolution Time",
+      "description": "Resolver latency via the container's system resolver -- distinct from ICMP round-trip time. Subject to local resolver caching.",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisLabel": "RSSI (dBm)",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 1,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "mappings": [],
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 40 },
+      "id": 6,
+      "options": {
+        "legend": {
+          "calcs": ["mean", "min"],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "wifi_rssi_dbm",
+          "legendFormat": "{{ssid}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Wi-Fi Signal Strength (RSSI)",
+      "description": "Populated by wifi_signal_exporter.py running on the macOS host (not in a container -- Wi-Fi RSSI isn't visible from the Docker Desktop Linux VM). Requires host-side scheduling; see README.",
       "type": "timeseries"
     }
   ],

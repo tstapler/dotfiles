@@ -18,30 +18,33 @@ scrape_configs:
           job: system_logs
           __path__: /private/var/log/system.log
 
-  # DHCP logs from system.log (macOS DHCP messages)
+  # DHCP logs (macOS unified logging, tailed to file by log_capture.sh - see
+  # com.stapler.vaping-log-dhcp launchd agent. /var/log/system.log stopped
+  # receiving DHCP output after macOS moved this to unified logging.)
   - job_name: dhcp
     static_configs:
       - targets:
           - localhost
         labels:
           job: dhcp_logs
-          __path__: /private/var/log/system.log
+          __path__: /Users/tstapler/Library/Logs/vaping-unified-logs/dhcp.log
     pipeline_stages:
       - match:
-          selector: '{job="dhcp_logs"} !~ "(?i)(DHCP|dhcp|bootpd)"'
+          selector: '{job="dhcp_logs"} |= "Filtering the log data using"'
           action: drop
 
-  # Network configuration logs
+  # Network configuration logs (same unified-logging situation as DHCP above;
+  # see com.stapler.vaping-log-network-config launchd agent)
   - job_name: network_config
     static_configs:
       - targets:
           - localhost
         labels:
           job: network_config
-          __path__: /private/var/log/system.log
+          __path__: /Users/tstapler/Library/Logs/vaping-unified-logs/network_config.log
     pipeline_stages:
       - match:
-          selector: '{job="network_config"} !~ "(?i)(configd|networkd|Network|Interface|SCNetworkReachability)"'
+          selector: '{job="network_config"} |= "Filtering the log data using"'
           action: drop
 
   # WiFi logs
@@ -53,17 +56,18 @@ scrape_configs:
           job: wifi_logs
           __path__: /private/var/log/wifi.log
 
-  # Power Management logs (for sleep/wake events)
+  # Power Management logs (for sleep/wake events; same unified-logging
+  # situation as DHCP above - see com.stapler.vaping-log-power launchd agent)
   - job_name: power_management
     static_configs:
       - targets:
           - localhost
         labels:
           job: power_logs
-          __path__: /private/var/log/system.log
+          __path__: /Users/tstapler/Library/Logs/vaping-unified-logs/power.log
     pipeline_stages:
       - match:
-          selector: '{job="power_logs"} !~ "(?i)(powerd|Sleep|Wake|hibernation|power)"'
+          selector: '{job="power_logs"} |= "Filtering the log data using"'
           action: drop
 
   # Install logs (may contain network/system configuration changes)

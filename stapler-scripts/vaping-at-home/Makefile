@@ -1,6 +1,6 @@
-.PHONY: all clean build run up stop logs debug shell
+.PHONY: all clean build run up stop logs debug shell wifi-metrics
 
-PYTHON_FILES := pyproject.toml requirements.lock prometheus_plugin.py
+PYTHON_FILES := pyproject.toml requirements.lock prometheus_plugin.py dns_probe.py command_plugin.py fping_mtr_plugin.py
 COMPOSE := $(shell if command -v docker-compose >/dev/null 2>&1; then echo "docker-compose"; else echo "docker compose"; fi)
 
 all: run
@@ -27,6 +27,9 @@ debug: build
 
 shell: build
 	$(COMPOSE) exec vaping /bin/bash
+
+wifi-metrics:
+	python3 wifi_signal_exporter.py
 
 clean:
 	rm -f config.yaml

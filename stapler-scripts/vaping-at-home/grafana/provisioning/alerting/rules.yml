@@ -1,0 +1,65 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: network-alerts
+    folder: Network Monitoring
+    interval: 1m
+    rules:
+      - uid: sustained-packet-loss
+        title: Sustained Packet Loss
+        condition: C
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Packet loss to {{ $labels.host }} has exceeded 5% for 5+ minutes"
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: packet_loss
+              instant: true
+              refId: A
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              refId: C
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [5]
+
+      - uid: sustained-high-latency
+        title: Sustained High Latency
+        condition: C
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Average latency to {{ $labels.host }} has exceeded 150ms for 5+ minutes"
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: rate(average_latency_milliseconds_sum[5m]) / rate(average_latency_milliseconds_count[5m])
+              instant: true
+              refId: A
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              refId: C
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [150]

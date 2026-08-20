@@ -41,6 +41,7 @@ services:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
       - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/provisioning/alerting:/etc/grafana/provisioning/alerting
       - ./grafana/dashboards:/var/lib/grafana/dashboards
     environment:
       - GF_SECURITY_ADMIN_USER=admin
@@ -70,6 +71,7 @@ services:
     volumes:
       - ./promtail-config.yaml:/etc/promtail/config.yml
       - /private/var/log:/private/var/log:ro
+      - ${HOME}/Library/Logs/vaping-unified-logs:/Users/tstapler/Library/Logs/vaping-unified-logs:ro
       - promtail_positions:/tmp
     command: -config.file=/etc/promtail/config.yml
     restart: unless-stopped
@@ -77,20 +79,11 @@ services:
       - loki
     logging: *default-logging
 
-  node-exporter:
-    image: mirror.gcr.io/prom/node-exporter:v1.8.2
-    ports:
-      - "9794:9100"  # Non-standard port in 9700 range
-    command:
-      - '--path.rootfs=/host'
-      - '--path.procfs=/host/proc'
-      - '--path.sysfs=/host/sys'
-      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
-    volumes:
-      - /:/host:ro
-    restart: unless-stopped
-    pid: host
-    logging: *default-logging
+  # Real host network/CPU/memory metrics come from a native node_exporter
+  # running on the Mac via `brew services` (see README) - a containerized
+  # node-exporter can only ever see Docker Desktop's LinuxKit VM, not the
+  # Mac's actual interfaces, so it was replaced with the native binary
+  # scraped at host.docker.internal:9100 (see prometheus.yml).
 
 volumes:
   prometheus_data:

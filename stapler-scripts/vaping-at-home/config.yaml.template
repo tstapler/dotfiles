@@ -35,9 +35,28 @@ probes:
             name: Cloudflare
           - host: 208.67.222.222
             name: OpenDNS
-          - host: 136.27.58.1
-            name: WebPass ISP
 ${TRACEROUTE_HOSTS}
+
+  - name: path_to_google_dns
+    type: fping_mtr
+    host: 8.8.8.8
+    interval: 30s
+    count: 5
+    output:
+      - prometheus
+
+  - name: dns_resolution_timing
+    type: command
+    command: "python3 /app/dns_probe.py {host}"
+    interval: 15s
+    output:
+      - prometheus
+    groups:
+      - name: dns_lookup_targets
+        hosts:
+          - host: google.com
+          - host: cloudflare.com
+          - host: github.com
 
 plugins:
   - name: prometheus
