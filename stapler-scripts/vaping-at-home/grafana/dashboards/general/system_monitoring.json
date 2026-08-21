@@ -344,7 +344,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)",
+          "expr": "1 - (node_memory_free_bytes / node_memory_total_bytes)",
           "legendFormat": "Memory Usage",
           "range": true,
           "refId": "A"
@@ -436,7 +436,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "rate(node_network_receive_bytes_total{device!=\"lo\"}[5m])",
+          "expr": "rate(node_network_receive_bytes_total{device=~\"en.*|bridge0\"}[5m])",
           "legendFormat": "{{device}} - Receive",
           "range": true,
           "refId": "A"
@@ -447,7 +447,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "rate(node_network_transmit_bytes_total{device!=\"lo\"}[5m])",
+          "expr": "rate(node_network_transmit_bytes_total{device=~\"en.*|bridge0\"}[5m])",
           "legendFormat": "{{device}} - Transmit",
           "range": true,
           "refId": "B"
@@ -539,7 +539,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "rate(node_network_receive_errs_total[5m])",
+          "expr": "rate(node_network_receive_errs_total{device=~\"en.*|bridge0\"}[5m])",
           "legendFormat": "{{device}} - RX Errors",
           "range": true,
           "refId": "A"
@@ -550,7 +550,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "rate(node_network_transmit_errs_total[5m])",
+          "expr": "rate(node_network_transmit_errs_total{device=~\"en.*|bridge0\"}[5m])",
           "legendFormat": "{{device}} - TX Errors",
           "range": true,
           "refId": "B"
@@ -635,7 +635,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "host_interface_up{instance=\"macos-host\"}",
+          "expr": "host_interface_up{instance=\"macos-host\",device=~\"en0|en7|bridge0\"}",
           "legendFormat": "{{hardware_port}}",
           "range": true,
           "refId": "A"
@@ -826,7 +826,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "host_interface_up{instance=\"macos-host\"}",
+          "expr": "host_interface_up{instance=\"macos-host\",device=~\"en0|en7|bridge0\"}",
           "legendFormat": "{{hardware_port}}",
           "range": true,
           "refId": "A"
@@ -1024,6 +1024,192 @@
       ],
       "title": "Thunderbolt Re-enumerations",
       "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "RSS of watched processes, defined per-host in config.d/process_watch.d/*.yaml (see process_watch.py). Currently watches CrowdStrike Falcon's Agent process on this host.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 84
+      },
+      "id": 15,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "process_watch_rss_bytes{instance=\"macos-host\"}",
+          "legendFormat": "{{label}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Watched Process Memory (RSS)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "CPU% of watched processes, defined per-host in config.d/process_watch.d/*.yaml (see process_watch.py).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 84
+      },
+      "id": 16,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "process_watch_cpu_percent{instance=\"macos-host\"}",
+          "legendFormat": "{{label}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Watched Process CPU",
+      "type": "timeseries"
     }
   ],
   "refresh": "5s",
