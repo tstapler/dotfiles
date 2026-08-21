@@ -70,6 +70,22 @@ scrape_configs:
           selector: '{job="power_logs"} |= "Filtering the log data using"'
           action: drop
 
+  # USB/Thunderbolt kernel logs (same unified-logging situation as DHCP above;
+  # see com.stapler.vaping-log-usb-thunderbolt launchd agent). The Mac is
+  # wired via en7, a Thunderbolt Ethernet port on a dock, not built-in
+  # Ethernet - dock disconnects/re-enumerations show up here.
+  - job_name: usb_thunderbolt
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: usb_thunderbolt_logs
+          __path__: /Users/tstapler/Library/Logs/vaping-unified-logs/usb_thunderbolt.log
+    pipeline_stages:
+      - match:
+          selector: '{job="usb_thunderbolt_logs"} |= "Filtering the log data using"'
+          action: drop
+
   # Install logs (may contain network/system configuration changes)
   - job_name: install
     static_configs:

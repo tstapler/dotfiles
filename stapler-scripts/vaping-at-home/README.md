@@ -105,6 +105,14 @@ Two unified-alerting rules are provisioned into a `Network Monitoring` folder: `
 
 - The exporter is host-only (reads the Mac's/Linux box's own Wi-Fi interface) and is not run automatically — schedule it yourself (e.g. `cron`/`launchd`) at whatever interval you want fresh samples; node-exporter will serve whatever the last-written `.prom` file contains between runs.
 
+### Thunderbolt/USB re-enumeration watch
+
+If the host is wired via a Thunderbolt/USB4 dock rather than built-in Ethernet, a dock disconnect or re-enumeration (bad cable seating, firmware hiccup, power event) drops the network exactly like a generic outage, but needs a different signal to diagnose.
+
+- `thunderbolt_watch.py` polls `system_profiler SPThunderboltDataType` and writes `thunderbolt_device_connected` (gauge) and `thunderbolt_device_reenumerations_total` (counter) to `textfile_collector/thunderbolt.prom`, comparing each poll against previous state persisted in `/tmp/vaping-thunderbolt-state.json`. Host-only, not run automatically — schedule it (e.g. `launchd`, ~30s interval; a full poll takes ~2s).
+- `log_capture.sh usb_thunderbolt` tails unified-logging kernel messages mentioning `Thunderbolt`/`USB` to `~/Library/Logs/vaping-unified-logs/usb_thunderbolt.log`, scraped by promtail as the `usb_thunderbolt_logs` job and overlaid as a Loki annotation layer (same pattern as the DHCP/power/network-config logs above).
+- Dashboard: "Thunderbolt Device State" (state-timeline) and "Thunderbolt Re-enumerations" (stat) panels on `macOS System & Network Monitoring`.
+
 ## Troubleshooting
 
 If you experience issues:

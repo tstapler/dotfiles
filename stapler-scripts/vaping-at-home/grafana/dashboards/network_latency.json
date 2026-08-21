@@ -37,6 +37,13 @@
         "iconColor": "rgba(178, 96, 255, 1)",
         "name": "Network config changes",
         "target": { "expr": "{job=\"network_config\"}", "refId": "Anno" }
+      },
+      {
+        "datasource": { "type": "loki", "uid": "loki" },
+        "enable": true,
+        "iconColor": "rgba(255, 215, 0, 1)",
+        "name": "USB/Thunderbolt kernel events",
+        "target": { "expr": "{job=\"usb_thunderbolt_logs\"}", "refId": "Anno" }
       }
     ]
   },

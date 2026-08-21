@@ -25,8 +25,12 @@ case "$1" in
         OUT="$LOG_DIR/power.log"
         PREDICATE='process == "powerd" AND (eventMessage CONTAINS[c] "Sleep" OR eventMessage CONTAINS[c] "Wake" OR eventMessage CONTAINS[c] "hibernation")'
         ;;
+    usb_thunderbolt)
+        OUT="$LOG_DIR/usb_thunderbolt.log"
+        PREDICATE='process == "kernel" AND (eventMessage CONTAINS[c] "Thunderbolt" OR eventMessage CONTAINS[c] "USB")'
+        ;;
     *)
-        echo "usage: $0 {dhcp|network_config|power}" >&2
+        echo "usage: $0 {dhcp|network_config|power|usb_thunderbolt}" >&2
         exit 1
         ;;
 esac
