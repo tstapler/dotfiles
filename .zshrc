@@ -5,6 +5,13 @@
 #      |__/                         |_|
 
 
+# A prior Claude Code session (or vim, etc.) can exit without disabling
+# terminal focus-reporting (DECSET 1004) or mouse-reporting (1000/1002/1003/
+# 1006), leaving the terminal stuck streaming escape sequences into whatever
+# reads the tty next. Reset them on every new shell so a fresh tab/pane never
+# inherits a dirty state. https://github.com/anthropics/claude-code/issues/10375
+printf '\e[?1004l\e[?1000l\e[?1002l\e[?1003l\e[?1006l'
+
 # Check if zplug is installed
 if [[ ! -d ~/.zplug ]]; then
   # Ignore the system .gitconfig in case it tries to force SSH

@@ -1,3 +1,11 @@
+# Claude Code can leave the terminal in focus/mouse-reporting mode after
+# exit (upstream bug, still open as of 2.1.240):
+# https://github.com/anthropics/claude-code/issues/10375
+function claude {
+  command claude "$@"
+  printf '\e[?1004l\e[?1000l\e[?1002l\e[?1003l\e[?1006l'
+}
+
 # Return the path to the local Logseq graph (override with $LOGSEQ_PATH)
 function logseq_path {
   local default="$HOME/Documents/notes"
