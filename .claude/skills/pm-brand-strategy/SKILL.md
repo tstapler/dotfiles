@@ -101,7 +101,7 @@ See: `templates/open-source-template.md`
 - README purpose: quick start / deep reference / narrative intro
 - Social proof to highlight: stars, downloads, notable dependents
 - Contribution posture: welcoming beginners / core team only / bounty-driven
-- Topics/tags to set
+- Topics/tags to set — decide them here, then use `oss-health-check`'s Phase 2 to actually verify/apply them via `gh repo edit`; this section is the "which," that skill is the "did it happen"
 
 ---
 
