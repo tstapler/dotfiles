@@ -331,6 +331,25 @@ for _, item := range items {
 if err := eg.Wait(); err != nil { return err }
 ```
 
+**Panic pitfall**: a panic inside an `eg.Go` goroutine crashes the process — `errgroup` does not recover it. If callers are third-party code or the work is otherwise panic-prone, use `sourcegraph/conc` instead (below).
+
+### sourcegraph/conc — Panic-Safe Goroutine Pools
+
+`errgroup` propagates errors but not panics; `conc` propagates both — a panic in any spawned goroutine is caught, repropagated on `Wait()` with the original stack trace, and no longer takes the whole process down.
+
+```go
+import "github.com/sourcegraph/conc/pool"
+
+p := pool.New().WithMaxGoroutines(10).WithErrors().WithContext(ctx)
+for _, item := range items {
+    item := item
+    p.Go(func(ctx context.Context) error { return process(ctx, item) })
+}
+if err := p.Wait(); err != nil { return err } // also re-panics here if a goroutine panicked
+```
+
+Reach for `conc` instead of `errgroup` when: goroutines call code you don't fully trust not to panic, you want bounded concurrency (`WithMaxGoroutines`) without a separate `semaphore`, or you need `conc/iter.Map`/`ForEach` for a simple parallel-map-over-slice instead of hand-rolling the errgroup loop. Stick with plain `errgroup` for simple, already-panic-safe internal code — it's stdlib-adjacent and one less dependency.
+
 ### singleflight — Request Coalescing
 
 ```go
@@ -472,6 +491,7 @@ for _, req := range requests {
 | `sync/atomic` | stdlib | Primitive atomics (Int64, Bool, Pointer, Value) |
 | `sync` | stdlib | Mutex, RWMutex, Map, Once, Pool |
 | `golang.org/x/sync/errgroup` | x/sync | Parallel work with first-error cancellation |
+| `sourcegraph/conc` | third-party | Panic-safe goroutine pools, bounded concurrency, `iter.Map`/`ForEach` |
 | `golang.org/x/sync/semaphore` | x/sync | N-at-a-time concurrency bounding |
 | `golang.org/x/sync/singleflight` | x/sync | Request coalescing / cache stampede prevention |
 | `puzpuzpuz/xsync/v4` | third-party | Typed lock-free map (`xsync.MapOf`) |

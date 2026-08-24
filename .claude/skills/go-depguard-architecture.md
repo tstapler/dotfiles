@@ -1,11 +1,11 @@
 ---
 name: go-depguard-architecture
-description: Configure depguard in golangci-lint to enforce hexagonal / clean architecture import direction in a Go project. Use when a Go codebase needs linter rules that prevent domain packages from importing adapters or infrastructure, services from importing global config, or adapters from cross-coupling. Examples — "add depguard rules for hexagonal architecture", "enforce that session package can't import server", "configure linter to enforce clean architecture tiers", "domain package is importing infrastructure, how do I prevent this".
+description: Configure depguard in golangci-lint to enforce hexagonal / clean architecture import direction in a Go project, or pick a standalone architecture-linting tool (arch-go, go-arch-lint, cht-go-lint, go-cleanarch — researched comparison and recommendation included) when import-direction checking alone isn't enough. Use when a Go codebase needs linter rules that prevent domain packages from importing adapters or infrastructure, services from importing global config, or adapters from cross-coupling — or needs to enforce package content/naming rules beyond imports. Examples — "add depguard rules for hexagonal architecture", "enforce that session package can't import server", "configure linter to enforce clean architecture tiers", "domain package is importing infrastructure, how do I prevent this", "set up go-arch-lint", "visualize Go package dependency graph", "which Go architecture linter should I use", "set up arch-go".
 ---
 
 # Go depguard: Enforcing Hexagonal Architecture with Import Rules
 
-`depguard` is a `golangci-lint` linter that makes architectural layer boundaries mechanical — violations become build errors instead of review comments.
+`depguard` is a `golangci-lint` linter that makes architectural layer boundaries mechanical — violations become build errors instead of review comments. See [Alternative: go-arch-lint](#alternative-go-arch-lint) below for a standalone tool that fits better once a project has more than ~5 named components or needs a dependency graph for review/onboarding.
 
 ## ARGUMENTS
 
@@ -335,6 +335,107 @@ golangci-lint run --enable-only depguard ./cmd/... 2>&1
 **Done when:** `golangci-lint run --enable-only depguard ./...` exits 0 with no output (or only expected `//nolint` suppressions), and `golangci-lint run --enable-only depguard ./cmd/...` also exits 0 (confirming the composition root exemption works correctly).
 
 ---
+
+## Choosing a Tool
+
+Five Go architecture-linting tools compared (checked 2026-08-22 via `gh api`/README):
+
+| Tool | Stars | Maintained | Scope | Config |
+|---|---|---|---|---|
+| **depguard** (via golangci-lint) | mainstream `golangci-lint` linter | active | import direction only | file-glob deny/allow |
+| **[go-arch-lint](https://github.com/fe3dback/go-arch-lint)** | 535 | active | import direction + dependency graph viz | component + adjacency-list YAML |
+| **[arch-go](https://github.com/arch-go/arch-go)** (v2) | 270 | active (pushed same day) | import direction + package content + function complexity + naming | rule-category YAML |
+| **[go-cleanarch](https://github.com/roblaszczak/go-cleanarch)** | 984 | **stale since 2021** | import direction, fixed 4-layer model | CLI flags, no config file |
+| **[cht-go-lint](https://github.com/channel-io/cht-go-lint)** | 3 | active, brand-new | import direction + naming + structure + DDD-specific rules (45 built-in) | ESLint-style YAML with presets |
+
+**Recommendation: `depguard` if `golangci-lint` already runs in CI (which most Go projects here already do) — zero new tooling, and this skill's Steps 0–6 above are ready to use.** For a project that wants dedicated architecture tooling beyond import direction — validating what belongs *inside* a layer, not just what it can import, which is closer to what "clean architecture" actually means — reach for **`arch-go`** over the other three: `go-cleanarch` is unmaintained despite its star count (last commit 2021, fixed-flag config, no YAML), `cht-go-lint`'s DDD-specific rule set is the most complete on paper but has 3 stars and no track record, and `go-arch-lint`'s main edge (dependency-graph visualization) doesn't outweigh `arch-go`'s broader active rule surface unless the graph output specifically matters (architecture review decks, onboarding docs).
+
+### go-arch-lint
+
+[fe3dback/go-arch-lint](https://github.com/fe3dback/go-arch-lint) enforces the same kind of import-direction rule as the steps above, but as a **standalone binary** (`go install github.com/fe3dback/go-arch-lint@latest`, or Docker) driven by its own `.go-arch-lint.yml` manifest — not a `golangci-lint` plugin.
+
+**Config shape**, contrasted with depguard's file-glob deny/allow rules:
+
+```yaml
+# .go-arch-lint.yml
+components:
+  domain:
+    in: internal/domain/**
+  application:
+    in: internal/app/**
+  adapter:
+    in: internal/adapter/**
+
+deps:
+  domain:
+    mayDependOn: []
+  application:
+    mayDependOn: [domain]
+  adapter:
+    mayDependOn: [domain, application]
+```
+
+Each block names a component once and lists what it may depend on — reads as an adjacency list rather than N separate deny-rules per tier, which stays readable well past the 5-tier hexagonal split this skill's `depguard` config targets.
+
+**Pick go-arch-lint over depguard when:**
+- The project has many named components (feature-sliced modules, a plugin system) rather than a handful of clean-architecture tiers — an adjacency-list manifest scales better than repeating `deny:`/`allow:` blocks per tier.
+- You want `go-arch-lint graph` — generates a Graphviz/PlantUML dependency diagram straight from the same manifest, useful for architecture review or onboarding docs.
+- The project doesn't already run `golangci-lint` in CI and you don't want to adopt it just for this.
+
+**Stick with depguard when:** the project already runs `golangci-lint` (zero new CI tooling) and the layout is the standard domain/application/adapter/infrastructure split this skill already has ready-to-use rules for.
+
+Both tools support incremental adoption on an existing codebase with violations: depguard via `//nolint:depguard` (Step 5 above), go-arch-lint via its own softer warning mode — check `go-arch-lint check --help` for the current flag name, since this has changed across versions.
+
+### arch-go (recommended standalone pick)
+
+[arch-go/arch-go](https://github.com/arch-go/arch-go) (currently v2, `go install github.com/arch-go/arch-go/v2@latest`) validates more than import direction from a single `arch-go.yml` — verified against the tool's own self-check config in its repo root:
+
+```yaml
+# arch-go.yml
+version: 1
+dependenciesRules:
+  - package: '**.internal.**'
+    shouldNotDependsOn:
+      internal:
+        - '**.cmd.**'
+  - package: '**.**'
+    shouldOnlyDependsOn:
+      external:
+        - github.com/spf13/cobra
+        - golang.org/x/tools
+
+functionsRules:
+  - package: '**.**'
+    maxParameters: 5
+    maxReturnValues: 3
+    maxLines: 55
+    maxPublicFunctionPerFile: 15
+
+contentsRules:
+  - package: '**.model.**'
+    shouldOnlyContainStructs: true
+
+namingRules:
+  - package: '**.**'
+    interfaceImplementationNamingRule:
+      structsThatImplement:
+        internal: 'Command'
+      shouldHaveSimpleNameEndingWith: 'Command'
+```
+
+Four rule categories: **`dependenciesRules`** (import direction — same territory as depguard/go-arch-lint, plus an external-package allow-list), **`contentsRules`** (what a package may contain — e.g. `internal/model/**` must only hold structs, catching a stray interface or function leaking into a data-model package), **`functionsRules`** (parameter/return/line-count limits — general code-health, not architecture-specific, but bundled in), and **`namingRules`** (structs implementing a given interface must follow a naming convention, e.g. every `Command` implementation ending in `Command`).
+
+Pick `arch-go` over `go-arch-lint`/`depguard` when a stray import isn't the failure mode you're worried about — e.g. someone defines a concrete repository struct inside `domain/` instead of just an interface, which content-checking catches and import-direction checking does not.
+
+### cht-go-lint (early-stage, DDD-specific rules)
+
+[channel-io/cht-go-lint](https://github.com/channel-io/cht-go-lint) covers the most ground of any tool here: on top of import-direction checks, it has 45 built-in rules for naming conventions, file/declaration structure, and DDD patterns specifically (aggregate boundaries, repository contracts, value-object immutability, domain-event naming) — an ESLint-style config with presets (`clean-arch` built in) rather than a hand-written rule set. It can also run as a `golangci-lint`-bundled linter or directly inside Go tests via `lint.QuickCheck(t, ...)`.
+
+**Caveat before adopting:** as of this writing the repo has only 3 GitHub stars and no visible version/changelog — early-stage and effectively unproven outside its origin org (Channel.io). Worth trying on a low-stakes project or re-checking in 6+ months rather than defaulting to it on something that matters.
+
+### go-cleanarch (skip — unmaintained)
+
+[roblaszczak/go-cleanarch](https://github.com/roblaszczak/go-cleanarch) has the highest star count here (984) and real historical weight — Robert Laszczak/ThreeDotsLabs' Clean Architecture writeups are the source for a lot of Go clean-architecture convention, including the `wild-workouts-go-ddd-example` reference project. But the repo's last commit was 2021-11-08: no YAML config (CLI flags only, `-domain`/`-application`/`-interfaces`/`-infrastructure`), no package-content or naming rules, and no indication it's been adapted for `golangci-lint`-style workflows since. Useful as historical/conceptual reference for the Dependency Rule itself — not as a tool to actually adopt today.
 
 ## Reference: Principle Behind Each Rule
 

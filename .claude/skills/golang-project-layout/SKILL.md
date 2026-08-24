@@ -31,6 +31,12 @@ When starting a new project, **ask the developer** what software architecture th
 
 After settling on the architecture, **ask the developer** which dependency injection approach they want: manual constructor injection, or a DI library (samber/do, google/wire, uber-go/dig+fx), or none at all. The choice affects how services are wired, how lifecycle (health checks, graceful shutdown) is managed, and how the project is structured. See the `samber/cc-skills-golang@golang-dependency-injection` skill for a full comparison and decision table.
 
+## Data Layer: ORM
+
+Default to **[ariga/ent](https://github.com/ariga/ent)** over GORM for any service with a real schema — it code-generates a fully type-safe client from a Go schema definition (no `interface{}`/reflection-based queries), so a renamed column or a wrong type is a compile error, not a runtime panic. If the service exposes a REST API over that schema, **[ariga/ogent](https://github.com/ariga/ogent)** generates the OpenAPI-backed REST layer directly from the Ent schema instead of hand-writing CRUD handlers.
+
+Only reach for GORM when the project needs to interoperate with an existing GORM codebase, or a contributor's unfamiliarity with code-gen workflows is a bigger cost than the type-safety gap.
+
 ## 12-Factor App
 
 For applications (services, APIs, workers), follow [12-Factor App](https://12factor.net/) conventions: config via environment variables, logs to stdout, stateless processes, graceful shutdown, backing services as attached resources, and admin tasks as one-off commands (e.g., `cmd/migrate/`).
@@ -89,6 +95,10 @@ Every Go project should include at the root:
 
 For application configuration with Cobra + Viper, see [config reference](references/config.md).
 
+### Architecture Linting
+
+Once the project has real layer boundaries (domain/application/adapter, or hexagonal), enforce them mechanically instead of relying on review comments to catch a stray import: `depguard` (a `golangci-lint` linter, zero new CI tooling if `golangci-lint` already runs) turns "domain must not import infrastructure" into a build failure. See the `go-depguard-architecture` skill for the full tier-mapping workflow and ready-to-use rule config, plus a researched comparison against standalone alternatives (`arch-go`, `go-arch-lint`, `cht-go-lint`, `go-cleanarch`) for when import-direction checking alone isn't enough — invoke it once the layout below has settled, not before (rules are only as good as the tier classification, and that classification needs real packages to classify).
+
 ## Tests, Benchmarks, and Examples
 
 Co-locate `_test.go` files with the code they test. Use `testdata/` for fixtures. See [testing layout](references/testing-layout.md) for file naming, placement, and organization details.
@@ -118,4 +128,4 @@ When starting a new Go project:
 
 ## Related Skills
 
-→ See `samber/cc-skills-golang@golang-cli` skill for CLI tool structure and Cobra/Viper patterns. → See `samber/cc-skills-golang@golang-dependency-injection` skill for DI approach comparison and wiring. → See `samber/cc-skills-golang@golang-lint` skill for golangci-lint configuration. → See `samber/cc-skills-golang@golang-continuous-integration` skill for CI/CD pipeline setup. → See `samber/cc-skills-golang@golang-design-patterns` skill for architectural patterns. → See `samber/cc-skills-golang@golang-refactoring` skill for safely moving or splitting existing code into the layout above via type-alias gradual code repair and staged PRs, without a big-bang break. → See `samber/cc-skills-golang@golang-how-to` skill's Configure mode for the always-load directive and optional `## Required Go skills` block written to `CLAUDE.md`/`AGENTS.md`.
+→ See `samber/cc-skills-golang@golang-cli` skill for CLI tool structure and Cobra/Viper patterns. → See `samber/cc-skills-golang@golang-dependency-injection` skill for DI approach comparison and wiring. → See `samber/cc-skills-golang@golang-lint` skill for golangci-lint configuration. → See `samber/cc-skills-golang@golang-continuous-integration` skill for CI/CD pipeline setup. → See `samber/cc-skills-golang@golang-design-patterns` skill for architectural patterns. → See `samber/cc-skills-golang@golang-refactoring` skill for safely moving or splitting existing code into the layout above via type-alias gradual code repair and staged PRs, without a big-bang break. → See `samber/cc-skills-golang@golang-how-to` skill's Configure mode for the always-load directive and optional `## Required Go skills` block written to `CLAUDE.md`/`AGENTS.md`. → See `go-depguard-architecture` skill for enforcing layer boundaries (domain/application/adapter) as a linter rule instead of a review comment.

@@ -373,6 +373,27 @@ func FuzzReverse(f *testing.F) {
 }
 ```
 
+### Fuzzing in CI
+
+`go test -fuzz` only runs for a fixed local duration and its corpus lives on one machine — it does nothing on a normal `go test ./...` CI run. Use `jidicula/go-fuzz-action` to run each `Fuzz*` target on a schedule (or on PRs touching fuzz-tested packages) so regressions get caught continuously instead of only when someone remembers to fuzz locally:
+
+```yaml
+# .github/workflows/fuzz.yml
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  pull_request:
+jobs:
+  fuzz:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jidicula/go-fuzz-action@v1
+        with:
+          fuzz-time: 3m
+          fuzz-regexp: FuzzReverse # matches Fuzz* target name(s); omit to fuzz all
+```
+
 ## Examples as Documentation
 
 Examples are executable documentation verified by `go test`:
