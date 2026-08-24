@@ -33,6 +33,7 @@ Apply this taxonomy to each bug. Pick the **primary** failure mode.
 | **Type Safety Gap** | Null/optional mishandled, wrong type, primitive/unit confusion, missing discriminant | Type isn't leveraged; a wrapper, union, or non-null type would prevent it |
 | **Integration Gap** | Two individually-correct components interact incorrectly across a seam | Unit tests with mocks pass; the seam is never exercised together |
 | **Dependency/Build Gap** | A dependency, version, or build-graph change introduces a crash/regression — bad transitive dep, init-time panic, version skew | `build`/unit tests pass; the failure is environmental or only at startup |
+| **Duplicated/Divergent Logic** | The same precondition, invariant, or operation is implemented or invoked separately at multiple call sites; a fix applied to one site leaves the others broken (Fowler's "Shotgun Surgery" / "Divergent Change") | Nothing forces every call site to stay in sync — the class of "I fixed it but missed a caller" bug |
 
 Fill this table before proceeding to Phase 3:
 
@@ -44,8 +45,14 @@ Fill this table before proceeding to Phase 3:
 
 Work down the **enforcement ladder** — implement at the highest (earliest) level achievable.
 Never accept level 5 when 1–4 is reachable. "We'll be more careful" is not a system.
+Always start at Level 0: if the fix touched more than one call site, or a future call site
+could skip it, consolidate to a single source of truth first — enforcement applied to one of
+several duplicated call sites is not enforcement, it's a fix that hasn't finished failing yet.
 
 ```
+0.  Consolidate   → if the same precondition lives at 2+ call sites, merge to one source of
+                    truth BEFORE picking a level below — you can't type-check or lint-guard
+                    an invariant that's duplicated in three places (evaluate first, always)
 1. Compile time   → make illegal states unrepresentable: non-null/non-optional type,
                     sealed/union type, value/newtype wrapper, required parameter, opt-in marker
 1b. Type-Driven Design gate (evaluate before reaching for a linter)
@@ -54,6 +61,51 @@ Never accept level 5 when 1–4 is reachable. "We'll be more careful" is not a s
 4. Integration    → exercises both sides of a seam with minimal mocking
 5. Checklist      → CLAUDE.md / docs entry only when 1–4 are genuinely not achievable
 ```
+
+### Level 0 — Consolidate (mandatory gate, run before Level 1)
+
+Run this check on every bug, not just ones classified as Duplicated/Divergent Logic — a fix
+that only touches the call site you happened to find is the most common way "enforcement"
+quietly fails to hold.
+
+**1. Did fixing this bug require touching more than one call site**, or would a *future*
+call site need the same fix repeated to stay correct? If a second caller of the same
+operation can be added without inheriting the fix, the class isn't closed yet.
+
+**2. Name the smell** (Fowler, *Refactoring*, ch. 3):
+- **Shotgun Surgery** — one conceptual change requires edits scattered across many places.
+- **Divergent Change** — one module/file changes for many unrelated reasons because it
+  absorbed logic that belongs elsewhere.
+- **Duplicated Code** — the plainest form: the same precondition copy-pasted at each caller.
+
+**3. Consolidate to a single source of truth before enforcing anything**, using the smallest
+refactoring that fits (Fowler's catalog; also Clean Code's DRY/SRP and Parnas's information
+hiding — hide the invariant behind one module so callers physically cannot bypass it):
+- **Extract Function** — pull the duplicated precondition into one function; make every call
+  site call it.
+- **Move Function** — relocate logic that's drifted into the wrong module back next to the
+  state it protects.
+- **Combine Functions into Class/Module** — when the same few operations keep needing the
+  same setup, own that setup once instead of at each entry point.
+- **Replace Function with Command / wrap the primitive** — if a lower-level primitive
+  (an RPC sender, a raw setter) is directly reachable and easy to call without its
+  precondition, shadow it: rename the raw import/destructure to a private name, and expose
+  the *only* public-facing name in scope as the version that already does the required step.
+  This is the cheapest form of "make the wrong usage unrepresentable" (poka-yoke / Josh
+  Bloch's "design APIs that are hard to misuse") when a full Level 1 type change isn't
+  practical — a caller would have to go out of their way to reach the unsafe primitive.
+- **Introduce Parameter Object / Encapsulate Variable** — when the duplication is a group of
+  values callers assemble separately instead of asking for one object that's always valid.
+
+**4. After consolidating, re-run the ladder at the single remaining site.** Consolidation is
+not itself the enforcement — it's what makes Level 1/1b/2/3 actually stick, because now there
+is exactly one place to put a type constraint, a lint rule, or a test. Skipping straight to
+"I wrapped it" without also asking whether Level 1 (compile-time) is now reachable at that one
+site is under-enforcing; the ladder still applies after consolidation, not instead of it.
+
+**Verify**: would a new call site added later automatically get the fix, or does the next
+person have to remember to call the wrapper? If they have to remember, consolidation isn't
+finished — the unsafe primitive is still exported/reachable.
 
 ### Level 1b — Type-Driven Design Gate (mandatory before writing a lint rule)
 
@@ -229,61 +281,5 @@ every bug has at least one enforcement that would have caught it.
 - Writing a test that mocks the broken component — it won't catch the regression
 - Writing a custom lint rule with no test for the rule itself — rules break silently on refactors
 - Stopping at "the fix is in" — the class is still alive until enforcement is in place
-
-# Reflect & Fix — Shift Left After Every Bug
-
-After fixing bugs, the work isn't done until recurrence is **structurally impossible**.
-This command runs a 4-phase post-mortem that produces runnable enforcement (tests, lint
-rules, type changes) — not documentation or promises to be careful.
-
-It is **language-agnostic**: detect the stack from the repo and apply enforcement with that
-stack's tools. Examples are given across languages (Go, TypeScript, Kotlin, Python, Rust) —
-use the matching one or translate the idea.
-
-## The Enforcement Ladder
-
-Always implement at the **earliest** achievable level. Never accept level 5 when 1–4 is reachable.
-
-```
-1.  Compile time   → make illegal states unrepresentable (non-null type, sealed/union,
-                     value/newtype wrapper, required parameter, opt-in marker)
-1b. Type-Driven    → evaluate before lint — can the type system eliminate this class?
-2.  Lint / static  → existing linter rule, custom rule, or ast-grep/semgrep pattern
-3.  Unit test      → asserts exact failed behavior; must fail against pre-fix code
-4.  Integration    → exercises both sides of a seam with minimal mocking
-5.  Checklist      → CLAUDE.md / docs entry only when 1–4 genuinely not achievable
-```
-
-**Level 1b is mandatory.** Before writing any lint rule, use the `type-driven-design` skill to
-evaluate whether the type system can close the gap entirely. A lint rule catches bad patterns
-after they're written; a type change makes them impossible to write. Document the verdict — if
-types cannot close the gap, say why in the rule's doc comment.
-
-## Root Cause Taxonomy
-
-| Category | Signature | Earliest enforcement |
-|----------|-----------|---------------------|
-| **Semantic/Intent** | Wrong default, wrong condition, wrong constant — code is syntactically valid | Unit/integration test |
-| **Framework Pattern Misuse** | Valid code in the wrong framework/async/lifecycle context | Lint rule (enable existing or write custom / ast-grep) |
-| **API Contract Gap** | Caller omits required setup step — permission, init, cleanup, annotation | Type-level enforcement (required param / opt-in marker) |
-| **Type Safety Gap** | Null/optional mishandled, wrong type, primitive confusion | Type system (non-null, wrapper, sealed/union) — via the TDD gate |
-| **Integration Gap** | Individually-correct components interact incorrectly at a seam | Integration test spanning the seam |
-| **Dependency/Build Gap** | Bad dependency/version/build-graph change; init-time or environmental failure | Forbidden-dependency test or startup smoke test |
-
-## Phases
-
-**Phase 1 — Enumerate**: list every bug fixed; one sentence each on what went wrong and what correct looks like.
-
-**Phase 2 — Classify**: assign each bug a category and identify why the current tooling didn't catch it.
-
-**Phase 3 — Implement**: for each bug, run the Level 1b TDD gate first, then implement enforcement at the highest achievable level on the ladder, using the matching language's tools.
-
-**Phase 4 — Verify**: confirm each enforcement would have caught the original bug (revert and test, or reason through it). If not, escalate.
-
-## Anti-patterns
-
-- Noting the fix in CLAUDE.md instead of writing a test — notes rot, tests don't
-- Mocking the broken component in the test — it won't catch the regression
-- Writing a custom lint rule with no test for the rule itself — rules break silently
-- Stopping at "the fix is in" before enforcement is in place
-- **Skipping the TDD gate and going straight to lint** — always evaluate Level 1b first
+- **Patching only the call site you found** — if the same precondition is duplicated at other
+  call sites, the bug survives there; run the Level 0 consolidation check first
