@@ -21,7 +21,8 @@ make clean   # stop and wipe all volumes
 | OTLP gRPC | `localhost:4317` | point `OTEL_EXPORTER_OTLP_ENDPOINT` here (or nothing — most OTel SDKs default to this) |
 | OTLP HTTP | `localhost:4318` | |
 | VictoriaMetrics query API | `http://localhost:8428` | Prometheus-compatible; `/api/v1/query`, `/api/v1/query_range` |
-| Grafana | `http://localhost:3000` | `admin` / `admin` — change this if you ever expose the port beyond localhost |
+| Tempo query API | `http://localhost:3200` | not usually queried directly — use Grafana's Explore |
+| Grafana | `http://localhost:48300` | `admin` / `admin` — change this if you ever expose the port beyond localhost. Non-standard port: `:3000` is one of the most commonly already-bound dev ports (Next.js, CRA, etc.) |
 
 ## Pointing a project at this stack
 
@@ -36,11 +37,12 @@ after the project.
 
 - **Metrics**: `otlp` receiver → `prometheusremotewrite` exporter →
   VictoriaMetrics. This is the only pipeline that actually persists data.
-- **Traces / logs**: accepted by the collector (so a project that exports
-  both, like stapler-squad, doesn't error), but only routed to a `debug`
-  exporter (collector's own stdout) — no trace/log backend (e.g. Tempo/Loki)
-  is wired up yet. Add one to `otel-collector-config.yaml` if that's ever
-  needed; out of scope for now.
+- **Traces**: `otlp` receiver → `otlp/tempo` exporter → Tempo (local-disk
+  storage, `tempo.yaml`, 48h retention). Query via Grafana Explore using the
+  Tempo datasource.
+- **Logs**: accepted by the collector (so a project exporting logs doesn't
+  error) but only routed to a `debug` exporter (collector's own stdout) — no
+  log backend (e.g. Loki) is wired up yet.
 - **Dashboards**: `grafana/dashboards/stapler-squad-cgroup-memory.json` is a
   starter dashboard for stapler-squad's `cgroup_memory_*` metrics
   (`telemetry/cgroup_linux.go`) — memory.current vs the MemoryHigh/MemoryMax

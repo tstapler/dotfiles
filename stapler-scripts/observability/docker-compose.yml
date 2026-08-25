@@ -15,6 +15,19 @@ services:
       - ./otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
     depends_on:
       - victoriametrics
+      - tempo
+    logging: *default-logging
+
+  tempo:
+    image: grafana/tempo:2.10.8
+    restart: unless-stopped
+    command: ["-config.file=/etc/tempo.yaml"]
+    ports:
+      - "3200:3200"  # query API — Grafana reaches it via the tempo: hostname regardless
+
+    volumes:
+      - ./tempo.yaml:/etc/tempo.yaml
+      - tempo_data:/var/tempo
     logging: *default-logging
 
   victoriametrics:
@@ -30,7 +43,8 @@ services:
     image: mirror.gcr.io/grafana/grafana:11.5.2
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "48300:3000"  # non-standard host port — :3000 is one of the most commonly
+                       # already-bound dev ports (Next.js, CRA, etc.); see README
     volumes:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
@@ -47,3 +61,4 @@ services:
 volumes:
   victoriametrics_data:
   grafana_data:
+  tempo_data:

@@ -13,3 +13,12 @@ datasources:
       queryTimeout: "30s"
       httpMethod: "POST"
     version: 1
+
+  - name: Tempo
+    type: tempo
+    access: proxy
+    url: http://tempo:3200
+    isDefault: false
+    editable: true
+    uid: tempo
+    version: 1

@@ -12,9 +12,13 @@ processors:
 exporters:
   prometheus_remote_write:
     endpoint: http://victoriametrics:8428/api/v1/write
-  # No trace/log backend (e.g. Tempo/Loki) wired up yet — debug just logs
-  # what arrives so a project exporting traces/logs (stapler-squad does both)
-  # doesn't error against a pipeline with nowhere to send data.
+  otlp/tempo:
+    endpoint: tempo:4317
+    tls:
+      insecure: true
+  # No log backend (e.g. Loki) wired up yet — debug just logs what arrives so
+  # a project exporting logs doesn't error against a pipeline with nowhere to
+  # send data.
   debug:
     verbosity: basic
 
@@ -27,7 +31,7 @@ service:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [debug]
+      exporters: [otlp/tempo]
     logs:
       receivers: [otlp]
       processors: [batch]
