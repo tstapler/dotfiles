@@ -1,0 +1,34 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+
+exporters:
+  prometheus_remote_write:
+    endpoint: http://victoriametrics:8428/api/v1/write
+  # No trace/log backend (e.g. Tempo/Loki) wired up yet — debug just logs
+  # what arrives so a project exporting traces/logs (stapler-squad does both)
+  # doesn't error against a pipeline with nowhere to send data.
+  debug:
+    verbosity: basic
+
+service:
+  pipelines:
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [prometheus_remote_write]
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug]
