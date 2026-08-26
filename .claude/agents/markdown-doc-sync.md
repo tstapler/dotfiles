@@ -1,6 +1,6 @@
 ---
-name: markdown-confluence-sync
-description: Sync markdown projects to Google Docs and Confluence using docspan (markgate repo). Use for pushing/pulling markdown files mapped in docspan.yaml.
+name: markdown-doc-sync
+description: Preferred markdown ↔ remote-doc sync — Google Docs and Confluence via docspan (markgate repo). Use for pushing/pulling markdown files mapped in docspan.yaml. For legacy Confluence-only features docspan doesn't cover yet (page-tree crawling, comments, ADF migration), see the markdown-doc-sync skill instead.
 temperature: 0.1
 ---
 

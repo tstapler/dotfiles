@@ -8,15 +8,16 @@ Coordinator for the design-doc-review pipeline. Runs each check as an independen
 
 **Target**: {{args}} — a file path to the design doc. If omitted, use the doc already in context.
 
-This skill does not invent checks — it dispatches to whatever lives under `design-doc-review/skills/*` other than itself. Today that's `outline`, `readability`, and `visuals`. Adding a new check later (e.g. `evidence-quality`, `risk-completeness`) means adding one `skills/<name>/SKILL.md` following the same JSON-summary contract — no change needed here beyond adding it to the registry below.
+This skill does not invent checks — it dispatches to whatever lives under `design-doc-review/skills/*` other than itself. Today that's `outline`, `readability`, `visuals`, and `publish-compat`. Adding a new check later (e.g. `evidence-quality`, `risk-completeness`) means adding one `skills/<name>/SKILL.md` following the same JSON-summary contract — no change needed here beyond adding it to the registry below.
 
 ## Registry
 
 | Check | Skill | Fixable automatically? |
 |---|---|---|
 | Structure / topic coverage | `design-doc-review:outline` | Rarely — most gaps need author input (e.g. "what's the actual rollback plan"). Coordinator proposes a stub + a question, does not invent content. |
-| Prose / cognitive load | `design-doc-review:readability` | Yes — filler removal, hedge cleanup, front-loading, splitting mixed-purpose paragraphs are mechanical rewrites. |
+| Prose / cognitive load / terseness | `design-doc-review:readability` | Yes — filler removal, hedge cleanup, front-loading, splitting mixed-purpose paragraphs, and appendix-extraction (`"fix": "extract-to-appendix"`) are mechanical. |
 | Missing diagrams / comparison tables | `design-doc-review:visuals` | Rarely — coordinator can propose a mermaid/table skeleton with extracted axes, but correct diagram type and exact table columns need author confirmation; never auto-insert. |
+| Markdown constructs that break on the actual publish target (Confluence/Google Docs) | `design-doc-review:publish-compat` | Often, once the finding is `verified: true` — swapping an unsupported code-fence language, moving content that precedes the H1, converting a diagram fence to an image are mechanical. Anything `verified: false` (lookup was unavailable) is author-input: flag it, don't auto-fix a guess. |
 
 ## Phase 0 — Section split (long docs)
 
@@ -24,7 +25,7 @@ A single agent reading an entire long doc for a section-local check loses precis
 
 Over ~150 lines, split the body by H2 headings (`^## `). Not every check benefits equally from splitting:
 
-- **`outline` always runs whole-doc**, regardless of length. Its checks are global ("does a non-goals section exist *anywhere*", "does the functional spec trace to Layer 1 requirements stated elsewhere") — scoping it to one section would produce false `missing` findings for topics a *different* section covers.
+- **`outline` and `publish-compat` always run whole-doc**, regardless of length. Outline's checks are global ("does a non-goals section exist *anywhere*", "does the functional spec trace to Layer 1 requirements stated elsewhere") — scoping it to one section would produce false `missing` findings for topics a *different* section covers. `publish-compat`'s target-detection (frontmatter, docspan mapping) and its highest-severity check (content before the single H1, duplicate H1s) are structurally whole-doc; splitting it would also mean re-doing target detection per section for no benefit, since the same target applies to the whole file.
 - **`readability` and `visuals` are section-local** and fan out one agent per H2 section on long docs:
   - `readability`: one agent per section, each given only that section's text. Tell only the agent handling the doc's *first* section that it's first — the 30-second test and the missing-front-load check apply only there; a later section isn't a front-load violation for not re-stating a decision it was never supposed to front. Other agents run every other check normally.
   - `visuals`: one agent per section, each given that section's text **plus** a coordinator-supplied list of headings elsewhere in the doc that already contain a diagram or table (grep `^```(mermaid|d2)`, `!\[`, or table-pipe rows across the whole doc first — same signal `scripts/doc_report.py`'s `diagram` property uses). Without that list, a per-section agent can't honor the "already-adequate diagram exists elsewhere in the doc" guardrail, since it never sees the rest of the doc.
@@ -33,12 +34,13 @@ Merge each check's per-section results into the same JSON contract it already re
 
 ## Phase 1 — Dispatch (parallel lean agents)
 
-Launch one agent per registry row, **in a single message** (tier A, per lean-agent-loop) — or, for a doc split per Phase 0, one agent per (check, section) pair for `readability`/`visuals` plus one whole-doc agent for `outline`, all still in that same single message. Each agent prompt is exactly that check's own instructions plus its target (the whole doc, or one section plus the Phase 0 context noted above) — do not summarize prior findings into the prompt; there are none yet on round 1.
+Launch one agent per registry row, **in a single message** (tier A, per lean-agent-loop) — or, for a doc split per Phase 0, one agent per (check, section) pair for `readability`/`visuals` plus one whole-doc agent each for `outline` and `publish-compat`, all still in that same single message. Each agent prompt is exactly that check's own instructions plus its target (the whole doc, or one section plus the Phase 0 context noted above) — do not summarize prior findings into the prompt; there are none yet on round 1.
 
 ```
 Agent "outline": run design-doc-review:outline against <path>. Return only its JSON summary.
 Agent "readability": run design-doc-review:readability against <path>. Return only its JSON summary.
 Agent "visuals": run design-doc-review:visuals against <path>. Return only its JSON summary.
+Agent "publish-compat": run design-doc-review:publish-compat against <path>. Return only its JSON summary.
 ```
 
 Split-doc example (readability only shown; visuals follows the same shape with the diagram-location list added):
@@ -56,11 +58,11 @@ If parallel dispatch is unavailable, drop to the next tier in lean-agent-loop's 
 
 ## Phase 2 — Triage
 
-Combine the two JSON summaries. If both `status: "pass"` → skip to Phase 5 (report clean, no rounds needed).
+Combine the JSON summaries from all checks that ran. If every check reports `status: "pass"` → skip to Phase 5 (report clean, no rounds needed).
 
 Otherwise, split findings into:
-- **Author-input-needed** (outline `missing`/`weak` findings, mostly) — these become questions for the user, not autofixes. Never invent a rollback plan, a non-goals list, or a rejection rationale — that would put words in the author's mouth without evidence, which is exactly what CLAUDE.md's evidence rule forbids.
-- **Mechanically fixable** (readability `notable`/`blocking` findings, and any outline finding that's genuinely just "add a stub heading, content TBD") — these drive the fix loop below.
+- **Author-input-needed** (outline `missing`/`weak` findings, mostly; and any `publish-compat` finding with `"verified": false`) — these become questions for the user, not autofixes. Never invent a rollback plan, a non-goals list, or a rejection rationale — that would put words in the author's mouth without evidence, which is exactly what CLAUDE.md's evidence rule forbids. The same principle applies to an unverified publish-compat guess: presenting it as a confirmed fix would be inventing a fact the coordinator didn't actually check.
+- **Mechanically fixable** (readability `notable`/`blocking` findings including `"fix": "extract-to-appendix"`; `publish-compat` findings with `"verified": true`; and any outline finding that's genuinely just "add a stub heading, content TBD") — these drive the fix loop below.
 
 Present both lists to the user before touching the file. Ask which mechanically-fixable findings to apply (default: all) and note which author-input items remain open regardless of what's fixed.
 
@@ -115,6 +117,8 @@ Rounds run: <N> / 3
 |---|---|---|
 | outline | fail (3) | fail (1 — author input pending) |
 | readability | fail (5) | pass |
+| visuals | pass | pass |
+| publish-compat | fail (2, target: confluence-markdown-confluence) | pass |
 
 Fixed automatically: <count>
 Needs author input (see Phase 4 questions above): <count>
@@ -129,3 +133,5 @@ State plainly if the loop stopped on the round cap with findings remaining — t
 - Don't merge outline + readability into one mega-agent "just check the doc" — they're different lenses with different fixability; keep them separate so each stays sharp.
 - Don't skip round 2 because round 1's fixes "looked right" — re-verification is the point, not a formality.
 - Don't auto-fix an outline `missing` by writing plausible-sounding content — that's fabricating a claim, which is the failure mode CLAUDE.md's evidence rules exist to prevent. Ask instead.
+- Don't apply a `publish-compat` finding with `"verified": false` as if it were confirmed — an unverified guess about what a sync tool will do to the doc is exactly the kind of unchecked claim CLAUDE.md's evidence rules exist to catch; surface it as a question, not a fix.
+- Don't treat readability's `"fix": "extract-to-appendix"` as a cut — the content still belongs in the doc. Move it to an appendix heading (creating one if none exists) rather than deleting it.

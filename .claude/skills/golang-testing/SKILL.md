@@ -259,6 +259,22 @@ Key differences in `synctest`:
 - All goroutines run to blocking points before time advances
 - Test execution is deterministic and repeatable
 
+### Why synctest can hang: durably blocked vs. externally blocked
+
+Synthetic time only advances once every goroutine in the bubble is **durably blocked** — blocked on something the bubble itself controls, so it knows the goroutine can't make progress on its own:
+
+- `time.Sleep`, `sync.Cond.Wait`, `sync.WaitGroup.Wait`
+- a `select` where every case is a channel created inside the bubble
+- send/receive on a channel created inside the bubble
+
+A goroutine blocked on something **outside** the bubble's control — real network/file I/O, a syscall, or a channel created before `synctest.Test` started — counts as still "running" from the bubble's point of view. If even one goroutine is externally blocked, synthetic time never advances, so a sibling goroutine's `time.Sleep` inside the bubble waits forever and the test hangs (not fails — hangs, until the test timeout). This is the failure mode to check for first when a `synctest.Test` test doesn't return: something in the code under test is doing real I/O or touching a pre-bubble channel/mutex instead of a bubble-local one.
+
+`synctest.Wait()` blocks until every other goroutine in the bubble is finished or durably blocked — use it after triggering an async effect (e.g. `cancel()` firing a `context.AfterFunc` callback, or a goroutine you just started) to reach a stable point before asserting, instead of a real `time.Sleep` + hope.
+
+### Applying this in stapler-squad
+
+Good candidates for a `synctest.Test` conversion are tests that call real `time.Sleep` purely to let a background goroutine run before asserting (the `time.Sleep(50 * time.Millisecond) // allow any goroutine to run` pattern), rather than tests that assert real wall-clock behavior. `session/tmux/fork_metrics_test.go`'s `TestCheckPressure_BaselineNotUpdated_WhenSuppressed`, `TestCheckPressure_NoAlertOnClear`, and `TestStartForkPressureLogger_GoroutineFullyExits_When_WaitGroupIsJoined`/`TestStartForkPressureLogger_JoinsOnCtxCancel` (ticker + cancel + sleep) are the clearest examples — a `synctest.Wait()` after the triggering event replaces the arbitrary sleep with a real synchronization point. `session/tmux/exec_gate_test.go` and `TestEnsureServerRunning_NoOp`/`TestEnsureServerRunning_StartsServer` are **not** good fits despite superficially living in the same "polling" territory: `exec_gate_test.go`'s tests assert genuine elapsed-time behavior (e.g. `assert.Less(t, elapsed, 100*time.Millisecond)`, wait-time-in-milliseconds logging) or drive real flock-backed cross-process concurrency, and the `EnsureServerRunning` tests drive a real tmux subprocess — both are externally blocked by definition and synctest's bubble can't see into them. (`TestEnsureServerRunning_NoOp`'s original flake, named in `.claude/rules/fix-flaky-tests-dont-defer.md`, was already root-caused and fixed in commit `29248305b` by extracting the racy recovery decision into `startServerSucceededDespiteError` and covering it with a deterministic unit test, `TestStartServerSucceededDespiteError`, instead of converting the subprocess-driving test itself.) Not every `time.Sleep`-in-test is a fit — leave alone anything asserting genuine wall-clock duration or driving a real external process that `synctest`'s bubble can't see into.
+
 ## Test Timeouts
 
 For tests that may hang, use a timeout helper that panics with caller location. See [Helpers](./references/helpers.md).

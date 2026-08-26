@@ -1,1 +1,0 @@
-../../skills/jj/skills/rebase/SKILL.md

@@ -1,1 +1,0 @@
-../../skills/jj/skills/commit/SKILL.md

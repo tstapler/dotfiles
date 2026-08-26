@@ -113,6 +113,20 @@ If the host is wired via a Thunderbolt/USB4 dock rather than built-in Ethernet, 
 - `log_capture.sh usb_thunderbolt` tails unified-logging kernel messages mentioning `Thunderbolt`/`USB` to `~/Library/Logs/vaping-unified-logs/usb_thunderbolt.log`, scraped by promtail as the `usb_thunderbolt_logs` job and overlaid as a Loki annotation layer (same pattern as the DHCP/power/network-config logs above).
 - Dashboard: "Thunderbolt Device State" (state-timeline) and "Thunderbolt Re-enumerations" (stat) panels on `macOS System & Network Monitoring`.
 
+### Per-process resource watch
+
+`process_watch.py` polls `ps` for one or more configured processes and writes `process_watch_rss_bytes`, `process_watch_cpu_percent`, and `process_watch_count` (all gauges, labeled by `label`) to `textfile_collector/process_watch.prom`. Built to catch a CrowdStrike Falcon Agent memory leak that spiked RSS from 1.4GB to 25GB within seconds — a coarser poll interval would miss bursts like that.
+
+- Host-only, not run automatically — schedule it (e.g. `launchd`, ~15s interval to catch fast bursts).
+- **Which processes to watch is host-specific config**, not hardcoded in the script: drop a YAML file per watch into `config.d/process_watch.d/*.yaml` with a `label`, a `match` substring checked against each process's full command line, and an optional `hosts` allowlist (exact hostname match) so the entry only applies on machines where it's relevant — e.g. only hosts running `falcond`. Omit `hosts` to apply everywhere. Example (`config.d/process_watch.d/crowdstrike-falcon.yaml`):
+  ```yaml
+  label: crowdstrike_falcon
+  match: com.crowdstrike.falcon.Agent
+  hosts:
+    - MacBook-4M6L1
+  ```
+- Dashboard: "Watched Process Memory (RSS)" and "Watched Process CPU" (timeseries) panels on `macOS System & Network Monitoring`.
+
 ## Troubleshooting
 
 If you experience issues:

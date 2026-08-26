@@ -12,6 +12,8 @@ Prose-quality check only — this skill does not evaluate whether the right topi
 
 Adapted from `docs:review-clarity` (cognitive-load theory / decision-focused writing), narrowed to design docs specifically and reconciled with the Proportionality rule in CLAUDE.md — **this check must not penalize a doc for putting rigor where it belongs.**
 
+Governing standard for the main body: Dieter Rams' "as little design as possible" and Pascal's "I would have written a shorter letter, but I did not have the time" — every sentence in the main body should have to justify its presence to a reader trying to make the decision. The fix for a sentence that fails that test is rarely deletion of the underlying content; it's usually **removal from the reader's critical path** — cut it if it's genuinely padding, extract it to an appendix if it's real evidence the doc still needs to keep.
+
 ### The Three Questions
 
 1. **Decision Focus** — what decision is the reader being asked to make?
@@ -27,10 +29,11 @@ Adapted from `docs:review-clarity` (cognitive-load theory / decision-focused wri
 - **Passive voice hiding an actor** — "it was decided that" — who decided, and can the reader ask them?
 - **Paragraph or section doing two jobs** — mixing "what we're building" with "why we're allowed to" with "how it degrades" in one block, so a reader skimming for one of those has to read all three
 - **Missing front-load** — the doc doesn't let a reader stop after 30 seconds with the core message and the ask; critical risk/impact is not near the top
+- **Extractable-to-appendix content (terseness pass)** — run this as its own explicit pass over the main body, section by section, after the checks above: for each paragraph, ask "does the reader need this to make the decision, or only to audit how the decision was reached?" Content in the second bucket — raw investigation logs, full benchmark tables, exhaustive edge-case enumeration, a second worked example once the first has made the point, background/history the reader doesn't need to act — is a **terseness finding with `"fix": "extract-to-appendix"`**, not a deletion. It stays in the doc, just not on the reader's critical path. Only recommend `"fix": "cut"` when the sentence is pure filler/hedge/restatement with zero evidentiary value even in an appendix (see the filler-and-hedge bullet above). Flag the specific paragraph/section, name what it's doing (evidence vs. decision-relevant), and say which bucket it falls in — don't just assert "too long."
 
 ### What NOT to flag (proportionality guardrails)
 
-- **Appendix detail carrying evidence, measurements, or a review record.** Long is not verbose if it's load-bearing and correctly demoted out of the main body. Check the ratio: main body should be readable in one sitting for the doc's stakes; appendices exist precisely so the main body can be short. Flag a bloated *main body*, not a long *document*.
+- **Appendix detail carrying evidence, measurements, or a review record — that is already in an appendix.** Long is not verbose if it's load-bearing and correctly demoted out of the main body. Check the ratio: main body should be readable in one sitting for the doc's stakes; appendices exist precisely so the main body can be short. Flag a bloated *main body*, not a long *document* — and don't re-flag content the terseness pass already moved.
 - **Citations, links, and command output backing a claim.** These satisfy CLAUDE.md's evidence rule; don't ask to cut them for terseness — that would trade correctness for brevity, the wrong trade.
 - **Hedged, uncertainty-owning language on a genuinely uncertain claim** ("may indicate", "consistent with", "not verified") — this is the CNE hedged-language convention CAP's own doc references; it is precision, not padding. Only flag hedging that is used to avoid a checkable claim the author could have made concrete.
 
@@ -66,13 +69,15 @@ Return only this structured summary:
   "status": "pass" | "fail",
   "count": <number of blocking+notable findings>,
   "findings": [
-    {"section": "§5.4", "severity": "notable", "note": "one line: what's wrong + the fix direction"}
+    {"section": "§5.4", "severity": "notable", "fix": "cut" | "extract-to-appendix" | "rewrite", "note": "one line: what's wrong + the fix direction"}
   ]
 }
 ```
+
+`fix` defaults to `"rewrite"` for anything that isn't a pure-filler cut or a terseness-pass extraction (buried decisions, passive voice, mixed-purpose paragraphs, unquantified risk — these need new prose, not just relocation).
 
 `status: "pass"` only if the 30-second test passes and there are zero `blocking` findings.
 
 ## When invoked standalone (not via the coordinator)
 
-Print the summary as a table with before/after examples for the top 3 findings, then ask whether to apply the rewrites. Do not edit the file without that confirmation — this check runs directly against prose the author owns, unlike outline gaps which usually need author input anyway.
+Print the summary as a table with before/after examples for the top 3 findings, then ask whether to apply the rewrites. For `"fix": "extract-to-appendix"` findings, propose the destination heading (an existing Appendix if the doc has one, otherwise a new `## Appendix` to create) alongside the before/after. Do not edit the file without that confirmation — this check runs directly against prose the author owns, unlike outline gaps which usually need author input anyway.

@@ -1,12 +1,20 @@
 ---
-name: markdown-confluence-sync
-description: Publish markdown files to Confluence, crawl Confluence pages to local
-  markdown, sync bidirectionally, validate links, and manage page hierarchy. Use when
-  publishing documentation, downloading Confluence content, checking sync status,
-  resolving conflicts, managing comments, or troubleshooting Confluence page issues.
+name: markdown-doc-sync
+description: Legacy Confluence-only sync via the markdown-confluence CLI — publish
+  markdown to Confluence, crawl pages to local markdown, sync bidirectionally,
+  validate links, and manage page hierarchy. Use only for the crawl/comments/
+  migrate-editor features docspan doesn't have yet; for plain push/pull of files
+  mapped in docspan.yaml (Google Docs or Confluence), use the markdown-doc-sync
+  agent (docspan/markgate) instead.
 ---
 
-# Markdown Confluence Sync
+# Markdown Confluence Sync (legacy — pre-docspan)
+
+> Superseded for routine push/pull by the `markdown-doc-sync` **agent**, which wraps
+> `docspan` (markgate repo) and covers both Google Docs and Confluence. Keep using
+> this skill's CLI only for capabilities docspan doesn't have yet: page-tree/space
+> crawling, comment management, version history, and ADF migration. Once docspan
+> grows those, this skill should be retired.
 
 Manage the bidirectional flow between local markdown files and Confluence pages using the `markdown-confluence` CLI.
 

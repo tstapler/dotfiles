@@ -1,0 +1,4 @@
+label: crowdstrike_falcon
+match: com.crowdstrike.falcon.Agent
+hosts:
+  - MacBook-4M6L1
