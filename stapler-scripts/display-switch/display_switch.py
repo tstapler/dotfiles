@@ -5,9 +5,22 @@ import re
 import os
 import stat
 import datetime
+import shlex
+import getpass
 
-STATE_FILE = "/tmp/monitor_state.sh"
-LOG_FILE = "/tmp/display_switch.log"
+def _get_secure_path(filename):
+    """Returns a secure, user-specific path for a file."""
+    user = getpass.getuser()
+    # Try XDG_RUNTIME_DIR first (typically /run/user/UID)
+    base_dir = os.environ.get("XDG_RUNTIME_DIR")
+    if not base_dir or not os.path.isdir(base_dir) or not os.access(base_dir, os.W_OK):
+        base_dir = "/tmp"
+
+    # Use a user-prefixed filename to avoid collisions and predictable paths in /tmp
+    return os.path.join(base_dir, f"display-switch-{user}-{filename}")
+
+STATE_FILE = _get_secure_path("monitor_state.sh")
+LOG_FILE = _get_secure_path("display_switch.log")
 
 def log(message):
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -166,17 +179,21 @@ def save_state():
             
         command_parts.extend(["--rotate", m['rotation']])
         
-    full_command = " ".join(command_parts)
+    full_command = shlex.join(command_parts)
     log(f"Generated restore command: {full_command}")
     
     try:
-        with open(STATE_FILE, "w") as f:
+        # Securely create the file with restrictive permissions (0o600)
+        # os.O_EXCL ensures we don't follow symlinks or overwrite an existing file
+        fd = os.open(STATE_FILE, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+        with os.fdopen(fd, 'w') as f:
             f.write("#!/bin/bash\n")
             f.write(full_command + "\n")
         
-        os.chmod(STATE_FILE, os.stat(STATE_FILE).st_mode | stat.S_IEXEC)
         log(f"State saved successfully to {STATE_FILE}")
-    except IOError as e:
+    except FileExistsError:
+        log(f"State file {STATE_FILE} already exists. Skipping save.")
+    except (IOError, OSError) as e:
         log(f"Failed to write state file: {e}")
         sys.exit(1)
 
@@ -186,9 +203,19 @@ def restore_state():
         log(f"No state file found at {STATE_FILE}. Nothing to restore.")
         return
 
+    # Security check: Ensure the file is owned by the current user and has restrictive permissions
+    st = os.stat(STATE_FILE)
+    if st.st_uid != os.getuid():
+        log(f"Security error: {STATE_FILE} is not owned by the current user.")
+        return
+    if st.st_mode & (stat.S_IRWXG | stat.S_IRWXO):
+        log(f"Security error: {STATE_FILE} has insecure permissions: {oct(st.st_mode)}")
+        return
+
     try:
         log(f"Executing {STATE_FILE}...")
-        subprocess.run(STATE_FILE, check=True, shell=True)
+        # Execute securely: No shell=True, and pass the file path as an argument to bash
+        subprocess.run(["/bin/bash", STATE_FILE], check=True)
         log("State restored successfully.")
         os.remove(STATE_FILE)
         log(f"Deleted {STATE_FILE}")
