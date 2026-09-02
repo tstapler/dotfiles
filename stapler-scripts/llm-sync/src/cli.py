@@ -11,6 +11,7 @@ try:
     from .sources.plugins import PluginSource
     from .targets.gemini import GeminiTarget, AntigravityTarget
     from .targets.opencode import OpenCodeTarget
+    from .targets.pi import PiTarget
     from .targets.claude_settings import ClaudeSettingsTarget
     from .targets.claude_plugin_installer import ClaudePluginInstaller
     from .targets.antigravity_plugin_installer import AntigravityPluginInstaller
@@ -25,6 +26,7 @@ except ImportError:
     from sources.plugins import PluginSource
     from targets.gemini import GeminiTarget, AntigravityTarget
     from targets.opencode import OpenCodeTarget
+    from targets.pi import PiTarget
     from targets.claude_settings import ClaudeSettingsTarget
     from targets.claude_plugin_installer import ClaudePluginInstaller
     from targets.antigravity_plugin_installer import AntigravityPluginInstaller
@@ -242,7 +244,7 @@ def main():
     parser.add_argument("--dry-run", action="store_true", help="Preview changes")
     parser.add_argument("--force", action="store_true", help="Force sync regardless of content hash")
     parser.add_argument("--cleanup", action="store_true", help="Remove legacy non-namespaced files")
-    parser.add_argument("--target", choices=['gemini', 'opencode', 'antigravity', 'all'], default='all', help="Target platform(s)")
+    parser.add_argument("--target", choices=['gemini', 'opencode', 'antigravity', 'pi', 'all'], default='all', help="Target platform(s)")
     parser.add_argument("--direction", choices=['to-target', 'from-target', 'both'], default='to-target',
                         help="Sync direction")
     parser.add_argument("--state-file", type=Path, help="Custom state file path")
@@ -252,6 +254,7 @@ def main():
     parser.add_argument("--gemini-dir", type=Path, help="Override base directory for Gemini assets")
     parser.add_argument("--antigravity-dir", type=Path, help="Override base directory for Antigravity config")
     parser.add_argument("--opencode-dir", type=Path, help="Override base directory for OpenCode assets")
+    parser.add_argument("--pi-dir", type=Path, help="Override base directory for Pi assets (default: ~/.pi/agent)")
     parser.add_argument("--mcp-global-config", type=Path, help="Override global MCP servers JSON file")
     parser.add_argument("--mcp-local-config", type=Path, help="Override machine-local MCP servers JSON file")
     parser.add_argument("--mcp-global-config-dir", type=Path, help="Override global MCP servers config.d directory")
@@ -310,6 +313,12 @@ def main():
                     opencode_params['agents_dir'] = args.opencode_dir / "agents"
                     opencode_params['commands_dir'] = args.opencode_dir / "commands"
                 targets.append(OpenCodeTarget(**opencode_params))
+
+            if args.target in ['pi', 'all']:
+                pi_params = {}
+                if args.pi_dir:
+                    pi_params['agent_dir'] = args.pi_dir
+                targets.append(PiTarget(**pi_params))
 
             if args.cleanup:
                 console.print("\n[bold]Cleaning up legacy files...[/bold]")

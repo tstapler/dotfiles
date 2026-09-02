@@ -1,6 +1,6 @@
 # LLM Sync Agent
 
-This project syncs LLM agents, skills, and commands from Claude to Gemini (legacy), Antigravity, and OpenCode.
+This project syncs LLM agents, skills, and commands from Claude to Gemini (legacy), Antigravity, OpenCode, and Pi.
 
 ## Running the Project
 
@@ -16,7 +16,7 @@ uv run main.py --help
 - **Tool Mapping:** Automatically maps Claude tool names to Gemini/OpenCode/Antigravity equivalents.
 - **Metadata Overrides:** Supports overriding default values (like model, temperature, mode) via YAML frontmatter.
 - **Recursive Directory Creation:** Ensures nested structures are synced correctly.
-- **Custom Paths:** Use `--source-dir`, `--gemini-dir`, `--antigravity-dir`, or `--opencode-dir` to sync to local project folders.
+- **Custom Paths:** Use `--source-dir`, `--gemini-dir`, `--antigravity-dir`, `--opencode-dir`, or `--pi-dir` to sync to local project folders.
 - **Plugin Installer:** Installs plugins globally or locally into both Claude (`.claude/`) and Antigravity (`.agents/` or `~/.gemini/config/plugins/`).
 - **MCP Server Sync:** Syncs Model Context Protocol configs to both Claude (`~/.claude.json`) and Antigravity (`~/.gemini/antigravity-cli/mcp_config.json`).
 
@@ -33,6 +33,18 @@ uv run main.py --help
 ### Gemini CLI (Legacy)
 - **Configuration:** https://github.com/google-gemini/gemini-cli/blob/main/docs/reference/configuration.md
 - **Location:** `.gemini/agents/*.md`, `.gemini/skills/*/SKILL.md`, `.gemini/commands/*.toml`
+
+### Pi (pi.dev)
+- **Docs:** https://pi.dev/docs/latest, https://github.com/earendil-works/pi/tree/main/packages/coding-agent/docs
+- **Skills:** `~/.pi/agent/skills/<name>/SKILL.md` — same Agent Skills standard as Claude, so no format
+  conversion is needed; only the `name` frontmatter field is flattened (`/` → `-`) since Pi forbids slashes there,
+  while the directory keeps the namespaced path. Pi's own docs note you can point `settings.json`'s `skills`
+  array straight at `~/.claude/skills` instead of syncing at all.
+- **Commands → Prompt Templates:** `~/.pi/agent/prompts/<flattened-name>.md` — Pi templates use the same
+  `$ARGUMENTS`/`$1`/`$2` substitution as Claude commands, so content passes through unchanged. Discovery in
+  `prompts/` is non-recursive, so namespaced command names (`git/commit`) are flattened to `git-commit.md`.
+- **No agents/sub-agents, no native MCP:** Pi's philosophy deliberately omits both (see its README) — build
+  them via extensions if needed. `PiTarget` only implements `save_skills`/`save_commands`.
 
 ### Antigravity
 - **Customizations Root:** `~/.gemini/config` (global) or `.agents` (workspace)
