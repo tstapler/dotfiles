@@ -1,22 +1,32 @@
 ---
 name: golang-profiling
-description: Profile Go processes using pprof. Covers CPU, memory, goroutine, and mutex profiles; flamegraph visualization; collapsed-stacks output for LLM analysis; and benchmark profiling.
+description: Profile Go processes using pprof. Covers CPU, memory, goroutine, and mutex profiles; flamegraph visualization; collapsed-stacks and annotated-call-tree output for LLM analysis (with bundled, tested scripts); and benchmark profiling.
 ---
 
 # Go Profiling with pprof
 
-End-to-end workflow: enable pprof → collect profile → collapsed stacks (primary analysis format) → flamegraph (visualization).
+End-to-end workflow: enable pprof → collect profile → collapsed stacks or annotated call tree (primary analysis formats) → flamegraph (visualization).
 
 ## Format Strategy
 
 | Format | Best for | Command |
 |--------|----------|---------|
-| **Collapsed stacks** | LLM analysis, CI diffs, awk parsing | `go tool pprof -raw -output=collapsed` |
+| **Collapsed stacks** | Scripting, CI diffs, awk parsing, max compression | `go tool pprof -raw -output=collapsed` |
+| **Annotated call tree** | LLM reasoning about *which call chain* to fix, without full collapsed-stacks token cost | see Step 3a below |
 | HTML flamegraph | Interactive human exploration | `go tool pprof -http=:8081` |
 | Text top | Quick terminal summary | `go tool pprof -top` |
 | Raw `.prof` | Archive, future re-analysis | — |
 
-**Use collapsed stacks for LLM analysis.** Format: `frame1;frame2;leaf N` — one line per unique call stack, count at end.
+**Use collapsed stacks when scripting or diffing; use the annotated call tree when handing a profile to an LLM to decide what to fix.** Collapsed-stacks format: `frame1;frame2;leaf N` — one line per unique call stack, count at end. It's the most compact representation but flattens call-path context into thousands of near-duplicate lines; the annotated tree (Step 3a) keeps the tree structure so the LLM can see *which caller* to fix, at roughly the token cost of a top-N table.
+
+## Bundled Scripts
+
+`scripts/` holds stdlib-only Python (no deps to install) with a `tests/` suite (`python3 -m unittest discover -s scripts/tests`):
+
+| Script | Purpose | Used in |
+|--------|---------|---------|
+| `scripts/annotate_tree.py` | Builds the annotated call tree (self%/cum%, HOTSPOT markers, pruned) directly from `go tool pprof -raw` output | Step 3a |
+| `scripts/pct_breakdown.py` | Leaf-frame percentage breakdown from collapsed stacks | Step 3 |
 
 ---
 
@@ -136,9 +146,12 @@ go tool pprof -top=20 cpu.prof
 
 ### awk extraction from collapsed stacks
 
+Collapsed-stacks format is root-first, leaf-last (`root;caller;leaf N`) — the
+leaf frame is the *last* `;`-separated field, not the first.
+
 ```bash
 # Top leaf frames by self-sample count
-awk '{n=$NF; sub(/ [0-9]+$/,"",n); split(n,a,";"); leaf=a[1]; count[leaf]+=$NF} END{for(f in count) print count[f],f}' \
+awk '{n=$NF; sub(/ [0-9]+$/,"",n); split(n,a,";"); leaf=a[length(a)]; count[leaf]+=$NF} END{for(f in count) print count[f],f}' \
   cpu.collapsed | sort -rn | head -20
 
 # Stacks in a specific package
@@ -148,23 +161,70 @@ grep "yourpackage" cpu.collapsed | sort -t' ' -k2 -rn | head -10
 sort -t' ' -k2 -rn cpu.collapsed | head -20
 ```
 
-### Minimal Python for percentage breakdown
+### Percentage breakdown (bundled script)
 
-```python
-from collections import defaultdict
-import sys
-
-lines = open(sys.argv[1]).readlines()
-total = sum(int(l.rsplit(" ", 1)[1]) for l in lines if l.strip())
-by_leaf = defaultdict(int)
-for line in lines:
-    stack, _, count = line.strip().rpartition(" ")
-    leaf = stack.split(";")[0]
-    by_leaf[leaf] += int(count)
-
-for count, frame in sorted((-v, k) for k, v in by_leaf.items())[:20]:
-    print(f"{100*-count/total:5.1f}%  {-count:6d}  {frame}")
+```bash
+python3 scripts/pct_breakdown.py cpu.collapsed --top 20
 ```
+
+See `scripts/pct_breakdown.py` — leaf-frame self-time ranked by percentage of
+total samples, tested in `scripts/tests/test_pct_breakdown.py`.
+
+---
+
+## Step 3a — Annotated Call Tree (LLM format)
+
+The terse-but-context-preserving middle ground between collapsed stacks (all
+call-path detail, but thousands of near-duplicate lines) and a flat top-N
+table (compact, but loses which caller is responsible). Built with the
+bundled `scripts/annotate_tree.py` directly from `go tool pprof -raw` —
+no Perl/stackcollapse dependency, stdlib-only.
+
+```bash
+go tool pprof -raw cpu.prof > raw.txt
+python3 scripts/annotate_tree.py raw.txt
+```
+
+Tune pruning/sensitivity for the profile size:
+
+```bash
+python3 scripts/annotate_tree.py raw.txt --min-pct 2 --hotspot-pct 8 --max-depth 10 --top-self 15
+```
+
+Example output (verified against a real CPU profile with a hot recursive
+function, an allocation-heavy path, and a `strings.Builder` growth path):
+
+```
+Total samples: 8
+Legend: [self% | cum%] function  (pruned below 1.0% cum, HOTSPOT = self% >= 5.0%)
+
+├── [  0.0% |  87.5%] runtime.main
+│   ├── [  0.0% |  50.0%] main.main
+│   │   └── [  0.0% |  50.0%] main.cpuHeavy
+│   │       └── [  0.0% |  50.0%] main.fib
+│   ├── [ 25.0% |  25.0%] strings.(*Builder).copyCheck  ◀ HOTSPOT
+│   └── [ 12.5% |  12.5%] main.allocHeavy  ◀ HOTSPOT
+└── [  0.0% |  12.5%] runtime.systemstack
+    └── ...
+
+Top 10 by self-time (flat, across all call sites):
+   50.0%  main.fib
+   25.0%  strings.(*Builder).copyCheck
+   12.5%  main.allocHeavy
+```
+
+`--min-pct` prunes any subtree below that cumulative % of total (keeps output
+readable on real multi-thousand-sample profiles); `--hotspot-pct` controls
+the self% threshold for the `◀ HOTSPOT` marker; `--top-self` adds a flat
+leaderboard that catches hotspots split across many call sites (e.g. a shared
+helper called from a dozen places, each individually below the tree's
+pruning floor). Works on any profile type `-raw` supports (CPU, heap,
+goroutine, mutex, block) — self/cum are computed from the sample-count
+column, which pprof already normalizes per profile type.
+
+Tested in `scripts/tests/test_annotate_tree.py` against a synthetic
+`-raw`-format fixture (shared call-path merging, hotspot marking, pruning,
+depth truncation, flat leaderboard).
 
 ---
 
