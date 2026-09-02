@@ -265,7 +265,7 @@ class PluginSource:
         try:
             with open(hooks_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                if isinstance(data, dict) and "hooks" in data and len(data) == 1:
+                if isinstance(data, dict) and isinstance(data.get("hooks"), dict):
                     return data["hooks"]
                 return data
         except Exception as e:
