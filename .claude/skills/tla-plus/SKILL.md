@@ -193,6 +193,39 @@ real execution traces, translate them into the spec's vocabulary, and verify the
 permits every real trace) is the concrete practice for keeping the two from diverging — see
 MongoDB's public writeup, linked below.
 
+**Trace validation, concretely** — the mechanics behind "check the spec against real traces," per
+[Cirstea, Kuppe, Loillier & Merz, "Validating Traces of Distributed Programs Against TLA+
+Specifications"](https://arxiv.org/abs/2404.16075) (their reference implementation instruments
+Java; the technique itself is language-agnostic):
+- Frame it as *constrained model checking*, not refinement checking: given the spec's behaviors
+  `S` and the trace-compatible behaviors `T` (any variable the trace didn't record is left free),
+  success means `S ∩ T ≠ ∅`, deliberately weaker than requiring `T ⊆ S` — full refinement would
+  reject an otherwise-valid trace whenever an unrecorded variable's non-deterministically-filled
+  value doesn't happen to match what really occurred.
+- Instrument only *changes* to spec variables at chosen linearization points (message send/receive,
+  lock acquire/release, a commit to stable storage) — not full state snapshots. Those points are
+  what "atomic transition" has to mean for the trace to correspond to spec actions at all.
+- Drive TLC against the trace with a companion spec, not the original directly: for each spec
+  action `A`, define `IsA == IsEvent("A") /\ A` (existentially quantify over `A`'s parameters if
+  the trace didn't record them), combine into one `TraceNext`, and check the invariant
+  **`[](l < Len(Trace))`** — not liveness (`<>(l >= Len(Trace))` fails on any legitimately-incomplete
+  prefix) and not deadlock checking (a trace can legitimately dead-end mid-recording). A clean
+  invariant run alone doesn't mean the whole trace matched — check the separate postcondition
+  `TraceAccepted == TLCGet("stats").diameter - 1 = Len(Trace)` afterward.
+- **Grain-of-atomicity mismatches are the dominant failure mode, ahead of actual logic bugs**: an
+  implementation step finer or coarser than the spec's actions (a retried message that shouldn't
+  re-fire an already-completed spec action; two spec actions folded into one real step). Fix by
+  modeling the fold explicitly with TLC's action composition (`A \cdot B`) or by adjusting what gets
+  logged — document the mismatch in the spec rather than silently working around it.
+- **Trace precision is a real trade-off, not "more is always better."** Logging only variable names
+  or only event names (never both) can blow the constrained state space up to infeasible; a
+  well-chosen partial trace (e.g., events plus their arguments, when those determine every
+  variable's value uniquely) can be nearly as cheap as full logging. Under-instrumentation's real
+  risk isn't just inefficiency — it's a **false pass**: TLC can fill an unrecorded variable with a
+  value that never actually occurred, silently accepting a trace that shouldn't have validated.
+- Adopted in production CI by etcd (Go) and Microsoft's Confidential Consortium Framework (C++);
+  CCF's adoption specifically surfaced safety violations its existing test suite had missed.
+
 ## Pre-trust checklist
 
 Before reporting a TLA+ result as evidence for a design decision, confirm:
@@ -225,4 +258,5 @@ Before reporting a TLA+ result as evidence for a design decision, confirm:
 - [ongardie/raft.tla](https://github.com/ongardie/raft.tla), [Vanlightly/raft-tlaplus](https://github.com/Vanlightly/raft-tlaplus), [heidihoward/leaderelection-tlaplus](https://github.com/heidihoward/leaderelection-tlaplus)
 - [TLA+ Wiki — coverage statistics](https://docs.tlapl.us/using:coverage)
 - MongoDB Engineering — [Conformance Checking at MongoDB](https://www.mongodb.com/company/blog/engineering/conformance-checking-at-mongodb-testing-our-code-matches-our-tla-specs)
+- Cirstea, Kuppe, Loillier & Merz — [Validating Traces of Distributed Programs Against TLA+ Specifications](https://arxiv.org/abs/2404.16075)
 - [Surfing Complexity — TLA+ is hard to learn](https://surfingcomplexity.blog/2018/12/24/tla-is-hard-to-learn/)
