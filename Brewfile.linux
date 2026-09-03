@@ -17,6 +17,7 @@ brew "gh"
 brew "golang"
 brew "htop"
 brew "jq"
+brew "tstapler/homebrew-tap/kibitzer"  # diff-aware code/doc inspection hook for Claude Code
 brew "neovim"
 brew "node"
 brew "ollama", restart_service: :changed

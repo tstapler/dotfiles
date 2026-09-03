@@ -20,6 +20,13 @@
       "args": [],
       "_requires": "1Password desktop app installed natively (not Flatpak/Snap) with Settings > Developer > 'Integrate with MCP clients' turned on. after-install.sh symlinks the binary to /usr/local/bin. Fails to start (command not found) on machines without the app — same graceful-failure pattern as stapler-mcp needing BRAVE_API_KEY.",
       "env": {}
+    },
+    "kibitzer": {
+      "command": "${HOME}/.cargo/bin/kibitzer",
+      "args": ["mcp"],
+      "_fork": "https://github.com/tstapler/kibitzer",
+      "_requires": "brew bundle (Brewfile/Brewfile.linux both carry tstapler/homebrew-tap/kibitzer) or cargo install --path . from the kibitzer repo. Exposes architecture_assessment and the native code/doc checkers as MCP tools over stdio.",
+      "env": {}
     }
   }
 }
