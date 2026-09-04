@@ -112,13 +112,51 @@ If not ready: stop here.
 
 ---
 
-## Phase 5 — Implement (parallel Agent calls per epic)
+## Phase 5 — Implement (delegated to a fresh agent)
 
-⚠️ If this session was used for planning, stop and open a fresh session before Phase 5.
+If this session ran Phase 1 inline (i.e. it wrote requirements.md itself rather than
+entirely via subagents), its context already carries the full planning history —
+too much to also drive ~29-story implementation work in. Rather than stopping and
+telling the user to open a new terminal, delegate Phase 5 to a fresh `Agent` call:
 
-Read `.claude/commands/sdd/5-implement.md` for the full worker agent prompt template, dependency diagram reading, failure recovery rules, and spec compliance sweep instructions.
+```
+Agent({
+  subagent_type: "sdd",
+  description: "Run SDD Phase 5 for <PROJECT_NAME>",
+  prompt: `Run Stapler-Driven Development Phase 5 only (Implement) for project
+    "<PROJECT_NAME>" in the repo at <WORKTREE_OR_REPO_PATH> — run all commands
+    from there.
 
-Dispatch workers directly from this thread in parallel — do not use a coordinator agent. Per the Parallelization model above: `subagent_type` for each epic worker must not be `sdd`.
+    Phases 1-4 are complete and committed (commit <SHA>, "chore(sdd): planning
+    artifacts for <PROJECT_NAME>"). All planning artifacts exist at
+    project_plans/<PROJECT_NAME>/: requirements.md, research/*.md,
+    implementation/plan.md, implementation/{architecture-review,
+    adversarial-review,validation,pre-mortem}.md, design/ux.md (if
+    user-facing), decisions/ADR-*.md.
+
+    Your job: execute Phase 5 (Implement) only. Read
+    .claude/commands/sdd/5-implement.md for the full worker agent prompt
+    template, dependency diagram reading, failure recovery rules, and spec
+    compliance sweep instructions, and follow it exactly. Per the
+    Parallelization model, dispatch epic workers directly with
+    subagent_type: general-purpose (never sdd) — you are the top-level
+    thread for this phase.
+
+    Do not run Phase 6 (verify) or Phase 7 (ship). Stop after Phase 5
+    completes or halts on a failure-recovery rule, and report back: which
+    epics/stories/tasks completed, any that failed or were skipped, and
+    what the next step should be (typically /sdd:6-verify).`
+})
+```
+
+This is a background dispatch — tell the user it's running and that you'll report
+back when it completes or hits a blocker; don't block synchronously waiting on it.
+If this session's own context is still small (e.g. `$ARGUMENTS[0]` was provided so
+Phase 1 skipped its question, or the user resumed straight into `/sdd:full` from a
+freshly-cleared session), Phase 5 may run directly in this thread instead — dispatch
+workers directly, `subagent_type` for each epic worker must not be `sdd`, per the
+Parallelization model above. Use judgment: the goal is keeping Phase 5's context
+budget clean, not dogmatically always spawning a fresh agent.
 
 ---
 
