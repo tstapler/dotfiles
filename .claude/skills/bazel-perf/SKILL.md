@@ -13,11 +13,22 @@ its own trace profile and `INFO:` summary lines first.
 ```bash
 bazel build //kmp:android_app --config=android --profile=/tmp/profile.json.gz
 # or: bazel test //kmp:jvm_tests --profile=/tmp/profile.json.gz
-bazel analyze-profile /tmp/profile.json.gz          # phase breakdown, critical path
 ```
 
-For per-action detail, load `/tmp/profile.json.gz` at `chrome://tracing` (unzip first),
-or pull the slowest individual actions with jq:
+`bazel analyze-profile` is gone as of Bazel 9.2.0 (this repo's version — no `.bazelversion`
+pin, Bazelisk resolves latest) — `bazel help` doesn't list it. It was still documented as
+of Bazel 7.4.0, so it was removed somewhere in 8.x/9.x, not just missing from an old
+install; upgrading further will not bring it back. Use the JSON trace profile directly
+instead — it's the modern, still-supported path and is actually more useful (interactive
+timeline, not just text):
+
+- **Perfetto UI (recommended):** open https://ui.perfetto.dev, drag in the `.json.gz`
+  directly (no need to unzip) — flamegraph-style timeline, filterable by thread/action.
+- **`chrome://tracing`:** same file, unzip first (`gunzip profile.json.gz`); Perfetto UI
+  supersedes this but it still works.
+- **jq, for a quick top-N without leaving the terminal** — pull the slowest individual
+  actions (filter out phase/wrapper wrapper events like `Action.execute`,
+  `Resources acquired`, `Worker #N working`, `buildTargets` to see real action names):
 
 ```bash
 zcat /tmp/profile.json.gz | jq -r '
@@ -62,10 +73,53 @@ per-file C++ compiles). `worker`/`multiplex-worker` means a warm persistent proc
 reused. A job dominated by sandbox strategy with a large elapsed/critical-path gap is the
 textbook case for enabling persistent workers, not for adding more CPU/jobs.
 
-Known win already applied here: `build:android --persistent_android_dex_desugar` and
-`--persistent_android_resource_processor` in `.bazelrc` (native `rules_android`/Bazel
-flags — `bazel help build | grep persistent`). Verified locally: shifted 466/809 actions
-from `processwrapper-sandbox` to `worker` on `//kmp:android_app` with no failures.
+**Tried and reverted here** (do not re-attempt without the memory math below):
+`build:android --persistent_android_dex_desugar` and `--persistent_android_resource_processor`
+(native `rules_android`/Bazel flags — `bazel help build | grep persistent`) shift Desugar/
+DexBuilder/PackageAndroidResources from `processwrapper-sandbox` to `worker` mode — real, on
+`//kmp:android_app` this was the majority of a 6.4x elapsed/critical-path gap. But it doesn't
+fit this repo's 16GB GH runner and got reverted after 3 failed CI attempts.
+
+**Why it broke, and why "local passed" didn't catch it.** A persistent worker stays
+resident holding its JVM heap *between* actions instead of releasing it on exit like the
+sandboxed process it replaces, and these actions' declared `resource_set` apparently
+understates that footprint — so `--local_resources=memory=` doesn't stop enough concurrent
+workers from spawning to blow past the runner's real RAM. Local verification on a
+61GB/24-core dev box showed clean action-count shifts with zero swap and looked fully
+safe — the box just has too much headroom to ever hit the ceiling. **Do the memory math
+against the target runner's actual RAM, not just "run it and check for failures":** this
+repo's own `.bazelrc` already documents these as `-Xmx3G` processes (the comment behind
+`--local_resources=memory=9000`). Even `--worker_max_instances=<Mnemonic>=2` on all three
+new-worker mnemonics is 6 workers × 3GB = 18GB from *just those three*, before the 6GB
+Bazel-server cap, `KotlinCompile`'s own (pre-existing, already-persistent) worker, or OS
+overhead — on a 16GB box that was never going to fit, and 3 rounds of CI (runs
+33929109869, 33931054162, 33931907031) each took ~12-25 minutes to confirm it the hard
+way. Multiply *(cap × mnemonics × per-worker -Xmx)* against the runner's total RAM minus
+the Bazel server cap **before** picking a cap number, and mnemonic name matters
+(`--worker_max_instances=<Mnemonic>=N`, `--worker_max_multiplex_instances=<Mnemonic>=N` —
+find every mnemonic the flag actually touches with
+`grep -oP 'bazel-workers/worker-\d+-\K\w+(?=\.log)'` on a failure log, not just the ones
+you expect; missing one is exactly what caused attempt #2 here). **A local "no failures"
+run is not sufficient proof for any worker/concurrency flag — push it and watch the actual
+CI job, and don't declare success until that's green**, not just "didn't error locally."
+Revisiting this needs either a larger-memory CI runner or verified real per-worker RSS
+(not the tool's understated `resource_set`) measured on hardware matching the runner.
+
+## 3b. One giant target on the critical path
+
+The jq top-N (§1) surfaces this directly: if the single biggest action is a `KotlinCompile`
+covering hundreds of files in one target (e.g. `//kmp/src/androidMain/kotlin:android_main
+{ kt: 711 }` at 71s — measured here, ~half of a 138s critical path by itself), that's a
+monolithic-module problem, not a scheduling or worker problem. A single Kotlin compilation
+unit can't be parallelized internally and can't get a partial cache hit — touch one file
+in it and the whole 711-file action reruns. §2's rule applies: this is dependency-chain-
+bound, so persistent workers/more cores/cache tuning don't touch it. The fix is splitting
+the module into smaller Bazel targets (by package, e.g. `:model`, `:repository`, `:db`,
+`:ui` as separate `kt_jvm_library`/`kt_android_library` targets with explicit deps) so an
+unrelated change only recompiles its own slice. Check for import cycles between the
+candidate packages first (`grep -rl "import dev.stapler.stelekit.<pkgA>" <pkgB>/` both
+ways) — a real cycle means those two packages can't be split apart without breaking one of
+them out further.
 
 ## 4. Local build (correctness first, output is secondary signal)
 
@@ -84,3 +138,8 @@ churn or GitHub Actions cache eviction (~10GB/repo), not compute — check
 - Don't chase the slowest single action mnemonic before checking elapsed-vs-critical-path
   — a build with a short critical path but a huge gap is a scheduling problem, and
   shaving one slow action won't fix it.
+- Don't enable a persistent-worker flag and call it done after one clean local run — verify
+  on the real CI runner's memory (§3's OOM story). A big dev box hides exactly this class
+  of regression.
+- Don't reach for `bazel analyze-profile` — it doesn't exist in this repo's Bazel version.
+  Use the JSON trace profile (§1).
