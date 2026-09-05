@@ -21,6 +21,32 @@ From the current session context, list every bug that was fixed. For each state:
 
 If bugs aren't obvious from context, ask the user to list them before continuing.
 
+## Phase 1.5 — Correlate (cheap, run before classifying — do this even for a single bug)
+
+Multiple bugs (in this session, or in recent history) sharing one architectural root cause need
+one systemic fix, not N one-off enforcements. Check this with tools you already have — no new
+tooling required:
+
+1. **Overlap within this session's bug list.** Do 2+ bugs in Phase 1 touch the same file, module,
+   or symbol? If so, treat them as one Level 0 case (see below), not independent bugs.
+2. **Recurrence in history.** For each touched file, run `git log --oneline --all -- <file>` (or
+   your VCS equivalent) and skim for prior `fix:`/bugfix-shaped commits. Two or more independent
+   past fixes to the same file is the same signal as #1, just spread across time instead of
+   within one session.
+3. **If a `kibitzer`-style architecture MCP/CLI is available in this repo**, run its checks
+   (e.g. `architecture_assessment` / `run_checks`) against the touched files. A corroborating
+   structural finding — the files sit in an import cycle, one of them is over a fan-in/coupling
+   threshold, or a layering rule is violated — upgrades the correlation from "these files change
+   together" to "there's a specific structural defect causing it," and names the defect for you.
+4. **If any of 1–3 fire**, name the shared root cause in one sentence (God Class, missing
+   abstraction, cyclic dependency, leaked layering) before proceeding — Phase 3's Level 0
+   Consolidate step below is where you act on it. If nothing fires, proceed bug-by-bug as normal.
+
+This is a heuristic, not a full deterministic pipeline — treating co-change as proof of shared
+cause (vs. coincidence, a shared test fixture, or one contributor's habits) is a judgment call,
+not something git history alone proves. When ambiguous, say so rather than asserting a root
+cause the evidence doesn't fully support.
+
 ## Phase 2 — Classify
 
 Apply this taxonomy to each bug. Pick the **primary** failure mode.
@@ -66,7 +92,9 @@ several duplicated call sites is not enforcement, it's a fix that hasn't finishe
 
 Run this check on every bug, not just ones classified as Duplicated/Divergent Logic — a fix
 that only touches the call site you happened to find is the most common way "enforcement"
-quietly fails to hold.
+quietly fails to hold. If Phase 1.5 flagged a cross-bug correlation, run this check once for
+the whole correlated group, not once per bug — the fix belongs at the shared root, and
+enforcing at each bug's individual call site would just re-create N copies of the same gap.
 
 **1. Did fixing this bug require touching more than one call site**, or would a *future*
 call site need the same fix repeated to stay correct? If a second caller of the same
