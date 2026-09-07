@@ -1,4 +1,4 @@
-.PHONY: push pull ready lint ansible-lint shellcheck llm-sync run pyinfra-lint pyinfra-dry lint-skills test-lint-skills
+.PHONY: push pull ready lint ansible-lint shellcheck llm-sync run pyinfra-lint pyinfra-dry lint-skills test-lint-skills agent-tool-usage test-agent-tool-usage
 
 BOOTSTRAP_FILES := $(shell find bootstrap -name '*.yml') bootstrap/.ansible-lint bootstrap/hosts
 SHELL_FILES     := install.sh bootstrap/run.sh
@@ -36,6 +36,16 @@ lint-skills:
 # Unit tests for the linter itself, against synthetic fixtures — not the live repo.
 test-lint-skills:
 	python3 stapler-scripts/test_lint_claude_kb.py
+
+# Evidence-based tool/skill usage per agent type, mined from real session
+# history across every project (~/.claude/projects) — use before deciding
+# which agents to scope `tools:` for. Pass an agent name for per-invocation
+# detail: ./stapler-scripts/agent-tool-usage-report code-refactoring
+agent-tool-usage:
+	./stapler-scripts/agent-tool-usage-report
+
+test-agent-tool-usage:
+	python3 stapler-scripts/test_agent_tool_usage_report.py
 
 # Run all checks — use this before pushing
 ready: .cache/ansible-lint.ok .cache/shellcheck.ok .cache/pyinfra-lint.ok

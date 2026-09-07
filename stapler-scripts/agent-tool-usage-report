@@ -1,0 +1,134 @@
+#!/usr/bin/env python3
+"""Deterministic inventory of which tools/skills a subagent type actually used,
+mined from historical Claude Code session transcripts across all projects.
+
+This answers "what does this agent actually need" with evidence instead of an
+LLM's inference: every subagent dispatch leaves an `agent-<id>.meta.json`
+(agentType, description) next to its own transcript `agent-<id>.jsonl` under
+~/.claude/projects/<project>/<session>/subagents/. Parsing every `tool_use`
+block in each transcript gives a real, per-invocation usage count — including
+which Skills were loaded via the Skill tool's `skill` input field.
+
+Usage:
+    agent-tool-usage-report                  # every agent type, all history
+    agent-tool-usage-report code-refactoring  # one agent type, per-invocation detail
+    agent-tool-usage-report --json
+
+Caveat: an agent type with zero historical invocations has no evidence here —
+that's itself the finding (see meta-skill-effectiveness-audit for the
+sibling report on cost/frequency). A tool used once in ten years of one
+invocation isn't "always needed" either; read counts, not just presence.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from collections import Counter, defaultdict
+from pathlib import Path
+
+PROJECTS_DIR = Path.home() / ".claude" / "projects"
+
+
+def iter_agent_invocations(projects_dir: Path):
+    """Yield (agent_type, description, jsonl_path) for every subagent dispatch
+    that left a .meta.json — i.e. every non-fork Agent/Task invocation."""
+    for meta_path in sorted(projects_dir.glob("*/*/subagents/agent-*.meta.json")):
+        try:
+            meta = json.loads(meta_path.read_text(encoding="utf-8", errors="replace"))
+        except (json.JSONDecodeError, OSError):
+            continue
+        agent_type = meta.get("agentType")
+        if not agent_type:
+            continue
+        jsonl_path = meta_path.with_name(meta_path.name.removesuffix(".meta.json") + ".jsonl")
+        if jsonl_path.exists():
+            yield agent_type, meta.get("description", ""), jsonl_path
+
+
+def tool_uses_in_transcript(jsonl_path: Path):
+    """Yield (tool_name, skill_name_or_None) for every tool_use block in one
+    subagent transcript."""
+    try:
+        text = jsonl_path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return
+    for line in text.splitlines():
+        if '"tool_use"' not in line:
+            continue
+        try:
+            d = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        msg = d.get("message")
+        content = msg.get("content") if isinstance(msg, dict) else None
+        if not isinstance(content, list):
+            continue
+        for c in content:
+            if isinstance(c, dict) and c.get("type") == "tool_use":
+                name = c.get("name")
+                skill = None
+                if name == "Skill":
+                    inp = c.get("input") or {}
+                    skill = inp.get("skill") or inp.get("command")
+                yield name, skill
+
+
+def build_report(projects_dir: Path):
+    invocation_counts: Counter[str] = Counter()
+    tool_counts: dict[str, Counter[str]] = defaultdict(Counter)
+    skill_counts: dict[str, Counter[str]] = defaultdict(Counter)
+    for agent_type, _desc, jsonl_path in iter_agent_invocations(projects_dir):
+        invocation_counts[agent_type] += 1
+        for tool_name, skill_name in tool_uses_in_transcript(jsonl_path):
+            tool_counts[agent_type][tool_name] += 1
+            if skill_name:
+                skill_counts[agent_type][skill_name] += 1
+    return invocation_counts, tool_counts, skill_counts
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__,
+                                      formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("agent_type", nargs="?",
+                         help="Show per-invocation detail for one agent type instead of the summary table")
+    parser.add_argument("--projects-dir", type=Path, default=PROJECTS_DIR)
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args()
+
+    invocation_counts, tool_counts, skill_counts = build_report(args.projects_dir)
+
+    if args.agent_type:
+        if args.agent_type not in invocation_counts:
+            print(f"No historical invocations found for {args.agent_type!r}.", file=sys.stderr)
+            return 1
+        print(f"{args.agent_type}: {invocation_counts[args.agent_type]} invocation(s)\n")
+        print("Tools used:")
+        for tool, n in tool_counts[args.agent_type].most_common():
+            print(f"  {n:5} {tool}")
+        if skill_counts[args.agent_type]:
+            print("\nSkills loaded:")
+            for skill, n in skill_counts[args.agent_type].most_common():
+                print(f"  {n:5} {skill}")
+        return 0
+
+    if args.json:
+        out = {
+            agent: {
+                "invocations": invocation_counts[agent],
+                "tools": dict(tool_counts[agent].most_common()),
+                "skills": dict(skill_counts[agent].most_common()),
+            }
+            for agent in invocation_counts
+        }
+        print(json.dumps(out, indent=2, sort_keys=True))
+        return 0
+
+    for agent, n in invocation_counts.most_common():
+        tools = ", ".join(f"{t}×{c}" for t, c in tool_counts[agent].most_common())
+        print(f"{agent} ({n} invocation{'s' if n != 1 else ''}): {tools}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
