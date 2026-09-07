@@ -94,7 +94,7 @@ Only run this after `/sdd:6-verify` has produced a ✅ PASS verdict. If you skip
    ```
    Ask for confirmation before removing. Do not remove if the PR is not yet merged.
 
-7. **Run `/knowledge:extract-learnings`** to capture project-specific instincts before the session ends.
+7. **Run `/knowledge:extract-learnings` automatically — do not ask the user whether to run it, and do not skip it even if the PR isn't merged yet or the user hasn't responded to the merge-command report.** This step always fires at the end of Phase 7, immediately after step 6, as part of executing this skill — it is not optional and not conditional on anything above. If the learnings skill itself has an interactive prompt (e.g. "what are the most useful things you learned"), answer it yourself from the session's own context (the "figure it out from context" path) rather than stopping to ask the user that question either — only stop for a *genuinely* blocking ambiguity the skill can't resolve on its own.
 
    Specifically prompt it to capture:
    - Whether the build-vs-buy decision matched the Phase 2 recommendation in practice

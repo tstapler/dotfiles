@@ -184,4 +184,4 @@ Key steps (per 7-ship.md):
 3. Create PR with `gh pr create`
 4. For "drive to merge-ready" option: invoke `/github:pr-ship <PR_NUMBER>`
 5. Clean up worktree after merge
-6. Run `/knowledge:extract-learnings`
+6. Run `/knowledge:extract-learnings` automatically — always, no confirmation prompt (see 7-ship.md step 7)

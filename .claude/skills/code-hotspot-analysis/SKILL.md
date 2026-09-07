@@ -23,6 +23,21 @@ This is a **prioritization** tool, not a judgment tool. It tells you where to po
 
 Run all of these against the whole repo or a suspect package; save `dot`/`svg`/`.puml` output somewhere durable if the finding is worth referencing later (this repo's convention: `docs/architecture-audit-<date>.md` plus any generated artifacts alongside it).
 
+**Check kibitzer first.** If the repo has a `.claude/inspect.json` and `kibitzer` is on `PATH`
+(or its MCP server is connected — same underlying tool, use whichever this session has), it
+covers most of the table above with no per-repo tool install:
+
+| Signal | kibitzer command | Covers | Doesn't cover |
+|---|---|---|---|
+| Package dependency graph, cycles, layering | CLI: `kibitzer run <dir> --trigger batch` (filter output for `import-cycles`/`layering`/`coupling`/`component-deps`) — MCP: `architecture_assessment` (`scope` the touched packages, adds a Mermaid diagram) | Same ground as `goda graph`/`reach` — import cycles, layer-direction violations, fan-in/fan-out coupling >10, plus (if `.claude/inspect.json` names `architecture.components`) cross-component dependency-rule violations. Go/TS/JS/Java/Kotlin/Python. | No function-level call graph — use `go-callvis` for that |
+| Struct/interface size (God Object signal) | CLI: `kibitzer architecture export --path . --scope '<pkg-glob>' --dry-run --out /dev/null`, group the JSON `symbols` array by `parent` and count — MCP: `list_architecture_symbols` (`package: "<pkg>"`) does the same query server-side | Method/field count per type, JSON, no PlantUML renderer needed | Go/TS/TSX/JS only right now (Python/Java/Kotlin symbol export is a planned fast-follow) — use `goplantuml` for those languages or when you need a visual `.puml` |
+| Complexity | Same `kibitzer run --trigger batch` output as row 1 — filter for `long-function` (>40 lines), `deep-nesting` (>4 levels) | A real, zero-install signal for ranking hotspots. Go/TS/TSX/JS/Python/Java/Kotlin. | Not true cyclomatic/cognitive complexity, just a line-count/nesting heuristic — use `gocyclo`/`gocognit` when you need the actual metric, not just a ranking |
+| One symbol's exact definition | CLI: grep the `architecture export` JSON for the symbol id — MCP: `get_architecture_node` (`node: "<pkg>::<Type>.<Method>"` or a package path) | Single lookup, no repo-wide grep | Same Go/TS/TSX/JS limit as the row above |
+
+Fall back to the Go-specific toolchain below only when kibitzer isn't configured for this repo,
+or a finding genuinely needs a real call graph, a true cyclomatic/cognitive number, or symbol-level
+detail in a language kibitzer's symbol export doesn't cover yet.
+
 **Working commands and gotchas actually hit running this stack** (Go 1.25, this repo):
 
 ```bash
@@ -97,7 +112,7 @@ git log --since="6 months ago" --name-only --pretty=format:'--%H--' \
 ```
 (a Python script pairing up each commit's changed-file list with `itertools.combinations` and a `Counter` is the simplest correct implementation — don't over-invest in a shell one-liner if the awk/sort pipeline gets unreadable)
 
-**Hotspot score**: for each file, `(commit count touching it in the window) × (complexity proxy)`. Cyclomatic/cognitive complexity from `gocyclo`/`gocognit` is the real proxy if you have it; line count is an acceptable fallback. Rank descending — the top of this list is where bugs and slow PRs concentrate, regardless of what the static dependency graph says.
+**Hotspot score**: for each file, `(commit count touching it in the window) × (complexity proxy)`. Cyclomatic/cognitive complexity from `gocyclo`/`gocognit` is the real proxy if you have it; kibitzer's `long-function`/`deep-nesting` finding count per file (via `architecture_assessment`, zero install, cross-language) is a decent middle ground; line count is an acceptable fallback. Rank descending — the top of this list is where bugs and slow PRs concentrate, regardless of what the static dependency graph says.
 
 **Cross-check**: a file that is both a top hotspot AND already has multiple ADRs/design docs written about it (grep `docs/adr/`, `project_plans/*/requirements.md` for the filename) is a strong signal of a genuinely contested, high-churn architectural area — not a false positive.
 

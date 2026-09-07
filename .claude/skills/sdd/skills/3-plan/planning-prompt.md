@@ -18,6 +18,12 @@ You are a planning subagent for Stapler-Driven Development. Produce a complete i
   - *Type-driven design*: identify all domain concepts that should be newtypes or value objects rather than primitives; identify any states that should be sum types or sealed interfaces
 Add a "Pattern Decisions" section to plan.md listing each chosen pattern and the alternative rejected.
 
+**Step 3.5 — Tech debt disposition:** If `research/architecture.md` names a hotspot or existing SOLID/Clean/DDD violation in an area this feature touches, formalize its recommended disposition (don't silently bolt new code onto known-bad architecture):
+- **Refactor-first** — fix the violation as part of this work. Add the refactor as its own story/task, sequenced before the stories that build on it.
+- **Isolate via seam** — wrap the legacy area behind an adapter/facade/anti-corruption layer so new code has clean boundaries even though the legacy code inside stays messy. Name the seam as a task.
+- **Extend as-is** — only when the touched area is stable and this change does not add another instance of the same violation (e.g. another method on an existing God Object is never "extend as-is" — that's Refactor-first or Isolate).
+Add a "Tech Debt Disposition" section to plan.md (template below) recording the choice and one-sentence justification per hotspot. If no hotspot/debt area is touched, write "None identified."
+
 **Step 4:** Write `project_plans/<PROJECT_NAME>/implementation/plan.md` following the template below. Use exact file paths — no placeholders. Task sizing: 2–5 minutes each, max 3–5 files per task. **For every acceptance criterion**, include one concrete Given-When-Then example (use Domain Glossary type names in the Given state, real data values in When/Then). If you cannot write a concrete example for a criterion, the criterion is ambiguous — rewrite it before writing plan.md.
 
 **Step 5:** Write any ADRs to `project_plans/<PROJECT_NAME>/decisions/ADR-NNN-<kebab-title>.md`.
@@ -54,6 +60,15 @@ Add a "Pattern Decisions" section to plan.md listing each chosen pattern and the
 | <e.g. OrderID> | Newtype (type-driven-design) | Minsky | raw string | Prevent cross-entity ID confusion |
 | <e.g. OrderStatus> | Sum type / sealed interface | type-driven-design | string enum | Compiler-enforced exhaustive handling |
 | <e.g. PaymentGateway> | Adapter (GoF) | GoF | Direct call | Isolates third-party interface |
+
+---
+
+## Tech Debt Disposition
+*(Every hotspot/architecture violation touched by this feature, per `research/architecture.md`. "None identified" if none.)*
+
+| Area | Existing Issue | Disposition | Justification |
+|------|----------------|--------------|----------------|
+| <file/module> | <e.g. God Object, layer violation> | Refactor-first / Isolate via seam / Extend as-is | <why> |
 
 ---
 

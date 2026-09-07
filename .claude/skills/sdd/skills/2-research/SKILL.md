@@ -57,6 +57,8 @@ Spawn 6 parallel subagents to research the problem — covering stack, features,
    >
    > If step 2.75 above found an existing hotspot/architecture analysis covering this area, its path is: `<path from step 2.75, or "none found">`. Read it first and build on it explicitly — cite its findings by file:line where relevant instead of re-deriving them, and focus your own research on filling gaps it didn't cover (e.g. it may have flagged *that* a class is a God Object without researching *how* this specific requirement should be layered around it). Do not silently ignore it and produce a parallel, disconnected analysis.
    >
+   > **If the touched area is a known hotspot or already violates SOLID/Clean/DDD boundaries** (per the analysis above, or your own read of the code): recommend a disposition Phase 3 must formalize — **Refactor-first** (fix the violation as part of this work), **Isolate via seam** (wrap it behind an adapter/facade so new code stays clean even though the legacy code inside doesn't), or **Extend as-is** (touched area is stable and this change doesn't deepen the existing violation). State which one and why in one or two sentences — this becomes an input to plan.md's Tech Debt Disposition section.
+   >
    > **If the requirements describe a complex business domain involving multiple actors, systems, or business rules** (not simple CRUD): produce an Event-Command-Policy table using EventStorming grammar. This surfaces bounded context boundaries and business rules before planning begins:
    >
    > | Domain Event (what happened) | Policy trigger (whenever X, then…) | Command (intent to change state) | Actor / System |

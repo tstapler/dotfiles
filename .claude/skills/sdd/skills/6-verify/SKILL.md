@@ -222,15 +222,19 @@ with the unresolved list. Do not proceed to <next step>.
    **Step 0: kibitzer mechanical pre-pass (optional, degrades gracefully)**
    - If an MCP connection to `kibitzer` is available and the repo has a `.claude/inspect.json`:
      call its `architecture_assessment` tool scoped (via `scope`) to the packages/modules
-     touched by the diff. This is a mechanical pre-pass, not a replacement for the
-     architecture-review agent below — it covers what's cheaply checkable (import cycles,
-     layering violations, coupling thresholds, a Mermaid dependency diagram), not qualitative
-     judgment (SOLID, testability, over-engineering).
-   - If the tool isn't reachable, or the repo has no `.claude/inspect.json`: skip this step
+     touched by the diff. If MCP isn't connected but `kibitzer` is on `PATH`, use the CLI
+     equivalent instead: `kibitzer run <touched-dir> --trigger batch`. This is a mechanical
+     pre-pass, not a replacement for the architecture-review agent below — it covers what's
+     cheaply checkable (import cycles, layering violations, coupling thresholds, a Mermaid
+     dependency diagram via MCP, plus — if `.claude/inspect.json` declares
+     `architecture.components`/`dependency_rules`/`content_rules`/`naming_rules` — cross-component
+     dependency, content, and naming-convention violations), not qualitative judgment (SOLID,
+     testability, over-engineering).
+   - If neither is reachable, or the repo has no `.claude/inspect.json`: skip this step
      silently and proceed straight to the architecture-review agent with no pre-pass context.
      Phase 6 must never fail or stall because kibitzer isn't set up.
-   - If it returns findings: pass its raw output (findings text + Mermaid diagram) into the
-     architecture-review agent's prompt below as grounding context.
+   - If it returns findings: pass its raw output (findings text + Mermaid diagram, if any) into
+     the architecture-review agent's prompt below as grounding context.
 
    **Agent: Architecture review**
    - Use the `code-architecture-best-practices` subagent type
@@ -238,7 +242,10 @@ with the unresolved list. Do not proceed to <next step>.
      inappropriate coupling between packages, missing abstractions where duplication will hurt,
      over-engineering, testability of new components in isolation, and consistency with the
      existing architecture. Also read `project_plans/<PROJECT_NAME>/implementation/plan.md`
-     to check whether the implementation matches the design intent.
+     to check whether the implementation matches the design intent, and specifically whether the
+     diff actually carries out each row of plan.md's Tech Debt Disposition table — a planned
+     Refactor-first or Isolate-via-seam that the diff skipped (code just extended the existing
+     violation instead) is a BLOCKER, not a follow-up.
      [If Step 0 ran and returned findings, append:] Here's what kibitzer's mechanical
      architecture_assessment found — verify these are real (don't take them on faith) and
      assess what it can't check: `<kibitzer output>`.

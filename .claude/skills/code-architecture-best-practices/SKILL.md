@@ -22,6 +22,24 @@ If the file you're about to edit is a known churn/complexity hotspot, run `code-
 inline spot-check first — a file that already changes often and is already complex is exactly
 where uncaught duplication compounds fastest.
 
+## Extending Bad Architecture: Refactor, Isolate, or Extend
+
+When the touched area already violates SOLID/Clean/DDD boundaries, don't bolt new code onto the
+existing mess by default. Decide explicitly, in this priority order:
+
+1. **Refactor-first** — fix the violation as part of this change, if the fix is small enough to
+   fit the task budget and the new work would otherwise deepen it (e.g. adding a 6th responsibility
+   to a class that already has 5).
+2. **Isolate via seam** — wrap the legacy area behind an adapter/facade/anti-corruption layer so
+   the new code gets clean boundaries even though the legacy code inside stays messy. Use this
+   when a full refactor is out of scope for the change.
+3. **Extend as-is** — only when the touched area is stable and this change does not add another
+   instance of the *same* violation the area already has. A one-line change to a large-but-stable
+   file is fine; another method on an existing God Object is not.
+
+Never pick "extend as-is" silently — state which of the three you chose and why. Compounding an
+existing violation (same kind, one more instance) is a review-blocking finding, not a style nit.
+
 ## Core Principles (Language-Agnostic)
 
 ### SOLID
@@ -51,6 +69,26 @@ where uncaught duplication compounds fastest.
 - **Adapters**: Implementations of ports (HTTP, DB, messaging)
 - **Core**: Business logic with no framework dependencies
 - Enables swapping infrastructure without touching domain logic
+
+**Make the layer/component rules mechanical, not just reviewed.** If `kibitzer` is available
+(`kibitzer --help` on `PATH`, or the `kibitzer` MCP server), it can enforce the Clean/Hexagonal
+layer rules and DDD naming conventions above as a batch check instead of relying on an LLM
+catching a violation at review time. In `.claude/inspect.json`'s top-level `architecture` section:
+- `components` — name the layers/bounded contexts by path glob (e.g. `domain`, `handlers`, `infra`).
+- `dependency_rules` — `{component, may_depend_on: [...]}`, deny-by-default: this is the
+  "dependencies point inward only" rule, enforced. Checker name `component-deps`.
+- `content_rules` — `{component, allowed_kinds: [...]}` restricts what a component may declare
+  (e.g. `domain` only allows `struct`/`class` — keeps framework types from leaking into the core).
+  Checker name `content-rules`.
+- `naming_rules` — `{component, kind, pattern}` (regex) enforces port/adapter naming (e.g. every
+  `struct` in `infra` must match `^.*(Repository|Client)$`). Checker name `naming-rules`.
+
+Run `kibitzer run <dir> --trigger batch` (CLI) or the `architecture_assessment`/`run_checks` MCP
+tools to check current compliance before proposing new components, and add these three checkers
+to `.claude/inspect.json` once components are named — this turns a plan-time judgment call into
+something CI/PostToolUse catches on every future change. All three cover Go, TypeScript/JavaScript,
+Java, Kotlin, and Python. If kibitzer isn't installed, this is a nice-to-have, not a blocker —
+fall back to manual review of the same rules.
 
 ### Domain-Driven Design Essentials
 | Concept | Purpose | Rule |

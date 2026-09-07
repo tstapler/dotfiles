@@ -118,6 +118,7 @@ Dispatch a planning subagent to produce the implementation plan. The subagent do
 
    Epics: <N> | Stories: <N> | Tasks: <N>
    Flagged choices: <N> (ADRs written)
+   Tech debt disposition: <N hotspots addressed (Refactor-first/Isolate/Extend) | None identified>
    Architecture review: <BLOCKED|CONCERNS|CLEAN> — <N> blockers, <N> concerns
    Adversarial review: <BLOCKED|CONCERNS|CLEAN> — <N> blockers, <N> concerns, <N> minors
    UX design: <N surfaces, N UX acceptance criteria | N/A — no user-facing surface>
