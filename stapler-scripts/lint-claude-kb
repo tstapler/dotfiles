@@ -1,0 +1,362 @@
+#!/usr/bin/env python3
+"""Deterministic lint for .claude/skills, .claude/agents, .claude/commands.
+
+Stdlib only — frontmatter here is simple `key: value` YAML, so this hand-rolls
+just enough of a parser for `name:`/`description:` rather than adding a PyYAML
+dependency for three fields.
+
+Checks — the frontmatter-limit and progressive-disclosure ones are sourced from
+Anthropic's own authoring guidance:
+https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices
+
+  name-mismatch       frontmatter `name:` != the id implied by the file's path
+  missing-description a file that HAS a frontmatter block but no `description:`
+  name-too-long       `name:` over the documented 64-character max
+  name-invalid-chars  `name:` outside lowercase letters/numbers/hyphens
+  name-xml-tag        `name:` contains an XML-like tag (`<...>`)
+  description-too-long `description:` over the documented 1,024-character max
+  description-xml-tag `description:` contains an XML-like tag (`<...>`)
+  broken-skill-ref    a backtick `` `token` `` immediately followed by the word
+                       "skill" whose token doesn't resolve to any known skill id
+  oversized-no-split  a top-level SKILL.md over the line-count thresholds below
+                       with no references/scripts/assets subdirectory ("keep
+                       SKILL.md under 500 lines; split via progressive
+                       disclosure once it doesn't fit"). >500 lines = error,
+                       300-500 lines = warn. Namespaced sub-skills (ns:sub) are
+                       excluded — they're conventionally short by design.
+  nested-references   a subdirectory inside a skill's references/ dir (guidance:
+                       "keep references one level deep from SKILL.md")
+  windows-path        a backslash-style file path in the body text (guidance:
+                       "always use forward slashes, even on Windows")
+  dangling-symlink    a symlink under .claude/{skills,agents,commands} whose
+                       target doesn't resolve (node_modules/.venv/.git skipped —
+                       those legitimately don't exist until installed)
+
+Exit code is nonzero iff any error-tier finding exists (name-mismatch,
+broken-skill-ref, oversized-no-split >500 lines, dangling-symlink, and the
+frontmatter-limit checks). missing-description, the 300-500 line
+oversized-no-split tier, nested-references, and windows-path are warnings and
+do not fail the run.
+"""
+from __future__ import annotations
+
+import re
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent / ".claude"
+SKILLS = ROOT / "skills"
+AGENTS = ROOT / "agents"
+COMMANDS = ROOT / "commands"
+
+# Skills referenced by name in this repo but not vendored under .claude/skills —
+# Claude Code built-ins or installed plugins. Add here only after confirming (via
+# the Skill tool's own available-skills listing) that the name is real; otherwise
+# a broken-skill-ref finding for it is a genuine bug, not noise.
+EXTERNAL_SKILLS = {
+    "security-review",
+    "claude-in-chrome",
+    "update-config",
+}
+
+FRONTMATTER_RE = re.compile(r"\A---\n(.*?\n)---\n", re.S)
+# `token` immediately followed by "skill" (allowing 's / punctuation), e.g.
+# "the `foo-bar` skill", "`foo-bar`'s ...", "run `foo-bar` skill.".
+SKILL_REF_RE = re.compile(r"`([A-Za-z][\w:/@.-]*)`'?s?[ \t]+skill\b")
+
+
+@dataclass
+class Finding:
+    level: str  # "error" | "warn"
+    check: str
+    path: Path
+    detail: str
+
+    def __str__(self) -> str:
+        rel = self.path.relative_to(ROOT.parent)
+        return f"[{self.level.upper():5}] {self.check:20} {rel}: {self.detail}"
+
+
+BLOCK_SCALAR_INDICATORS = {">", ">-", ">+", "|", "|-", "|+"}
+
+
+def parse_frontmatter(text: str) -> dict[str, str] | None:
+    """Return {key: value} for simple scalar frontmatter fields, or None if no
+    frontmatter block exists. A block scalar (`>-`, `|`, ...) folds its
+    continuation lines into the value, with the indicator itself dropped —
+    good enough for length/content checks without a full YAML parser."""
+    m = FRONTMATTER_RE.match(text)
+    if not m:
+        return None
+    fields: dict[str, str] = {}
+    key = None
+    for line in m.group(1).splitlines():
+        kv = re.match(r"^([A-Za-z_][\w-]*):[ \t]*(.*)$", line)
+        if kv:
+            key, val = kv.group(1), kv.group(2).strip()
+            fields[key] = "" if val in BLOCK_SCALAR_INDICATORS else val
+        elif key and line.startswith((" ", "\t")) and line.strip():
+            # continuation line of a block scalar / multi-line value
+            fields[key] = (fields.get(key, "") + " " + line.strip()).strip()
+    return fields
+
+
+def iter_skill_files(skills_dir: Path = SKILLS):
+    """Yield (path, expected_id_or_None) for every SKILL.md / single-file skill.
+
+    expected_id is None for namespaced skills (ns/skills/sub/SKILL.md), which
+    conventionally omit `name:` — the id is `ns:sub`, inferred from the path,
+    not asserted via frontmatter.
+    """
+    if not skills_dir.is_dir():
+        return
+    for entry in sorted(skills_dir.iterdir()):
+        if entry.is_file() and entry.suffix == ".md":
+            yield entry, entry.stem
+        elif entry.is_dir():
+            direct = entry / "SKILL.md"
+            if direct.exists():
+                yield direct, entry.name
+            ns_dir = entry / "skills"
+            if ns_dir.is_dir():
+                for sub in sorted(ns_dir.iterdir()):
+                    subfile = sub / "SKILL.md"
+                    if subfile.exists():
+                        yield subfile, None
+
+
+def iter_agent_files(agents_dir: Path = AGENTS):
+    if not agents_dir.is_dir():
+        return
+    for entry in sorted(agents_dir.iterdir()):
+        if entry.is_file() and entry.suffix == ".md":
+            yield entry, entry.stem
+
+
+def iter_command_files(commands_dir: Path = COMMANDS):
+    if not commands_dir.is_dir():
+        return
+    skip = {"CLAUDE.md", "README.md"}
+    for entry in sorted(commands_dir.rglob("*.md")):
+        if entry.name in skip:
+            continue
+        yield entry, None  # commands don't carry a name: field by convention
+
+
+def build_skill_id_registry(skills_dir: Path = SKILLS) -> set[str]:
+    ids: set[str] = set()
+    for entry in sorted(skills_dir.iterdir()) if skills_dir.is_dir() else []:
+        if entry.is_file() and entry.suffix == ".md":
+            ids.add(entry.stem)
+        elif entry.is_dir():
+            if (entry / "SKILL.md").exists():
+                ids.add(entry.name)
+            ns_dir = entry / "skills"
+            if ns_dir.is_dir():
+                for sub in sorted(ns_dir.iterdir()):
+                    if (sub / "SKILL.md").exists():
+                        ids.add(f"{entry.name}:{sub.name}")
+                        ids.add(sub.name)  # bare sub-id also seen in prose
+    return ids
+
+
+NAME_MAX_CHARS = 64
+DESCRIPTION_MAX_CHARS = 1024
+NAME_CHARSET_RE = re.compile(r"^[a-z0-9-]+$")
+# A *paired* open/close tag (`<example>...</example>`), not a bare `<word>` —
+# this repo uses `<placeholder>`/`<project>`-style angle brackets constantly as
+# human-readable variable placeholders, which aren't the "XML tag" Anthropic's
+# rule is about. Requiring a matching close tag is what actually distinguishes
+# injected/structural markup from that convention.
+XML_TAG_PAIR_RE = re.compile(r"<([a-zA-Z][\w-]*)\b[^>]*>.*?</\1>", re.S)
+
+
+def check_name_limits(path: Path, fm: dict[str, str]) -> list[Finding]:
+    """Anthropic's documented frontmatter validation rules for `name:` — these
+    apply to skills, agents, and commands alike (all use the same plain
+    kebab-case identifier convention)."""
+    findings: list[Finding] = []
+    name = fm.get("name")
+    if not name:
+        return findings
+    if len(name) > NAME_MAX_CHARS:
+        findings.append(Finding("error", "name-too-long", path,
+                                 f"{len(name)} chars > {NAME_MAX_CHARS}-char max"))
+    if not NAME_CHARSET_RE.match(name):
+        findings.append(Finding("error", "name-invalid-chars", path,
+                                 f"{name!r} must be lowercase letters/numbers/hyphens only"))
+    if XML_TAG_PAIR_RE.search(name):
+        findings.append(Finding("error", "name-xml-tag", path,
+                                 f"{name!r} contains an XML-like tag"))
+    return findings
+
+
+def check_description_limits(path: Path, fm: dict[str, str]) -> list[Finding]:
+    """Anthropic's documented `description:` limits for *Skill* frontmatter
+    (<=1024 chars, no XML-like tags). Deliberately NOT applied to agent
+    definitions — Claude Code subagent files use a materially different,
+    longer convention with embedded `<example>`/`<commentary>` blocks by
+    design (verified against this repo's own agent files), so this spec
+    doesn't apply to them."""
+    findings: list[Finding] = []
+    description = fm.get("description")
+    if not description:
+        return findings
+    if len(description) > DESCRIPTION_MAX_CHARS:
+        findings.append(Finding("error", "description-too-long", path,
+                                 f"{len(description)} chars > {DESCRIPTION_MAX_CHARS}-char max"))
+    if XML_TAG_PAIR_RE.search(description):
+        findings.append(Finding("error", "description-xml-tag", path,
+                                 "description contains a paired XML-like tag"))
+    return findings
+
+
+def check_nested_references(skill_dir: Path) -> list[Finding]:
+    """Anthropic guidance: keep references/ one level deep from SKILL.md so
+    Claude always reads complete files instead of partially previewing a
+    nested chain."""
+    refs = skill_dir / "references"
+    if not refs.is_dir():
+        return []
+    return [
+        Finding("warn", "nested-references", entry,
+                "references/ should stay one level deep from SKILL.md")
+        for entry in sorted(refs.iterdir()) if entry.is_dir()
+    ]
+
+
+WINDOWS_PATH_RE = re.compile(r"\b[\w.-]+\\[\w.-]+\.(?:md|py|sh|js|ts|json|ya?ml|txt)\b")
+
+
+def check_windows_paths(path: Path, text: str) -> list[Finding]:
+    """Anthropic guidance: always use forward slashes, even on Windows —
+    backslash paths break on Unix runners."""
+    findings: list[Finding] = []
+    for m in WINDOWS_PATH_RE.finditer(text):
+        line_no = text.count("\n", 0, m.start()) + 1
+        findings.append(Finding("warn", "windows-path", path,
+                                 f"line {line_no}: {m.group(0)!r} uses a backslash path separator"))
+    return findings
+
+
+def check_name_and_description(path: Path, expected_id: str | None,
+                                is_agent: bool = False) -> list[Finding]:
+    findings: list[Finding] = []
+    text = path.read_text(encoding="utf-8", errors="replace")
+    fm = parse_frontmatter(text)
+    if fm is None:
+        return findings  # no-frontmatter skills (e.g. ponytail:*) are a known, valid shape
+    name = fm.get("name")
+    if expected_id is not None and name and name != expected_id:
+        findings.append(Finding("error", "name-mismatch", path,
+                                 f"frontmatter name: {name!r} != expected {expected_id!r}"))
+    if not fm.get("description"):
+        findings.append(Finding("warn", "missing-description", path,
+                                 "has frontmatter but no description: field"))
+    findings += check_name_limits(path, fm)
+    if not is_agent:
+        findings += check_description_limits(path, fm)
+    return findings
+
+
+SPLIT_DIRS = ("references", "scripts", "assets")
+OVERSIZED_ERROR_LINES = 500
+OVERSIZED_WARN_LINES = 300
+SYMLINK_SKIP_SEGMENTS = {"node_modules", ".venv", ".git"}
+
+
+def check_oversized(path: Path, expected_id: str | None) -> list[Finding]:
+    """Flag a top-level SKILL.md that's grown past the point where Anthropic's
+    own authoring guidance says to split it via progressive disclosure. Only
+    applies to top-level skills (expected_id is not None) — namespaced
+    sub-skills are conventionally short and excluded."""
+    if expected_id is None or path.name != "SKILL.md":
+        return []
+    skill_dir = path.parent
+    if any((skill_dir / d).is_dir() for d in SPLIT_DIRS):
+        return []
+    lines = path.read_text(encoding="utf-8", errors="replace").count("\n")
+    if lines > OVERSIZED_ERROR_LINES:
+        return [Finding("error", "oversized-no-split", path,
+                         f"{lines} lines, no references/scripts/assets split "
+                         f"(>{OVERSIZED_ERROR_LINES}-line ceiling)")]
+    if lines > OVERSIZED_WARN_LINES:
+        return [Finding("warn", "oversized-no-split", path,
+                         f"{lines} lines, no references/scripts/assets split "
+                         f"(consider splitting past {OVERSIZED_WARN_LINES})")]
+    return []
+
+
+def check_dangling_symlinks(base: Path) -> list[Finding]:
+    findings: list[Finding] = []
+    if not base.is_dir():
+        return findings
+    for entry in base.rglob("*"):
+        if SYMLINK_SKIP_SEGMENTS & set(entry.parts):
+            continue
+        if entry.is_symlink() and not entry.exists():
+            findings.append(Finding("error", "dangling-symlink", entry,
+                                     f"target does not resolve: {entry.readlink()}"))
+    return findings
+
+
+def check_broken_refs(path: Path, valid_ids: set[str]) -> list[Finding]:
+    findings: list[Finding] = []
+    text = path.read_text(encoding="utf-8", errors="replace")
+    for m in SKILL_REF_RE.finditer(text):
+        token = m.group(1)
+        name = token.rsplit("@", 1)[-1]  # e.g. samber/cc-skills-golang@golang-project-layout
+        if name in valid_ids or token in valid_ids or name in EXTERNAL_SKILLS:
+            continue
+        line_no = text.count("\n", 0, m.start()) + 1
+        findings.append(Finding("error", "broken-skill-ref", path,
+                                 f"line {line_no}: `{token}` skill — no skill named {name!r} found"))
+    return findings
+
+
+def main() -> int:
+    findings: list[Finding] = []
+
+    for path, expected_id in iter_skill_files():
+        findings += check_name_and_description(path, expected_id)
+        findings += check_oversized(path, expected_id)
+        findings += check_nested_references(path.parent)
+    for path, expected_id in iter_agent_files():
+        findings += check_name_and_description(path, expected_id, is_agent=True)
+
+    for base in (SKILLS, AGENTS, COMMANDS):
+        findings += check_dangling_symlinks(base)
+    for path, _ in iter_command_files():
+        text = path.read_text(encoding="utf-8", errors="replace")
+        fm = parse_frontmatter(text)
+        if fm is not None:
+            if not fm.get("description"):
+                findings.append(Finding("warn", "missing-description", path,
+                                         "has frontmatter but no description: field"))
+            findings += check_name_limits(path, fm)
+            findings += check_description_limits(path, fm)
+
+    valid_ids = build_skill_id_registry()
+    all_text_files = (
+        [p for p, _ in iter_skill_files()]
+        + [p for p, _ in iter_agent_files()]
+        + [p for p, _ in iter_command_files()]
+    )
+    for path in all_text_files:
+        findings += check_broken_refs(path, valid_ids)
+        findings += check_windows_paths(path, path.read_text(encoding="utf-8", errors="replace"))
+
+    errors = [f for f in findings if f.level == "error"]
+    warns = [f for f in findings if f.level == "warn"]
+
+    for f in sorted(findings, key=lambda f: (f.level != "error", str(f.path))):
+        print(f)
+
+    print(f"\n{len(errors)} error(s), {len(warns)} warning(s) "
+          f"across {len(all_text_files)} files.")
+    return 1 if errors else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

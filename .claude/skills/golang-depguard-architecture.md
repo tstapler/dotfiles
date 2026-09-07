@@ -1,5 +1,5 @@
 ---
-name: go-depguard-architecture
+name: golang-depguard-architecture
 description: Configure depguard in golangci-lint to enforce hexagonal / clean architecture import direction in a Go project, or pick a standalone architecture-linting tool (arch-go, go-arch-lint, cht-go-lint, go-cleanarch — researched comparison and recommendation included) when import-direction checking alone isn't enough. Use when a Go codebase needs linter rules that prevent domain packages from importing adapters or infrastructure, services from importing global config, or adapters from cross-coupling — or needs to enforce package content/naming rules beyond imports. Examples — "add depguard rules for hexagonal architecture", "enforce that session package can't import server", "configure linter to enforce clean architecture tiers", "domain package is importing infrastructure, how do I prevent this", "set up go-arch-lint", "visualize Go package dependency graph", "which Go architecture linter should I use", "set up arch-go".
 ---
 
@@ -9,7 +9,7 @@ description: Configure depguard in golangci-lint to enforce hexagonal / clean ar
 
 ## ARGUMENTS
 
-If invoked with a path argument (e.g., `/go-depguard-architecture ./session`), scope the tier mapping and generated rules to that package subtree. If invoked with a tier name (e.g., `domain`), focus the fix patterns on violations in that tier. If no argument, apply the full workflow to the entire project.
+If invoked with a path argument (e.g., `/golang-depguard-architecture ./session`), scope the tier mapping and generated rules to that package subtree. If invoked with a tier name (e.g., `domain`), focus the fix patterns on violations in that tier. If no argument, apply the full workflow to the entire project.
 
 ---
 

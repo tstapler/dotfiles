@@ -1,4 +1,4 @@
-.PHONY: push pull ready lint ansible-lint shellcheck llm-sync run pyinfra-lint pyinfra-dry
+.PHONY: push pull ready lint ansible-lint shellcheck llm-sync run pyinfra-lint pyinfra-dry lint-skills test-lint-skills
 
 BOOTSTRAP_FILES := $(shell find bootstrap -name '*.yml') bootstrap/.ansible-lint bootstrap/hosts
 SHELL_FILES     := install.sh bootstrap/run.sh
@@ -26,6 +26,16 @@ pyinfra-lint: .cache/pyinfra-lint.ok
 # No sentinel — always live, since it reflects this machine's actual current state
 pyinfra-dry:
 	cd bootstrap-pyinfra && uv run pyinfra -y inventory.py main.py --dry
+
+# Deterministic lint for .claude/skills, agents, commands — frontmatter name/dirname
+# drift and dangling `X` skill cross-references (see the script's module docstring
+# for the check list). NOT yet in `ready`: there's existing findings to triage first.
+lint-skills:
+	./stapler-scripts/lint-claude-kb
+
+# Unit tests for the linter itself, against synthetic fixtures — not the live repo.
+test-lint-skills:
+	python3 stapler-scripts/test_lint_claude_kb.py
 
 # Run all checks — use this before pushing
 ready: .cache/ansible-lint.ok .cache/shellcheck.ok .cache/pyinfra-lint.ok
