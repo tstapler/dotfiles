@@ -72,69 +72,7 @@ Systematic comparison framework that considers:
 - Equipment/office stipend
 - Meals, gym, etc.
 
-### Calculation Template
-
-```
-OFFER A - TOTAL COMPENSATION
-
-CASH
-Base Salary:                    $150,000
-Signing Bonus (year 1 only):     $25,000
-Target Bonus (15%):              $22,500
---------------------------------
-Cash Compensation:              $197,500 (year 1)
-                               $172,500 (ongoing)
-
-EQUITY
-RSU Grant: $200,000 over 4 years
-Annual Value:                    $50,000
---------------------------------
-Equity Compensation:             $50,000/year
-
-BENEFITS
-401(k) Match (4%):               $6,000
-Health Insurance:                $15,000 (employer portion)
-HSA Contribution:                 $1,000
---------------------------------
-Benefits Value:                  $22,000/year
-
-PERKS
-Vacation: 20 days (vs 10 standard)
-  Extra 10 days × ~$575/day:      $5,750 value
-Remote Work Savings:              $3,000 (commute, lunch)
-Professional Dev:                 $2,000 budget
---------------------------------
-Perks Value:                     $10,750/year
-
-TOTAL YEAR 1:        $280,250
-TOTAL ONGOING:       $255,250/year
-```
-
-## Side-by-Side Comparison Template
-
-```markdown
-# OFFER COMPARISON
-
-|                          | Company A | Company B | Notes |
-|--------------------------|-----------|-----------|-------|
-| **CASH**                 |           |           |       |
-| Base Salary              | $150,000  | $160,000  | B +$10K |
-| Signing Bonus            | $25,000   | $10,000   | A +$15K |
-| Target Bonus             | 15%       | 10%       | A +$6.5K |
-| **Cash Total (Yr 1)**    | $197,500  | $186,000  | A +$11.5K |
-|                          |           |           |       |
-| **EQUITY**               |           |           |       |
-| Grant Value (4yr)        | $200,000  | $300,000  | B +$100K |
-| Annual Equity            | $50,000   | $75,000   | B +$25K |
-|                          |           |           |       |
-| **BENEFITS**             |           |           |       |
-| 401(k) Match             | 4%        | 6%        | B +$3.2K |
-| Health Insurance         | Good      | Premium   | B better |
-| PTO                      | 20 days   | Unlimited | Varies |
-|                          |           |           |       |
-| **TOTAL COMP (Yr 1)**    | $280,250  | $285,000  | B +$4.7K |
-| **TOTAL COMP (Ongoing)** | $255,250  | $275,000  | B +$19.7K |
-```
+See `references/worked-examples.md` for a full worked calculation template and side-by-side comparison table example.
 
 ## Non-Monetary Factor Framework
 
@@ -147,22 +85,7 @@ TOTAL ONGOING:       $255,250/year
 - Which offers more scope/responsibility?
 - Which manager will develop you more?
 
-**Scoring:**
-```
-Company A: Growth Score
-- Learning opportunity: 8/10
-- Brand/resume value: 7/10
-- Promotion potential: 6/10
-- Scope: 8/10
-Average: 7.25/10
-
-Company B: Growth Score
-- Learning opportunity: 7/10
-- Brand/resume value: 9/10
-- Promotion potential: 8/10
-- Scope: 7/10
-Average: 7.75/10
-```
+Score each on a 1-10 scale per question and average them — see `references/worked-examples.md` for a scored example.
 
 ### Work-Life Balance (Weight: Personal)
 
@@ -199,48 +122,11 @@ Average: 7.75/10
 
 ## Weighted Decision Matrix
 
-### Step 1: Define Your Priorities
+1. **Define priorities** — assign each factor (compensation, career growth, work-life balance, team/culture, location) a weight that sums to 100%, based on what the user says matters most.
+2. **Score each offer** 1-10 per factor.
+3. **Calculate the weighted score** — sum of `score × weight` per offer, then compare totals.
 
-```
-Factor                  Weight
-------------------------------------
-Total Compensation       25%
-Career Growth            25%
-Work-Life Balance        20%
-Team & Culture           20%
-Location/Commute         10%
-------------------------------------
-Total:                   100%
-```
-
-### Step 2: Score Each Factor
-
-```
-                    Company A   Company B
-Factor              Score (1-10)
-------------------------------------
-Compensation        7           8
-Career Growth       7           8
-Work-Life           8           6
-Team & Culture      9           7
-Location            8           5
-```
-
-### Step 3: Calculate Weighted Score
-
-```
-Company A:
-(7 × 0.25) + (7 × 0.25) + (8 × 0.20) + (9 × 0.20) + (8 × 0.10)
-= 1.75 + 1.75 + 1.60 + 1.80 + 0.80
-= 7.70
-
-Company B:
-(8 × 0.25) + (8 × 0.25) + (6 × 0.20) + (7 × 0.20) + (5 × 0.10)
-= 2.00 + 2.00 + 1.20 + 1.40 + 0.50
-= 7.10
-
-Result: Company A scores higher (7.70 vs 7.10)
-```
+See `references/worked-examples.md` for a fully worked weighting, scoring, and calculation example.
 
 ## Red Flags to Watch
 
@@ -296,61 +182,9 @@ Result: Company A scores higher (7.70 vs 7.10)
 
 ## Output Format
 
-When comparing offers:
+Report offers being compared, total compensation comparison table, non-monetary comparison table, weighted analysis scores, key differences, a recommendation with reasons, open questions to clarify, and negotiation opportunities.
 
-```markdown
-# JOB OFFER COMPARISON
-
-## Offers Being Compared
-- **Offer A:** [Role] at [Company]
-- **Offer B:** [Role] at [Company]
-
-## Total Compensation Comparison
-
-| Component | Offer A | Offer B | Difference |
-|-----------|---------|---------|------------|
-| Base | $X | $X | |
-| Bonus | $X | $X | |
-| Equity (annual) | $X | $X | |
-| Benefits | $X | $X | |
-| **Year 1 Total** | $X | $X | |
-| **Ongoing Total** | $X | $X | |
-
-## Non-Monetary Comparison
-
-| Factor | Offer A | Offer B | Notes |
-|--------|---------|---------|-------|
-| Career Growth | X/10 | X/10 | |
-| Work-Life | X/10 | X/10 | |
-| Team/Culture | X/10 | X/10 | |
-| Risk Level | X/10 | X/10 | |
-
-## Weighted Analysis
-
-Using your priorities:
-- Offer A Score: X.XX
-- Offer B Score: X.XX
-
-## Key Differences
-1. [Key difference 1]
-2. [Key difference 2]
-3. [Key difference 3]
-
-## Recommendation
-
-Based on your stated priorities of [X, Y, Z], **Offer [A/B]** appears to be the stronger choice because:
-- [Reason 1]
-- [Reason 2]
-- [Reason 3]
-
-## Things to Clarify Before Deciding
-- [ ] [Question for Company A]
-- [ ] [Question for Company B]
-
-## Negotiation Opportunities
-- [Opportunity 1]
-- [Opportunity 2]
-```
+See `references/output-report-template.md` for the ready-to-fill template.
 
 ## Comparison Checklist
 

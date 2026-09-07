@@ -88,128 +88,13 @@ What kind of shared state?
 
 ---
 
-## Rung 2: Typed Atomics (Go 1.19+)
+## Rung 2-3: Typed Atomics and Copy-on-Write
 
-Use these, not raw `unsafe.Pointer` or untyped `atomic.Value`, for single primitive values:
+**Rung 2 (single primitive)**: use a typed atomic (`atomic.Int64`, `atomic.Bool`, `atomic.Pointer[T]`) instead of raw `unsafe.Pointer` or untyped `atomic.Value`. Watch for the noCopy pitfall — these types embed a `noCopy` sentinel `go vet` flags if the containing struct is copied by value.
 
-```go
-var requestCount atomic.Int64
-requestCount.Add(1)
+**Rung 3 (read-mostly struct or list)**: writers build a full new immutable value and atomically swap the pointer; readers pay one atomic load, zero lock contention. This beats `sync.RWMutex` at high core counts because `RLock()` still does an atomic increment that bounces cache lines across readers. Three shapes: `atomic.Pointer[T]` for a single uniform struct, `atomic.Value` for a multi-field snapshot whose type isn't uniform across stores, and a COW slice (`atomic.Value` + a writer-side `sync.Mutex`) for rarely-updated lists like plugin/subscriber registries.
 
-var enabled atomic.Bool
-enabled.Store(true)
-```
-
-### Atomic Primitives Cheat Sheet
-
-| Need | Type | Notes |
-|------|------|-------|
-| Integer counter | `atomic.Int64` | Clean API, no noCopy issue in normal struct embedding |
-| Boolean flag | `atomic.Bool` | Replaces `sync.Mutex` + `bool` |
-| Typed pointer | `atomic.Pointer[T]` | Generic; replaces `unsafe.Pointer` |
-| Any value | `atomic.Value` | Must always Store same concrete type |
-| Counter in a copied struct | `int64` + `atomic.LoadInt64` | Avoid `atomic.Int64` when the struct is copied (noCopy) |
-
-**noCopy pitfall**: `atomic.Int64`, `atomic.Bool`, etc. embed a `noCopy` sentinel. If the containing struct is passed by value or used in a slice-of-structs, `go vet` will flag it. Use raw `int64` + `atomic.LoadInt64/StoreInt64` when the struct is copied, or store an `*atomic.Int64` pointer instead.
-
----
-
-## Rung 3: Copy-on-Write Patterns
-
-The standard fix for "many readers, occasional writer." Writers build a full new value and swap the pointer atomically — readers pay one atomic load, zero lock contention.
-
-### 3a. atomic.Pointer[T] — Single-Value COW
-
-The cleanest option when the shared value is a single struct. Eliminates `RWMutex.RLock()`'s cache-line invalidation cost entirely, which matters because **`sync.RWMutex` does not scale on high core counts for read-heavy workloads**: every `RLock()` does an atomic increment on shared internal state, so readers across cores contend with each other even though they're not blocking each other logically.
-
-```go
-type Config struct {
-    Timeout time.Duration
-    Limits  map[string]int
-}
-
-type Service struct {
-    cfg atomic.Pointer[Config]
-}
-
-func (s *Service) Config() *Config {
-    return s.cfg.Load() // single atomic load, no lock, no cache-line bounce
-}
-
-func (s *Service) UpdateConfig(c *Config) {
-    s.cfg.Store(c) // build the new value fully, then swap the pointer
-}
-```
-
-The struct behind the pointer is treated as immutable once published — writers build a full new copy, never mutate in place. Callers may hold a pointer to the old config while a new one is being stored; that is correct and expected.
-
-### 3b. atomic.Value — Multi-Field Snapshot
-
-Use when multiple fields must be read consistently and the type is not uniform across all stores. Prefer `atomic.Pointer[T]` (3a) when the type is uniform — it avoids interface boxing overhead and is more type-safe.
-
-```go
-type authResult struct {
-    ok        bool
-    checkedAt time.Time
-}
-
-type Service struct {
-    auth atomic.Value // stores authResult; nil = not yet checked
-}
-
-func (s *Service) isAuthFresh() (bool, bool) {
-    v := s.auth.Load()
-    if v == nil {
-        return false, false
-    }
-    r := v.(authResult)
-    return r.ok, time.Since(r.checkedAt) < 5*time.Minute
-}
-
-func (s *Service) setAuth(ok bool) {
-    s.auth.Store(authResult{ok: ok, checkedAt: time.Now()})
-}
-```
-
-**Rules**:
-- The stored type must be the same across all `Store()` calls (Go panics otherwise).
-- Never modify fields of the loaded struct — it may be concurrently loaded elsewhere.
-- Use `CompareAndSwap` (Go 1.17+) when you need to update only if the value hasn't changed.
-
-### 3c. COW Slice — Rarely-Updated Lists
-
-Use for plugin registries, subscriber lists, poller instance lists — where readers iterate frequently and writes are occasional:
-
-```go
-type Poller struct {
-    instances atomic.Value // stores []Instance (immutable snapshot)
-    writeMu   sync.Mutex   // serializes concurrent writers only
-}
-
-func (p *Poller) loadInstances() []Instance {
-    v := p.instances.Load()
-    if v == nil {
-        return nil
-    }
-    return v.([]Instance)
-}
-
-func (p *Poller) addInstance(inst Instance) {
-    p.writeMu.Lock()
-    defer p.writeMu.Unlock()
-    cur := p.loadInstances()
-    next := make([]Instance, len(cur)+1)
-    copy(next, cur)
-    next[len(cur)] = inst
-    p.instances.Store(next)
-}
-
-func (p *Poller) pollOnce() {
-    for _, inst := range p.loadInstances() { // lock-free
-        go p.pollInstance(inst)
-    }
-}
-```
+See [Atomics and Copy-on-Write](references/atomics-and-copy-on-write.md) for the full cheat sheet and code for all three COW shapes.
 
 ---
 
@@ -222,218 +107,41 @@ Still correct for most code. A `sync.Mutex` is the right choice when ALL of thes
 3. The write:read ratio is high enough that `sync.RWMutex` would add complexity without benefit.
 4. `singleflight` cannot coalesce the callers (different keys, non-idempotent operations).
 
-### Rules that actually matter
+**Rules that actually matter**: never hold a lock across I/O; `RWMutex` only pays off when reads significantly outnumber writes on a non-trivial critical section (plain `Mutex` can win on short sections); keep critical sections to field mutation only, watching for lock-order cycles; shard the mutex once one struct serves many independent keys.
 
-- **Never hold a lock across I/O** — acquire, mutate in-memory state, release, *then* do I/O.
-- **`RWMutex` only pays off when reads significantly outnumber writes** and the critical section is non-trivial. For short critical sections, plain `Mutex` can outperform `RWMutex` because `RWMutex` has higher per-op overhead. At high core counts, `RWMutex` reader contention is still real (see Rung 3a).
-- **Keep critical sections to field mutation only.** If you need to call another method that might itself lock something, check for lock-order cycles first.
-- **Shard the mutex if one struct serves many independent keys.** N independent per-key mutexes (or a sharded map — see Rung 5) scales better than one global lock once N is large.
+See [Mutexes and Concurrent Maps](references/mutexes-and-concurrent-maps.md) for the full rules and code.
 
 ---
 
 ## Rung 5: Concurrent Maps
 
-### sync.Map
+Pick `sync.Map` for stable keys with read-heavy access (0 B/op at 99% reads — benchmark your workload; Go 1.24's HashTrieMap backend narrows the gap further). Pick `xsync.MapOf[K, V]` (puzpuzpuz/xsync/v4) for typed generics, higher write throughput on Go < 1.24, or when you need the structural guarantee that its internal lock can never be held across I/O (no exported `Lock()`). Pick a sharded map (`orcaman/concurrent-map/v2`, or N manual `xsync.MapOf` shards keyed by `hash(key) % N`) for extreme write-heavy, high-cardinality workloads. Never use `sync.Map` for compound transactional updates — it's only atomic per-operation.
 
-Use when keys are stable (mostly inserted once, rarely deleted) and reads vastly outnumber writes.
-
-```go
-var cache sync.Map
-
-type cacheEntry struct {
-    result string
-    expiry time.Time
-}
-
-func get(key string) (string, bool) {
-    v, ok := cache.Load(key)
-    if !ok {
-        return "", false
-    }
-    e := v.(cacheEntry)
-    if time.Now().After(e.expiry) {
-        cache.Delete(key)
-        return "", false
-    }
-    return e.result, true
-}
-```
-
-Allocation profile (directional — benchmark your workload): 0 B/op at 99% reads, 3 B/op at 90%, 9 B/op at 75%.
-
-> **Go 1.24 note**: `sync.Map` uses a HashTrieMap backend that improves write performance. On Go 1.24+, `sync.Map` may be sufficient for mixed workloads without reaching for `xsync.MapOf`. Benchmark your actual workload.
-
-Do NOT use `sync.Map` for compound transactional updates — it only gives atomicity per-operation, not across a read-then-write sequence.
-
-### xsync.MapOf (puzpuzpuz/xsync/v4)
-
-Use when you need generic type safety and/or higher write throughput than `sync.Map` on Go < 1.24, or when the no-exported-lock structural guarantee matters.
-
-```go
-import "github.com/puzpuzpuz/xsync/v4"
-
-type ETagCache struct {
-    store *xsync.MapOf[string, etagEntry]
-}
-
-func NewETagCache() *ETagCache {
-    return &ETagCache{store: xsync.NewMapOf[string, etagEntry]()}
-}
-
-// Atomic conditional update — no separate load+store race:
-func (c *ETagCache) UpdateETag(key, newETag string) {
-    c.store.Compute(key, func(e etagEntry, loaded bool) (etagEntry, xsync.ComputeOp) {
-        if !loaded {
-            return etagEntry{}, xsync.CancelOp
-        }
-        ne := e
-        ne.etag = newETag
-        return ne, xsync.UpdateOp
-    })
-}
-```
-
-**Key property**: `xsync.MapOf` has no exported `Lock()`/`Unlock()` — structurally impossible to hold its internal lock across I/O.
-
-> **Benchmark caveat**: xsync benchmarks are authored by the library's creator. Run your own before treating xsync as categorically faster than `sync.Map`.
-
-### Sharded Maps
-
-For extremely write-heavy workloads with high key cardinality:
-
-```go
-import cmap "github.com/orcaman/concurrent-map/v2"
-
-m := cmap.New[string]()
-m.Set("key", "value")
-v, ok := m.Get("key")
-```
-
-Or shard manually: N `xsync.MapOf` shards, key routed by `hash(key) % N`.
+See [Mutexes and Concurrent Maps](references/mutexes-and-concurrent-maps.md) for code for all three.
 
 ---
 
-## golang.org/x/sync Toolkit
+## golang.org/x/sync Toolkit, conc, and sync.Once
 
 | Package | Use for |
 |---|---|
-| `errgroup` | Parallel work with first-error cancellation propagation |
+| `errgroup` | Parallel work with first-error cancellation propagation — panics still crash the process |
+| `sourcegraph/conc` | Same as errgroup, but panic-safe (repropagated on `Wait()`) and includes bounded pools |
 | `semaphore` | Bounding concurrency (N-at-a-time worker limits) |
-| `singleflight` | Collapsing duplicate concurrent calls (cache stampede prevention) |
+| `singleflight` | Collapsing duplicate concurrent calls for the same key (cache stampede prevention) |
+| `sync.Once` | One-time initialization, zero lock after the first call |
 
-### errgroup
+Reach for `conc` over `errgroup` when goroutines call code you don't fully trust not to panic, or you want bounded concurrency without a separate `semaphore`. `singleflight`'s panic propagation fans out to every waiter on that key — wrap the inner function with `recover` if panics are possible — and `group.Forget(key)` clears a key for re-execution.
 
-```go
-eg, ctx := errgroup.WithContext(ctx)
-for _, item := range items {
-    eg.Go(func() error { return process(ctx, item) })
-}
-if err := eg.Wait(); err != nil { return err }
-```
-
-**Panic pitfall**: a panic inside an `eg.Go` goroutine crashes the process — `errgroup` does not recover it. If callers are third-party code or the work is otherwise panic-prone, use `sourcegraph/conc` instead (below).
-
-### sourcegraph/conc — Panic-Safe Goroutine Pools
-
-`errgroup` propagates errors but not panics; `conc` propagates both — a panic in any spawned goroutine is caught, repropagated on `Wait()` with the original stack trace, and no longer takes the whole process down.
-
-```go
-import "github.com/sourcegraph/conc/pool"
-
-p := pool.New().WithMaxGoroutines(10).WithErrors().WithContext(ctx)
-for _, item := range items {
-    item := item
-    p.Go(func(ctx context.Context) error { return process(ctx, item) })
-}
-if err := p.Wait(); err != nil { return err } // also re-panics here if a goroutine panicked
-```
-
-Reach for `conc` instead of `errgroup` when: goroutines call code you don't fully trust not to panic, you want bounded concurrency (`WithMaxGoroutines`) without a separate `semaphore`, or you need `conc/iter.Map`/`ForEach` for a simple parallel-map-over-slice instead of hand-rolling the errgroup loop. Stick with plain `errgroup` for simple, already-panic-safe internal code — it's stdlib-adjacent and one less dependency.
-
-### singleflight — Request Coalescing
-
-```go
-import "golang.org/x/sync/singleflight"
-
-type Service struct {
-    cache sync.Map
-    group singleflight.Group
-}
-
-func (s *Service) getOrFetch(key string) (string, error) {
-    if v, ok := s.cache.Load(key); ok {
-        return v.(string), nil
-    }
-    v, err, _ := s.group.Do(key, func() (any, error) {
-        result, err := expensiveFetch(key)
-        if err == nil {
-            s.cache.Store(key, result)
-        }
-        return result, err
-    })
-    if err != nil {
-        return "", err
-    }
-    return v.(string), nil
-}
-```
-
-**Panic propagation (production critical)**: If the executing goroutine panics, the panic is propagated to ALL waiting goroutines for that key. Wrap the inner function with `recover` if panics are possible.
-
-**Cache invalidation**: Call `group.Forget(key)` to allow the next call for that key to re-execute.
-
-**At extreme scale**: `singleflight.Group` uses a single global mutex over the key map. Under very high goroutine concurrency, consider `github.com/tarndt/shardedsingleflight`.
-
----
-
-## sync.Once
-
-```go
-var (
-    instance *Service
-    once     sync.Once
-)
-
-func GetService() *Service {
-    once.Do(func() { instance = &Service{...} })
-    return instance
-}
-```
+See [Concurrency Toolkit](references/concurrency-toolkit.md) for code for errgroup, conc, singleflight, and sync.Once.
 
 ---
 
 ## Rung 7: Lock-Free Queues and Ring Buffers
 
-Only reach here after profiling shows a genuine MPMC queue is the bottleneck.
+Only reach here after profiling shows a genuine MPMC queue is the bottleneck — never start here. Preferred: `Workiva/go-datastructures` (bounded ring buffer, blocking semantics, `Dispose()` for shutdown). Alternative: `golang-design/lockfree` (unbounded, no `Dispose()` — own your shutdown coordination). A lock-free queue is **not** a substitute for a mutex guarding mutable struct fields — that's copy-on-write (Rung 3) or `RWMutex` (Rung 4).
 
-### Workiva/go-datastructures (preferred)
-
-Bounded MPMC ring buffer with blocking semantics and `Dispose()` for clean shutdown:
-
-```go
-import "github.com/Workiva/go-datastructures/queue"
-
-rb := queue.NewRingBuffer(1024) // capacity must be power of 2
-rb.Put(item)   // blocks if full
-rb.Get()       // blocks if empty
-rb.Dispose()   // unblocks all waiters — call on shutdown
-```
-
-### golang-design/lockfree
-
-Unbounded lock-free queue/stack. No `Dispose()` — own your shutdown coordination:
-
-```go
-import "github.com/golang-design/lockfree"
-
-q := lockfree.NewQueue()
-q.Enqueue(item)
-v := q.Dequeue() // nil if empty
-```
-
-### What lock-free structures do NOT fix
-
-A lock-free queue passes items between producers and consumers. It is **not** a substitute for a mutex guarding mutable struct fields. If many goroutines read/write fields on a shared object, the fix is copy-on-write (rung 3) or `RWMutex` (rung 4) — not a lock-free queue.
+See [Lock-Free Structures](references/lock-free-structures.md) for code and the "what this doesn't fix" detail.
 
 ---
 

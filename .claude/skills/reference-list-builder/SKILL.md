@@ -53,25 +53,7 @@ Use this skill when the user:
 
 ## Reference List Format
 
-### Standard Format
-
-```
-PROFESSIONAL REFERENCES
-
-Jane Smith
-Senior Director of Product
-TechCorp Inc.
-Phone: (555) 123-4567
-Email: jane.smith@techcorp.com
-Relationship: Direct supervisor for 3 years (2020-2023)
-
-John Doe
-VP of Engineering
-Previous Company
-Phone: (555) 234-5678
-Email: john.doe@previous.com
-Relationship: Cross-functional partner on 5 major projects
-```
+See `references/templates.md` for a worked example of the standard format.
 
 ### Information to Include
 
@@ -106,10 +88,7 @@ Relationship: Cross-functional partner on 5 major projects
 - Explain the role you're applying for
 - Gauge their willingness and enthusiasm
 
-**Script:**
-```
-"Hi [Name], I hope you're doing well! I'm applying for a [Role] position at [Company] and was wondering if you'd be comfortable serving as a reference for me. The role involves [brief description], and I think your perspective on [specific project/skill] would be particularly valuable. Would you be willing to speak with them if they reach out?"
-```
+See `references/templates.md` for a ready-to-use permission request script.
 
 ### Step 2: Brief Your References
 
@@ -120,33 +99,7 @@ Relationship: Cross-functional partner on 5 major projects
 - Specific projects to mention
 - Timeline for when they might be contacted
 
-**Briefing Email Template:**
-```
-Subject: Reference Preparation - [Role] at [Company]
-
-Hi [Name],
-
-Thank you so much for agreeing to be a reference! Here's some context to help:
-
-**The Role:** [Job title] at [Company]
-**What they're looking for:** [Key requirements]
-
-**Points I'm emphasizing:**
-- [Achievement 1]
-- [Achievement 2]
-- [Skill they should mention]
-
-**Our work together they might ask about:**
-- [Project 1]
-- [Project 2]
-
-I've attached my resume and the job description for reference. They may reach out in the next [timeframe].
-
-Please let me know if you have any questions, and thank you again!
-
-Best,
-[Your name]
-```
+See `references/templates.md` for a ready-to-use briefing email template.
 
 ### Step 3: Follow Up
 
@@ -222,41 +175,7 @@ After references are checked:
 
 **Most important question.** Brief your references that this may be asked and ensure they can answer enthusiastically.
 
-## Reference List Template
-
-```
-[YOUR NAME]
-[Your Email] | [Your Phone]
-
-PROFESSIONAL REFERENCES
-
-[REFERENCE 1 - MOST SENIOR/RELEVANT]
-[Name]
-[Title]
-[Company]
-Phone: [Number]
-Email: [Email]
-Relationship: [How you worked together, dates]
-
-[REFERENCE 2]
-[Name]
-[Title]
-[Company]
-Phone: [Number]
-Email: [Email]
-Relationship: [How you worked together, dates]
-
-[REFERENCE 3]
-[Name]
-[Title]
-[Company]
-Phone: [Number]
-Email: [Email]
-Relationship: [How you worked together, dates]
-
----
-References available upon request for additional contacts.
-```
+See `references/templates.md` for a fill-in reference list template.
 
 ## Reference Timing
 
@@ -277,61 +196,9 @@ References available upon request for additional contacts.
 
 ## Output Format
 
-When building a reference list:
+Report reference strategy (target role/company), recommended primary and backup references (each with title, company, contact, relationship, why, and talking points), briefing notes (what to send, key points to emphasize), and drafted reference outreach (permission script, briefing email, thank-you template).
 
-```markdown
-# REFERENCE LIST
-
-## Reference Strategy
-**Target Role:** [Position]
-**Company:** [Company]
-
-## Recommended References
-
-### Primary References (Use These)
-
-**Reference 1: [Name]**
-- Current Title: [Title]
-- Company: [Company]
-- Contact: [Phone/Email]
-- Relationship: [Description]
-- Why: [What they can speak to]
-- Key points to highlight: [Specific projects/skills]
-
-**Reference 2: [Name]**
-[Same format]
-
-**Reference 3: [Name]**
-[Same format]
-
-### Backup References (If Needed)
-
-**Reference 4: [Name]**
-[Same format]
-
-## Briefing Notes
-
-### For Each Reference, Send:
-- [ ] Resume
-- [ ] Job description
-- [ ] Key talking points
-- [ ] Timeline
-
-### Key Points to Emphasize
-- [Point 1 - who should mention]
-- [Point 2 - who should mention]
-
-## Reference Outreach
-
-### Permission Request Script
-[Customized script]
-
-### Briefing Email
-[Draft briefing email]
-
-### Thank You Template
-[Post-check thank you message]
-```
+See `references/templates.md` for the ready-to-fill output template.
 
 ## Reference Checklist
 

@@ -41,176 +41,15 @@ A systematic approach with:
 
 ## Master Resume Concept
 
-### What is a Master Resume?
+A master resume is a single comprehensive document containing ALL your experiences, bullet points, and achievements — even ones that won't fit on any one-page tailored version. It's the source of truth every tailored resume pulls from; never edit it directly for a specific application.
 
-A comprehensive document containing:
-- ALL your experiences (not just recent)
-- ALL bullet points you've ever written
-- Every achievement, project, skill
-- Full details (even if they won't fit on one page)
+See `references/master-resume-template.md` for the full section-by-section template.
 
-**Purpose:** Source of truth to pull from when tailoring
+## File Organization
 
-### Master Resume Structure
+Organize resumes into `Master/`, `Tailored/<role-type>/`, `CoverLetters/`, and `Applications/` folders, with a consistent naming pattern: `[LastName]_[Role/Type]_[Company]_[Date].pdf`.
 
-```markdown
-# MASTER RESUME - [YOUR NAME]
-Last Updated: [Date]
-
-## CONTACT INFORMATION
-[Full contact details]
-
-## PROFESSIONAL SUMMARY VERSIONS
-[Summary for Role Type A]
-[Summary for Role Type B]
-[Summary for Role Type C]
-
-## ALL SKILLS
-### Technical Skills
-[Complete list by category]
-
-### Soft Skills
-[Complete list]
-
-### Industry Knowledge
-[All domains]
-
-## PROFESSIONAL EXPERIENCE
-
-### Company Name | Title | Dates
-
-**All Bullets (choose best for each application):**
-• Bullet 1 (leadership focused)
-• Bullet 2 (technical focused)
-• Bullet 3 (results focused)
-• Bullet 4 (collaboration focused)
-• Bullet 5 (additional achievement)
-• Bullet 6 (additional achievement)
-
-**Keywords this experience covers:**
-[List of keywords this job demonstrates]
-
-### Previous Company | Title | Dates
-[Same format...]
-
-## EDUCATION
-[Complete education history]
-
-## CERTIFICATIONS
-[All certifications ever earned]
-
-## PROJECTS
-[All notable projects]
-
-## VOLUNTEER / ADDITIONAL
-[All other relevant experience]
-```
-
-## File Organization System
-
-### Folder Structure
-
-```
-Resume/
-├── Master/
-│   └── LastName_Master_Resume.docx
-├── Tailored/
-│   ├── ProductManagement/
-│   │   ├── LastName_PM_Google_Jan2024.pdf
-│   │   └── LastName_PM_Meta_Jan2024.pdf
-│   ├── Engineering/
-│   │   ├── LastName_SWE_Startup_Feb2024.pdf
-│   │   └── LastName_SWE_Enterprise_Feb2024.pdf
-│   └── General/
-│       └── LastName_General_Resume.pdf
-├── CoverLetters/
-│   ├── Google_PM_CoverLetter.docx
-│   └── Meta_PM_CoverLetter.docx
-└── Applications/
-    └── ApplicationTracker.xlsx
-```
-
-### File Naming Convention
-
-**Pattern:**
-`[LastName]_[Role/Type]_[Company]_[Date].pdf`
-
-**Examples:**
-- `Smith_ProductManager_Google_Jan2024.pdf`
-- `Smith_SWE_Stripe_Feb2024.pdf`
-- `Smith_DataScience_General_2024.pdf`
-- `Smith_Master_Resume_v3.docx`
-
-## Version Categories
-
-### By Target Role
-
-**Product Management:**
-- Emphasizes: Strategy, roadmap, metrics, stakeholders
-- Skills highlight: Product tools, analytics, user research
-
-**Software Engineering:**
-- Emphasizes: Technical projects, systems, code
-- Skills highlight: Languages, frameworks, tools
-
-**Data Science:**
-- Emphasizes: Analysis, ML, statistical methods
-- Skills highlight: Python, SQL, ML libraries
-
-### By Industry
-
-**Tech/Startup:**
-- Emphasizes: Innovation, growth, scrappiness
-- Tone: Modern, direct, achievement-focused
-
-**Enterprise/Corporate:**
-- Emphasizes: Scale, process, collaboration
-- Tone: Professional, structured, comprehensive
-
-**Finance:**
-- Emphasizes: Analysis, compliance, accuracy
-- Tone: Conservative, precise, credentialed
-
-### By Seniority Level
-
-**Individual Contributor:**
-- Focus on execution and technical skills
-- Detailed project descriptions
-- Technical accomplishments
-
-**Manager:**
-- Team leadership and development
-- Cross-functional collaboration
-- Business impact metrics
-
-**Executive:**
-- Strategic leadership
-- P&L responsibility
-- Organizational transformation
-
-## Application Tracking
-
-### Simple Tracker Spreadsheet
-
-```
-| Company | Role | Version Used | Date Applied | Status | Notes |
-|---------|------|--------------|--------------|--------|-------|
-| Google | PM | PM_Google_Jan | 1/15/24 | Interview | 2nd round 2/1 |
-| Meta | PM | PM_Meta_Jan | 1/18/24 | Applied | Referral from John |
-| Startup | PM | PM_General | 1/20/24 | Rejected | Too senior |
-```
-
-### Information to Track
-
-- Company name
-- Job title
-- Resume version used
-- Cover letter version used
-- Application date
-- Application method (portal, referral, direct)
-- Current status
-- Follow-up dates
-- Notes and contacts
+See `references/organization.md` for the full folder structure and version categories (by target role, industry, and seniority level).
 
 ## Update Workflow
 
@@ -253,53 +92,25 @@ Resume/
 10. Update application tracker
 ```
 
-## Common Scenarios
-
-### Scenario 1: Applying to Similar Roles
-
-**Strategy:**
-- Create one well-tailored version for the role type
-- Make minor adjustments for each company
-- Track which slight variation went where
-
-### Scenario 2: Applying to Different Role Types
-
-**Strategy:**
-- Create separate base versions for each role type
-- Maintain clear folder organization
-- Each version pulls from same master
-
-### Scenario 3: Rapid Application Volume
-
-**Strategy:**
-- Create 2-3 strong category versions
-- Use "general" versions for quick applications
-- Reserve deep tailoring for top choices
-
-### Scenario 4: Career Transition
-
-**Strategy:**
-- Create transition-focused version
-- Emphasize transferable skills
-- Maintain original industry version as backup
+Track every submission (company, role, version used, date, status) so you always know what was sent where — see `references/application-tracking.md` for a ready-to-use tracker format. For scenario-specific strategies (similar roles, different role types, high application volume, career transitions), see `references/scenarios.md`.
 
 ## Version Control Best Practices
 
 ### DO:
-- ✅ Always work from master as source
-- ✅ Use consistent naming conventions
-- ✅ Track which version went where
-- ✅ Keep master updated
-- ✅ Date your files
-- ✅ Backup to cloud storage
+- Always work from master as source
+- Use consistent naming conventions
+- Track which version went where
+- Keep master updated
+- Date your files
+- Backup to cloud storage
 
 ### DON'T:
-- ❌ Edit master directly for applications
-- ❌ Use vague names like "resume_final_v2"
-- ❌ Forget which version you sent
-- ❌ Let master get out of date
-- ❌ Have multiple "master" files
-- ❌ Delete old versions (archive instead)
+- Edit master directly for applications
+- Use vague names like "resume_final_v2"
+- Forget which version you sent
+- Let master get out of date
+- Have multiple "master" files
+- Delete old versions (archive instead)
 
 ## Output Format
 
@@ -339,16 +150,16 @@ When managing resume versions:
 
 ## Version Management Checklist
 
-- ✅ Master resume exists and is current
-- ✅ Folder structure is organized
-- ✅ Naming convention is consistent
-- ✅ Application tracker is maintained
-- ✅ Know which version sent to each company
-- ✅ All versions pull from same master
-- ✅ Backup system in place
-- ✅ Old versions archived (not deleted)
-- ✅ Update workflow is established
-- ✅ Regular master resume reviews scheduled
+- Master resume exists and is current
+- Folder structure is organized
+- Naming convention is consistent
+- Application tracker is maintained
+- Know which version sent to each company
+- All versions pull from same master
+- Backup system in place
+- Old versions archived (not deleted)
+- Update workflow is established
+- Regular master resume reviews scheduled
 
 ---
 

@@ -10,192 +10,13 @@ Use when:
 - Need syntax reference for Confluence markdown features
 - Setting up project structure for Confluence sync
 
-## Confluence Markdown Syntax
+## Confluence Markdown Syntax — Quick Guide
 
-### Frontmatter
+Every synced file has YAML frontmatter (auto-generated on first publish; don't hand-edit `connie-*` fields). Use exactly **one H1** — it becomes the page title and is stripped from the body — then start content at H2. Add `[TOC]` on its own line for an auto-updating table of contents. Standard GFM otherwise: headings, tables, ordered/unordered/task lists, code fences (python/javascript/typescript/java/go/rust/bash/sql/yaml/json/xml/html/css/markdown), emphasis, blockquotes, `---` horizontal rules, and images (relative paths, `images/`/`assets/` subdirectory, <2MB).
 
-Every Confluence-synced markdown file uses YAML frontmatter:
+Links come in three forms: `[[Page Title]]` / `[[Custom Text|Page Title]]` for other Confluence pages (must also be published), `[text](https://...)` for external URLs, and `[text](./relative.md)` for project-internal docs (resolved during sync — the target must be published too).
 
-```yaml
----
-connie-page-id: '1234567890'              # Confluence page ID (auto-assigned after first publish)
-connie-last-sync-timestamp: '2026-02-20T...'  # Last sync time (auto-updated)
-connie-last-remote-version: 2              # Confluence version number (auto-tracked)
----
-```
-
-**Important**:
-- Frontmatter is auto-generated on first publish
-- Don't manually edit `connie-*` fields unless you know what you're doing
-- Empty frontmatter (`---\n---`) is fine for new files
-
-### Headings
-
-```markdown
-# Page Title
-
-## Section Heading (H2)
-
-### Subsection (H3)
-
-#### Sub-subsection (H4)
-```
-
-**Best Practices**:
-- Use **only one H1** (`#`) - it becomes the Confluence page title
-- The H1 will NOT appear in the body (automatically removed to prevent duplication)
-- Start body content with H2 (`##`)
-
-### Table of Contents
-
-```markdown
-[TOC]
-```
-
-**Features**:
-- Place `[TOC]` on its own line where you want the table of contents
-- Automatically generates Confluence TOC macro
-- Shows all headings (H2-H6) in the document
-- Auto-updates when headings change
-
-**Example**:
-```markdown
-# Project Documentation
-
-**Last Updated**: 2026-02-20
-
-[TOC]
-
-## Overview
-Content here...
-
-## Architecture
-More content...
-```
-
-### Links
-
-#### Internal Links (to other Confluence pages)
-```markdown
-[[Page Title]]               # Link to another page in wiki
-[[Custom Text|Page Title]]   # Link with custom text
-```
-
-**Note**: The markdown-confluence tool will resolve these to Confluence page links.
-
-#### External Links
-```markdown
-[Link Text](https://example.com)
-[Google](https://google.com)
-```
-
-#### Relative Links (within project)
-```markdown
-[Other Doc](./other-doc.md)
-[Sibling Doc](../sibling/doc.md)
-```
-
-**Note**: Relative links are resolved during sync. The target file must also be published to Confluence.
-
-### Images
-
-```markdown
-![Alt Text](./images/diagram.png)
-![Screenshot](../assets/screenshot.png)
-![External](https://example.com/image.png)
-```
-
-**Best Practices**:
-- Store images in `images/` or `assets/` subdirectory
-- Use relative paths
-- External URLs work but images won't be uploaded to Confluence
-
-### Code Blocks
-
-````markdown
-```python
-def hello():
-    print("Hello, Confluence!")
-```
-
-```javascript
-const greeting = "Hello, Confluence!";
-console.log(greeting);
-```
-````
-
-**Supported Languages**: python, javascript, typescript, java, go, rust, bash, shell, sql, yaml, json, xml, html, css, markdown
-
-### Tables
-
-```markdown
-| Header 1 | Header 2 | Header 3 |
-|----------|----------|----------|
-| Cell 1   | Cell 2   | Cell 3   |
-| Cell 4   | Cell 5   | Cell 6   |
-```
-
-**Alignment**:
-```markdown
-| Left | Center | Right |
-|:-----|:------:|------:|
-| L1   | C1     | R1    |
-| L2   | C2     | R2    |
-```
-
-### Lists
-
-**Unordered**:
-```markdown
-- Item 1
-- Item 2
-  - Nested item
-  - Another nested
-- Item 3
-```
-
-**Ordered**:
-```markdown
-1. First item
-2. Second item
-   1. Nested numbered
-   2. Another nested
-3. Third item
-```
-
-**Task Lists**:
-```markdown
-- [ ] Incomplete task
-- [x] Completed task
-- [ ] Another task
-```
-
-### Emphasis
-
-```markdown
-**Bold text**
-*Italic text*
-***Bold and italic***
-~~Strikethrough~~
-`Inline code`
-```
-
-### Blockquotes
-
-```markdown
-> This is a blockquote.
-> It can span multiple lines.
-
-> **Note**: Use blockquotes for callouts or important notes.
-```
-
-### Horizontal Rules
-
-```markdown
----
-```
-
-Use `---` on its own line for a horizontal divider.
+Full syntax with examples for every element above: [Syntax Reference](references/syntax-reference.md).
 
 ---
 
@@ -263,21 +84,7 @@ EOF
 
 ### 2. Write Markdown Files
 
-Create `README.md`:
-```markdown
----
----
-
-# My Project
-
-[TOC]
-
-## Overview
-This is my project documentation.
-
-## Architecture
-Details about the architecture.
-```
+Create `README.md` with empty frontmatter (`---\n---`), one H1, `[TOC]`, and H2 sections — see [Syntax Reference](references/syntax-reference.md) for the full element list, or [Examples](references/examples-and-troubleshooting.md) for two complete worked pages.
 
 ### 3. Publish to Confluence
 
@@ -305,166 +112,14 @@ The tool automatically:
 
 ---
 
-## Best Practices
+## Best Practices (Summary)
 
-### 1. Document Structure
+- **One H1 per file**, content starts at H2, don't hand-edit `connie-*` frontmatter fields
+- **Relative links only** — absolute paths break after sync; link targets must also be published
+- **Images in `images/`/`assets/`**, relative paths, kept under 2MB
+- **Directory structure mirrors page hierarchy** — set `parentPageId` in config, avoid a flat layout for large projects
 
-✅ **Do**:
-- Use one H1 for the page title
-- Start body content with H2
-- Add `[TOC]` after metadata for long documents
-- Keep related docs in subdirectories
-- Use descriptive filenames (becomes page title)
-
-❌ **Don't**:
-- Use multiple H1 headings (only first is used as title)
-- Put content before the H1 (it will be lost)
-- Manually edit `connie-*` frontmatter fields
-
-### 2. Linking
-
-✅ **Do**:
-- Use relative links for project-internal docs
-- Link to other published pages with `[[Page Title]]`
-- Verify target files are also published
-
-❌ **Don't**:
-- Use absolute paths (won't work after sync)
-- Link to unpublished files
-
-### 3. Images
-
-✅ **Do**:
-- Store images in `images/` or `assets/` subdirectory
-- Use relative paths from the markdown file
-- Keep image files small (<2MB)
-
-❌ **Don't**:
-- Use absolute paths to local images
-- Reference images outside the project
-
-### 4. Page Hierarchy
-
-✅ **Do**:
-- Use directory structure to organize pages
-- Set `parentPageId` in config for proper hierarchy
-- Keep related docs together
-
-❌ **Don't**:
-- Create flat structure for large projects
-- Forget to configure parent page
-
----
-
-## Troubleshooting
-
-### Page Title Appearing Twice
-
-**Fixed** ✅ - The tool now automatically removes duplicate H1 headings that match the page title.
-
-### TOC Not Appearing
-
-- Verify `[TOC]` is on its own line
-- Check that it's a paragraph, not inside a code block or list
-
-### Images Not Uploading
-
-- Verify image paths are relative
-- Check that images are in the project directory
-- Ensure file extensions are correct (.png, .jpg, .gif, .svg)
-
-### Links Broken After Sync
-
-- Verify target files are also published to Confluence
-- Use relative links, not absolute paths
-- Check that `[[Page Title]]` matches actual page title
-
----
-
-## Examples
-
-### Simple Project Page
-
-```markdown
----
----
-
-# Project Name
-
-**Status**: Active
-**Owner**: Tyler Stapler
-**Last Updated**: 2026-02-20
-
-[TOC]
-
-## Overview
-
-Brief description of the project.
-
-## Architecture
-
-![Architecture Diagram](./images/architecture.png)
-
-Key components:
-- Component A
-- Component B
-- Component C
-
-## Getting Started
-
-1. Clone the repository
-2. Install dependencies
-3. Run the application
-
-```bash
-npm install
-npm start
-```
-
-## Related Documents
-
-- [[API Documentation]]
-- [[Deployment Guide]]
-```
-
-### Requirements Document
-
-```markdown
----
----
-
-# Requirements Document
-
-**Project**: IDP Evaluation
-**Date**: 2026-02-20
-
-[TOC]
-
-## Use Case 1: Developer Surveys
-
-### Problem Statement
-Description of the problem...
-
-### Requirements
-
-#### Must Have
-- Requirement 1
-- Requirement 2
-
-#### Nice to Have
-- Optional feature 1
-- Optional feature 2
-
-### Success Criteria
-- Metric 1: Target value
-- Metric 2: Target value
-
----
-
-## Use Case 2: AI Monitoring
-
-[Continue with next use case...]
-```
+Full do/don't lists per category, plus troubleshooting (duplicate page titles, missing TOC, failed image uploads, broken links after sync), are in [Examples and Troubleshooting](references/examples-and-troubleshooting.md).
 
 ---
 
@@ -500,3 +155,8 @@ markdown-confluence status
 # Validate links
 markdown-confluence validate-links
 ```
+
+## References
+
+- [Syntax Reference](references/syntax-reference.md) — full markdown syntax with examples (frontmatter, headings, TOC, links, images, code blocks, tables, lists, emphasis)
+- [Examples and Troubleshooting](references/examples-and-troubleshooting.md) — detailed do/don't lists, troubleshooting, and two full worked example pages

@@ -76,96 +76,11 @@ Use this skill when the user:
 
 ## Career Change Translation Examples
 
-### Teacher → Corporate Trainer / L&D
-
-**Teaching Experience:**
-- "Taught 25 students in 5th grade classroom"
-
-**Translated:**
-- "Designed and delivered curriculum for 25 learners, achieving 95% proficiency on standardized assessments through differentiated instruction and data-driven intervention strategies"
-
-**Key Translations:**
-| Teaching Term | Corporate Term |
-|--------------|----------------|
-| Lesson plans | Training curriculum |
-| Students | Learners |
-| Classroom management | Group facilitation |
-| Parent conferences | Stakeholder communication |
-| Assessments | Learning evaluations |
-| IEPs | Individual development plans |
-
-### Military → Corporate
-
-**Military Experience:**
-- "Commanded platoon of 30 soldiers in combat operations"
-
-**Translated:**
-- "Led cross-functional team of 30 through high-stakes operations in ambiguous environments, managing $2M in equipment and achieving 100% mission completion rate"
-
-**Key Translations:**
-| Military Term | Corporate Term |
-|--------------|----------------|
-| Platoon/Unit | Team/Department |
-| Mission | Project/Initiative |
-| Operations | Programs |
-| Intel | Data/Analytics |
-| Briefing | Presentation |
-| Command | Leadership |
-| Deployment | Implementation |
-
-### Retail → Sales/Account Management
-
-**Retail Experience:**
-- "Sold products to customers and met sales targets"
-
-**Translated:**
-- "Consistently exceeded sales targets by 125%, generating $500K annual revenue through consultative selling and relationship building with 50+ repeat customers"
-
-**Key Translations:**
-| Retail Term | Corporate Term |
-|------------|----------------|
-| Customers | Clients/Accounts |
-| Store sales | Revenue generation |
-| Customer service | Account management |
-| Upselling | Cross-selling |
-| Returns | Issue resolution |
-| Visual merchandising | Brand presentation |
-
-### Hospitality → Customer Success
-
-**Hospitality Experience:**
-- "Managed front desk and handled guest complaints"
-
-**Translated:**
-- "Served as primary customer contact for 100+ daily guests, resolving escalated issues with 95% satisfaction rate and implementing feedback processes that improved NPS by 15 points"
-
-**Key Translations:**
-| Hospitality Term | Corporate Term |
-|-----------------|----------------|
-| Guests | Customers/Clients |
-| Reservations | Account management |
-| Guest satisfaction | Customer success |
-| Complaints | Escalations |
-| Concierge services | Customer support |
-| Event planning | Project management |
-
-### Healthcare → Tech/Pharma
-
-**Healthcare Experience:**
-- "Provided patient care and maintained medical records"
-
-**Translated:**
-- "Delivered patient-centered care to 20+ daily cases, maintaining 100% compliance with HIPAA protocols and utilizing EMR systems (Epic) for accurate documentation and care coordination"
-
-**Key Translations:**
-| Healthcare Term | Corporate Term |
-|----------------|----------------|
-| Patient care | Client service |
-| EMR/EHR | CRM/Database systems |
-| Care coordination | Project coordination |
-| Clinical protocols | Standard operating procedures |
-| Patient outcomes | Performance metrics |
-| Rounds | Status meetings |
+Worked before/after translations for five common transitions — Teacher → L&D,
+Military → Corporate, Retail → Sales, Hospitality → Customer Success, and
+Healthcare → Tech/Pharma — each with a term-mapping table, live in
+`references/industry-translations.md`. Use the closest analog as a model when
+translating a bullet.
 
 ## The Career Change Resume Strategy
 
@@ -183,26 +98,13 @@ Use this skill when the user:
 ```
 Professional Summary (targeted)
 Core Competencies (transferable skills)
-Relevant Experience (grouped by skill)
+Relevant Experience (grouped by skill, e.g. "PROJECT MANAGEMENT EXPERIENCE")
 Additional Experience (chronological)
 Education & Certifications
 ```
 
-**Group by Transferable Function:**
-```
-PROJECT MANAGEMENT EXPERIENCE
-[Bullet from Job 1]
-[Bullet from Job 2]
-[Bullet from Job 3]
-
-LEADERSHIP & TEAM DEVELOPMENT
-[Bullet from Job 1]
-[Bullet from Job 2]
-
-CLIENT RELATIONSHIP MANAGEMENT
-[Bullet from Job 1]
-[Bullet from Job 2]
-```
+Group bullets from different jobs under the transferable function they
+demonstrate (e.g. all leadership bullets together), not under the job title.
 
 ### 3. Build Bridge Experiences
 
@@ -214,17 +116,9 @@ CLIENT RELATIONSHIP MANAGEMENT
 - Professional organizations
 - Coursework
 
-**Example:**
-```
-BRIDGE EXPERIENCE
-
-Volunteer Marketing Lead | Nonprofit XYZ | 2023-Present
-- Designed social media strategy increasing engagement by 150%
-- Created content calendar and managed 3 volunteer content creators
-
-Google Digital Marketing Certificate | 2023
-- Completed 200+ hour program covering SEO, SEM, Analytics, and Social Media
-```
+List these under a "Bridge Experience" heading with the same bullet format as
+paid roles — e.g. a volunteer marketing lead position with quantified results,
+alongside a relevant certification.
 
 ## Addressing the "Why" Question
 
@@ -258,49 +152,9 @@ Google Digital Marketing Certificate | 2023
 
 ## Industry-Specific Career Change Paths
 
-### Into Tech
-
-**Best Entry Points:**
-- Customer Success (from any client-facing role)
-- Technical Project Manager (from any PM role)
-- Sales/Account Executive (from any sales role)
-- Product Management (from domain expertise)
-- Technical Writing (from any writing role)
-
-**Bridge Activities:**
-- Learn SQL, basic coding, or relevant tools
-- Get certifications (Google, Salesforce, AWS)
-- Build personal projects
-- Attend tech meetups
-- Volunteer for tech nonprofits
-
-### Into Finance
-
-**Best Entry Points:**
-- Operations (from any process-oriented role)
-- Compliance (from any regulated industry)
-- Client Services (from relationship roles)
-- Analysis (from any analytical role)
-
-**Bridge Activities:**
-- Excel/financial modeling certifications
-- CFA or CFP study
-- Financial analysis courses
-- Industry networking
-
-### Into Healthcare
-
-**Best Entry Points:**
-- Healthcare Administration (from any admin role)
-- Medical Sales (from any sales role)
-- Health IT (from any tech role)
-- Patient Advocacy (from customer service)
-
-**Bridge Activities:**
-- Healthcare certifications
-- HIPAA training
-- Healthcare industry knowledge
-- Volunteer at hospitals
+Best entry points and bridge activities for the three most-requested target
+industries — Tech, Finance, and Healthcare — live in
+`references/industry-entry-paths.md`.
 
 ## Output Format
 

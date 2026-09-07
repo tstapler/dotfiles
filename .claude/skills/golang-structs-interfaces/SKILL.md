@@ -42,20 +42,10 @@ type Writer interface {
     Write(p []byte) (n int, err error)
 }
 
-// Composed from small interfaces
+// Composed from small interfaces, same as io.ReadWriter
 type ReadWriter interface {
     Reader
     Writer
-}
-```
-
-Compose larger interfaces from smaller ones:
-
-```go
-type ReadWriteCloser interface {
-    io.Reader
-    io.Writer
-    io.Closer
 }
 ```
 
@@ -172,60 +162,7 @@ This costs nothing at runtime. If `MyBuffer` ever stops satisfying `io.ReadWrite
 
 ## Type Assertions & Type Switches
 
-### Safe Type Assertion
-
-Type assertions MUST use the comma-ok form to avoid panics:
-
-```go
-// Good — safe
-s, ok := val.(string)
-if !ok {
-    // handle
-}
-
-// Bad — panics if val is not a string
-s := val.(string)
-```
-
-### Type Switch
-
-Discover the dynamic type of an interface value:
-
-```go
-switch v := val.(type) {
-case string:
-    fmt.Println(v)
-case int:
-    fmt.Println(v * 2)
-case io.Reader:
-    io.Copy(os.Stdout, v)
-default:
-    fmt.Printf("unexpected type %T\n", v)
-}
-```
-
-### Optional Behavior with Type Assertions
-
-Check if a value supports additional capabilities without requiring them upfront:
-
-```go
-type Flusher interface {
-    Flush() error
-}
-
-func writeData(w io.Writer, data []byte) error {
-    if _, err := w.Write(data); err != nil {
-        return err
-    }
-    // Flush only if the writer supports it
-    if f, ok := w.(Flusher); ok {
-        return f.Flush()
-    }
-    return nil
-}
-```
-
-This pattern is used extensively in the standard library (e.g., `http.Flusher`, `io.ReaderFrom`).
+Type assertions MUST use the comma-ok form (`s, ok := val.(string)`) to avoid panics; use a type switch to discover a value's dynamic type; and check for optional behavior (e.g. `io.Flusher`) with a type assertion rather than requiring it upfront. See [Type Assertions & Type Switches](references/type-assertions-and-switches.md) for the full patterns, including the standard-library optional-capability idiom.
 
 ## Struct & Interface Embedding
 
@@ -295,13 +232,9 @@ Use field tags for serialization control. Exported fields in serialized structs 
 
 ```go
 type Order struct {
-    ID        string    `json:"id"         db:"id"`
-    UserID    string    `json:"user_id"    db:"user_id"`
-    Total     float64   `json:"total"      db:"total"`
-    Items     []Item    `json:"items"      db:"-"`
-    CreatedAt time.Time `json:"created_at" db:"created_at"`
-    DeletedAt time.Time `json:"-"          db:"deleted_at"`
-    Internal  string    `json:"-"          db:"-"`
+    ID       string  `json:"id"      db:"id"`
+    Total    float64 `json:"total"   db:"total"`
+    Internal string  `json:"-"       db:"-"`
 }
 ```
 
@@ -329,34 +262,7 @@ Receiver type MUST be consistent across all methods of a type — if one method 
 
 ## Preventing Struct Copies with `noCopy`
 
-Some structs must never be copied after first use (e.g., those containing a mutex, a channel, or internal pointers). Embed a `noCopy` sentinel to make `go vet` catch accidental copies:
-
-```go
-// noCopy may be added to structs which must not be copied after first use.
-// See https://pkg.go.dev/sync#noCopy
-type noCopy struct{}
-
-func (*noCopy) Lock()   {}
-func (*noCopy) Unlock() {}
-
-type ConnPool struct {
-    noCopy noCopy
-    mu     sync.Mutex
-    conns  []*Conn
-}
-```
-
-`go vet` reports an error if a `ConnPool` value is copied (passed by value, assigned, etc.). This is the same technique the standard library uses for `sync.WaitGroup`, `sync.Mutex`, `strings.Builder`, and others.
-
-Always pass these structs by pointer:
-
-```go
-// Good
-func process(pool *ConnPool) { ... }
-
-// Bad — go vet will flag this
-func process(pool ConnPool) { ... }
-```
+Some structs must never be copied after first use (e.g., those containing a mutex, a channel, or internal pointers). Embed a `noCopy` sentinel so `go vet` catches accidental copies at compile time — the same technique the standard library uses for `sync.WaitGroup`, `sync.Mutex`, and `strings.Builder`. See [The noCopy Pattern](references/nocopy-pattern.md) for the full implementation.
 
 ## Cross-References
 

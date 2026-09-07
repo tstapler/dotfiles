@@ -98,103 +98,16 @@ Even the ATS version can show creativity through:
 - Consistent color palette
 - Unified visual identity
 
-### Visual Elements to Consider
-
-**Typography:**
-- Headline font (display, personality)
-- Body font (readable, professional)
-- Size hierarchy (name > sections > body)
-- Line height and letter spacing
-
-**Color:**
-- Brand color for accents
-- High contrast for readability
-- Limited palette (2-3 colors max)
-- Consider print-friendly colors
-
-**Layout:**
-- Consider two-column (for designed version only)
-- Strategic white space
-- Clear visual hierarchy
-- Consistent margins and gutters
-
-**Visual Accents:**
-- Icons (if used, consistently)
-- Dividers and rules
-- Subtle background elements
-- Your logo/personal brand mark
+Typography, color, layout, and accent choices for the designed version are
+detailed in `references/design-specifications.md`, along with execution
+checklists and recommended design tools.
 
 ## Creative Field-Specific Guidance
 
-### Graphic Designers
-
-**Must Show:**
-- Typography skills
-- Layout and composition
-- Visual hierarchy
-- Attention to detail
-
-**Resume Approach:**
-- Your resume IS a portfolio piece
-- Clean, sophisticated design
-- Show range through subtle choices
-- Link to portfolio for variety
-
-### UX/Product Designers
-
-**Must Show:**
-- Information architecture skills
-- User-centered thinking
-- Clear visual hierarchy
-- Systematic approach
-
-**Resume Approach:**
-- Scannable, organized structure
-- Clear content hierarchy
-- User (recruiter) focused organization
-- Link to case studies
-
-### Marketing/Brand
-
-**Must Show:**
-- Brand thinking
-- Storytelling ability
-- Strategic communication
-- Attention to audience
-
-**Resume Approach:**
-- On-brand visual identity
-- Compelling narrative flow
-- Strategic content choices
-- Proof points for claims
-
-### Writers/Content
-
-**Must Show:**
-- Writing quality
-- Editing precision
-- Clear communication
-- Voice and style
-
-**Resume Approach:**
-- Impeccable copy
-- Strong bullets
-- Zero errors
-- Personality through writing
-
-### Photographers/Video
-
-**Must Show:**
-- Visual eye
-- Production quality
-- Technical skill
-- Aesthetic sensibility
-
-**Resume Approach:**
-- Clean, uncluttered design
-- Strong portfolio link
-- Quality over quantity
-- Let portfolio speak
+What each discipline's resume must demonstrate — Graphic Design, UX/Product
+Design, Marketing/Brand, Writing/Content, and Photography/Video — and the
+resume approach that best shows it is detailed in
+`references/field-specific-guidance.md`.
 
 ## Portfolio Integration
 
@@ -223,50 +136,6 @@ Portfolio: yourname.com
 - Offer PDF download for convenience
 - Ensure web version is responsive
 - Keep updated with main resume
-
-## Design Execution Tips
-
-### Typography Checklist
-- [ ] Name is largest element
-- [ ] Clear hierarchy (3-4 levels max)
-- [ ] Body text is 10-12pt minimum
-- [ ] Line height allows breathing room
-- [ ] No more than 2 font families
-- [ ] Fonts complement each other
-
-### Layout Checklist
-- [ ] Clear sections and flow
-- [ ] Consistent margins throughout
-- [ ] Adequate white space
-- [ ] Elements align to grid
-- [ ] Visual balance achieved
-- [ ] Scannable in 6 seconds
-
-### Color Checklist
-- [ ] Limited palette (2-3 colors)
-- [ ] High contrast for text
-- [ ] Accessible color choices
-- [ ] Prints well in B&W
-- [ ] Consistent with personal brand
-- [ ] Professional appearance
-
-## Tools for Designed Resumes
-
-**Design Software:**
-- Adobe InDesign (best for layout)
-- Figma (good for web-native)
-- Adobe Illustrator (vector-based)
-- Sketch (Mac option)
-
-**Simpler Options:**
-- Canva (templates available)
-- Google Docs (limited but ATS-safe)
-- Microsoft Word (surprisingly capable)
-
-**Avoid:**
-- PowerPoint/Keynote (not designed for this)
-- Random online resume builders
-- Heavy templates that obscure content
 
 ## Output Format
 

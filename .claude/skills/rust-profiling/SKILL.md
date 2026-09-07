@@ -58,184 +58,22 @@ Without this, flamegraphs show only symbol names with no source locations.
 
 ---
 
-## Step 1 — CPU Profile a Binary
+## Collecting a Profile (Steps 1, 2, 4, 5, 6, 8)
 
-### cargo flamegraph (simplest)
+- **Step 1 — CPU profile a binary:** `cargo flamegraph --bin <bin> -- <args>` (simplest), `samply record` (interactive Firefox Profiler UI), or `perf record -F 997 -g --call-graph=dwarf` directly.
+- **Step 2 — CPU profile a criterion benchmark:** same three tools, pointed at `--bench <name>` or the compiled bench binary in `target/release/deps/`.
+- **Step 4 — Memory profiling:** `heaptrack ./binary` for peak heap / leaked / top-allocators / temporary-allocations breakdown; `valgrind --tool=dhat` for a slower, more detailed alternative.
+- **Step 5 — Differential flamegraph (A/B):** capture `before.collapsed` and `after.collapsed` with perf, then `difffolded.pl before after | flamegraph.pl > diff.svg` (red = regression, blue = improvement).
+- **Step 6 — Criterion regression tracking:** `cargo bench -- --save-baseline before`, then `--baseline before` after changes; HTML report at `target/criterion/report/index.html` (not stored in git).
+- **Step 8 — perf quick reference:** one-shot record+report, time-limited system-wide recording, attaching to a running PID, and `perf stat` for low-overhead counts.
 
-```bash
-# Profile a binary — runs it under perf/dtrace automatically
-cargo flamegraph --bin proextract -- pipeline --scan-dir /path/to/scan --output-dir /tmp/out
-
-# Profile a specific subcommand
-cargo flamegraph --bin proextract -- bpa --input cloud.ply --output mesh.ply
-
-# Increase frequency for short runs (default: 997 Hz; higher = more detail, more overhead)
-cargo flamegraph --freq 4000 --bin proextract -- bpa --input cloud.ply
-
-# Output goes to flamegraph.svg in current directory
-xdg-open flamegraph.svg
-```
-
-### samply (interactive Firefox Profiler UI)
-
-```bash
-# Record then auto-open browser
-samply record ./target/release/proextract pipeline \
-  --scan-dir /path/to/scan --output-dir /tmp/out
-
-# Explicit frequency
-samply record --rate 4000 ./target/release/proextract bpa --input cloud.ply
-```
-
-### perf directly (Linux)
-
-```bash
-# Record
-perf record -F 997 -g --call-graph=dwarf -- ./target/release/proextract bpa --input cloud.ply
-
-# Quick text summary
-perf report --stdio --no-children | head -60
-
-# Collapsed stacks (for LLM analysis or custom flamegraph)
-perf script | /opt/FlameGraph/stackcollapse-perf.pl > cpu.collapsed
-```
-
----
-
-## Step 2 — CPU Profile a Criterion Benchmark
-
-```bash
-# Flamegraph from benchmark (binary already has --bench harness)
-cargo flamegraph --bench bpa_bench -- --bench ball_pivot/sphere/5000
-
-# Profile all benchmarks in a group
-cargo flamegraph --bench bpa_bench -- --bench "ball_pivot"
-
-# samply on a benchmark
-samply record ./target/release/deps/bpa_bench-* --bench "ball_pivot/sphere/5000"
-# Find the binary name with: ls target/release/deps/bpa_bench-*
-
-# perf on a criterion benchmark
-perf record -F 997 -g --call-graph=dwarf \
-  ./target/release/deps/bpa_bench-* --bench "ball_pivot/sphere/5000"
-perf script | /opt/FlameGraph/stackcollapse-perf.pl > bench.collapsed
-```
+Full commands for all of the above: [Collection Commands](references/collection-commands.md).
 
 ---
 
 ## Step 3 — Analyze Collapsed Stacks
 
-### Generate collapsed stacks
-
-```bash
-# From perf recording
-perf script | /opt/FlameGraph/stackcollapse-perf.pl --kernel > cpu.collapsed
-
-# Render SVG from collapsed stacks (same as cargo flamegraph, more control)
-/opt/FlameGraph/flamegraph.pl --title "proextract BPA" cpu.collapsed > flamegraph.svg
-```
-
-### awk extraction from collapsed stacks
-
-```bash
-# Top leaf frames by self-sample count
-awk '{n=$NF; sub(/ [0-9]+$/,""); split($0,a,";"); leaf=a[length(a)]; count[leaf]+=$NF}
-     END{for(f in count) print count[f],f}' \
-  cpu.collapsed | sort -rn | head -20
-
-# Stacks touching a specific function
-grep "bpa::pivot_step" cpu.collapsed | sort -t' ' -k2 -rn | head -10
-
-# Filter to your crate only (remove stdlib + runtime noise)
-grep "proextract" cpu.collapsed | sort -t' ' -k2 -rn | head -30
-```
-
-### Python percentage breakdown
-
-```python
-from collections import defaultdict
-import sys
-
-lines = [l.strip() for l in open(sys.argv[1]) if l.strip()]
-total = sum(int(l.rsplit(" ", 1)[1]) for l in lines)
-by_leaf = defaultdict(int)
-for line in lines:
-    stack, _, count = line.rpartition(" ")
-    leaf = stack.split(";")[-1]
-    by_leaf[leaf] += int(count)
-
-for count, frame in sorted((-v, k) for k, v in by_leaf.items())[:20]:
-    print(f"{100*-count/total:5.1f}%  {-count:6d}  {frame}")
-```
-
-```bash
-python3 analyze.py cpu.collapsed
-```
-
----
-
-## Step 4 — Memory Profiling with heaptrack
-
-```bash
-# Record heap allocations
-heaptrack ./target/release/proextract bpa --input cloud.ply
-
-# heaptrack writes heaptrack.<binary>.<pid>.zst
-# Open GUI
-heaptrack_gui heaptrack.proextract.12345.zst
-
-# Or print text summary
-heaptrack_print heaptrack.proextract.12345.zst | head -80
-```
-
-heaptrack output sections:
-- **Peak heap** — maximum live memory
-- **Leaked** — allocations never freed
-- **Top allocators** — call stacks with highest total bytes allocated
-- **Temporary allocations** — allocated and freed within same call stack (GC pressure equivalent)
-
-### DHAT (Valgrind heap profiler — slower but more detailed)
-
-```bash
-valgrind --tool=dhat --dhat-out-file=dhat.out \
-  ./target/release/proextract bpa --input small_cloud.ply
-# Opens at: https://nnethercote.github.io/dh_view/dh_view.html
-# Upload dhat.out to view
-```
-
----
-
-## Step 5 — Differential Flamegraph (A/B comparison)
-
-```bash
-# Baseline — save as before.collapsed
-perf record -F 997 -g --call-graph=dwarf -- ./target/release/proextract bpa --input cloud.ply
-perf script | /opt/FlameGraph/stackcollapse-perf.pl > before.collapsed
-
-# After code change — save as after.collapsed
-perf script | /opt/FlameGraph/stackcollapse-perf.pl > after.collapsed
-
-# Differential flamegraph (red = regression, blue = improvement)
-/opt/FlameGraph/difffolded.pl before.collapsed after.collapsed | /opt/FlameGraph/flamegraph.pl > diff.svg
-xdg-open diff.svg
-```
-
----
-
-## Step 6 — Criterion Benchmark Regression Tracking
-
-```bash
-# Save a named baseline before changes
-cargo bench -p proextract-pipeline -- --save-baseline before
-
-# After changes — compare
-cargo bench -p proextract-pipeline -- --baseline before
-
-# Open HTML report
-xdg-open target/criterion/report/index.html
-```
-
-Criterion reports: mean, stddev, outliers, and regression/improvement vs baseline. Stored in `target/criterion/` — **not in git by default**.
+Generate with `perf script | stackcollapse-perf.pl > cpu.collapsed`. From there, `awk` extracts top leaf frames by self-sample count or filters to stacks touching a specific function/crate; a short Python script gives a percentage breakdown per leaf frame. Full commands and the Python script: [Collapsed Stack Analysis](references/collapsed-stack-analysis.md).
 
 ---
 
@@ -256,32 +94,7 @@ Criterion reports: mean, stddev, outliers, and regression/improvement vs baselin
 | `nalgebra::*` slow | Linear algebra allocation | Use stack-allocated `nalgebra::SMatrix` |
 | `bytemuck::cast_slice` in loop | Re-casting repeatedly | Cast once outside loop |
 
-### Rust-specific: check for monomorphization bloat
-
-```bash
-# Symbols in the binary — large count of similar names = monomorphization
-nm --demangle target/release/proextract | grep -c "fn "
-cargo bloat --release --crates    # shows which crates dominate binary size
-cargo bloat --release -n 30       # top 30 functions by size
-```
-
----
-
-## Step 8 — Linux perf Quick Reference
-
-```bash
-# One-shot: record + report
-perf record -F 997 -g --call-graph=dwarf -- <cmd> && perf report --stdio --no-children | head -40
-
-# Record with time limit (useful for long-running processes)
-perf record -F 997 -g --call-graph=dwarf -a -- sleep 10  # system-wide for 10s
-
-# Attach to running process
-perf record -F 997 -g --call-graph=dwarf -p <PID> -- sleep 10
-
-# Stat (counts, not stacks — low overhead)
-perf stat -- ./target/release/proextract bpa --input cloud.ply
-```
+Rust-specific monomorphization-bloat check (`nm --demangle`, `cargo bloat`) is in [Collapsed Stack Analysis](references/collapsed-stack-analysis.md).
 
 ---
 

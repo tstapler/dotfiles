@@ -31,58 +31,12 @@ Write `$SESSION_DIR/03-decompiled.md`. Append one-line summary to `$SESSION_DIR/
 
 ---
 
-## analyzeHeadless Reference
+## Headless Automation
 
-Binary: `$GHIDRA_HOME/support/analyzeHeadless`
-
-```bash
-# Import and analyze (run once — slow)
-$GHIDRA_HOME/support/analyzeHeadless \
-  /tmp/ghidra-projects MyProject \
-  -import <target> \
-  -processor x86:LE:64:default \
-  -cspec windows \
-  -analysisTimeoutPerFile 300 \
-  -overwrite
-
-# Run scripts on cached project (fast — no reimport)
-$GHIDRA_HOME/support/analyzeHeadless \
-  /tmp/ghidra-projects MyProject \
-  -process <target-filename> \
-  -noanalysis \
-  -scriptPath "/path/to/scripts" \
-  -scriptlog /tmp/script.log \
-  -postScript ExtractFunctions.py ++output /tmp/functions.json
-```
-
-**Key flags:**
-
-| Flag | Purpose |
-|------|---------|
-| `-import <file>` | Import binary (add `-overwrite` to reimport) |
-| `-process [file]` | Run scripts on existing project (no reimport) |
-| `-noanalysis` | Skip analysis pass (use with `-process` for script-only runs) |
-| `-postScript <Name> [args]` | Script runs AFTER analysis — all API available |
-| `-preScript <Name> [args]` | Script runs BEFORE analysis — functions not yet defined |
-| `-scriptlog <file>` | Redirect script `println()` to file (separates from Ghidra framework log) |
-| `-analysisTimeoutPerFile <sec>` | Kill analysis after N seconds (set 300–600 for large DLLs) |
-| `-loader-loadLibraries true` | Load imported DLLs for cross-DLL xrefs |
-| `-librarySearchPaths "<p1>;<p2>"` | Where to find dependent DLLs |
-| `-processor <langID>` | Force architecture: `x86:LE:64:default` for 64-bit PE |
-| `-cspec <specID>` | Compiler spec: `windows` for Windows PE |
-| `-deleteProject` | Delete project on exit (CI/ephemeral use) |
-
-**Script argument passing** — use `++` prefix (not `-`) to avoid conflict with analyzeHeadless flags:
-```bash
--postScript MyScript.py ++output /tmp/out.json ++verbose
-```
-In script: `args = getScriptArgs()` returns `["++output", "/tmp/out.json", "++verbose"]`
-
-**Common language IDs:**
-- `x86:LE:64:default` — 64-bit x86-64 (most Windows PE/DLL)
-- `x86:LE:32:default` — 32-bit x86
-
----
+Run analysis and scripts via `$GHIDRA_HOME/support/analyzeHeadless`: import once (slow),
+then re-run `-postScript`s against the cached project (fast). Full flag reference,
+`++`-prefixed script argument passing, and the import/reuse pattern are in
+[references/analyzeheadless-reference.md](references/analyzeheadless-reference.md).
 
 ## Python Scripting: PyGhidra (Recommended)
 
@@ -115,134 +69,13 @@ with pyghidra.open_program("/path/to/binary.exe") as flat_api:
 
 **Avoid Jython (Python 2.7, EOL)** — only use for legacy scripts. PyGhidra is the correct Python 3 path.
 
----
+## FlatProgramAPI
 
-## FlatProgramAPI Key Methods
-
-In headless scripts, all FlatProgramAPI methods are callable as bare names. `currentProgram` is available directly.
-
-### Functions
-
-```python
-# Iteration
-func = getFirstFunction()
-while func is not None:
-    print(func.getName(), func.getEntryPoint())
-    func = getFunctionAfter(func)
-
-# Via FunctionManager (complete iterator)
-fm = currentProgram.getFunctionManager()
-for func in fm.getFunctions(True):   # True = forward order
-    pass
-
-# Lookup
-funcs = getGlobalFunctions("CreateFileW")   # returns List[Function]
-func  = getFunctionAt(toAddr(0x140001000))
-func  = getFunctionContaining(toAddr(0x140001234))
-
-# Function object methods
-func.getName()                          # string name
-func.getEntryPoint()                    # Address
-func.getBody()                          # AddressSetView (all addrs in func)
-func.getCalledFunctions(monitor)        # Set[Function] — what it calls
-func.getCallingFunctions(monitor)       # Set[Function] — what calls it
-func.getParameters()                    # Parameter[]
-func.getReturnType()                    # DataType
-func.isThunk()                          # bool
-func.isExternal()                       # bool (imported DLL functions)
-```
-
-### Symbols and Imports
-
-```python
-# Symbol lookup
-sym = getSymbolAt(toAddr(0x140001000))
-syms = getSymbols("CreateFileW", None)   # None = global namespace
-
-# Symbol table iteration
-st = currentProgram.getSymbolTable()
-for sym in st.getAllSymbols(True):
-    print(sym.getName(), sym.getAddress(), sym.getSymbolType())
-
-# Imports via ExternalManager
-em = currentProgram.getExternalManager()
-for lib in em.getExternalLibraryNames():       # e.g. "ws2_32.dll"
-    for loc in em.getExternalLocations(lib):
-        print(lib, loc.getLabel(), loc.getAddress())
-
-# Exports
-for sym in st.getAllSymbols(True):
-    if sym.isExternalEntryPoint():
-        print("Export:", sym.getName(), sym.getAddress())
-```
-
-### Cross-References
-
-```python
-# All callers of a function
-refs = getReferencesTo(func.getEntryPoint())
-for ref in refs:
-    print("From:", ref.getFromAddress(), "Type:", ref.getReferenceType())
-
-# Via ReferenceManager
-rm = currentProgram.getReferenceManager()
-refs = rm.getReferencesTo(addr)
-refs = rm.getReferencesFrom(addr)
-```
-
-### Memory Blocks (Sections)
-
-```python
-for block in getMemoryBlocks():
-    print(block.getName(),
-          hex(block.getStart().getOffset()),
-          block.getSize(),
-          "r" if block.isRead() else "-",
-          "w" if block.isWrite() else "-",
-          "x" if block.isExecute() else "-")
-
-text_block = getMemoryBlock(".text")
-```
-
-### Decompiler API
-
-```python
-from ghidra.app.decompiler import DecompInterface
-from ghidra.util.task import ConsoleTaskMonitor
-
-ifc = DecompInterface()
-ifc.openProgram(currentProgram)
-try:
-    for func in currentProgram.getFunctionManager().getFunctions(True):
-        result = ifc.decompileFunction(func, 60, ConsoleTaskMonitor())
-        if result.decompileCompleted():
-            c_code = result.getDecompiledFunction().getC()
-            print(f"// {func.getName()} @ {func.getEntryPoint()}")
-            print(c_code)
-        else:
-            printerr(f"Failed: {result.getErrorMessage()}")
-finally:
-    ifc.dispose()   # REQUIRED: releases native decompiler process
-```
-
-### JSON Output Pattern
-
-```python
-import json
-
-# Use -scriptlog for clean capture (separates script output from Ghidra log)
-# Invoke: analyzeHeadless ... -scriptlog /tmp/script.log -postScript Script.py
-
-output = []
-for func in currentProgram.getFunctionManager().getFunctions(True):
-    output.append({"name": func.getName(),
-                   "address": str(func.getEntryPoint())})
-
-output_path = getScriptArgs()[0] if getScriptArgs() else "/tmp/output.json"
-with open(output_path, "w") as f:
-    json.dump(output, f, indent=2)
-println(f"Wrote {len(output)} entries to {output_path}")
-```
+In headless scripts, all FlatProgramAPI methods are callable as bare names and
+`currentProgram` is available directly. For function/symbol/xref iteration, memory block
+enumeration, the `DecompInterface` decompiler API (remember `ifc.dispose()` in a
+`finally` block), and the JSON output pattern, see
+[references/flatprogramapi-reference.md](references/flatprogramapi-reference.md).
 
 ---
 
@@ -295,22 +128,6 @@ r2 -q -c "aaa; s sym.main; pdgj" binary.exe | jq .
 ```
 
 Use for: fast batch decompilation, CI pipelines. Weaker than full Ghidra (no RTTI, no PDB, no analysis passes).
-
----
-
-## Project Reuse (Performance)
-
-```bash
-# Import once (slow, ~30–300s)
-analyzeHeadless /tmp/ghidra-projects MyProject \
-  -import binary.exe -processor x86:LE:64:default -cspec windows \
-  -analysisTimeoutPerFile 300 -overwrite
-
-# Re-run scripts without reimporting (fast, ~1–5s)
-analyzeHeadless /tmp/ghidra-projects MyProject \
-  -process binary.exe -noanalysis \
-  -postScript NewScript.py
-```
 
 ---
 

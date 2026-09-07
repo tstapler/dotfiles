@@ -145,6 +145,8 @@ elif [ -f Makefile ] && grep -q "^install:" Makefile; then
 fi
 ```
 
+For PHP, Java/Kotlin (Gradle/Maven), multi-language projects, and the full package-manager detection order, see `project-detection.md`.
+
 **Step 3: Handle setup failures**
 - If setup fails → Read `project-detection.md` for alternatives
 - Report error to user
@@ -184,115 +186,26 @@ if [ -f Makefile ] && grep -q "^test:" Makefile; then make test; fi
 
 ### Phase 6: Completion Report
 
-```markdown
-✅ Worktree ready at <full-path>
-
-**Branch**: <branch-name>
-**Base Branch**: <base-branch>
-
-**Setup Status**:
-- Project type: <detected-type>
-- Setup command: <executed-command>
-- Result: ✅ Success / ⚠️ Failed / ⏭️ Skipped
-
-**Test Status**:
-- Test command: <executed-command>
-- Result: ✅ Pass (<N> tests) / ❌ Fail / ⏭️ Skipped
-- Duration: <seconds>s
-
-**Next Steps**:
-1. cd <worktree-path>
-2. Start working on your feature
-3. When done: git worktree remove <worktree-path>
-
-**Cleanup Command**:
-```bash
-git worktree remove <worktree-path>
-```
-```
+Report the worktree path, branch, setup status, and test status, then the cleanup command. See `references/completion-report-and-lookup.md` for the exact report template.
 
 ## Quick Reference
 
 | Situation | Action |
 |-----------|--------|
 | `.worktrees/` exists | Use it (verify ignored) |
-| `worktrees/` exists | Use it (verify ignored) |
-| Both exist | Use `.worktrees/` |
-| Neither exists | Check CLAUDE.md → Ask user |
+| Neither `.worktrees/` nor `worktrees/` exists | Check CLAUDE.md → Ask user |
 | Directory not ignored | Add to .gitignore + commit |
 | Tests fail during baseline | Report failures + ask |
-| No package.json/Cargo.toml | Skip dependency install |
 | CLAUDE.md has setup_command | Use custom command instead of auto-detect |
 
-## Common Mistakes
-
-### ❌ Skipping ignore verification
-- **Problem**: Worktree contents get tracked, pollute git status
-- **Fix**: Always use `git check-ignore` before creating project-local worktree
-
-### ❌ Assuming directory location
-- **Problem**: Creates inconsistency, violates project conventions
-- **Fix**: Follow priority: existing > CLAUDE.md > ask
-
-### ❌ Proceeding with failing tests
-- **Problem**: Can't distinguish new bugs from pre-existing issues
-- **Fix**: Report failures, get explicit permission to proceed
-
-### ❌ Hardcoding setup commands
-- **Problem**: Breaks on projects using different tools
-- **Fix**: Auto-detect from project files (package.json, Cargo.toml, etc.)
-
-### ❌ Creating worktree without changing directory
-- **Problem**: Setup and tests run in wrong directory
-- **Fix**: Always `cd` into worktree before running setup/tests
-
-## Error Handling
-
-| Error | Cause | Resolution |
-|-------|-------|------------|
-| `fatal: invalid reference` | Branch name conflicts with existing branch | Choose different branch name |
-| `fatal: '<path>' already exists` | Worktree directory exists | Remove existing directory or choose new path |
-| `npm: command not found` | Missing package manager | Install package manager or skip setup |
-| Tests failed in baseline | Pre-existing test failures | Report to user, get permission to continue |
-| Permission denied | Insufficient permissions | Check directory permissions |
-
-For detailed troubleshooting: See `troubleshooting.md`
+Full quick-reference table, common mistakes, and error-to-resolution mapping: [references/completion-report-and-lookup.md](references/completion-report-and-lookup.md). Detailed troubleshooting by error message: `troubleshooting.md`.
 
 ## Integration Points
 
-### CLAUDE.md Directives
+Repositories can override auto-detection via `CLAUDE.md` (`worktree_directory`, `setup_command`, `test_command`). See [references/integration-and-best-practices.md](references/integration-and-best-practices.md) for the directive format, best practices, and related skills.
 
-Add these optional directives to your repository's `CLAUDE.md`:
-
-```markdown
-## Worktree Configuration
-
-worktree_directory: .worktrees    # Default directory for worktrees
-setup_command: make dev-setup     # Override auto-detected setup
-test_command: make verify         # Override auto-detected tests
-```
-
-### Progressive Context Loading
-
-- For detailed package manager detection: See `project-detection.md`
-- For troubleshooting common issues: See `troubleshooting.md`
-
-## Best Practices
-
-1. **Always verify .gitignore** - Prevents accidentally committing worktree directories
-2. **Use descriptive branch names** - Makes worktree management easier (e.g., `feature/auth`, `fix/bug-123`)
-3. **Clean up when done** - Remove worktrees after merging: `git worktree remove <dir>`
-4. **Check test baseline** - Ensures you start with passing tests
-5. **Document in CLAUDE.md** - Add `worktree_directory` for consistent team usage
-6. **Use project-local for team projects** - Use `.worktrees/` so team members use same location
-7. **Use global for personal projects** - Use `~/.claude/worktrees/` to keep workspace clean
-
-## Example Workflow
-
-```
-You: I need to work on authentication feature
-
----
+For detailed package manager detection: See `project-detection.md`.
+For troubleshooting common issues: See `troubleshooting.md`.
 
 ## Related Skills
 

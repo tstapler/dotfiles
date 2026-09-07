@@ -36,190 +36,18 @@ Use this skill when the user wants to:
 
 ## Profile Section Optimization
 
-### 1. Profile Photo
+Work through each section in order — photo and banner establish credibility, the headline and About section drive searchability, Experience and Skills carry the keyword weight, and Featured/Recommendations add social proof:
 
-**Requirements:**
-- Professional headshot (not casual photo)
-- Face takes up 60% of frame
-- Neutral or branded background
-- Good lighting, high resolution
-- Appropriate attire for your industry
-- Friendly expression (slight smile)
+1. **Profile Photo** — professional headshot, face ~60% of frame, neutral/branded background (21x more views than no photo)
+2. **Background Banner** — professional design or industry image, 1584x396px, avoid busy patterns
+3. **Headline** — most important field for searchability; formula `[Role] | [Key Expertise] | [Value Proposition]`, packed with recruiter-searched keywords (220 char limit)
+4. **About Section** — hook + 3-5 paragraphs (who you are, achievements, what you're looking for) + skills list + CTA; first ~300 characters are what shows before "see more" (2,600 char limit)
+5. **Experience Section** — longer/more detailed than a resume, with media attachments; 4-6 achievement bullets per role
+6. **Skills Section** — list all 50 slots, ordered by relevance/endorsements, mixing technical, tool, methodology, and soft skills
+7. **Featured Section** — portfolio pieces, articles, presentations; appears prominently so use it for best work
+8. **Recommendations** — target 5-10 from managers, reports, cross-functional partners, and clients; give recommendations first to prompt reciprocity
 
-**Impact:** Profiles with photos get 21x more views
-
-### 2. Background Banner
-
-**Best Practices:**
-- Use a professional design or industry-related image
-- Can include personal branding elements
-- Size: 1584 x 396 pixels
-- Avoid busy patterns that distract from your photo
-
-**Options:**
-- Company brand (if appropriate)
-- Industry-related imagery
-- Professional abstract design
-- Personal brand statement
-
-### 3. Headline (Most Important for Searchability)
-
-**Character Limit:** 220 characters
-
-**Formula:** [Role] | [Key Expertise] | [Value Proposition]
-
-**Examples:**
-
-❌ **Weak Headlines:**
-- "Looking for opportunities"
-- "Unemployed Product Manager"
-- "Student at University"
-- "Open to work"
-
-✅ **Strong Headlines:**
-```
-Senior Product Manager | B2B SaaS | Driving 0→1 Products from Concept to $10M ARR
-
-Data Scientist | Machine Learning & Analytics | Turning Data into Business Decisions
-
-Software Engineer | Python, AWS, Kubernetes | Building Scalable Systems at Fortune 500
-
-Marketing Director | Growth & Brand Strategy | 3x Revenue Growth at Series B Startups
-```
-
-**Keyword Strategy:**
-Include terms recruiters search for:
-- Your job title (and variations)
-- Key skills (languages, tools, methodologies)
-- Industry terms
-- Certifications
-
-### 4. About Section (Summary)
-
-**Character Limit:** 2,600 characters
-**Recommended Length:** 1,500-2,000 characters (3-5 paragraphs)
-
-**Structure:**
-
-```
-[HOOK - Compelling first line that shows up in preview]
-
-[PARAGRAPH 1: Who you are and what you do]
-
-[PARAGRAPH 2: Your key achievements and specialties]
-
-[PARAGRAPH 3: What you're looking for or passionate about]
-
-[SKILLS LIST: Core competencies, searchable keywords]
-
-[CALL TO ACTION: How to reach you]
-```
-
-**Example:**
-
-```
-I help SaaS companies turn product ideas into revenue.
-
-For the past 8 years, I've been building products that people actually want to use. From a payments platform that processed $50M monthly to a developer tool used by 100K+ engineers, I've led cross-functional teams from idea to launch and beyond.
-
-What I do best:
-→ Transform ambiguous customer problems into clear product roadmaps
-→ Build and lead high-performing product teams
-→ Drive growth through data-informed decision making
-→ Bridge technical and business stakeholders
-
-Currently, I'm a Senior Product Manager at [Company], where I lead our API platform serving 500+ enterprise customers. Previously, I led product at [Previous Company] through their Series B and 10x growth.
-
-Key skills: Product Strategy, Roadmap Planning, Agile/Scrum, User Research, A/B Testing, SQL, Data Analysis, Stakeholder Management, B2B SaaS, API Products
-
-Let's connect! I'm always happy to chat about product, SaaS, or career advice for aspiring PMs. Reach me at [email].
-```
-
-**First Line is Crucial:**
-Only ~300 characters show before "see more" - make them count!
-
-### 5. Experience Section
-
-**Key Differences from Resume:**
-- Can be longer and more detailed
-- Should include media (presentations, links)
-- Can show personality
-- Update regularly (not just when job hunting)
-
-**For Each Role Include:**
-- Clear job title
-- Company (with logo linked)
-- Date range
-- Location
-- Description (2-3 sentences about the role)
-- 4-6 bullet points with achievements
-- Media attachments if available
-
-**Example:**
-
-```
-Senior Product Manager
-TechCorp Inc. · Full-time
-Jan 2021 - Present · 3 yrs 1 mo
-San Francisco, CA · Hybrid
-
-Leading product strategy for TechCorp's API Platform, serving 500+ enterprise customers and generating $20M ARR.
-
-• Grew platform revenue from $5M to $20M ARR by launching 3 new product lines and expanding into enterprise segment
-• Led cross-functional team of 15 (engineering, design, data) to deliver 25+ features with 95% on-time delivery rate  
-• Improved customer retention from 82% to 94% through proactive feature development based on usage analytics
-• Established product analytics framework using Amplitude, increasing feature adoption by 40%
-• Collaborated with sales team to close 50+ enterprise deals worth $10M+ by participating in technical sales calls
-
-Skills: Product Management · B2B SaaS · API Design · Agile Methodology · Stakeholder Management
-```
-
-### 6. Skills Section
-
-**Strategy:**
-- List up to 50 skills (use all 50!)
-- Order by relevance and endorsements
-- Get endorsements for top skills
-- Include both technical and soft skills
-
-**Categories to Include:**
-- Job-specific skills (Product Management, Data Analysis)
-- Tools (JIRA, Salesforce, Python)
-- Methodologies (Agile, Six Sigma)
-- Soft skills (Leadership, Communication)
-- Industry terms (B2B, SaaS, Enterprise)
-
-**Top 3 Featured Skills:**
-Choose your three most important, most endorsed skills
-
-### 7. Featured Section
-
-**Use For:**
-- Portfolio pieces
-- Published articles
-- Presentations
-- Media coverage
-- Important posts
-- Project highlights
-
-**Why It Matters:**
-Appears prominently on profile - showcase your best work
-
-### 8. Recommendations
-
-**Target:** 5-10 quality recommendations
-
-**Best Sources:**
-- Former managers
-- Direct reports
-- Cross-functional partners
-- Clients/customers
-
-**How to Get Them:**
-1. Give recommendations first
-2. Ask specific people directly
-3. Make it easy - suggest talking points
-4. Time it right (after successful project)
+See `references/profile-section-guide.md` for full requirements, character limits, and worked examples (headlines, About section, Experience entry) for each section.
 
 ## Keyword Optimization
 
@@ -308,46 +136,9 @@ Ensure these are ON:
 
 ## Output Format
 
-When optimizing a LinkedIn profile:
+Report the optimization as: current profile assessment (completeness %, searchability score, key issues), then optimized sections (headline before/after, full About text, per-role Experience improvements, skills to add, keywords integrated), then a numbered action-item checklist.
 
-```markdown
-# LINKEDIN PROFILE OPTIMIZATION
-
-## Current Profile Assessment
-**Completeness:** X%
-**Searchability Score:** X/10
-**Key Issues:** [List]
-
-## Optimized Sections
-
-### Headline
-**Current:** [Their current headline]
-**Optimized:** [New headline with keywords]
-
-### About Section
-[Full optimized About section text]
-
-### Experience Improvements
-**[Company Name]**
-- Add: [Suggested additions]
-- Modify: [Suggested changes]
-- Media to add: [Suggestions]
-
-### Skills to Add
-[List of skills to add based on target roles]
-
-### Keywords Integrated
-[List of keywords added throughout profile]
-
-## Action Items
-1. [ ] Update headline
-2. [ ] Rewrite About section
-3. [ ] Update current role description
-4. [ ] Add X skills
-5. [ ] Request X recommendations
-6. [ ] Add featured content
-7. [ ] Upload professional photo
-```
+See `references/output-report-template.md` for the ready-to-fill template.
 
 ## Resume-to-LinkedIn Sync
 

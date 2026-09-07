@@ -95,6 +95,12 @@ tcp[20:1] = 0x01        # first byte of TCP payload = 0x01
 host 192.168.1.100 and udp
 ```
 
+For device-hardware protocols where nothing shows up on a network interface, capture at
+the USB/HID layer instead — see
+[references/usb-hid-capture.md](references/usb-hid-capture.md). For encrypted traffic on
+a Wine target, intercept at the libgnutls layer before it hits the wire — see
+[references/tls-interception.md](references/tls-interception.md).
+
 ---
 
 ## Step 3 — Extract Raw TCP Stream
@@ -156,62 +162,9 @@ sudo ngrep -x -q 'RAVN' \
 # -x = hex output; -q = quiet; -W byline for text protocols
 ```
 
----
-
-## TLS Interception (Wine Targets)
-
-Wine's `secur32.dll` calls the **host system's `libgnutls.so`** via a push/pull adapter.
-This means `ecapture gnutls` intercepts Wine app TLS at the libgnutls layer — no proxy,
-no certificate pinning bypass needed.
-
-```bash
-# Install ecapture (eBPF-based TLS capture)
-# Arch: yay -S ecapture  OR  download from: https://github.com/gojue/ecapture/releases
-
-# Capture TLS plaintext from Wine process
-sudo ecapture gnutls --pid <wine-pid> \
-  -w $SESSION_DIR/captures/tls-plaintext.pcap
-
-# Alternatively, extract session keys and embed in pcapng
-SSLKEYLOGFILE=$SESSION_DIR/captures/tls-keys.log \
-  WINEPREFIX=~/.wine-target wine target.exe
-
-# Embed keys into pcapng for self-contained sharing
-editcap --inject-secrets tls,$SESSION_DIR/captures/tls-keys.log \
-  session-001.pcap $SESSION_DIR/captures/session-tls.pcapng
-```
-
-Note: If target uses statically-linked BoringSSL (uncommon in Win32 apps), ecapture may
-not intercept — use Frida hooks on the SSL_write/SSL_read functions instead.
-
----
-
-## USB / HID Capture
-
-For hardware device protocols over USB:
-
-```bash
-# Load usbmon kernel module
-sudo modprobe usbmon
-
-# Grant capture permissions (or run as root)
-sudo setfacl -m u:$USER:r /dev/usbmon*
-
-# Find USB device bus number
-lsusb | grep -i "scanner\|device-name"
-# e.g. "Bus 001 Device 004" → capture on usbmon1
-
-# Capture USB traffic
-sudo tcpdump -i usbmon1 -w $SESSION_DIR/captures/usb-session.pcap
-
-# In Wireshark/tshark: filter by device address
-tshark -r usb-session.pcap -Y "usb.device_address==4" \
-  -T fields -e usb.capdata 2>/dev/null | tr -d ':' | xxd -r -p \
-  > $SESSION_DIR/captures/usb-payload.bin
-
-# For HID devices: simpler — read directly
-xxd /dev/hidraw0 | head -40
-```
+Once the framing is understood, a Wireshark Lua dissector makes future captures
+self-annotating — see
+[references/wireshark-lua-dissector.md](references/wireshark-lua-dissector.md).
 
 ---
 
@@ -223,46 +176,6 @@ xxd /dev/hidraw0 | head -40
 | Checksum failure | tshark skips reassembly | `tshark -o tcp.check_checksum:FALSE` |
 | Out-of-order misread as retransmit | Gaps in stream | Wireshark GitLab #15993; use `tshark -2` (two-pass) |
 | Multi-PDU gap | Late PDU delivery | Increase `tcp.reassembly_table_size` in prefs |
-
----
-
-## Wireshark Lua Dissector (once structure is known)
-
-```lua
--- minimal_dissector.lua
--- Load: tshark -X lua_script:minimal_dissector.lua -r session.pcap
-local proto = Proto("myproto", "My Protocol")
-
-local fields = {
-    magic      = ProtoField.uint32("myproto.magic",   "Magic",   base.HEX),
-    length     = ProtoField.uint32("myproto.length",  "Length",  base.DEC),
-    msg_type   = ProtoField.uint8 ("myproto.type",    "Type",    base.HEX),
-    payload    = ProtoField.bytes ("myproto.payload", "Payload"),
-}
-proto.fields = fields
-
-function proto.dissector(buf, pinfo, tree)
-    if buf:len() < 9 then
-        pinfo.desegment_len = DESEGMENT_ONE_MORE_SEGMENT
-        return
-    end
-    local payload_len = buf(4, 4):le_uint()
-    local total = 9 + payload_len
-    if buf:len() < total then
-        pinfo.desegment_len = total - buf:len()
-        return
-    end
-    pinfo.cols.protocol = "MYPROTO"
-    local t = tree:add(proto, buf(0, total))
-    t:add_le(fields.magic,    buf(0, 4))
-    t:add_le(fields.length,   buf(4, 4))
-    t:add   (fields.msg_type, buf(8, 1))
-    t:add   (fields.payload,  buf(9, payload_len))
-end
-
--- Register on port (or use heuristic checker)
-DissectorTable.get("tcp.port"):add(9999, proto)
-```
 
 ---
 

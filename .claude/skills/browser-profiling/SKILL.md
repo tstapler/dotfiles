@@ -21,322 +21,65 @@ End-to-end workflow: triage the complaint → capture numeric baseline → isola
 
 ## Step 1 — Capture a Numeric Baseline
 
-Never skip this. "It feels slow" is not a measurement. Run this Playwright script before touching code; compare after fixes.
+Never skip this. "It feels slow" is not a measurement. Run a Playwright script before touching code that captures `page.metrics()` deltas, long-task counts, and a Chrome trace file — then compare after fixes.
 
-```javascript
-// scripts/perf-baseline.js — run with: node scripts/perf-baseline.js
-const { chromium } = require('playwright');
-
-async function captureBaseline(url, scenarioFn, label = 'baseline') {
-  const browser = await chromium.launch();
-  const page = await browser.newPage();
-
-  // Inject Web Vitals + Long Task observer
-  await page.addInitScript(() => {
-    window.__perfData__ = { longTasks: [], vitals: {} };
-    new PerformanceObserver(list => {
-      list.getEntries().forEach(e => window.__perfData__.longTasks.push({
-        duration: e.duration, startTime: e.startTime
-      }));
-    }).observe({ entryTypes: ['longtask'] });
-  });
-
-  // Capture Chrome trace
-  await browser.startTracing(page, {
-    path: `trace-${label}.json`,
-    screenshots: false,
-    categories: ['devtools.timeline', 'v8', 'blink.user_timing', 'disabled-by-default-v8.cpu_profiler'],
-  });
-
-  const before = await page.metrics();
-  await page.goto(url, { waitUntil: 'networkidle' });
-  await scenarioFn(page);
-  const after = await page.metrics();
-
-  await browser.stopTracing();
-
-  const delta = {
-    scriptDuration:    (after.ScriptDuration    - before.ScriptDuration).toFixed(3),
-    layoutCount:        after.LayoutCount        - before.LayoutCount,
-    recalcStyleCount:   after.RecalcStyleCount   - before.RecalcStyleCount,
-    heapGrowthMB:      ((after.JSHeapUsedSize    - before.JSHeapUsedSize) / 1024 / 1024).toFixed(2),
-    nodes:              after.Nodes              - before.Nodes,
-  };
-
-  const longTasks = await page.evaluate(() => window.__perfData__.longTasks);
-  console.log(`\n=== ${label} ===`);
-  console.log('Metrics delta:', delta);
-  console.log(`Long tasks (>50ms): ${longTasks.length}`, longTasks.map(t => `${t.duration.toFixed(0)}ms`));
-
-  await browser.close();
-  return { delta, longTasks, traceFile: `trace-${label}.json` };
-}
-
-// Usage:
-captureBaseline('http://localhost:8543', async (page) => {
-  await page.click('[data-testid="sessions-list"]');
-  await page.waitForSelector('[data-testid="session-item"]');
-}, 'sessions-list');
-```
-
-**Load the `.json` trace file**: Open Chrome DevTools → Performance tab → drag-and-drop the file. This gives you the exact flamechart, long tasks, and timeline for the scenario.
+See [Baseline Capture and Fix Verification](references/baseline-and-verification.md) for the full `perf-baseline.js` script and the Step 6 verification workflow.
 
 ---
 
 ## Step 2 — Add React `<Profiler>` to Slow Subtrees
 
-Wrap the component tree you suspect. `onRender` fires every commit; log `actualDuration` to spot expensive trees.
-
-```tsx
-import { Profiler, type ProfilerOnRenderCallback } from 'react';
-
-const onRender: ProfilerOnRenderCallback = (
-  id,             // which Profiler ("SessionList")
-  phase,          // "mount" | "update" | "nested-update"
-  actualDuration, // ms spent rendering this update
-  baseDuration,   // ms if no memoization (worst-case reference)
-) => {
-  if (actualDuration > 16) {  // > 1 frame at 60fps
-    console.warn(`[Profiler] ${id} (${phase}): ${actualDuration.toFixed(1)}ms  (base: ${baseDuration.toFixed(1)}ms)`);
-  }
-};
-
-// Wrap the subtree under investigation:
-<Profiler id="SessionList" onRender={onRender}>
-  <SessionList />
-</Profiler>
-```
+Wrap the suspect component tree in a `<Profiler>`; its `onRender` callback reports `actualDuration` (this render) vs `baseDuration` (worst case without memoization).
 
 **Key ratio**: `actualDuration / baseDuration`
 - Near **1.0** → memoization is absent or not helping; every component in the subtree re-renders
 - Near **0.1** → memoization works; only ~10% of the subtree re-renders on updates
 
-**React Performance Tracks (React 19 + Chrome DevTools)**: Open DevTools Performance panel, record, and look for the "Scheduler" and "Components" tracks. These appear automatically in dev builds. Look for:
-- Wide bars in the **Blocking** lane → synchronous updates blocking interaction
-- **Cascading updates** flag → a render triggered another render (typically `useEffect` setting state)
+In the Chrome DevTools Performance panel (React 19+), the "Scheduler" and "Components" tracks show wide bars in the **Blocking** lane (synchronous updates) or a **Cascading updates** flag (a render triggering another render).
+
+See [React Profiler and Re-render Detection](references/react-profiler.md) for the `<Profiler>` code and the `why-did-you-render` dev tool.
 
 ---
 
 ## Step 3 — Read the Chrome Performance Panel
 
-### Recording a trace manually
-
 1. Open DevTools → Performance tab
-2. **CPU throttling**: set to `4×` or `6×` to simulate mobile (reproduces problems on fast machines)
+2. Set **CPU throttling** to `4×`–`6×` to simulate mobile (reproduces problems that don't show on fast machines)
 3. Click **Record** → reproduce the slow action → **Stop**
-4. Look at the **Main** thread row
+4. Read the **Main** thread row: Bottom-Up tab sorted by Self Time finds the expensive function; Call Tree tab sorted by Total Time finds the entry point that triggers the most work
 
-### Reading the flamechart
-
-| What you see | What it means |
-|-------------|---------------|
-| Red-flagged gray bars | Long Tasks (>50ms) — main thread blocked |
-| Wide flat bars | High self-time — this function is expensive |
-| Tall deep stacks | Long call chains — usually framework overhead, not your code |
-| "Forced reflow" warning | Layout thrashing (read geometry + write style in a loop) |
-| `(garbage collector)` bars | GC pressure — too many allocations |
-
-**Bottom-Up tab**: Sort by "Self Time" to find the actual expensive function (not its callers).  
-**Call Tree tab**: Sort by "Total Time" to find which entry point triggers the most work.
-
-### Key scripting events to find in the timeline
-
-| Event name | Diagnosis |
-|-----------|-----------|
-| `Timer Fired` repeatedly | `setInterval` / `setTimeout` doing expensive work |
-| `Animation Frame Fired` | `requestAnimationFrame` loop — check what's inside |
-| `Recalculate Style` | CSS selector matching triggered — check if batched |
-| `Layout` after `Recalculate Style` | Full layout reflow — check for layout thrashing |
-| `GC Event` > 5ms frequently | Allocation churn — look for object creation in hot paths |
+See [Reading the Chrome Performance Panel](references/chrome-performance-panel.md) for the flamechart legend and key event names to search for.
 
 ---
 
 ## Step 4 — Diagnose by Layer
 
-### React re-render cascade
+Once you know the layer (from Step 1's trace or Step 3's panel), match the symptom to a fix:
 
-**Symptom**: `<Profiler>` shows `actualDuration` close to `baseDuration`; Components track shows most of the tree re-rendering on every keystroke.
+| Layer | Symptom |
+|-------|---------|
+| React re-render cascade | `<Profiler>` ratio near 1.0; most of the tree re-renders on every keystroke |
+| Long tasks / JS-heavy interaction | Red-flagged tasks >50ms on interaction; INP > 200ms |
+| Layout thrashing | "Forced reflow" warnings; `Layout` events interleaved with JS |
+| Bundle size / dead code | Slow initial load; large `node_modules` in the critical bundle |
 
-**Cause lookup**:
-
-| Anti-pattern | Fix |
-|-------------|-----|
-| Inline `style={{ }}` or `onClick={() => fn()}` on a memoized child | Extract to `const` at module scope (objects) or `useCallback` (functions) |
-| Context value is a new object every render | `useMemo(() => ({ count, setCount }), [count])` around context value |
-| Array index used as `key` | Use stable item IDs as keys |
-| `useEffect` sets state unconditionally | Derive value during render with `useMemo`; don't sync state to props |
-| Expensive compute on every render | `useMemo(() => heavyFn(input), [input])` |
-
-**why-did-you-render** (development only — install `@welldone-software/why-did-you-render`):
-```javascript
-// src/wdyr.js — import BEFORE React in dev only
-if (process.env.NODE_ENV === 'development') {
-  const whyDidYouRender = require('@welldone-software/why-did-you-render');
-  whyDidYouRender(React, { trackAllPureComponents: true });
-}
-// Then on a specific component:
-MyComponent.whyDidYouRender = true;
-```
-Console output: "Re-rendered — same props" with the specific prop that changed identity.
-
-### Long tasks / JS-heavy interaction
-
-**Symptom**: Performance panel shows red-flagged tasks >50ms on interaction; INP > 200ms.
-
-Fix pattern — break work with `scheduler.yield()`:
-```javascript
-async function processLargeList(items) {
-  const results = [];
-  for (let i = 0; i < items.length; i++) {
-    results.push(expensiveTransform(items[i]));
-    // Yield every 50 items to unblock user input
-    if (i % 50 === 0) {
-      await scheduler.yield();  // or: await new Promise(r => setTimeout(r, 0));
-    }
-  }
-  return results;
-}
-```
-
-Use React's `startTransition` for non-urgent state updates that trigger expensive re-renders:
-```javascript
-const [isPending, startTransition] = useTransition();
-
-function handleInput(value) {
-  setInputValue(value);  // urgent — updates the input immediately
-  startTransition(() => {
-    setFilteredResults(expensiveFilter(value));  // non-urgent — can be interrupted
-  });
-}
-```
-
-### Layout thrashing
-
-**Symptom**: "Forced reflow" warnings in Performance panel; `Layout` events interleaved with JS in the flamechart.
-
-```javascript
-// BAD — read → write → read (browser forced to relayout twice)
-elements.forEach(el => {
-  const w = el.offsetWidth;         // READ: forces layout
-  el.style.width = (w + 10) + 'px'; // WRITE: invalidates layout
-});
-
-// GOOD — batch all reads, then all writes (one layout)
-const widths = elements.map(el => el.offsetWidth);           // all READs
-elements.forEach((el, i) => el.style.width = (widths[i] + 10) + 'px'); // all WRITEs
-```
-
-Properties that force layout: `offsetWidth/Height`, `clientWidth/Height`, `scrollTop`, `getBoundingClientRect()`, `getComputedStyle()`.
-
-### Bundle size / dead code
-
-**Measure unused JS** with the Playwright coverage API:
-```javascript
-await page.coverage.startJSCoverage();
-await page.goto(url, { waitUntil: 'networkidle' });
-// Interact with the main scenario
-const coverage = await page.coverage.stopJSCoverage();
-
-let used = 0, total = 0;
-for (const entry of coverage) {
-  total += entry.text.length;
-  for (const range of entry.ranges) used += range.end - range.start;
-}
-console.log(`JS used: ${(used / total * 100).toFixed(1)}% of ${(total / 1024).toFixed(0)}KB`);
-```
-
-**Visualize with source-map-explorer** (works with any bundler):
-```bash
-npm install --save-dev source-map-explorer
-npm run build
-npx source-map-explorer 'build/static/js/*.js'
-```
-
-**What to look for**:
-- Duplicate packages (two versions of same library)
-- Large utility libraries included whole (e.g., all of lodash instead of `lodash/get`)
-- `node_modules` in the critical bundle that should be lazy-loaded
-
-Fix: dynamic `import()` for non-critical routes (React.lazy + Suspense):
-```tsx
-const HeavyPanel = React.lazy(() => import('./HeavyPanel'));
-
-<Suspense fallback={<Spinner />}>
-  <HeavyPanel />
-</Suspense>
-```
+See [Diagnose by Layer](references/diagnose-by-layer.md) for the anti-pattern tables and fix code for each (memoization, `scheduler.yield()`/`startTransition`, batched reads/writes, `source-map-explorer` + `React.lazy`).
 
 ---
 
 ## Step 5 — Memory Leak Detection
 
-**Symptom**: JS Heap in Task Manager grows over time and doesn't return to baseline after GC.
+**Symptom**: JS Heap grows over time in Task Manager and doesn't return to baseline after GC.
 
-### Quick check via Playwright
+Quick check: run 10 cycles of the suspect action via Playwright, force GC, and compare `page.metrics()` heap size before/after — growth over ~5MB warrants a DevTools Heap Snapshot comparison (sort by "# New" objects). The most common React leak is a missing `useEffect` cleanup for an event listener.
 
-```javascript
-const before = await page.metrics();
-// Perform 10 cycles of the leaky action (e.g., open/close modal)
-for (let i = 0; i < 10; i++) {
-  await page.click('[data-testid="open-modal"]');
-  await page.click('[data-testid="close-modal"]');
-}
-// Force GC if possible, then wait
-await page.evaluate(() => window.gc && window.gc());
-await page.waitForTimeout(500);
-const after = await page.metrics();
-
-const leakMB = (after.JSHeapUsedSize - before.JSHeapUsedSize) / 1024 / 1024;
-console.log(`Heap growth after 10 cycles: ${leakMB.toFixed(2)}MB`);
-if (leakMB > 5) console.warn('Likely memory leak — investigate with DevTools Heap Snapshot');
-```
-
-### Chrome DevTools Memory panel workflow
-
-1. **Heap Snapshot** → take snapshot A (baseline)
-2. Perform the leaky action N times
-3. **Heap Snapshot** → take snapshot B
-4. Switch to **Comparison** view (dropdown in snapshot B)
-5. Sort by **# New** — these objects were allocated and not freed
-
-**Look for**:
-- `Detached HTMLDivElement` / `Detached HTMLSpanElement` — DOM nodes removed from the tree but still referenced in JS
-- React component instances that should have been unmounted
-- Event listener accumulation (`EventListener` objects growing)
-
-**Most common React leak**:
-```tsx
-// BAD — event listener added but never removed
-useEffect(() => {
-  window.addEventListener('resize', updateLayout);
-  // missing cleanup!
-}, []);
-
-// GOOD
-useEffect(() => {
-  window.addEventListener('resize', updateLayout);
-  return () => window.removeEventListener('resize', updateLayout);
-}, []);
-```
+See [Memory Leak Detection](references/memory-leak-detection.md) for the Playwright check script and the DevTools Heap Snapshot workflow.
 
 ---
 
 ## Step 6 — Verify the Fix
 
-Run the same baseline script from Step 1 with a new label; compare numbers:
-
-```bash
-node scripts/perf-baseline.js  # saves trace-after.json
-```
-
-**Pass criteria**:
-- `scriptDuration` delta reduced by target %
-- Long task count reduced or longest task < 50ms
-- `<Profiler>` `actualDuration / baseDuration` ratio improved
-- No new long tasks introduced elsewhere (check the full trace)
-- If fixing a memory leak: heap growth across 10 cycles < 1MB
-
-Load `trace-after.json` in DevTools alongside `trace-baseline.json` and confirm the specific long task is gone.
+Re-run the Step 1 baseline script with a new label and compare against the original trace. Pass criteria: reduced `scriptDuration` delta, fewer/shorter long tasks, improved `<Profiler>` ratio, no new long tasks elsewhere, and (for leaks) heap growth under 1MB across 10 cycles. Full checklist in [Baseline Capture and Fix Verification](references/baseline-and-verification.md).
 
 ---
 
