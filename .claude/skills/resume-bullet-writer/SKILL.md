@@ -1,5 +1,5 @@
 ---
-name: Resume Bullet Writer
+name: resume-bullet-writer
 description: Transform weak resume bullets into achievement-focused statements with metrics and impact
 ---
 

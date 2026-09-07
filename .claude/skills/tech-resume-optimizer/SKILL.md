@@ -1,5 +1,5 @@
 ---
-name: Tech Resume Optimizer
+name: tech-resume-optimizer
 description: Optimize resumes for software engineering, PM, and technical roles
 ---
 

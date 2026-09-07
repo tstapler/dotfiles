@@ -1,5 +1,5 @@
 ---
-name: Resume Formatter
+name: resume-formatter
 description: Ensure ATS-friendly formatting and create clean scannable layouts
 ---
 

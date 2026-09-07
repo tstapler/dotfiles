@@ -1,5 +1,5 @@
 ---
-name: LinkedIn Profile Optimizer
+name: linkedin-profile-optimizer
 description: Optimize LinkedIn profile for searchability, recruiter visibility, and engagement
 ---
 

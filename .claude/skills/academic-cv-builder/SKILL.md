@@ -1,5 +1,5 @@
 ---
-name: Academic CV Builder
+name: academic-cv-builder
 description: Format CVs for academic positions with publications, grants, and teaching
 ---
 

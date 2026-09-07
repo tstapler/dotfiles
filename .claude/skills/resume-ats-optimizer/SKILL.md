@@ -1,5 +1,5 @@
 ---
-name: Resume ATS Optimizer
+name: resume-ats-optimizer
 description: Optimize resumes for Applicant Tracking Systems, check ATS compatibility, and analyze keyword match
 ---
 

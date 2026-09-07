@@ -1,5 +1,5 @@
 ---
-name: Job Description Analyzer
+name: job-description-analyzer
 description: Analyze job postings, calculate match scores, identify gaps, and create application strategy
 ---
 

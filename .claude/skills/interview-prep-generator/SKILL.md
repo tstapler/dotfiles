@@ -1,5 +1,5 @@
 ---
-name: Interview Prep Generator
+name: interview-prep-generator
 description: Generate STAR stories, practice questions, and talking points from resume
 ---
 

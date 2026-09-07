@@ -1,5 +1,5 @@
 ---
-name: Creative Portfolio Resume
+name: creative-portfolio-resume
 description: Balance visual design with ATS compatibility for creative roles
 ---
 

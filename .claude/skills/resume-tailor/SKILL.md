@@ -1,5 +1,5 @@
 ---
-name: Resume Tailor
+name: resume-tailor
 description: Customize resume for specific job postings while maintaining truthfulness
 ---
 

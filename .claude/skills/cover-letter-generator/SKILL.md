@@ -1,5 +1,5 @@
 ---
-name: Cover Letter Generator
+name: cover-letter-generator
 description: Create personalized, compelling cover letters from resume and job description
 ---
 

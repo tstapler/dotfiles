@@ -1,5 +1,5 @@
 ---
-name: Portfolio Case Study Writer
+name: portfolio-case-study-writer
 description: Transform resume bullets into detailed portfolio case studies
 ---
 

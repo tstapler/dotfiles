@@ -1,5 +1,5 @@
 ---
-name: Salary Negotiation Prep
+name: salary-negotiation-prep
 description: Research market rates, build negotiation strategy, and create counter-offer scripts
 ---
 

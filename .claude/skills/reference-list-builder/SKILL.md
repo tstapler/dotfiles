@@ -1,5 +1,5 @@
 ---
-name: Reference List Builder
+name: reference-list-builder
 description: Format professional references properly and prepare reference materials
 ---
 

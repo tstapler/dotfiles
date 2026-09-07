@@ -1,5 +1,5 @@
 ---
-name: Career Changer Translator
+name: career-changer-translator
 description: Translate skills from one industry to another, identify transferable skills
 ---
 

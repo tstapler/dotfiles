@@ -1,5 +1,5 @@
 ---
-name: Offer Comparison Analyzer
+name: offer-comparison-analyzer
 description: Compare multiple job offers side-by-side with total compensation analysis
 ---
 

@@ -1,5 +1,5 @@
 ---
-name: Resume Version Manager
+name: resume-version-manager
 description: Track different resume versions, maintain master resume, manage tailored versions
 ---
 

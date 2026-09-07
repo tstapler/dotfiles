@@ -1,5 +1,5 @@
 ---
-name: Resume Section Builder
+name: resume-section-builder
 description: Create targeted resume sections optimized for different experience levels and roles
 ---
 

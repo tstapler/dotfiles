@@ -1,5 +1,5 @@
 ---
-name: Executive Resume Writer
+name: executive-resume-writer
 description: Create C-suite and VP level resumes emphasizing strategic leadership
 ---
 

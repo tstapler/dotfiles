@@ -1,5 +1,5 @@
 ---
-name: Resume Quantifier
+name: resume-quantifier
 description: Find opportunities to add metrics and estimate numbers when exact data unavailable
 ---
 
