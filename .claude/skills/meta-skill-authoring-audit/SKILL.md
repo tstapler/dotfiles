@@ -12,6 +12,12 @@ Run the deterministic pass first, then apply judgment to what it can't check.
 `stapler-scripts/lint-claude-kb` (`make lint-skills`; tested by `make test-lint-skills` against
 synthetic fixtures, not the live repo) catches the mechanical half of this, all sourced from
 [Anthropic's Skill authoring guidance](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices):
+- `invalid-skill-location`: a bare `<name>.md` sitting directly under `.claude/skills/` instead of
+  `<name>/SKILL.md`. **This is the single highest-value check** — Claude Code's own spec is
+  unambiguous ("Create Skills as directories with SKILL.md files"), and a flat file in this shape
+  is never discovered or triggered, no matter how well-formed its frontmatter is. It looks like a
+  working skill, reads like one, and simply never fires. Found 75 instances in this repo on first
+  run (68 genuinely non-functional, 7 harmless dead duplicates of an already-working directory).
 - frontmatter `name:`/dirname drift, missing `description:`
 - `name:` over 64 chars, outside lowercase/digits/hyphens, or `description:` over 1,024 chars or
   containing a paired XML-like tag (`<example>...</example>`, not a bare `<placeholder>` — this

@@ -28,6 +28,11 @@ https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices
                        "keep references one level deep from SKILL.md")
   windows-path        a backslash-style file path in the body text (guidance:
                        "always use forward slashes, even on Windows")
+  invalid-skill-location  a bare `<name>.md` sitting directly under .claude/skills/
+                       instead of `<name>/SKILL.md` — per Claude Code's own spec
+                       ("Create Skills as directories with SKILL.md files"), this
+                       is NEVER discovered/triggered, regardless of how well-formed
+                       its frontmatter is
   dangling-symlink    a symlink under .claude/{skills,agents,commands} whose
                        target doesn't resolve (node_modules/.venv/.git skipped —
                        those legitimately don't exist until installed)
@@ -301,6 +306,26 @@ def check_dangling_symlinks(base: Path) -> list[Finding]:
     return findings
 
 
+def check_invalid_location(path: Path, skills_dir: Path) -> list[Finding]:
+    """Claude Code's own spec is unambiguous: "Create Skills as directories
+    with SKILL.md files. Claude discovers and uses them automatically" —
+    https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview#skill-structure.
+    A bare `<name>.md` sitting directly under .claude/skills/ is not a
+    recognized Skill shape at all; Claude Code never reads it. This is a
+    silent failure — the file looks fine, reads fine, and simply never
+    triggers."""
+    if path.parent != skills_dir or path.name == "SKILL.md":
+        return []
+    counterpart = skills_dir / path.stem / "SKILL.md"
+    if counterpart.exists():
+        detail = (f"dead duplicate — {path.stem}/SKILL.md already exists and is what Claude Code "
+                   "actually loads; this flat file is never read")
+    else:
+        detail = ("never discoverable — Claude Code only loads Skills as `<name>/SKILL.md` "
+                   f"directories; move this to {path.stem}/SKILL.md")
+    return [Finding("error", "invalid-skill-location", path, detail)]
+
+
 def check_broken_refs(path: Path, valid_ids: set[str]) -> list[Finding]:
     findings: list[Finding] = []
     text = path.read_text(encoding="utf-8", errors="replace")
@@ -322,6 +347,7 @@ def main() -> int:
         findings += check_name_and_description(path, expected_id)
         findings += check_oversized(path, expected_id)
         findings += check_nested_references(path.parent)
+        findings += check_invalid_location(path, SKILLS)
     for path, expected_id in iter_agent_files():
         findings += check_name_and_description(path, expected_id, is_agent=True)
 

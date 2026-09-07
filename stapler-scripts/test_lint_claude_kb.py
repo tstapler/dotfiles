@@ -177,6 +177,37 @@ class NestedReferencesTests(unittest.TestCase):
             self.assertEqual([f.check for f in findings], ["nested-references"])
 
 
+class InvalidSkillLocationTests(unittest.TestCase):
+    def test_flat_md_with_no_directory_counterpart_is_orphaned(self):
+        with tempfile.TemporaryDirectory() as d:
+            skills_dir = Path(d)
+            p = write(skills_dir / "some-skill.md", "---\nname: some-skill\n---\n")
+            findings = lint.check_invalid_location(p, skills_dir)
+            self.assertEqual([f.check for f in findings], ["invalid-skill-location"])
+            self.assertIn("never discoverable", findings[0].detail)
+
+    def test_flat_md_with_directory_counterpart_is_dead_duplicate(self):
+        with tempfile.TemporaryDirectory() as d:
+            skills_dir = Path(d)
+            p = write(skills_dir / "some-skill.md", "---\nname: some-skill\n---\n")
+            write(skills_dir / "some-skill" / "SKILL.md", "---\nname: some-skill\n---\n")
+            findings = lint.check_invalid_location(p, skills_dir)
+            self.assertEqual([f.check for f in findings], ["invalid-skill-location"])
+            self.assertIn("dead duplicate", findings[0].detail)
+
+    def test_directory_based_skill_md_is_not_flagged(self):
+        with tempfile.TemporaryDirectory() as d:
+            skills_dir = Path(d)
+            p = write(skills_dir / "some-skill" / "SKILL.md", "---\nname: some-skill\n---\n")
+            self.assertEqual(lint.check_invalid_location(p, skills_dir), [])
+
+    def test_namespaced_sub_skill_is_not_flagged(self):
+        with tempfile.TemporaryDirectory() as d:
+            skills_dir = Path(d)
+            p = write(skills_dir / "myns" / "skills" / "sub" / "SKILL.md", "---\n---\n")
+            self.assertEqual(lint.check_invalid_location(p, skills_dir), [])
+
+
 class WindowsPathTests(unittest.TestCase):
     def test_backslash_path_is_flagged_with_line_number(self):
         text = "line one\nsee scripts\\helper.py for details\n"
