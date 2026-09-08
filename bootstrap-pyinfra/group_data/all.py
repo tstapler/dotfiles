@@ -14,6 +14,13 @@ sudo_mfa_enabled = False
 # Override per-run with `--data zerobrew_enabled=true`.
 zerobrew_enabled = False
 
+# Preserve an existing Pi installation (including a work-managed distribution),
+# otherwise install this exact public release under ~/.local. Set mode to
+# "external" when another machine manager owns installation, or "managed" to
+# converge the public install to the pinned version.
+pi_install_mode = "auto"
+pi_install_version = "0.84.4"
+
 # 1Password secret-reference paths for `gh auth login --with-token`, e.g.
 # "op://Personal/GitHub/token". Empty by default (no default value in the
 # Ansible role either) — override with `--data github_op_token_path=...`.

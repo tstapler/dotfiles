@@ -10,6 +10,7 @@ Run with: uv run pyinfra inventory.py main.py [--dry] [-y]
 from pyinfra import host  # type: ignore[attr-defined]  # pyinfra/#439
 
 from common import is_fbg_machine
+from deploys.ai_tools import ai_tools
 from deploys.asdf import asdf
 from deploys.claude import claude
 from deploys.dotfiles import dotfiles
@@ -20,6 +21,7 @@ from deploys.homebrew import homebrew
 from deploys.llm_sync import llm_sync
 from deploys.nix import nix
 from deploys.overlays import overlays
+from deploys.pi import pi
 from deploys.secrets import secrets
 from deploys.shell import shell
 from deploys.sudo_mfa import sudo_mfa
@@ -27,6 +29,8 @@ from deploys.zerobrew import zerobrew
 
 claude()
 homebrew()
+ai_tools()
+pi()
 
 if host.data.get("zerobrew_enabled"):
     zerobrew()

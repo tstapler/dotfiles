@@ -36,15 +36,29 @@ uv run main.py --help
 
 ### Pi (pi.dev)
 - **Docs:** https://pi.dev/docs/latest, https://github.com/earendil-works/pi/tree/main/packages/coding-agent/docs
-- **Skills:** `~/.pi/agent/skills/<name>/SKILL.md` — same Agent Skills standard as Claude, so no format
-  conversion is needed; only the `name` frontmatter field is flattened (`/` → `-`) since Pi forbids slashes there,
-  while the directory keeps the namespaced path. Pi's own docs note you can point `settings.json`'s `skills`
-  array straight at `~/.claude/skills` instead of syncing at all.
+- **Skills:** `~/.pi/agent/skills/<name>/SKILL.md` — Pi validates the Agent Skills standard more strictly
+  than the legacy Claude skill collection. `PiTarget` normalizes names to lowercase `a-z`, `0-9`, and hyphens;
+  enforces the 64-character name and 1024-character description limits; disambiguates normalized-name
+  collisions; and skips entries with missing descriptions. Standard directory skills keep their bundled
+  resources (`references/`, `scripts/`, and `assets/`). Claude discovery includes only root-level legacy
+  `*.md` skills and recursive `SKILL.md` files, so bundled Markdown references are not incorrectly promoted
+  to standalone Pi skills.
 - **Commands → Prompt Templates:** `~/.pi/agent/prompts/<flattened-name>.md` — Pi templates use the same
   `$ARGUMENTS`/`$1`/`$2` substitution as Claude commands, so content passes through unchanged. Discovery in
   `prompts/` is non-recursive, so namespaced command names (`git/commit`) are flattened to `git-commit.md`.
+- **Tiered settings:** `.config/pi/config.json` provides the tracked universal base. Tracked
+  `.config/pi/config.d/*.json`, untracked `~/.config/pi/config.local.json`, and untracked
+  `~/.config/pi/config.local.d/*.json` apply in that order. Objects deep-merge, arrays replace,
+  and `null` deletes an inherited key. Resource collections (`packages`, `extensions`, `skills`,
+  `prompts`, `themes`) are maps keyed by stable IDs and support `enabled: false`. The renderer
+  writes only its owned top-level keys to `~/.pi/agent/settings.json`, preserving unmanaged and
+  Pi-generated settings. Third-party packages must use an exact-commit `tstapler` fork;
+  Tyler-owned npm packages use an exact-version `@tstapler` scope. Unpinned packages are
+  allowed only from scopes listed in a top-level `trustedPackageScopes` array (a work
+  overlay's own config.d fragment supplies its scope there); local paths are always allowed.
 - **No agents/sub-agents, no native MCP:** Pi's philosophy deliberately omits both (see its README) — build
-  them via extensions if needed. `PiTarget` only implements `save_skills`/`save_commands`.
+  them via extensions if needed. `PiTarget` implements skill/prompt sync; tiered settings provision
+  extension/package equivalents for capabilities without native support.
 
 ### Antigravity
 - **Customizations Root:** `~/.gemini/config` (global) or `.agents` (workspace)

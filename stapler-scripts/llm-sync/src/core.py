@@ -1,6 +1,7 @@
 import hashlib
 import json
 from dataclasses import dataclass, field, asdict
+from pathlib import Path
 from typing import List, Dict, Any, Optional
 from abc import ABC, abstractmethod
 
@@ -47,6 +48,35 @@ class Skill(SyncItem):
     """Legacy/directory-based LLM skill."""
     content: str
     tools: Dict[str, bool] = field(default_factory=dict)
+
+    def get_hash(self) -> str:
+        """Include bundled scripts, references, and assets in change detection."""
+        base_hash = super().get_hash()
+        if not self.source_file:
+            return base_hash
+
+        source_file = Path(self.source_file)
+        if source_file.name != "SKILL.md" or not source_file.parent.is_dir():
+            return base_hash
+
+        bundle_hash = hashlib.sha256()
+        for path in sorted(source_file.parent.rglob("*")):
+            if path == source_file:
+                continue
+            if not path.is_symlink() and path.is_dir():
+                continue
+            relative_path = path.relative_to(source_file.parent)
+            bundle_hash.update(relative_path.as_posix().encode("utf-8"))
+            bundle_hash.update(b"\0")
+            if path.is_symlink():
+                bundle_hash.update(path.readlink().as_posix().encode("utf-8"))
+            else:
+                bundle_hash.update(path.read_bytes())
+            bundle_hash.update(b"\0")
+
+        return hashlib.sha256(
+            f"{base_hash}:{bundle_hash.hexdigest()}".encode("utf-8")
+        ).hexdigest()
 
 @dataclass(kw_only=True)
 class Command(SyncItem):

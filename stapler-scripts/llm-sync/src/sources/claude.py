@@ -53,10 +53,24 @@ class ClaudeSource(SyncSource, SyncTarget):
     def load_skills(self) -> List[Skill]:
         skills = []
         if self.skills_dir.exists():
-            for skill_file in self.skills_dir.glob("**/*.md"):
+            # Claude supports legacy root-level Markdown skills and standard
+            # directory skills. Other nested Markdown files are bundled
+            # references/examples, not independently discoverable skills.
+            skill_files = set(self.skills_dir.glob("*.md"))
+            skill_files.update(self.skills_dir.glob("**/SKILL.md"))
+            for skill_file in sorted(skill_files):
                 if skill_file.stem in IGNORED_NAMES:
                     continue
-                agent = self._load_agent(skill_file, self.skills_dir)
+
+                default_name = None
+                if skill_file.name == "SKILL.md":
+                    default_name = str(
+                        skill_file.parent.relative_to(self.skills_dir)
+                    ).replace("\\", "/")
+
+                agent = self._load_agent(
+                    skill_file, self.skills_dir, default_name=default_name
+                )
                 if agent:
                     skills.append(
                         Skill(
@@ -114,7 +128,12 @@ class ClaudeSource(SyncSource, SyncTarget):
                     console.print(f"[red]Error reading command {cmd_file}: {e}[/red]")
         return commands
 
-    def _load_agent(self, agent_file: Path, base_dir: Path) -> Optional[Agent]:
+    def _load_agent(
+        self,
+        agent_file: Path,
+        base_dir: Path,
+        default_name: Optional[str] = None,
+    ) -> Optional[Agent]:
         try:
             with open(agent_file, "r", encoding="utf-8") as f:
                 content = f.read()
@@ -134,9 +153,9 @@ class ClaudeSource(SyncSource, SyncTarget):
                         return None
 
                     rel_path = agent_file.relative_to(base_dir)
-                    default_name = str(rel_path.with_suffix("")).replace("\\", "/")
+                    path_name = str(rel_path.with_suffix("")).replace("\\", "/")
 
-                    name = metadata.get("name") or default_name
+                    name = metadata.get("name") or default_name or path_name
                     description = metadata.get("description") or ""
 
                     return Agent(

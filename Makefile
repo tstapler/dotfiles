@@ -1,4 +1,4 @@
-.PHONY: push pull ready lint ansible-lint shellcheck llm-sync run pyinfra-lint pyinfra-dry lint-skills test-lint-skills
+.PHONY: push pull ready lint ansible-lint shellcheck llm-sync llm-sync-test run pyinfra-lint pyinfra-test pyinfra-dry lint-skills test-lint-skills
 
 BOOTSTRAP_FILES := $(shell find bootstrap -name '*.yml') bootstrap/.ansible-lint bootstrap/hosts
 SHELL_FILES     := install.sh bootstrap/run.sh
@@ -37,8 +37,14 @@ lint-skills:
 test-lint-skills:
 	python3 stapler-scripts/test_lint_claude_kb.py
 
+llm-sync-test:
+	cd stapler-scripts/llm-sync && for test in test_*.py; do uv run "$$test"; done
+
+pyinfra-test:
+	cd bootstrap-pyinfra && for test in test_*.py; do uv run "$$test"; done
+
 # Run all checks — use this before pushing
-ready: .cache/ansible-lint.ok .cache/shellcheck.ok .cache/pyinfra-lint.ok
+ready: .cache/ansible-lint.ok .cache/shellcheck.ok .cache/pyinfra-lint.ok llm-sync-test pyinfra-test
 	@echo "All checks passed."
 
 lint: ready

@@ -92,6 +92,10 @@ its own passive-voice examples).
 - Use `tyclone <url>` (defined in `~/dotfiles/.shell/functions.sh`) to clone into that layout automatically; `repo_dir <url>` prints the resulting path without cloning
 - Existing repos outside this layout (e.g. `~/dotfiles` itself) are left in place — this convention only applies going forward, not as a retroactive migration
 
+## Personal Notes (Logseq Wiki)
+
+Tyler's personal Logseq wiki — daily journals and topic Zettels — lives at `~/Documents/notes` (its own git repo, not under `~/code/`; not currently symlinked or cloned via this dotfiles repo's bootstrap). It has its own `CLAUDE.md` describing conventions; format anything written there per the `logseq-wiki-syntax` skill. Use it (not this repo, and not a project's own `docs/`) for durable personal-knowledge notes, cross-project research writeups, and decision rationale that should outlive any one project's lifetime — e.g. `pages/Personal App Stack (2026).md`, which the `code-new-project` skill's `reference.md` points to for its condensed stack-decision tables.
+
 ---
 
 ## Stapler-Driven Development (SDD) Workflow

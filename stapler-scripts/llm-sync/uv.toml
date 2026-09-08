@@ -1,0 +1,6 @@
+# Pin the public PyPI index for this repo. Without this, a machine-level
+# ~/.config/uv/uv.toml pointing at a work registry mirror silently rewrites
+# uv.lock's package URLs to that mirror on every `uv run`/`uv lock` — which
+# then fails this repo's pre-push hook (or would leak an internal hostname
+# to the public remote if the hook didn't exist).
+index-url = "https://pypi.org/simple"

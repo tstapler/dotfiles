@@ -1,0 +1,174 @@
+# Starting point for a "clippy-equivalent" golangci-lint v2 config.
+# Cross-checked 2026-09 against Kubernetes' hack/golangci.yaml,
+# ccoVeille/golangci-lint-config-examples (03-safe tier), and a full
+# `golangci-lint help linters` audit against v2.12.2 (~110 linters total).
+# The testifylint/spancheck/loggercheck entries below assume the repo uses
+# testify, OpenTelemetry, and slog/zap respectively — drop whichever don't
+# apply to the target repo's actual dependencies (check go.mod, don't guess).
+#
+# Adapt per repo: delete depguard/forbidigo rules that don't apply, and
+# see SKILL.md's "ratchet pattern" before enabling gocyclo/gocognit/funlen/
+# dupl/revive's file-length-limit repo-wide on an existing codebase — run
+# those new-code-only via `--new-from-rev` instead of listing them here.
+
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  default: none
+  enable:
+    # baseline correctness (roughly go vet++)
+    - govet
+    - unused
+    - ineffassign
+    - staticcheck
+
+    # error handling / nil safety
+    - errcheck
+    - errorlint    # errors.Is/As misuse, %w wrapping mistakes
+    - nilnil
+    - nilerr       # `return nil` after an err != nil check — real bug class
+    - nilnesserr   # returns the wrong nil'd error after a non-nil check
+    - exhaustive   # enum switch statements must handle every case
+
+    # security (closest single linter to clippy's security lints)
+    - gosec
+
+    # resource / concurrency footguns
+    - bodyclose      # http.Response.Body must be closed
+    - contextcheck   # context propagation is not silently dropped
+    - noctx          # http requests must carry a context
+    - sqlclosecheck  # rows/statements must be closed — no-op if no database/sql usage
+    - fatcontext     # context stored in a struct field/loop var footgun
+
+    # perf / allocation hygiene
+    - prealloc
+    - durationcheck  # time.Duration multiplication mistakes (time.Second * ms)
+    - makezero       # make([]T, n) + append that silently dupes/skips elements
+    - unconvert      # dead type conversions
+    - unparam        # genuinely-unused function parameters
+
+    # observability correctness — enable only what the repo's stack uses
+    - loggercheck  # slog/zap/logr/klog key-value pair mismatches
+    - spancheck    # OTel/Census spans never End()-ed or missing error recording
+    - testifylint  # wrong testify assertion method (Equal vs True, etc.)
+
+    # style bugs with real failure modes, not pure taste
+    - gocritic
+    - revive
+    - misspell
+    - predeclared  # shadowing builtins (len, min, new, ...)
+    - modernize    # suggests modern-Go-idiom rewrites; review autofix, don't blind-apply
+
+    # architecture boundaries — see settings.depguard below
+    - depguard
+
+    # banned call patterns — see settings.forbidigo below
+    - forbidigo
+
+  disable:
+    # High-boilerplate-cost / low-marginal-value on internal call chains —
+    # commonly excluded even on greenfield repos, not just ratcheted.
+    - wrapcheck
+    - exhaustruct
+    - gochecknoglobals
+    - wsl
+    - nlreturn
+    - paralleltest
+    - testpackage
+    - cyclop
+
+  settings:
+    staticcheck:
+      # "all" pulls in every check CLASS staticcheck exposes, not just bug
+      # detection: SA* (bugs), S* (simplifications, formerly the separate
+      # `gosimple` tool), ST* (style, formerly `stylecheck`) — leaving this
+      # at golangci-lint's bare default only gets SA*. SA1019 (deprecation)
+      # floods on stdlib deprecations; exclude it here rather than
+      # disabling staticcheck entirely.
+      checks: ["all", "-SA1019"]
+
+    revive:
+      # golangci-lint's bare `enable: [revive]` only turns on revive's
+      # golint-equivalent defaults. Opt into revive's own deeper rule set
+      # deliberately — this is where most of revive's actual value over
+      # golint lives.
+      rules:
+        - name: cognitive-complexity
+        - name: unhandled-error
+        - name: unused-parameter
+        - name: bare-return
+        - name: confusing-naming
+
+    gocritic:
+      # paramTypeCombine/sloppyReassign are already disabled by default as
+      # of golangci-lint v2.12.2 — nothing to add here today, but this is
+      # the place to disable a specific noisy gocritic check if a future
+      # version's defaults change.
+      disabled-checks: []
+
+    depguard:
+      rules:
+        no_ioutil:
+          deny:
+            - pkg: "io/ioutil"
+              desc: "io/ioutil is deprecated; use io or os equivalents"
+        # Example architecture-boundary rule — adapt package paths per repo.
+        # no_server_in_core:
+        #   files: ["!**/internal/server/**"]
+        #   deny:
+        #     - pkg: "path/to/internal/server"
+        #       desc: "core packages must not import the server layer"
+
+    forbidigo:
+      forbid:
+        - pattern: '^fmt\.Print.*$'
+          msg: "use the structured logger, not fmt.Print*, in production code"
+        - pattern: '^exec\.Command$'
+          msg: "use exec.CommandContext with a timeout — exec.Command can hang indefinitely"
+
+    exhaustive:
+      # Relax for protobuf-style _UNSPECIFIED sentinel values and other
+      # externally-defined enums where every case truly can't be enumerated.
+      default-signifies-exhaustive: true
+
+    gosec:
+      excludes:
+        - G104 # already covered by errcheck; avoid duplicate findings
+        - G404 # weak math/rand: real finding for crypto use, high noise elsewhere
+      # Tune further with a severity floor if G304 (path traversal on any
+      # variable-path os.Open) is too noisy for this repo's actual usage.
+
+  exclusions:
+    presets:
+      - comments
+      - common-false-positives
+    rules:
+      # Generated code never gets hand-fixed for lint findings.
+      - path: '(\.pb|\.gen)\.go$'
+        linters:
+          - all
+      # Test files: allow looser error-checking (t.Fatal patterns trip errcheck).
+      - path: '_test\.go$'
+        linters:
+          - errcheck
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    gofmt:
+      simplify: true
+
+# Tier-2 gate (run as a SEPARATE invocation, new-code-only — do not add
+# these to `enable:` above on a repo with pre-existing violations):
+#
+#   golangci-lint run --enable=gocyclo,gocognit,funlen,dupl \
+#     --new-from-rev=origin/main
+#
+# (revive is already enabled above; its file-length-limit specifically is
+# the part that tends to be pre-existing-violation-heavy on a mature repo —
+# scope that one check via revive's own settings if it fires repo-wide.)

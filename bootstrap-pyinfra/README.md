@@ -33,9 +33,16 @@ run this from a real terminal, not a non-interactive shell.
 | `shell` | Ported, pending live verification (chsh step needs a real terminal for sudo — pyinfra's own `server.user` fact-check needs it too, not just the mutation; zplug clone run live twice, idempotent) | `deploys/shell.py` |
 | `github` | Ported, no sudo needed at all — run live twice on this machine, fully idempotent, confirmed against real GitHub state (`gh ssh-key list` shows `onyx-primary` registered, matching this code's title format exactly). NOT moved to Done: the personal-account (FBG) branch is completely unexercised on this non-FBG machine — needs verification on an FBG machine before removing from playbook.yml | `deploys/github.py` |
 | `llm-sync` | **Done** — no sudo needed, run live twice (really synced skills/agents/MCP config both times), removed from playbook.yml | `deploys/llm_sync.py` |
+| `pi` | Ported, pending fresh personal macOS/Linux verification. `auto` preserves any existing/work-managed Pi; `external` delegates installation; `managed` converges the pinned public release. | `deploys/pi.py` |
 | `claude` | Ported, pending live verification (fresh-install path not run for real, to avoid disrupting the currently-running Claude Code session — but its component logic verified live: real platform detection `linux-x64`, real version resolution `2.1.212`, real checksum pulled from the manifest; already-installed path run live twice on this machine, correctly printed the real installed version both times) | `deploys/claude.py` |
 | `fbg` | Ported (work-specific, hostname-auto-gated like `bootstrap/run.sh`). NOT run for real or via `--dry` on this non-FBG machine after a mistake during development (see "`--dry` does NOT protect immediate execution" below) — code review only. Needs live verification on an actual FBG machine before removing from playbook.yml | `deploys/fbg.py` |
 | `ssh-bastion-client` | Not started | — |
+
+**`ai_tools`** (no Ansible equivalent — new): provisions the Tyler-owned tools used by
+both Claude and Pi. Kibitzer and consolette come from `tstapler/homebrew-tap` on macOS
+and Linux, with stable links under `~/.local/bin`; stapler-mcp is built with Cargo from
+the exact commit pinned in `deploys/ai_tools.py`. The source build is a queued operation,
+so `--dry` previews it without compiling or writing files.
 
 **`zerobrew`** (no Ansible equivalent — new, opt-in): builds/installs `zb`/`zbx` from
 `github.com/tstapler/zerobrew` (branch `linux-reflink-ficlone`, a fork adding a Linux

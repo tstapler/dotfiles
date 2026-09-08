@@ -1,8 +1,9 @@
 """
 Port of bootstrap/roles/llm-sync/tasks/main.yml — syncs Claude agents/
-skills/commands and MCP config out to Gemini, OpenCode, and Antigravity via
-the in-repo llm-sync tool (stapler-scripts/llm-sync). The tool itself is
-hash-based and idempotent; this just invokes it and prints its summary.
+skills/commands and MCP config out to Gemini, OpenCode, Antigravity, and Pi,
+then renders tiered Pi settings via the in-repo llm-sync tool
+(stapler-scripts/llm-sync). The tool itself is hash-based and idempotent;
+this just invokes it and prints its summary.
 """
 
 import os

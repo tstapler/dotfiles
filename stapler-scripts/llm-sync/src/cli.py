@@ -8,10 +8,13 @@ from rich.console import Console
 try:
     from .sources.claude import ClaudeSource
     from .sources.mcp_config import McpConfigSource
+    from .sources.pi_config import PiConfigSource
     from .sources.plugins import PluginSource
+    from .sources.tiered_config import TieredJsonConfig
     from .targets.gemini import GeminiTarget, AntigravityTarget
     from .targets.opencode import OpenCodeTarget
     from .targets.pi import PiTarget
+    from .targets.pi_settings import PiSettingsTarget
     from .targets.claude_settings import ClaudeSettingsTarget
     from .targets.claude_plugin_installer import ClaudePluginInstaller
     from .targets.antigravity_plugin_installer import AntigravityPluginInstaller
@@ -23,10 +26,13 @@ except ImportError:
     sys.path.append(str(Path(__file__).parent))
     from sources.claude import ClaudeSource
     from sources.mcp_config import McpConfigSource
+    from sources.pi_config import PiConfigSource
     from sources.plugins import PluginSource
+    from sources.tiered_config import TieredJsonConfig
     from targets.gemini import GeminiTarget, AntigravityTarget
     from targets.opencode import OpenCodeTarget
     from targets.pi import PiTarget
+    from targets.pi_settings import PiSettingsTarget
     from targets.claude_settings import ClaudeSettingsTarget
     from targets.claude_plugin_installer import ClaudePluginInstaller
     from targets.antigravity_plugin_installer import AntigravityPluginInstaller
@@ -239,8 +245,43 @@ def sync_mcp(mcp_source: McpConfigSource, settings_target: ClaudeSettingsTarget,
     if not dry_run:
         console.print(f"[green]Wrote {count} MCP servers to {settings_target.settings_file}[/green]")
 
+def sync_pi_settings(args) -> None:
+    config_root = Path.home() / ".config" / "pi"
+    agent_dir = args.pi_dir or Path.home() / ".pi" / "agent"
+    source = PiConfigSource(
+        TieredJsonConfig(
+            universal_file=args.pi_config_file or config_root / "config.json",
+            tracked_fragments_dir=args.pi_config_dir or config_root / "config.d",
+            local_file=args.pi_local_config or config_root / "config.local.json",
+            local_fragments_dir=args.pi_local_config_dir
+            or config_root / "config.local.d",
+        )
+    )
+    loaded = source.load()
+    if not loaded.layers:
+        console.print("[dim]No Pi configuration layers found; leaving settings unchanged.[/dim]")
+        return
+
+    console.print("\n[bold]Syncing tiered Pi settings...[/bold]")
+    for layer in loaded.layers:
+        console.print(f"[dim]Loaded Pi configuration layer {layer}[/dim]")
+
+    target = PiSettingsTarget(
+        settings_path=args.pi_settings_file or agent_dir / "settings.json",
+        state_path=args.pi_settings_state_file
+        or Path.home() / ".config" / "llm-sync" / "pi-settings-state.json",
+    )
+    changed = target.save(loaded, dry_run=args.dry_run)
+    if args.dry_run and changed:
+        console.print("[blue]Would update managed Pi settings[/blue]")
+    elif changed:
+        console.print("[green]Updated managed Pi settings[/green]")
+    else:
+        console.print("[dim]Managed Pi settings already converged.[/dim]")
+
+
 def main():
-    parser = argparse.ArgumentParser(description="Sync LLM agents between Claude, Gemini, and OpenCode")
+    parser = argparse.ArgumentParser(description="Sync LLM agents between Claude, Gemini, OpenCode, and Pi")
     parser.add_argument("--dry-run", action="store_true", help="Preview changes")
     parser.add_argument("--force", action="store_true", help="Force sync regardless of content hash")
     parser.add_argument("--cleanup", action="store_true", help="Remove legacy non-namespaced files")
@@ -255,6 +296,12 @@ def main():
     parser.add_argument("--antigravity-dir", type=Path, help="Override base directory for Antigravity config")
     parser.add_argument("--opencode-dir", type=Path, help="Override base directory for OpenCode assets")
     parser.add_argument("--pi-dir", type=Path, help="Override base directory for Pi assets (default: ~/.pi/agent)")
+    parser.add_argument("--pi-config-file", type=Path, help="Override universal Pi config file")
+    parser.add_argument("--pi-config-dir", type=Path, help="Override tracked Pi config.d directory")
+    parser.add_argument("--pi-local-config", type=Path, help="Override machine-local Pi config file")
+    parser.add_argument("--pi-local-config-dir", type=Path, help="Override machine-local Pi config.d directory")
+    parser.add_argument("--pi-settings-file", type=Path, help="Override generated Pi settings.json path")
+    parser.add_argument("--pi-settings-state-file", type=Path, help="Override Pi managed-key state path")
     parser.add_argument("--mcp-global-config", type=Path, help="Override global MCP servers JSON file")
     parser.add_argument("--mcp-local-config", type=Path, help="Override machine-local MCP servers JSON file")
     parser.add_argument("--mcp-global-config-dir", type=Path, help="Override global MCP servers config.d directory")
@@ -346,6 +393,9 @@ def main():
             antigravity_mcp = AntigravityMcpTarget()
             sync_mcp(mcp_source, antigravity_mcp, args.dry_run)
 
+            if args.target in ['pi', 'all'] and args.direction in ['to-target', 'both']:
+                sync_pi_settings(args)
+
         if not args.dry_run:
             state_manager.save()
             
@@ -355,6 +405,7 @@ def main():
         console.print(f"[bold red]An error occurred:[/bold red] {e}")
         import traceback
         console.print(traceback.format_exc())
+        raise
 
 if __name__ == "__main__":
     main()

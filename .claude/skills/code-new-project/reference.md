@@ -56,6 +56,18 @@ Modeled directly on `tstapler/kibitzer` — a real, running repo, not a research
 | Pre-commit | **Lefthook** (fmt + clippy pre-commit, test pre-push) | Same polyglot-hook-runner choice as the web-app stack's cross-cutting quality row — consistent tool across both scaffold paths. |
 | License | **MIT** | Matches kibitzer. |
 
+## Local Single-User App Stack
+
+Condensed from `Personal App Stack (2026)` in the personal-wiki repo (`~/Documents/notes/pages/`) — see that page for the full research pass (triggered 2026-09-04 by evaluating TrailBase for `gh-signal`'s local triage dashboard), including the detailed comparison table and per-tool rationale. Distinct from both stacks above: no hosting, no other users, no auth — the only audience is the owner's own machine.
+
+**Default: roll your own** — SQLite (or whatever DB the existing project already has) + Axum + a static SPA (or plain HTML), linked straight into the existing binary, `bind(127.0.0.1)`, no auth at all. This is almost always the right call when adding a dashboard/UI to a project that already has its own process and local database (a `<tool> ui` subcommand) — see the decision tree in `SKILL.md` step 1c.
+
+**Only reach for PocketBase or TrailBase** when there's a genuinely new standalone local app with no existing binary/DB to hook into, and hand-rolling REST/realtime/admin-UI yourself isn't worth it. Both are designed to *be* the whole backend process, not a library embedded into one you already have — bolting either onto an existing binary means running it as a sibling process and working around a built-in auth model neither lets you cleanly disable for single-user use. Default to PocketBase (Go, MIT, mature, real framework-embedding story) over TrailBase (Rust, OSL-3.0, Alpha status, embedding described by its own maintainers as "an afterthought") unless Rust purity specifically matters more than maturity/license simplicity.
+
+**Tauri** is orthogonal to the backend choice — only relevant when the app needs to *be* an installed native desktop app (dock icon, native notifications) rather than a page served locally and opened in a browser.
+
+Note the difference from this doc's Firebase Migration Addendum above, which rules PocketBase out for **production-critical hosted migrations** (single-writer SQLite, no horizontal scaling — real constraints for real multi-user traffic). Those constraints are irrelevant here: a local single-user tool has exactly one writer by construction.
+
 ## Dominant Trade-off (for judgment calls not covered above)
 
 Every layer where "give me guardrails" (Angular, Spring-Boot-like structure, HCL's ecosystem) collided with "minimize cost and lock-in," the research consistently favored the smaller-but-purpose-built option over the biggest incumbent — Cloud Run over AWS-native PaaS, Neon over DynamoDB, OpenTofu over Terraform. When a new decision isn't covered by this reference, default to the same bias: composable/portable over bundled/incumbent, unless the project has a specific reason (team size, real revenue, deadline pressure) to trade that away.

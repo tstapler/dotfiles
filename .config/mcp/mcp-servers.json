@@ -7,6 +7,20 @@
       "_supersedes": "read-website-fast, website-downloader, docs-mcp-server, brave-search -- one shared native daemon (thin stdio client per session) instead of a fresh npx/uvx process tree per subagent. Requires `cargo install --path crates/cli` from the stapler-mcp repo. Uses an absolute path rather than relying on PATH resolution: the process that spawns MCP servers doesn't always inherit a shell profile that's run `pathadd \"$HOME/.cargo/bin\"` (see .shell/exports.sh), so the bare command name silently failed to resolve and the server never started. brave-search removed 2026-08-12: stapler-mcp's brave_web_search covers real usage; the official server's only extra capability (brave_local_search) saw ~zero use. Requires BRAVE_API_KEY in the environment of whichever thin client first spawns the daemon.",
       "env": {}
     },
+    "kibitzer": {
+      "command": "${HOME}/.local/bin/kibitzer",
+      "args": ["mcp"],
+      "_fork": "https://github.com/tstapler/kibitzer",
+      "_requires": "kibitzer's PostToolUse hook (`kibitzer hook`) already reads .claude/inspect.json per-repo; this MCP entry additionally exposes its checks (architecture_assessment, import-cycles, layering, etc.) as callable tools, e.g. for sdd's phase-6 verify pre-pass. bootstrap-pyinfra exposes the Homebrew binary through the stable ~/.local/bin path so MCP launch does not depend on shell-profile PATH setup.",
+      "env": {}
+    },
+    "consolette": {
+      "command": "${HOME}/.local/bin/consolette",
+      "args": ["mcp"],
+      "_fork": "https://github.com/tstapler/consolette",
+      "_requires": "Installed from tstapler/homebrew-tap by bootstrap-pyinfra and exposed through the stable ~/.local/bin path. Provides first-party session and compaction tools over stdio MCP.",
+      "env": {}
+    },
     "playwright": {
       "command": "npx",
       "args": [

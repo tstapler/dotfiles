@@ -1,6 +1,6 @@
 ---
 name: browser-profiling
-description: Profile Chrome/JavaScript/React apps to diagnose slowness. Covers triage (load vs interaction vs scroll), Playwright-based baseline capture, React Profiler component, Chrome Performance panel interpretation, bundle analysis, memory leak detection, and fix verification. Invoke when a browser or React app is noticeably slow and you need to find and fix the bottleneck.
+description: Profile Chrome/JavaScript/React apps to diagnose slowness. Covers triage (load vs interaction vs scroll), Playwright-based baseline capture, React Profiler component, Chrome Performance panel interpretation, bundle analysis, memory leak detection, fix verification, and programmatic large-trace analysis via Perfetto's trace_processor (the pprof-equivalent for Chrome traces). Invoke when a browser or React app is noticeably slow and you need to find and fix the bottleneck, or when you have a downloaded `.json`/`.json.gz` Performance-panel trace to analyze.
 ---
 
 # Browser / React Performance Profiling
@@ -49,6 +49,74 @@ See [React Profiler and Re-render Detection](references/react-profiler.md) for t
 4. Read the **Main** thread row: Bottom-Up tab sorted by Self Time finds the expensive function; Call Tree tab sorted by Total Time finds the entry point that triggers the most work
 
 See [Reading the Chrome Performance Panel](references/chrome-performance-panel.md) for the flamechart legend and key event names to search for.
+
+---
+
+## Step 3.5 — Analyzing a Trace Programmatically (Perfetto `trace_processor` — the pprof of Chrome traces)
+
+A DevTools Performance recording — from the manual "Record → Save profile..." flow, or `browser.startTracing()` in Step 1 — is a JSON array of trace events (`ts`, `dur`, `ph`, `name`, `cat`, `pid`/`tid`, `args`). On a real session this file is routinely **hundreds of MB**, and it is the exact same mistake as `curl`-ing a raw Go pprof profile to grep by hand: `jq`, `python -m json.load`, or `grep` over the whole array is slow, easy to get subtly wrong (matching the wrong process/thread, double-counting nested slices), and burns a huge amount of context if the output lands in a conversation. **Load it into Perfetto's `trace_processor` and query it with SQL instead** — this is the direct equivalent of `go tool pprof -top`: one purpose-built tool does the parsing/indexing, and you get ranked, aggregated answers instead of raw event soup.
+
+### Get the tool (one-time)
+
+```bash
+curl -LO https://get.perfetto.dev/trace_processor
+chmod +x trace_processor
+# First run downloads the native binary for your platform to ~/.local/share/perfetto/prebuilts (cached after).
+```
+
+`trace_processor` loads Chrome's JSON trace format directly — **including gzipped `.json.gz` downloads**, no manual `gunzip` needed. It also loads `.perfetto-trace` protobuf traces, `.heapprofile` files, and Android traces, so the same tool covers Playwright's `browser.startTracing()` output and a manually-downloaded DevTools trace.
+
+### Query mode (non-interactive — prefer this for scripted/agent use)
+
+```bash
+./trace_processor -q <(echo "SELECT name, COUNT(*) AS cnt, SUM(dur) AS total_ns FROM slice GROUP BY name ORDER BY total_ns DESC LIMIT 20;") mytrace.json.gz
+```
+
+Or drop into the interactive SQL shell for exploration: `./trace_processor mytrace.json.gz` then type queries at the `>` prompt. Durations (`dur`, `ts`) are in **nanoseconds**.
+
+### Canonical queries (the `-top` / `-list` equivalents)
+
+```sql
+-- Top 20 event names by total time across the whole trace (go tool pprof -top)
+SELECT name, COUNT(*) AS cnt, SUM(dur) AS total_ns
+FROM slice GROUP BY name ORDER BY total_ns DESC LIMIT 20;
+
+-- Long tasks (>50ms) on a named thread, with wall-clock offset from trace start
+SELECT (s.ts - (SELECT MIN(ts) FROM slice)) / 1e6 AS ms_from_start,
+       s.dur / 1e6 AS dur_ms, s.name, t.name AS thread
+FROM slice s
+JOIN thread_track tt ON s.track_id = tt.id
+JOIN thread t ON tt.utid = t.utid
+WHERE s.dur > 50 * 1e6
+ORDER BY s.dur DESC LIMIT 30;
+
+-- Discover what counter tracks exist before querying one blind (mirrors
+-- "list available tag keys before guessing an ASL query" for Atlas) —
+-- Chrome's JS-heap counter is typically named 'JS Heap' or similar; verify
+-- per-trace rather than assuming.
+SELECT DISTINCT name FROM counter_track;
+
+-- JS heap size over time once you have the exact counter_track name
+SELECT c.ts, c.value
+FROM counter c JOIN counter_track ct ON c.track_id = ct.id
+WHERE ct.name = 'JS Heap' ORDER BY c.ts;
+
+-- GC pauses (self time), ranked — allocation-churn signal
+SELECT name, COUNT(*) AS cnt, SUM(dur) AS total_ns, AVG(dur) AS avg_ns
+FROM slice WHERE name LIKE '%GC%' GROUP BY name ORDER BY total_ns DESC;
+```
+
+**Gotcha learned the hard way**: a multi-process/multi-tab trace mixes every process's counters and threads in one file — `SELECT MIN(value) FROM counter ...` across all processes can return a near-zero value that belongs to an unrelated tab/extension, not the page you're debugging. Filter to the right `pid`/`upid` first (`SELECT * FROM process;` to find it) rather than trusting an unscoped aggregate.
+
+### When to still use the DevTools UI instead
+
+`trace_processor` is for *ranking and aggregating* — finding which function/task/counter dominates, across a trace too large to eyeball. It does not replace:
+- **The flamechart itself** for understanding *why* a specific task is slow (call stack, nesting) — drag the same trace file into DevTools Performance panel for that.
+- **Heap Snapshot comparison** (Step 5) — a `.heapsnapshot` is a different format (object graph, not a timeline) and needs the Memory panel or `--inuse` uses; `trace_processor` cannot substitute for finding *which objects* are retained, only *how much* memory a counter shows over time.
+
+### LLM-native alternative
+
+A community MCP server (`perfetto-1` on mcpmarket.com) wraps `trace_processor_shell` and lets an LLM run PerfettoSQL queries directly against a trace without shelling out — worth adopting if this analysis becomes frequent enough to justify adding an MCP server, but the `curl`+SQL-file approach above needs no setup and is fine for occasional use.
 
 ---
 

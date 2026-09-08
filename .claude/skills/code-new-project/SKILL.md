@@ -1,6 +1,6 @@
 ---
 name: code-new-project
-description: Bootstrap a new personal/side project using Tyler's researched default stacks — a full web app (Angular, Rust+Axum, Connect-RPC/WebSocket, GCP Cloud Run, Neon+R2, OpenTofu) or a library/CLI/MCP tool (Rust, clap, rmcp, cargo-dist, git-cliff, Homebrew tap — modeled on tstapler/kibitzer). Starts by asking which kind of project this is, then runs a short decision interview to adapt the defaults, then scaffolds the full repo — build files, IaC, CD pipeline, local dev tooling, and a CLAUDE.md/AGENTS.md referencing /sdd:full and other ongoing-development skills for whichever path is chosen. Use when starting a new personal project, asking "what stack should I use for this", or "bootstrap a new project".
+description: Bootstrap a new personal/side project using Tyler's researched default stacks — a full hosted web app (Angular, Rust+Axum, Connect-RPC/WebSocket, GCP Cloud Run, Neon+R2, OpenTofu), a library/CLI/MCP tool (Rust, clap, rmcp, cargo-dist, git-cliff, Homebrew tap — modeled on tstapler/kibitzer), or a local single-user app/dashboard (roll-your-own Axum+SQLite+static-SPA bolted onto an existing binary by default; PocketBase/TrailBase/Tauri only for specific standalone-app or native-desktop cases). Starts by asking which kind of project this is, then runs a short decision interview to adapt the defaults, then scaffolds the full repo (or, for the local-app path, states the decision and pattern to follow — that path has no scripted bootstrap since it depends on whether an existing binary/DB already exists). For web apps: build files, RPC/proto layer, multi-environment IaC (staging+prod), CD pipeline (Workload Identity Federation, build/push/deploy), local dev via Neon Local, sqlx migrations tooling, secrets/.env conventions, quality tooling. For lib/CLI/MCP tools: single- or multi-crate layout, clap/rmcp starter, cargo-dist release pipeline with a human-pushed-tag flow, git-cliff changelog, PR test-gate CI, Lefthook. All paths generate or reference CLAUDE.md/AGENTS.md pointing at /sdd:full and other ongoing-development skills. Use when starting a new personal project, adding a local dashboard/UI to an existing tool, asking "what stack should I use for this", or "bootstrap a new project".
 ---
 
 # code-new-project
@@ -20,10 +20,27 @@ Bootstraps a new project repo against Tyler's decided default stack for the kind
 
 Before anything else, ask via `AskUserQuestion`:
 
-- **Web app** (default for anything with a browser-facing UI and its own users/data) → go to step 1.
+- **Web app** (default for anything with a browser-facing UI and its own users/data, hosted for real/multiple users) → go to step 1.
 - **Library / CLI / MCP tool** (a Rust binary, a CLI, an MCP server, something distributed via Homebrew/crates.io/npm rather than deployed) → skip to step 1b.
+- **Local, single-user app** (a browser-served dashboard/UI that only ever runs on the owner's own machine — no hosting, no other users, no auth) → skip to step 1c.
 
-If genuinely ambiguous (e.g. "a tool with a small web dashboard"), ask which surface is primary rather than guessing — the two paths produce very different repos and there's no supported hybrid scaffold.
+If genuinely ambiguous (e.g. "a tool with a small web dashboard"), ask which surface is primary rather than guessing — the three paths produce very different repos and there's no supported hybrid scaffold. The Web app vs. Local single-user app split is usually the one worth double-checking: "will anyone but me ever load this over a network" is the actual test, not "does it have a browser UI."
+
+### 1c. Local, single-user app: run the decision tree
+
+This path is deliberately **not a scripted bootstrap** — the right shape depends entirely on whether an existing binary/process already owns the data this UI will show. See `reference.md`'s "Local Single-User App Stack" section for the full research (TrailBase vs. PocketBase vs. roll-your-own vs. Tauri) backing this.
+
+1. **Is this a dashboard/UI being bolted onto a project that already has its own process and its own local database (SQLite or otherwise)?**
+   - Yes (the common case — e.g. adding a `<tool> ui` subcommand to an existing Rust CLI/daemon) → **roll your own**: add an Axum (or equivalent) router to the existing binary, reading the existing DB connection directly, `bind(127.0.0.1:<port>)`, no auth at all (it's the owner's own machine), serving a built static SPA (Angular, per this skill's default, unless the dashboard is trivial enough that plain server-rendered HTML is less work than standing up a whole Angular build for it — ask which if unclear). This is the only option that doesn't mean running a second process or vendoring a full backend framework with its own auth/admin-UI model you'd then have to work around.
+   - No (this is a genuinely new, standalone local app/service with no existing binary or database to hook into) → continue to question 2.
+2. **Would you rather not hand-roll the REST/realtime/admin-UI layer yourself for this new standalone local app?**
+   - No preference / happy to roll your own → same as above: Axum/equivalent + SQLite + static SPA, just as its own new binary instead of a subcommand.
+   - Yes, want a batteries-included local backend → default to **PocketBase** (Go, single binary, MIT, mature, embeddable as a framework if custom routes are needed later) over TrailBase — TrailBase (Rust, single binary, OSL-3.0, Alpha status as of 2026) is the more idiomatic-feeling choice if the project is Rust-only end-to-end, but its own maintainers describe embedding it as a framework as "an afterthought," and neither project has a documented single-user/no-login mode (both require manually opening up API rules to fake "no auth"). Note the language mismatch either way: PocketBase is Go, so it can't be linked into a Rust binary — this only applies to option 2, a standalone process, never to option 1's "bolt onto an existing Rust binary" case.
+3. **Does this need to be an installed native desktop app** (dock/taskbar presence, native OS notifications, no "open a browser tab to localhost" step) rather than a page served locally and opened in a browser?
+   - No (default — a CLI that prints a URL to open is enough friction reduction for a personal tool) → whichever of the above applies.
+   - Yes → **Tauri** (Rust backend + OS-native WebView, `tauri-plugin-sql` for SQLite) instead of/wrapping whichever backend choice above — this is an orthogonal packaging decision, not a competing backend option.
+
+State which branch applies and why in one short summary before writing any code — this determines the actual shape of what gets built, so confirm it rather than silently picking one.
 
 ### 1b. Library/CLI/MCP tool: run the decision interview
 

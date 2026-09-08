@@ -1,0 +1,23 @@
+{
+  "skill_name": "tiered-configuration",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Add declarative Pi settings to my public dotfiles, but let my private work-dotfiles repo add a company package and let one laptop disable it locally. Pi only reads one settings.json and keeps auth and sessions beside it.",
+      "expected_output": "Uses the four standard layers, avoids linking the mutable Pi directory, defines deterministic merge and disable behavior, preserves unmanaged state, and excludes credentials.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Two repos need to contribute SSH configuration. Right now the second repo replaces the first repo's ~/.ssh/config.d symlink. Redesign this so both can coexist and machine-only aliases stay untracked.",
+      "expected_output": "Assigns file-level ownership, uses tracked and local fragment tiers with lexical ordering, and avoids whole-directory ownership conflicts.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Review this config loader: it recursively merges dictionaries and concatenates every list, catches JSON errors and prints a warning, then rewrites the app's complete state directory on each bootstrap run.",
+      "expected_output": "Flags array concatenation, swallowed errors, mutable-directory replacement, unclear ownership, stale-entry handling, and missing idempotency/preservation tests.",
+      "files": []
+    }
+  ]
+}
