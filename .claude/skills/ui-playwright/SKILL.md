@@ -214,6 +214,7 @@ For comprehensive Playwright API documentation, see [API_REFERENCE.md](API_REFER
 - **Wait strategies:** Use `waitForURL`, `waitForSelector`, `waitForLoadState` instead of fixed timeouts
 - **Error handling:** Always use try-catch for robust automation
 - **Console output:** Use `console.log()` to track progress and show what's happening
+- **Scroll gradually when recording video or capturing frames** — `helpers.scrollPage`/`helpers.stepScroll` scroll via `page.mouse.wheel` in small steps for this reason; if you write scroll code inline (`window.scrollTo`/`scrollBy`) instead of using the helper, you will hit gray checkerboard blocks in `recordVideo` output. See Troubleshooting.
 
 ## Troubleshooting
 
@@ -231,6 +232,9 @@ Check `headless: false` and ensure display available
 
 **Element not found:**
 Add wait: `await page.waitForSelector('.element', { timeout: 10000 })`
+
+**Gray/blank block in a recorded video or a screencast frame, but `page.screenshot()` of the same moment looks fine:**
+Almost always caused by an instant scroll jump (`window.scrollTo`/`scrollBy`, or a Playwright MCP tool's `browser_evaluate` doing the same) outrunning Chromium's compositor — the newly revealed area hasn't been rasterized yet, so it renders as a flat gray "checkerboard" placeholder. `page.screenshot()` never shows this because it forces a full repaint before capturing; `recordVideo` and CDP screencast frames capture whatever's actually composited, checkerboard included. Fix: scroll in small increments with a short wait between each — `helpers.scrollPage(page, 'down', distance)` already does this via `page.mouse.wheel`, or use `helpers.stepScroll(page, deltaPixels)` directly for a one-off. Never `window.scrollBy`/`scrollTo` a large distance in one call if the result will be recorded or screenshotted via CDP rather than `page.screenshot()`.
 
 ## Example Usage
 

@@ -230,22 +230,45 @@ async function authenticate(page, credentials, selectors = {}) {
  * @param {string} direction - 'down', 'up', 'top', 'bottom'
  * @param {number} distance - Pixels to scroll (for up/down)
  */
+// stepScroll scrolls via page.mouse.wheel in small increments rather than
+// jumping straight to the target with window.scrollTo/scrollBy. A jump
+// scrolls faster than Chromium's compositor can rasterize the newly
+// revealed tiles, which then render as a flat gray "checkerboard"
+// placeholder instead of real content. page.screenshot() forces a full
+// repaint first so it never shows this, but recordVideo output and any
+// frame grabbed via CDP screencast bake the checkerboard right in — this
+// is the #1 cause of "why is there a gray block in my Playwright video."
+async function stepScroll(page, delta, stepSize = 100) {
+  const steps = Math.max(1, Math.ceil(Math.abs(delta) / stepSize));
+  const perStep = delta / steps;
+  for (let i = 0; i < steps; i++) {
+    await page.mouse.wheel(0, perStep);
+    await page.waitForTimeout(120);
+  }
+  await page.waitForTimeout(300); // let the compositor settle
+}
+
 async function scrollPage(page, direction = 'down', distance = 500) {
   switch (direction) {
     case 'down':
-      await page.evaluate(d => window.scrollBy(0, d), distance);
+      await stepScroll(page, distance);
       break;
     case 'up':
-      await page.evaluate(d => window.scrollBy(0, -d), distance);
+      await stepScroll(page, -distance);
       break;
-    case 'top':
-      await page.evaluate(() => window.scrollTo(0, 0));
+    case 'top': {
+      const y = await page.evaluate(() => window.scrollY);
+      await stepScroll(page, -y);
       break;
-    case 'bottom':
-      await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    }
+    case 'bottom': {
+      const delta = await page.evaluate(
+        () => document.body.scrollHeight - window.scrollY - window.innerHeight,
+      );
+      await stepScroll(page, delta);
       break;
+    }
   }
-  await page.waitForTimeout(500); // Wait for scroll animation
 }
 
 /**
@@ -432,6 +455,7 @@ module.exports = {
   takeScreenshot,
   authenticate,
   scrollPage,
+  stepScroll,
   extractTableData,
   handleCookieBanner,
   retryWithBackoff,
