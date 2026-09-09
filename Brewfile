@@ -352,8 +352,12 @@ brew "saulpw/vd/visidata"
 brew "stefanprodan/tap/timoni"
 # A dev environment as code for microservice apps
 brew "tilt-dev/tap/tilt"
-# Diff-aware code/doc inspection hook for Claude Code
+# Diff-aware code/doc inspection hook and MCP server
 brew "tstapler/homebrew-tap/kibitzer"
+# Local AI gateway, compaction utilities, and MCP server
+brew "tstapler/homebrew-tap/consolette"
+# Rust toolchain used to build the pinned stapler-mcp source release
+brew "rust"
 # Manage multiple AI terminal agents like Claude Code, Aider, Codex, OpenCode, and Amp.
 brew "tstapler/stapler-squad/stapler-squad"
 # Markdown-based outliner and note-taking app (Kotlin Multiplatform)

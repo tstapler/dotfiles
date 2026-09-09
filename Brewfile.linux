@@ -3,6 +3,9 @@
 # Private taps (fanatics-gaming/tap, tstapler/stelekit) are intentionally excluded
 # because they require SSH key setup which happens after bootstrap.
 
+# Public first-party CLI releases used by the Pi/Claude toolchain.
+tap "tstapler/homebrew-tap", "https://github.com/tstapler/homebrew-tap"
+
 cask "1password-cli"  # op CLI; ships as a cask upstream but is CLI-only, required by secrets role
 brew "ansible"
 brew "asdf"          # required by asdf role
@@ -23,6 +26,7 @@ brew "node"
 brew "ollama", restart_service: :changed
 brew "python@3.12"
 brew "ripgrep"
+brew "rust"           # builds the pinned stapler-mcp source release
 brew "sccache"
 brew "shellcheck"
 brew "starship"
@@ -33,3 +37,5 @@ brew "uv"
 brew "vim"
 brew "wget"
 brew "zsh"
+brew "tstapler/homebrew-tap/consolette"
+brew "tstapler/homebrew-tap/kibitzer"

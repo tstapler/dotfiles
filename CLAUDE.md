@@ -60,6 +60,6 @@ locally.
 
 ## Version control
 
-This repo uses **jj** (Jujutsu) in colocated mode over the git backend, not
-plain git — see memory for the orphaned-commit recovery workflow if `jj log`
-shows commits not reachable from `master`.
+This repo uses **Git** for version control. Use standard `git status`, `git diff`,
+`git log`, branching, commit, and push workflows. Do not initialize or use
+Jujutsu (`jj`) in this repository.

@@ -1,0 +1,7 @@
+{
+  "extensions": {
+    "ponytail": {
+      "path": "~/dotfiles/plugins/ponytail/pi/index.ts"
+    }
+  }
+}

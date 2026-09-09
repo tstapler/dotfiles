@@ -38,6 +38,12 @@ links:
   - src: .config/goose/config.yaml
     dest: .config/goose/config.yaml
     os: "Linux Darwin"
+  - src: .config/pi/config.json
+    dest: .config/pi/config.json
+    os: "Linux Darwin"
+  - src: .config/pi/config.d/*.json
+    dest: .config/pi/config.d
+    os: "Linux Darwin"
   - src: .claude/CLAUDE.md
     os: "Linux Darwin"
   - src: .claude/agents
