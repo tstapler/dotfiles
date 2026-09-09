@@ -10,6 +10,8 @@ I'll help you create well-structured git commits following the Conventional Comm
 
 1. I'll check for unstaged changes in your repository
 2. Analyze the changes to determine logical commit groupings
+   - **Structural vs. behavioral is the first split, before any other grouping.** Per Kent Beck's *Tidy First?*: a change that only restructures code (rename, extract, reorder, reformat) and a change that alters what the code does are never the same commit, even when they touch the same lines for the same reason. A reviewer can skim a pure-structural diff in seconds; a behavioral diff needs real scrutiny — mixing them forces the slow read on both.
+   - If a rename/extract was done *to make room for* a behavior change, that's still two commits: the tidying first (`refactor:`), then the behavior change (`feat:`/`fix:`) on top of it.
 3. For each logical group, I'll:
    - Suggest an appropriate commit type and scope
    - Draft a concise commit message following the convention

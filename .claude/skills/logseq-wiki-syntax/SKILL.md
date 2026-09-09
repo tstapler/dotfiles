@@ -29,9 +29,10 @@ These fail on Android FAT32/exFAT where the wiki syncs.
 | Character | Safe substitute | Example |
 |---|---|---|
 | `:` (colon) | `-` (hyphen) | `DDD- Aggregate.md` not `DDD: Aggregate.md` |
+| `?` (question mark) | drop it | `Tidy First.md` not `Tidy First?.md` |
 | `/` (slash) | `___` (triple underscore) | Logseq namespace separator |
 
-When a page title needs a colon (e.g. a book title), use `title::` in the page property to set the display name, and use a hyphen in the actual filename.
+When a page title needs a colon or question mark (e.g. a book title like "Tidy First?"), drop/substitute the character in the actual filename, and use `title::` in the page property to preserve the real display title (`title:: Tidy First?`).
 
 ```markdown
 title:: World War Z: An Oral History of the Zombie War

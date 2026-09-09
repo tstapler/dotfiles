@@ -8,6 +8,13 @@ I'll help you refactor code by applying established software engineering princip
 
 ## Refactoring Process
 
+0. **Tidy First? Decision** (Kent Beck) — before selecting techniques, decide *when* this structural work pays for itself:
+   - **First** — do it now, immediately before the behavior change it's blocking or de-risking
+   - **After** — do it right after the behavior change that revealed the mess, while it's fresh
+   - **Later** — it's not blocking anything urgent; note it and batch it for a dedicated pass instead of doing it now
+   - **Never** — the code won't be touched again, or the cost of tidying exceeds what it buys back; leave it
+   - Whatever the answer, keep this structural work in its own commit(s), never mixed with a behavior change — see Implementation Phase below
+
 1. **Analysis Phase**
    - Identify code smells using Martin Fowler's classification
    - Assess current design patterns and architectural approach
@@ -26,6 +33,7 @@ I'll help you refactor code by applying established software engineering princip
    - Incorporate language-specific idioms and conventions
    - Implement selected design patterns where appropriate
    - Improve naming, comments, and documentation
+   - **Keep structural changes in their own commit(s), separate from any behavior change** — even one done to enable the other (see `git:commit`)
 
 4. **Validation Phase**
    - Ensure behavior preservation (suggest tests if absent)
@@ -76,6 +84,7 @@ I'll adapt the refactoring to follow $1-specific (or detected language) idioms, 
 ## Academic and Industry References
 
 - "Refactoring: Improving the Design of Existing Code" (Martin Fowler)
+- "Tidy First?: A Personal Exercise in Empirical Software Design" (Kent Beck) — the First/After/Later/Never timing decision, and the discipline of never mixing structural and behavioral changes in one commit
 - "Clean Code: A Handbook of Agile Software Craftsmanship" (Robert C. Martin)
 - "Design Patterns: Elements of Reusable Object-Oriented Software" (Gamma, Helm, Johnson, Vlissides)
 - "Working Effectively with Legacy Code" (Michael Feathers)

@@ -74,6 +74,8 @@ git diff HEAD
 
 ### 5. Commit
 
+If completing the refactor required any behavior change (not just structure), split it into its own commit — never mix the two (see `git:commit`).
+
 ```bash
 git add -u
 git commit -m "refactor: <clear description>"
@@ -84,6 +86,7 @@ git commit -m "refactor: <clear description>"
 Before completing any refactor:
 - [ ] ast-grep scope review done before applying
 - [ ] Dry-run previewed and all changes intentional
+- [ ] Any behavior change needed to complete the refactor is in a separate commit from the structural change
 - [ ] Code formatted
 - [ ] Clean build (no compilation errors)
 - [ ] Tests passing

@@ -38,7 +38,14 @@ Synthesize knowledge from multiple sources into interconnected Zettelkasten note
 
 ### 3. Integration Phase
 
-- Update journal with synthesis summary
+- Update journal with synthesis summary, using this exact nested-bullet shape (established in the personal-wiki repo's CLAUDE.md, reused across every synthesis skill so the journal reads the same regardless of which skill wrote it):
+  ```markdown
+  - Asked/discussed <topic>; <one-line summary of what was written>
+  	- ## Created Pages
+  		- [[New Page]] — one-line description
+  	- ## Updated Pages
+  		- [[Existing Page]] — what changed on it
+  ```
 - Link to related existing pages
 - Ensure bidirectional connections
 
@@ -132,6 +139,10 @@ For referenced books, create dedicated pages:
 - Key concepts covered
 - Cross-references to related concepts
 - Tags: `#[[Books]]`, `#[[Authors]]`
+
+**Verify structural facts, don't recall them.** A book's table of contents, chapter/section names, and publication year are exactly the kind of precise detail that erodes in trained memory. Before writing a chapter list or part structure into the page, confirm it against a real source (publisher page, a chapter-by-chapter review, the book itself) — the same "run it, don't read it" standard CLAUDE.md applies elsewhere.
+
+**Don't inline-create an author stub.** If the author doesn't have a page yet, leave `[[Author Name]]` as a redlink rather than spinning up a bio page as a side effect of the book zettel — that's out of scope for a single synthesis pass. Wiki-wide redlink/stub creation is handled separately by the `knowledge:maintain` maintenance pass.
 
 ## Product & Retailer Zettel Template
 
