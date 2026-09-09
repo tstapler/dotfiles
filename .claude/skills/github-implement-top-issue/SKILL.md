@@ -1,6 +1,6 @@
 ---
 name: github-implement-top-issue
-description: Use when asked to find and implement the highest-priority GitHub issue for the current project — e.g. "work the top issue", "pick up the next issue", "implement the most important open issue". Detects the repo from the current directory, ranks open issues, implements the winner, and opens a draft PR.
+description: Use when asked to find and implement the highest-priority GitHub issue for the current project — e.g. "work the top issue", "pick up the next issue", "implement the most important open issue". Detects the repo from the current directory, ranks open issues, implements the winner, opens a draft PR, and drives it to mergeable via github:pr-ship.
 ---
 
 # Implement the top GitHub issue
@@ -49,5 +49,13 @@ description: Use when asked to find and implement the highest-priority GitHub is
 6. **Open a draft PR** (`gh pr create --draft`) with `Closes #<n>` in the body, following this
    repo's normal commit/PR conventions.
 
-Skip steps 4-6 and just report the ranked list if the user only asked which issue is next, not
+7. **Ship it**: invoke the `github:pr-ship` skill on the PR you just opened and let it iterate
+   (local CI, code review, remote CI, review comments, merge conflicts) until the PR is
+   mergeable. Opening the draft PR is not the finish line — do not report the task done, hand
+   back to the user, or stop until `github:pr-ship` reports the PR is ready to merge (or reports
+   a blocker only the user can resolve, e.g. a design question or missing credential). If
+   `github:pr-ship` surfaces such a blocker, report it plainly and say what's needed — don't
+   silently give up and call it done.
+
+Skip steps 4-7 and just report the ranked list if the user only asked which issue is next, not
 to implement it.
