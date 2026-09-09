@@ -1,0 +1,89 @@
+- name: Check if tymuxd is already on PATH
+  command: tymuxd --help
+  register: tymuxd_check
+  failed_when: false
+  changed_when: false
+  timeout: 3
+  environment:
+    PATH: "{{ brew_prefix }}/bin:{{ ansible_facts['env']['HOME'] }}/.local/bin:{{ ansible_facts['env']['PATH'] }}"
+  tags: [tymuxd]
+
+# tymuxd --help (like every other invocation of this binary) starts the
+# daemon rather than printing help and exiting — see
+# stapler-squad/docs/reference/bundling-tymuxd.md. The `timeout` module
+# argument above kills it after 3s if it's just sitting there listening; a
+# non-zero rc from that (or from AddrInUse if a daemon is already bound to
+# the port) means "found the binary and it ran," not failure.
+#
+# Verified empirically (2026-09-06) which field actually discriminates
+# presence, rather than assuming: command-not-found sets msg to the generic
+# "Error executing command." (NOT a "No such file or directory" string) with
+# rc=2; a found-and-executed binary reports some other rc (1 for AddrInUse,
+# a timeout-killed rc otherwise) with a real cmd/stdout/stderr/start/end
+# payload. rc==2 is ansible-core's own command-module convention for ENOENT,
+# not a stapler-squad-specific detail — see
+# lib/ansible/plugins/action/command.py's os.execvp ENOENT handling upstream.
+- name: Set tymuxd_present fact
+  set_fact:
+    tymuxd_present: "{{ (tymuxd_check.rc | default(2)) != 2 }}"
+  tags: [tymuxd]
+
+- name: Locate a local stapler-squad checkout to fetch the pinned tymuxd binary from
+  stat:
+    path: "{{ item }}/scripts/fetch-tymuxd.sh"
+  loop:
+    - "{{ ansible_facts['env']['HOME'] }}/Programming/stapler-squad"
+    - "{{ ansible_facts['env']['HOME'] }}/code/github.com/tstapler/stapler-squad"
+  register: tymuxd_stapler_squad_checkouts
+  when: not tymuxd_present
+  tags: [tymuxd]
+
+- name: Set tymuxd_stapler_squad_dir fact (first checkout found with the fetch script)
+  set_fact:
+    tymuxd_stapler_squad_dir: "{{ (tymuxd_stapler_squad_checkouts.results | selectattr('stat.exists') | first).item }}"
+  when:
+    - not tymuxd_present
+    - tymuxd_stapler_squad_checkouts.results | default([]) | selectattr('stat.exists') | list | length > 0
+  tags: [tymuxd]
+
+- name: Install tymuxd (pinned, checksum-verified release binary)
+  when:
+    - not tymuxd_present
+    - tymuxd_stapler_squad_dir is defined
+  tags: [tymuxd]
+  block:
+    # Reuses stapler-squad's own fetch script (checksum-verified against
+    # scripts/tymuxd-checksums.txt) rather than re-deriving the release
+    # version/platform-target/checksum mapping here — this repo's job is
+    # placing the result on PATH, not duplicating that pin.
+    - name: Fetch pinned tymuxd binary via stapler-squad's own fetch script
+      command: ./scripts/fetch-tymuxd.sh
+      args:
+        chdir: "{{ tymuxd_stapler_squad_dir }}"
+      changed_when: true
+
+    - name: Ensure ~/.local/bin exists
+      file:
+        path: "{{ ansible_facts['env']['HOME'] }}/.local/bin"
+        state: directory
+        mode: '0755'
+
+    - name: Symlink tymuxd onto PATH
+      file:
+        src: "{{ tymuxd_stapler_squad_dir }}/session/tymux/embed/tymuxd"
+        dest: "{{ ansible_facts['env']['HOME'] }}/.local/bin/tymuxd"
+        state: link
+        force: true
+
+- name: Tymuxd not installed — no local stapler-squad checkout found
+  debug:
+    msg: >-
+      Skipping tymuxd install: no stapler-squad checkout found at
+      ~/Programming/stapler-squad or ~/code/github.com/tstapler/stapler-squad.
+      Clone it (see stapler-squad/CLAUDE.md's Repo Placement) and re-run this
+      role with --tags tymuxd if stapler-squad's tymux backend is needed on
+      this machine.
+  when:
+    - not tymuxd_present
+    - tymuxd_stapler_squad_dir is not defined
+  tags: [tymuxd]

@@ -41,6 +41,8 @@
     - nix
     - secrets
     - github
+    - role: tymuxd
+      tags: [tymuxd]
     - role: fbg
       tags: [fbg]
     - role: ssh-bastion-client
