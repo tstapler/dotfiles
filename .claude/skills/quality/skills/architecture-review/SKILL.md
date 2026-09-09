@@ -232,7 +232,17 @@ This review is grounded in authoritative software engineering principles:
 
 ---
 
-## Phase 1: Discovery and Mapping (Using Explore Agent)
+## Phase 1: Discovery and Mapping
+
+**Check kibitzer first.** If the repo has a `.claude/inspect.json` and `kibitzer` is on `PATH`
+(or its MCP server is connected), run `architecture_assessment` before falling back to
+Explore-agent grepping — it gives a structural + complexity pass (package deps, cycles,
+layering, coupling, God-Object-sized structs, long-function/deep-nesting complexity) with a
+Mermaid diagram, with zero per-repo tool setup. Use `list_architecture_symbols`/
+`get_architecture_node` for targeted symbol/package lookups instead of manual grep. See the
+`code-hotspot-analysis` skill for the full kibitzer command/tool table. Fall back to the Explore
+agent below when kibitzer isn't configured for this repo, or a finding needs detail kibitzer's
+symbol export doesn't cover for this language yet.
 
 Use the **Explore agent** to systematically discover and map the architecture:
 
@@ -515,7 +525,7 @@ Launch the Explore agent with these queries (adjust based on language/framework)
 - [ ] Distance from main sequence
 
 **Dependency Analysis**
-- [ ] Generate an actual dependency graph with tooling, don't infer coupling from reading code alone — see the `code-hotspot-analysis` skill for the concrete tool stack (`goda`/`go mod graph` for Go package graphs, `go-callvis` for call graphs, `ast-grep` for cross-package field-access violations). For non-Go stacks, use the language's equivalent (e.g. `madge` for JS/TS, `jdeps`/ArchUnit for Java).
+- [ ] Generate an actual dependency graph with tooling, don't infer coupling from reading code alone. Prefer `kibitzer` if configured for this repo (`architecture_assessment`, or CLI `kibitzer run <dir> --trigger batch`) — it's zero-install and cross-language (Go/TS/JS/Java/Kotlin/Python) for import cycles, layering, and coupling. Otherwise see the `code-hotspot-analysis` skill for the language-specific tool stack (`goda`/`go mod graph` for Go package graphs, `go-callvis` for call graphs, `ast-grep` for cross-package field-access violations; `madge` for JS/TS; `jdeps`/ArchUnit for Java).
 - [ ] Identify coupling hotspots (highly coupled modules) — prefer the tool-generated graph's afferent-coupling count over eyeballing import lists
 - [ ] Find circular dependencies (most graph tools flag these directly)
 - [ ] Check dependency direction (should point toward stable abstractions)
@@ -842,7 +852,8 @@ Prioritized roadmap with agent usage and ticket creation
 
 ## Related Commands
 
-- `code-hotspot-analysis` skill - Run this FIRST for `--depth=deep`/whole-codebase reviews: tool-generated coupling graphs and git-history hotspot scoring to prioritize which modules actually warrant a deep principle-by-principle review, instead of spending equal effort everywhere
+- `code-hotspot-analysis` skill - Run this FIRST for `--depth=deep`/whole-codebase reviews: tool-generated coupling graphs and git-history hotspot scoring to prioritize which modules actually warrant a deep principle-by-principle review, instead of spending equal effort everywhere. Its kibitzer command table is the canonical reference for MCP tool names/args.
+- `kibitzer` MCP/CLI - When configured for this repo (`.claude/inspect.json` present), the default tool for Phase 1 discovery and Phase 3 dependency analysis: `architecture_assessment` for the whole-repo structural pass, `list_architecture_symbols`/`get_architecture_node` for targeted lookups. Zero per-repo install, cross-language.
 - `/code:implement` - Implement features following best practices
 - `/fix-failures` - Systematically fix test and linter failures
 - `/quality:refactor-code` - Refactor specific code using established principles

@@ -8,6 +8,15 @@ I'll help you identify files that are prime candidates for refactoring in $1 (or
 
 ## Metrics to Identify Refactoring Candidates
 
+**Check kibitzer first.** If the repo has a `.claude/inspect.json` and `kibitzer` is on `PATH`
+(or its MCP server is connected), it covers most of section 1 and part of section 3 below with
+zero per-repo tool install, across Go/TS/TSX/JS/Python/Java/Kotlin: `architecture_assessment`
+(MCP) / `kibitzer run <dir> --trigger batch` (CLI) surfaces `long-function`/`deep-nesting`
+findings (a complexity proxy) and God-Object-sized structs/interfaces; `list_architecture_symbols`
+gives struct/interface field counts directly as JSON. See the `code-hotspot-analysis` skill for
+the full command table. Use the per-language tools below when kibitzer isn't configured for this
+repo, or you need a true cyclomatic/cognitive number rather than a ranking heuristic.
+
 I'll run the following analyses to find potential refactoring targets:
 
 ### 1. Code Complexity
@@ -122,7 +131,7 @@ For each identified candidate, I'll suggest:
 
 ## Additional Languages
 
-Go and Python have concrete tooling above. For other languages, the same two-axis approach (complexity + churn, per `code-hotspot-analysis`) still applies — swap in the language's complexity tool and keep the git-history/hotspot-scoring commands as-is (they're language-agnostic):
+Go and Python have concrete tooling above. For other languages, try `kibitzer` first (see the note at the top of this file) — it covers Go/TS/TSX/JS/Python/Java/Kotlin with no install. Where it doesn't reach (a true complexity number, or a language outside that list), the same two-axis approach (complexity + churn, per `code-hotspot-analysis`) still applies — swap in the language's complexity tool and keep the git-history/hotspot-scoring commands as-is (they're language-agnostic):
 
 - JavaScript/TypeScript: `eslint` complexity rules, or `plato`/`es6-plato` for a complexity report
 - Java: `pmd`'s cyclomatic-complexity ruleset, or `checkstyle`
