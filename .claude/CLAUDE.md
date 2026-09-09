@@ -55,6 +55,16 @@ Use the serena MCP server for complex multi-file structural edits when available
 - **Git hygiene in shared repos.** Never `git add -A` / `git add .` in a repo you don't exclusively own — it can sweep up the user's own uncommitted work. Stage only the specific files you touched, and check `git status` first if anything looks entangled with pending changes that aren't yours.
 - **Draft PRs by default.** When opening a PR the user hasn't reviewed yet, open it as a draft (`gh pr create --draft`) so reviewers aren't notified prematurely; mark it ready only once the user gives the go-ahead.
 
+## Code Comments
+
+- **Self-explanatory code first.** A good name or a clean structure removes the need for a comment; reach for one only after that fails.
+- **Why, not what.** Comment a hidden constraint, a non-obvious tradeoff, or a workaround for a specific bug — never restate what the code already says.
+- **Short beats long.** One line over a paragraph. If a comment needs more than a line, the code usually needs a rename instead.
+- **Docstrings on entry points only.** Give a public function or module an overview when its purpose isn't obvious from its name and signature; skip it for private helpers.
+- **Name assumptions and limits.** If a function assumes sorted input, a bounded range, or has a known failure mode, say so once at the point of use.
+
+See also the Proportionality rule under Evidence and Claims: a comment explains the code, not the investigation behind it.
+
 ## Evidence and Claims
 
 Do not overclaim. Every factual statement — in chat, code comments, commit messages, PR bodies, docs, or notes — carries a source the reader can check, **and a hyperlink or path wherever one exists**: a PR/issue URL, `repo/path/file.ext:42`, a doc or dashboard URL, or the exact command and its output. Naming a source without a link pushes verification back onto the reader.
