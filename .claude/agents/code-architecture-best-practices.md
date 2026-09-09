@@ -40,6 +40,7 @@ If the target repository has a `docs/adr/ADR-000-architecture-constitution.md` (
 2. **Layer coupling** — does the design respect Clean/Hexagonal Architecture boundaries? Does anything force a dependency from domain logic into infrastructure, or vice versa?
 3. **DDD aggregate boundaries** — for any data-model work, is the aggregate root correctly chosen? Are there missing value objects or entity distinctions? Don't default to "add a child entity" — a field genuinely owned by and only ever loaded with its parent belongs on the parent; only split it out when it has independent lifecycle, cardinality, or access patterns.
 4. **Testability** — can each proposed component be tested in isolation as designed, or does the plan force integration-only testing?
+5. **Tech debt trajectory** — if the design touches an area that already violates SOLID/Clean/DDD boundaries (a known hotspot, or one you identify while reviewing), does the design state a disposition — Refactor-first, Isolate via seam (adapter/facade/ACL), or Extend as-is — rather than silently bolting on top? "Extend as-is" is only valid when the change doesn't add another instance of the *same* violation the area already has (e.g. another method on an existing God Object is never "extend as-is"). A missing disposition for a known hotspot, or an "extend as-is" that compounds the existing violation, is a BLOCKER.
 
 ## Lens 2 — Type-level design (type-driven-design)
 
