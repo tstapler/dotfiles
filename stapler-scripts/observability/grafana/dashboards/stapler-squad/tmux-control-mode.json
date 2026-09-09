@@ -1,0 +1,131 @@
+{
+  "title": "stapler-squad: tmux control mode",
+  "description": "RED (rate/errors/duration) + saturation for tmux control-mode command round trips. Answers: is tmux control mode healthy right now, and for which command?",
+  "uid": "ssq-tmux-control-mode",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "time": { "from": "now-6h", "to": "now" },
+  "refresh": "30s",
+  "panels": [
+    { "type": "row", "title": "Golden signals", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }, "id": 100 },
+    {
+      "id": 1,
+      "title": "Command rate (RED: Rate)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+      "targets": [
+        {
+          "expr": "sum(rate(tmux_control_mode_command_duration_ms_milliseconds_count[5m])) by (command)",
+          "legendFormat": "{{command}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Timeout rate (RED: Errors)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "max": 1,
+          "min": 0,
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "green", "value": null },
+            { "color": "orange", "value": 0.01 },
+            { "color": "red", "value": 0.05 }
+          ] }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(tmux_control_mode_timeouts_total[5m])) by (command) / sum(rate(tmux_control_mode_command_duration_ms_milliseconds_count[5m])) by (command)",
+          "legendFormat": "{{command}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Latency p50 / p99 (RED: Duration)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 9 },
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "fieldConfig": { "defaults": { "unit": "ms" }, "overrides": [] },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.5, sum(rate(tmux_control_mode_command_duration_ms_milliseconds_bucket[5m])) by (le, command))",
+          "legendFormat": "p50 {{command}}",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(tmux_control_mode_command_duration_ms_milliseconds_bucket[5m])) by (le, command))",
+          "legendFormat": "p99 {{command}}",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "FIFO backlog depth p99 (Saturation)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 9 },
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "green", "value": null },
+            { "color": "orange", "value": 20 },
+            { "color": "red", "value": 100 }
+          ] }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(tmux_control_mode_pending_depth_bucket[5m])) by (le))",
+          "legendFormat": "p99 pending depth",
+          "refId": "A"
+        }
+      ]
+    },
+    { "type": "row", "title": "Breakdown by command", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 17 }, "id": 101 },
+    {
+      "id": 5,
+      "title": "Timeout count (raw, 30m windows)",
+      "type": "barchart",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 18 },
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "targets": [
+        {
+          "expr": "sum(increase(tmux_control_mode_timeouts_total[30m])) by (command)",
+          "legendFormat": "{{command}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Latency p99.9 by command",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 18 },
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "fieldConfig": { "defaults": { "unit": "ms" }, "overrides": [] },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.999, sum(rate(tmux_control_mode_command_duration_ms_milliseconds_bucket[5m])) by (le, command))",
+          "legendFormat": "p99.9 {{command}}",
+          "refId": "A"
+        }
+      ]
+    }
+  ]
+}

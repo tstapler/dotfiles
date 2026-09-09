@@ -1,0 +1,108 @@
+{
+  "title": "stapler-squad: pprof profiles (flamegraphs)",
+  "description": "Continuous CPU/memory/goroutine profiling via Grafana Alloy scraping stapler-squad's net/http/pprof endpoint (only present when the app runs with --profile — see docs/how-to/profile-lockups.md) into Pyroscope. Answers: what is the process actually spending CPU/memory/goroutines on, right now or at a specific point in the past.",
+  "uid": "ssq-pprof-profiles",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "time": { "from": "now-30m", "to": "now" },
+  "refresh": "30s",
+  "panels": [
+    { "type": "row", "title": "CPU", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }, "id": 100 },
+    {
+      "id": 1,
+      "title": "CPU time sampled (drag to select a range for the flamegraph below)",
+      "type": "timeseries",
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 1 },
+      "datasource": { "type": "grafana-pyroscope-datasource", "uid": "pyroscope" },
+      "fieldConfig": { "defaults": { "unit": "ns" }, "overrides": [] },
+      "targets": [
+        {
+          "queryType": "metrics",
+          "profileTypeId": "process_cpu:cpu:nanoseconds:cpu:nanoseconds",
+          "labelSelector": "{service_name=\"stapler-squad\"}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "CPU flamegraph",
+      "type": "flamegraph",
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 8 },
+      "datasource": { "type": "grafana-pyroscope-datasource", "uid": "pyroscope" },
+      "targets": [
+        {
+          "queryType": "profile",
+          "profileTypeId": "process_cpu:cpu:nanoseconds:cpu:nanoseconds",
+          "labelSelector": "{service_name=\"stapler-squad\"}",
+          "refId": "A"
+        }
+      ]
+    },
+    { "type": "row", "title": "Memory (heap, in-use)", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 20 }, "id": 101 },
+    {
+      "id": 3,
+      "title": "In-use heap bytes over time",
+      "type": "timeseries",
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 21 },
+      "datasource": { "type": "grafana-pyroscope-datasource", "uid": "pyroscope" },
+      "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] },
+      "targets": [
+        {
+          "queryType": "metrics",
+          "profileTypeId": "memory:inuse_space:bytes:space:bytes",
+          "labelSelector": "{service_name=\"stapler-squad\"}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Heap flamegraph (in-use space)",
+      "type": "flamegraph",
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 28 },
+      "datasource": { "type": "grafana-pyroscope-datasource", "uid": "pyroscope" },
+      "targets": [
+        {
+          "queryType": "profile",
+          "profileTypeId": "memory:inuse_space:bytes:space:bytes",
+          "labelSelector": "{service_name=\"stapler-squad\"}",
+          "refId": "A"
+        }
+      ]
+    },
+    { "type": "row", "title": "Goroutines", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 40 }, "id": 102 },
+    {
+      "id": 5,
+      "title": "Goroutine count over time",
+      "type": "timeseries",
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 41 },
+      "datasource": { "type": "grafana-pyroscope-datasource", "uid": "pyroscope" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "targets": [
+        {
+          "queryType": "metrics",
+          "profileTypeId": "goroutine:goroutine:count:goroutine:count",
+          "labelSelector": "{service_name=\"stapler-squad\"}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Goroutine flamegraph (where they're blocked/created)",
+      "type": "flamegraph",
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 48 },
+      "datasource": { "type": "grafana-pyroscope-datasource", "uid": "pyroscope" },
+      "targets": [
+        {
+          "queryType": "profile",
+          "profileTypeId": "goroutine:goroutine:count:goroutine:count",
+          "labelSelector": "{service_name=\"stapler-squad\"}",
+          "refId": "A"
+        }
+      ]
+    }
+  ]
+}

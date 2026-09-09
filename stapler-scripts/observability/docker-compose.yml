@@ -39,6 +39,32 @@ services:
       - victoriametrics_data:/victoria-metrics-data
     logging: *default-logging
 
+  pyroscope:
+    image: grafana/pyroscope:1.14.0
+    restart: unless-stopped
+    ports:
+      - "4040:4040"  # query API + own UI — Grafana reaches it via the pyroscope: hostname regardless
+    volumes:
+      - pyroscope_data:/data
+    logging: *default-logging
+
+  alloy:
+    image: grafana/alloy:v1.11.1
+    restart: unless-stopped
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - /etc/alloy/config.alloy
+    ports:
+      - "12345:12345"  # Alloy's own debug UI (component graph, scrape status)
+    volumes:
+      - ./alloy-config.alloy:/etc/alloy/config.alloy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # no-op on Docker Desktop (already resolves); required on native Linux Docker
+    depends_on:
+      - pyroscope
+    logging: *default-logging
+
   grafana:
     image: mirror.gcr.io/grafana/grafana:11.5.2
     restart: unless-stopped
@@ -56,9 +82,11 @@ services:
       - GF_USERS_ALLOW_SIGN_UP=false
     depends_on:
       - victoriametrics
+      - pyroscope
     logging: *default-logging
 
 volumes:
   victoriametrics_data:
   grafana_data:
   tempo_data:
+  pyroscope_data:

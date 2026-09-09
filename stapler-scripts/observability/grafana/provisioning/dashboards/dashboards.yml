@@ -1,5 +1,23 @@
 apiVersion: 1
 
+# One explicit provider per top-level Grafana folder, each scoped to its own
+# subdirectory under grafana/dashboards/. Deliberately NOT using
+# `foldersFromFilesStructure: true` on a single provider — that's broken
+# against Grafana's `nestedFolders` feature toggle (on by default since
+# 11.x): dashboards silently land in "General" instead of their subfolder,
+# with no provisioning error logged. See
+# https://github.com/grafana/grafana/issues/73271. Verified working with
+# this explicit-provider-per-folder shape against grafana:11.5.2 on
+# 2026-09-09 (uid ssq-tmux-control-mode confirmed via GET
+# /api/dashboards/uid/... to carry folderTitle "stapler-squad", not
+# "General").
+#
+# To add a new project's dashboards: create grafana/dashboards/<project>/,
+# drop dashboard JSON in it, and add a provider block below pointing `folder`
+# and `options.path` at that same name — do not add files directly under
+# grafana/dashboards/ expecting them to land in General, since each
+# provider's path is scanned independently (an overlapping path would
+# provision the same dashboard twice under two providers and error).
 providers:
   - name: 'General'
     orgId: 1
@@ -10,4 +28,15 @@ providers:
     updateIntervalSeconds: 10
     allowUiUpdates: true
     options:
-      path: /var/lib/grafana/dashboards
+      path: /var/lib/grafana/dashboards/general
+
+  - name: 'stapler-squad'
+    orgId: 1
+    folder: 'stapler-squad'
+    type: file
+    disableDeletion: false
+    editable: true
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards/stapler-squad

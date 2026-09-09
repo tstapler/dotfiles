@@ -1,0 +1,50 @@
+// Scrapes stapler-squad's net/http/pprof endpoint (exposed only when the app
+// is run with --profile, default port 6060 — see docs/how-to/profile-lockups.md
+// in the stapler-squad repo) and forwards profiles to the local Pyroscope
+// server. host.docker.internal resolves to the host machine from inside the
+// container on both Docker Desktop (macOS) and Linux (via the compose
+// service's extra_hosts entry below).
+pyroscope.scrape "stapler_squad" {
+  targets = [
+    {"__address__" = "host.docker.internal:6060", "service_name" = "stapler-squad"},
+  ]
+  forward_to = [pyroscope.write.local.receiver]
+
+  // stapler-squad uses plain net/http/pprof (docs/how-to/profile-lockups.md),
+  // not the github.com/grafana/pyroscope-go/godeltaprof handlers — so the
+  // delta_* endpoints Alloy's godeltaprof_* profile types expect don't
+  // exist. Use the cumulative variants (/debug/pprof/heap, /mutex, /block,
+  // /goroutine, /profile) and disable every godeltaprof_* block.
+  profiling_config {
+    profile.process_cpu {
+      enabled = true
+    }
+    profile.memory {
+      enabled = true
+    }
+    profile.goroutine {
+      enabled = true
+    }
+    profile.mutex {
+      enabled = true
+    }
+    profile.block {
+      enabled = true
+    }
+    profile.godeltaprof_memory {
+      enabled = false
+    }
+    profile.godeltaprof_mutex {
+      enabled = false
+    }
+    profile.godeltaprof_block {
+      enabled = false
+    }
+  }
+}
+
+pyroscope.write "local" {
+  endpoint {
+    url = "http://pyroscope:4040"
+  }
+}

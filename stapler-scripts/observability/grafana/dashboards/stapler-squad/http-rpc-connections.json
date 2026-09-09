@@ -1,0 +1,103 @@
+{
+  "title": "stapler-squad: HTTP/RPC connections",
+  "description": "Connection saturation for stapler-squad's plain-HTTP/1.1 server — catches the browser's 6-connections-per-origin exhaustion bug class (see docs/how-to/enable-opentelemetry.md, 'Connection concurrency metrics').",
+  "uid": "ssq-http-rpc-connections",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "time": { "from": "now-6h", "to": "now" },
+  "refresh": "30s",
+  "panels": [
+    { "type": "row", "title": "Golden signals", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }, "id": 100 },
+    {
+      "id": 1,
+      "title": "HTTP/1.1 connections open",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "green", "value": null },
+            { "color": "orange", "value": 5 },
+            { "color": "red", "value": 6 }
+          ] }
+        },
+        "overrides": []
+      },
+      "targets": [{ "expr": "http_server_connections_open", "refId": "A" }]
+    },
+    {
+      "id": 2,
+      "title": "WebSocket upgrades (rate, 5m)",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 8, "x": 8, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+      "targets": [{ "expr": "sum(rate(http_server_connections_hijacked_total[5m]))", "refId": "A" }]
+    },
+    {
+      "id": 3,
+      "title": "Open long-lived RPC streams (total)",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "targets": [{ "expr": "sum(rpc_server_streams_open)", "refId": "A" }]
+    },
+    {
+      "id": 4,
+      "title": "HTTP/1.1 connections open (trend)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 7 },
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "green", "value": null },
+            { "color": "orange", "value": 5 },
+            { "color": "red", "value": 6 }
+          ] }
+        },
+        "overrides": []
+      },
+      "targets": [{ "expr": "http_server_connections_open", "legendFormat": "connections open", "refId": "A" }]
+    },
+    {
+      "id": 5,
+      "title": "RPC streams open by method (Breakdown)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 7 },
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "stacking": { "mode": "normal" } } }, "overrides": [] },
+      "targets": [
+        {
+          "expr": "sum(rpc_server_streams_open) by (method)",
+          "legendFormat": "{{method}}",
+          "refId": "A"
+        }
+      ]
+    },
+    { "type": "row", "title": "Context", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 15 }, "id": 101 },
+    {
+      "id": 6,
+      "title": "SIGKILL escalations (1h)",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 16 },
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "green", "value": null },
+            { "color": "red", "value": 1 }
+          ] }
+        },
+        "overrides": []
+      },
+      "targets": [{ "expr": "increase(safeexec_sigkill_escalations_total[1h])", "refId": "A" }]
+    }
+  ]
+}

@@ -22,6 +22,8 @@ make clean   # stop and wipe all volumes
 | OTLP HTTP | `localhost:4318` | |
 | VictoriaMetrics query API | `http://localhost:8428` | Prometheus-compatible; `/api/v1/query`, `/api/v1/query_range` |
 | Tempo query API | `http://localhost:3200` | not usually queried directly — use Grafana's Explore |
+| Pyroscope query API | `http://localhost:4040` | continuous profiling storage; not usually queried directly — use Grafana's flamegraph panels/Explore |
+| Alloy debug UI | `http://localhost:12345` | component graph + per-target scrape health for the `pyroscope.scrape` jobs below |
 | Grafana | `http://localhost:48300` | `admin` / `admin` — change this if you ever expose the port beyond localhost. Non-standard port: `:3000` is one of the most commonly already-bound dev ports (Next.js, CRA, etc.) |
 
 ## Pointing a project at this stack
@@ -40,15 +42,42 @@ after the project.
 - **Traces**: `otlp` receiver → `otlp/tempo` exporter → Tempo (local-disk
   storage, `tempo.yaml`, 48h retention). Query via Grafana Explore using the
   Tempo datasource.
+- **Profiles**: Grafana Alloy (`alloy-config.alloy`) pull-scrapes a project's
+  standard `net/http/pprof` HTTP endpoint (CPU, heap, goroutine, mutex,
+  block) on an interval and forwards to Pyroscope, no SDK/code change
+  required in the target project. Query via Grafana's flamegraph panels or
+  Explore using the Pyroscope datasource. See "Pointing a project's profiler
+  at this stack" below to wire up a new project.
 - **Logs**: accepted by the collector (so a project exporting logs doesn't
   error) but only routed to a `debug` exporter (collector's own stdout) — no
   log backend (e.g. Loki) is wired up yet.
-- **Dashboards**: `grafana/dashboards/stapler-squad-cgroup-memory.json` is a
-  starter dashboard for stapler-squad's `cgroup_memory_*` metrics
-  (`telemetry/cgroup_linux.go`) — memory.current vs the MemoryHigh/MemoryMax
-  ceilings, PSI stall percentages, and OOM/OOM-kill event counts. Add more
-  dashboards under `grafana/dashboards/` as new projects wire in metrics;
-  they're auto-provisioned (see `grafana/provisioning/dashboards/`).
+- **Dashboards**: file-provisioned per project folder under
+  `grafana/dashboards/<project>/`, each with its own explicit provider entry
+  in `grafana/provisioning/dashboards/dashboards.yml` (see that file's
+  comment for why — a single provider with `foldersFromFilesStructure: true`
+  is broken against Grafana's `nestedFolders` toggle, on by default since
+  11.x: https://github.com/grafana/grafana/issues/73271). Currently:
+  `grafana/dashboards/stapler-squad/` — RED-method dashboards for tmux
+  control-mode commands and HTTP/RPC connection saturation, a USE-method
+  cgroup-memory dashboard, and a Pyroscope flamegraph dashboard (CPU/heap/
+  goroutines). To add a new project: create
+  `grafana/dashboards/<project>/`, drop dashboard JSON in it, and add a
+  provider block to `dashboards.yml`.
+
+## Pointing a project's profiler at this stack
+
+Requires the project to expose a standard Go `net/http/pprof` endpoint
+(`import _ "net/http/pprof"` behind its own `http.ListenAndServe`, typically
+gated behind a flag/env var so it's not always-on in production). Add a
+`pyroscope.scrape` block to `alloy-config.alloy` pointing at
+`host.docker.internal:<port>` (works from inside the Alloy container on both
+Docker Desktop and native Linux, via the `alloy` service's `extra_hosts`
+entry in `docker-compose.yml`) with a unique `service_name` label — see the
+existing `stapler_squad` block for the exact shape, including which
+`profiling_config` sub-blocks to enable (the plain, non-`godeltaprof_*`
+variants — `net/http/pprof` doesn't expose the `delta_*` endpoints those
+require). `make restart-web-profile`-equivalent: bring the profiler up, then
+`docker compose restart alloy` to pick up the new scrape target.
 
 ## Persistence
 
