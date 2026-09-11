@@ -48,6 +48,16 @@ services:
       - pyroscope_data:/data
     logging: *default-logging
 
+  victorialogs:
+    image: victoriametrics/victoria-logs:v1.52.0
+    restart: unless-stopped
+    command: ["--storageDataPath=/victoria-logs-data"]
+    ports:
+      - "9428:9428"  # query API + OTLP log ingestion — Grafana/otel-collector reach it via the victorialogs: hostname regardless
+    volumes:
+      - victorialogs_data:/victoria-logs-data
+    logging: *default-logging
+
   alloy:
     image: grafana/alloy:v1.11.1
     restart: unless-stopped
@@ -80,9 +90,11 @@ services:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=victoriametrics-logs-datasource
     depends_on:
       - victoriametrics
       - pyroscope
+      - victorialogs
     logging: *default-logging
 
 volumes:
@@ -90,3 +102,4 @@ volumes:
   grafana_data:
   tempo_data:
   pyroscope_data:
+  victorialogs_data:

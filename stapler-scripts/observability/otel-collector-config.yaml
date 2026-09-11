@@ -16,9 +16,8 @@ exporters:
     endpoint: tempo:4317
     tls:
       insecure: true
-  # No log backend (e.g. Loki) wired up yet — debug just logs what arrives so
-  # a project exporting logs doesn't error against a pipeline with nowhere to
-  # send data.
+  otlphttp/victorialogs:
+    logs_endpoint: http://victorialogs:9428/insert/opentelemetry/v1/logs
   debug:
     verbosity: basic
 
@@ -35,4 +34,4 @@ service:
     logs:
       receivers: [otlp]
       processors: [batch]
-      exporters: [debug]
+      exporters: [otlphttp/victorialogs, debug]

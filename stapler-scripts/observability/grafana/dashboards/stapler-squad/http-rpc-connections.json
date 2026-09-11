@@ -7,6 +7,12 @@
   "editable": true,
   "time": { "from": "now-6h", "to": "now" },
   "refresh": "30s",
+  "annotations": {
+    "list": [
+      { "builtIn": 1, "datasource": { "type": "grafana", "uid": "-- Grafana --" }, "enable": true, "hide": true, "iconColor": "rgba(0, 211, 255, 1)", "name": "Annotations & Alerts", "type": "dashboard" },
+      { "datasource": { "type": "grafana", "uid": "-- Grafana --" }, "enable": true, "iconColor": "green", "name": "Deploys", "target": { "limit": 100, "matchAny": false, "tags": ["deploy", "stapler-squad"], "type": "tags" }, "type": "tags" }
+    ]
+  },
   "panels": [
     { "type": "row", "title": "Golden signals", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }, "id": 100 },
     {

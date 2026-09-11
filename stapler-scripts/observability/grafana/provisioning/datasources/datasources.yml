@@ -31,3 +31,12 @@ datasources:
     editable: true
     uid: pyroscope
     version: 1
+
+  - name: VictoriaLogs
+    type: victoriametrics-logs-datasource
+    access: proxy
+    url: http://victorialogs:9428
+    isDefault: false
+    editable: true
+    uid: victorialogs
+    version: 1
