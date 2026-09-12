@@ -1,12 +1,13 @@
 // Scrapes stapler-squad's net/http/pprof endpoint (exposed only when the app
 // is run with --profile, default port 6060 — see docs/how-to/profile-lockups.md
 // in the stapler-squad repo) and forwards profiles to the local Pyroscope
-// server. host.docker.internal resolves to the host machine from inside the
-// container on both Docker Desktop (macOS) and Linux (via the compose
-// service's extra_hosts entry below).
+// server. Target is `localhost`, not `host.docker.internal`: the alloy
+// service runs with network_mode: host (see docker-compose.yml) because
+// stapler-squad's pprof server binds to loopback only, which
+// host.docker.internal (the bridge gateway IP) can't reach.
 pyroscope.scrape "stapler_squad" {
   targets = [
-    {"__address__" = "host.docker.internal:6060", "service_name" = "stapler-squad"},
+    {"__address__" = "localhost:6060", "service_name" = "stapler-squad"},
   ]
   forward_to = [pyroscope.write.local.receiver]
 
@@ -45,6 +46,8 @@ pyroscope.scrape "stapler_squad" {
 
 pyroscope.write "local" {
   endpoint {
-    url = "http://pyroscope:4040"
+    // Compose service-name DNS ("pyroscope") isn't available under
+    // network_mode: host — reach it via its published port on localhost instead.
+    url = "http://localhost:4040"
   }
 }

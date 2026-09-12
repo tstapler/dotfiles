@@ -70,14 +70,18 @@ Requires the project to expose a standard Go `net/http/pprof` endpoint
 (`import _ "net/http/pprof"` behind its own `http.ListenAndServe`, typically
 gated behind a flag/env var so it's not always-on in production). Add a
 `pyroscope.scrape` block to `alloy-config.alloy` pointing at
-`host.docker.internal:<port>` (works from inside the Alloy container on both
-Docker Desktop and native Linux, via the `alloy` service's `extra_hosts`
-entry in `docker-compose.yml`) with a unique `service_name` label — see the
-existing `stapler_squad` block for the exact shape, including which
+`localhost:<port>` with a unique `service_name` label — see the existing
+`stapler_squad` block for the exact shape, including which
 `profiling_config` sub-blocks to enable (the plain, non-`godeltaprof_*`
 variants — `net/http/pprof` doesn't expose the `delta_*` endpoints those
-require). `make restart-web-profile`-equivalent: bring the profiler up, then
-`docker compose restart alloy` to pick up the new scrape target.
+require). `localhost` works because the `alloy` service runs with
+`network_mode: host` (see `docker-compose.yml`): most projects' pprof
+servers, like stapler-squad's, bind to `localhost` specifically
+(loopback-only), which `host.docker.internal` (the bridge gateway IP) cannot
+reach even with the right `extra_hosts` entry — only sharing the host's
+network namespace does. `make restart-web-profile`-equivalent: bring the
+profiler up, then `docker compose restart alloy` to pick up the new scrape
+target.
 
 ## Persistence
 

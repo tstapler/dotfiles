@@ -61,16 +61,21 @@ services:
   alloy:
     image: grafana/alloy:v1.11.1
     restart: unless-stopped
+    # host networking, not the compose bridge: scrape targets like
+    # stapler-squad's pprof server bind to `localhost` (loopback-only, by
+    # design — see profiling/profiling.go), and a loopback-only listener
+    # refuses connections arriving via host.docker.internal (which resolves
+    # to the bridge gateway IP, not loopback). Host networking makes
+    # `localhost` inside this container the real host loopback. Trade-off:
+    # loses compose's service-name DNS, so alloy-config.alloy addresses
+    # Pyroscope via its published `localhost:4040` port instead of `pyroscope:4040`.
+    network_mode: host
     command:
       - run
       - --server.http.listen-addr=0.0.0.0:12345
       - /etc/alloy/config.alloy
-    ports:
-      - "12345:12345"  # Alloy's own debug UI (component graph, scrape status)
     volumes:
       - ./alloy-config.alloy:/etc/alloy/config.alloy
-    extra_hosts:
-      - "host.docker.internal:host-gateway"  # no-op on Docker Desktop (already resolves); required on native Linux Docker
     depends_on:
       - pyroscope
     logging: *default-logging
