@@ -86,6 +86,11 @@ def shell_ok(command: str) -> bool:
     empirically) on any non-zero exit, which is wrong for checks that are
     expected to legitimately fail sometimes (Ansible's `failed_when: false`
     equivalent) — e.g. "is there an active op session yet?".
+
+    For a root-owned check, put `sudo` in `command` itself (see
+    `deploys/homebrew.py`'s `_install_linux_prerequisites`) rather than
+    reaching for pyinfra's own `_sudo` fact argument — the latter works
+    (confirmed empirically) but isn't this project's convention.
     """
     output = host.get_fact(
         Command, f"({command}) >/dev/null 2>&1 && echo __OK__ || echo __FAIL__"

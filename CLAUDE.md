@@ -12,11 +12,14 @@ file is the orientation map for working in the repo.
 2. **`bootstrap/run.sh`** → **`bootstrap/playbook.yml`** — installs Homebrew,
    then runs the Ansible roles in `bootstrap/roles/*` in order (see the
    playbook for the current sequence: `claude`, `homebrew`, `shell`, `nix`,
-   `secrets`, `github`, `fbg` (work-only), `ssh-bastion-client`,
-   `sudo-mfa`). `dotfiles`, `overlays`, `llm-sync`, `asdf`, and `fonts` have
-   been ported to **`bootstrap-pyinfra/`** (see its `main.py`) and removed
-   from here; `claude` and `homebrew` still run from both during the
-   in-flight migration.
+   `secrets`, `github`, `tymuxd`, `fbg` (work-only), `ssh-bastion-client`,
+   `sudo-mfa`, `memory-optimizer`). `dotfiles`, `overlays`, `llm-sync`,
+   `asdf`, and `fonts` have been ported to **`bootstrap-pyinfra/`** (see its
+   `main.py`) and removed from here. Every other role above now has a
+   pyinfra deploy too (`bootstrap-pyinfra/deploys/`) and still runs from
+   both during the in-flight migration — see that directory's `README.md`
+   for the per-role status table (ported vs. live-verified and safe to
+   remove from here).
 3. **`Brewfile`** (macOS, casks allowed) / **`Brewfile.linux`** (Linuxbrew;
    GUI-only casks are excluded, but CLI-only casks like `1password-cli` work
    fine since Homebrew Cask on Linux just installs the binary artifact) —
