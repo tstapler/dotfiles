@@ -39,3 +39,11 @@ Use `ansible_facts['fact_name']` (dict access), never the legacy top-level
 using this repo's `bootstrap/.ansible-lint` profile — lint against that, not
 ansible-lint's default strict profile, which flags FQCN/shell-pipe noise this
 repo doesn't enforce.
+
+## Migrating a role to pyinfra
+
+Ansible's `become: yes` has no drop-in pyinfra equivalent in a hand-rolled
+shell command — `../bootstrap-pyinfra/README.md`'s "`sudo` only works through
+`_sudo=True`" section covers a real bug this bit us with (embedding `sudo` in
+a command string times out reading the password even from a real terminal,
+every time). Read that section before porting any role with `become: yes`.

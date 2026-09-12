@@ -78,7 +78,7 @@ def dev_tools_path_env() -> str:
     )
 
 
-def shell_ok(command: str) -> bool:
+def shell_ok(command: str, *, sudo: bool = False) -> bool:
     """
     Run `command` and return whether it exited 0, WITHOUT raising or marking
     the host failed on a non-zero exit. The server.Command fact raises
@@ -87,27 +87,42 @@ def shell_ok(command: str) -> bool:
     expected to legitimately fail sometimes (Ansible's `failed_when: false`
     equivalent) — e.g. "is there an active op session yet?".
 
-    For a root-owned check, put `sudo` in `command` itself (see
-    `deploys/homebrew.py`'s `_install_linux_prerequisites`) rather than
-    reaching for pyinfra's own `_sudo` fact argument — the latter works
-    (confirmed empirically) but isn't this project's convention.
+    `sudo=True` uses pyinfra's own `_sudo` fact argument, which is REQUIRED
+    for a real interactive password prompt to work — confirmed by tracing
+    pyinfra.connectors.local.LocalConnector.run_shell_command (which never
+    attaches a pty: `_get_pty` is popped and discarded) and
+    connectors/util.py's execute_command_with_sudo_retry (which only
+    getpass()-prompts and retries for a command carrying `_sudo`). A bare
+    `sudo` embedded in `command` text bypasses that machinery entirely and
+    hangs/times out reading a password even from a real terminal, unless
+    sudo's credential cache already happens to be warm — confirmed live:
+    `homebrew.py`'s embedded-`sudo` pacman install failed with "sudo: timed
+    out reading password" on an interactive run.
     """
     output = host.get_fact(
-        Command, f"({command}) >/dev/null 2>&1 && echo __OK__ || echo __FAIL__"
+        Command,
+        f"({command}) >/dev/null 2>&1 && echo __OK__ || echo __FAIL__",
+        _sudo=sudo,
     )
     return output.strip() == "__OK__"
 
 
-def shell_capture(command: str) -> tuple[int, str]:
+def shell_capture(command: str, *, sudo: bool = False) -> tuple[int, str]:
     """
     Like shell_ok, but returns (exit_code, combined stdout+stderr) instead of
     a bool — for commands where the caller needs to inspect output text to
     decide whether a non-zero exit is actually fine (e.g. `asdf plugin add`
     exits non-zero for "already added", which isn't a real failure).
+
+    See shell_ok's docstring for why `sudo=True` (pyinfra's `_sudo` fact
+    argument), not embedding `sudo` in `command`, is the only way to get a
+    real interactive password prompt.
     """
     marker = "__PYINFRA_EXIT__"
     raw = host.get_fact(
-        Command, f'OUT=$({command} 2>&1); CODE=$?; printf "%s{marker}%d" "$OUT" "$CODE"'
+        Command,
+        f'OUT=$({command} 2>&1); CODE=$?; printf "%s{marker}%d" "$OUT" "$CODE"',
+        _sudo=sudo,
     )
     text, _, code_str = raw.rpartition(marker)
     return int(code_str), text

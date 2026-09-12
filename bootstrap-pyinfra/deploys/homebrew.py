@@ -43,8 +43,8 @@ NO_GIT_PROMPT_ENV = (
 )
 
 
-def _run(step: str, command: str) -> None:
-    code, output = shell_capture(command)
+def _run(step: str, command: str, *, sudo: bool = False) -> None:
+    code, output = shell_capture(command, sudo=sudo)
     if code != 0:
         raise DeployError(f"{step} failed ({code}): {output}")
 
@@ -53,12 +53,14 @@ def _install_linux_prerequisites() -> None:
     if is_debian_like():
         _run(
             "Install Linux prerequisites (Debian/Ubuntu)",
-            "sudo apt-get update && sudo apt-get install -y build-essential curl file git",
+            "apt-get update && apt-get install -y build-essential curl file git",
+            sudo=True,
         )
     else:
         _run(
             "Install Linux prerequisites (Arch/Manjaro)",
-            "sudo pacman -Sy --noconfirm --needed base-devel curl file git",
+            "pacman -Sy --noconfirm --needed base-devel curl file git",
+            sudo=True,
         )
 
 

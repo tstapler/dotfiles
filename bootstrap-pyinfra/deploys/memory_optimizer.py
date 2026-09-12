@@ -4,12 +4,14 @@ swap/zswap/systemd-oomd/KSM/THP/MGLRU/DAMON kernel memory tuning.
 
 Every mutating step in the Ansible original has `become: yes` — this deploy
 is entirely root-touching. The swapfile and zswap/GRUB sections are
-immediate execution (shell_capture/shell_ok with `sudo` embedded in the
-command, matching deploys/homebrew.py's convention), since each step's
-branch depends on the real outcome of the step before it (Ansible's
-register-then-`when` chain). Everything else (systemd units, sysctl,
-modprobe) has no such same-run dependency, so it uses ordinary queued
-pyinfra operations with `_sudo=True`.
+immediate execution (shell_capture/shell_ok with `sudo=True`, common.py's
+wrapper around pyinfra's own `_sudo` fact argument — NOT a bare `sudo`
+embedded in the command text, which bypasses pyinfra's interactive
+password-prompt machinery entirely; see common.py's shell_ok docstring),
+since each step's branch depends on the real outcome of the step before it
+(Ansible's register-then-`when` chain). Everything else (systemd units,
+sysctl, modprobe) has no such same-run dependency, so it uses ordinary
+queued pyinfra operations with `_sudo=True`.
 
 NOT yet run live anywhere — every mutation here needs root, which needs a
 real interactive terminal for the sudo password prompt (see
@@ -128,14 +130,14 @@ def _config_from_host_data() -> MemoryOptimizerConfig:
     )
 
 
-def _run(step: str, command: str) -> None:
-    code, output = shell_capture(command)
+def _run(step: str, command: str, *, sudo: bool = False) -> None:
+    code, output = shell_capture(command, sudo=sudo)
     if code != 0:
         raise DeployError(f"{step} failed ({code}): {output}")
 
 
 def _swapfile_exists(swap_file: str) -> bool:
-    return shell_ok(f"sudo test -e {swap_file}")
+    return shell_ok(f"test -e {swap_file}", sudo=True)
 
 
 def _ensure_swapfile_nocow(swap_file: str, root_fstype: str) -> None:
@@ -147,19 +149,22 @@ def _ensure_swapfile_nocow(swap_file: str, root_fstype: str) -> None:
 
     if _swapfile_exists(swap_file):
         has_nocow = shell_ok(
-            f"sudo lsattr {swap_file} | awk '{{print $1}}' | grep -q C"
+            f"lsattr {swap_file} | awk '{{print $1}}' | grep -q C", sudo=True
         )
         if not has_nocow:
             _run(
-                f"Remove {swap_file} missing NoCOW attribute", f"sudo rm -f {swap_file}"
+                f"Remove {swap_file} missing NoCOW attribute",
+                f"rm -f {swap_file}",
+                sudo=True,
             )
 
     if not _swapfile_exists(swap_file):
         _run(
             f"Touch {swap_file} before setting attributes",
-            f"sudo touch {swap_file} && sudo chmod 0600 {swap_file} && sudo chown root:root {swap_file}",
+            f"touch {swap_file} && chmod 0600 {swap_file} && chown root:root {swap_file}",
+            sudo=True,
         )
-        _run(f"Set NoCOW attribute on {swap_file}", f"sudo chattr +C {swap_file}")
+        _run(f"Set NoCOW attribute on {swap_file}", f"chattr +C {swap_file}", sudo=True)
 
 
 def _configure_swapfile(swap_file: str, swap_size_gb: int) -> None:
@@ -167,20 +172,25 @@ def _configure_swapfile(swap_file: str, swap_size_gb: int) -> None:
     _ensure_swapfile_nocow(swap_file, root_fstype)
 
     if not _swapfile_exists(swap_file):
-        _run(f"Allocate {swap_file}", f"sudo fallocate -l {swap_size_gb}G {swap_file}")
+        _run(
+            f"Allocate {swap_file}",
+            f"fallocate -l {swap_size_gb}G {swap_file}",
+            sudo=True,
+        )
 
     _run(
         f"Set {swap_file} permissions",
-        f"sudo chmod 0600 {swap_file} && sudo chown root:root {swap_file}",
+        f"chmod 0600 {swap_file} && chown root:root {swap_file}",
+        sudo=True,
     )
 
-    has_swap_signature = shell_ok(f"sudo blkid -t TYPE=swap {swap_file}")
+    has_swap_signature = shell_ok(f"blkid -t TYPE=swap {swap_file}", sudo=True)
     if not has_swap_signature:
-        _run(f"Format {swap_file}", f"sudo mkswap {swap_file}")
+        _run(f"Format {swap_file}", f"mkswap {swap_file}", sudo=True)
 
     active_swaps = shell_capture("swapon --show --noheadings")[1]
     if swap_file not in active_swaps:
-        _run(f"Activate swap {swap_file}", f"sudo swapon {swap_file}")
+        _run(f"Activate swap {swap_file}", f"swapon {swap_file}", sudo=True)
 
     files.line(
         name="Persist swapfile in fstab",
@@ -204,12 +214,13 @@ def _configure_zswap(config: MemoryOptimizerConfig) -> None:
 
     _run(
         "Enable zswap at runtime",
-        "echo 1 | sudo tee /sys/module/zswap/parameters/enabled > /dev/null && "
-        f"echo {config.zswap_compressor} | sudo tee /sys/module/zswap/parameters/compressor > /dev/null && "
-        f"echo {config.zswap_max_pool_percent} | sudo tee /sys/module/zswap/parameters/max_pool_percent > /dev/null",
+        "echo 1 | tee /sys/module/zswap/parameters/enabled > /dev/null && "
+        f"echo {config.zswap_compressor} | tee /sys/module/zswap/parameters/compressor > /dev/null && "
+        f"echo {config.zswap_max_pool_percent} | tee /sys/module/zswap/parameters/max_pool_percent > /dev/null",
+        sudo=True,
     )
 
-    if shell_ok(f"sudo grep -q 'zswap.enabled=1' {GRUB_PATH}"):
+    if shell_ok(f"grep -q 'zswap.enabled=1' {GRUB_PATH}", sudo=True):
         return
 
     server.shell(

@@ -71,7 +71,9 @@ def _install_nix() -> None:
     if code != 0:
         raise DeployError(f"Download nix-installer failed: {output}")
 
-    code, output = shell_capture(f"sudo {NIX_INSTALLER_PATH} install --no-confirm")
+    code, output = shell_capture(
+        f"{NIX_INSTALLER_PATH} install --no-confirm", sudo=True
+    )
     if code != 0:
         raise DeployError(f"nix-installer failed: {output}")
 

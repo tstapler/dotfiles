@@ -113,6 +113,31 @@ target (e.g. `fbg.py` outside an actual FBG machine), the only safe verification
 static code review, or testing individual pure-logic helpers in isolation with paths/
 inputs that can't touch real state.
 
+## `sudo` only works through `_sudo=True` — never embed `sudo` in a command string
+
+A `shell_capture`/`shell_ok` command with a literal `sudo` in it (e.g. `"sudo pacman
+-Sy ..."`) will time out reading a password **even from a real interactive terminal**,
+every time it doesn't hit a warm sudo credential cache. Confirmed live: `homebrew.py`'s
+Linux-prereq install failed with `sudo: timed out reading password` on an interactive
+run.
+
+Root cause, traced through pyinfra's own source: `LocalConnector.run_shell_command`
+(`pyinfra/connectors/local.py`) never attaches a pty to the subprocess — it pops and
+discards `_get_pty` unconditionally — so a bare `sudo` inside the command text has
+nowhere to read a password from. pyinfra's actual interactive-sudo support
+(`execute_command_with_sudo_retry` in `pyinfra/connectors/util.py`) only kicks in for a
+command that carries the `_sudo` argument: it detects the `sudo: a password is
+required`/`sudo-rs: interactive authentication is required` sentinel lines, `getpass()`s
+the user, and retries. A bare `sudo` in the text bypasses that machinery entirely — this
+applies equally to queued operations and to facts (confirmed: `host.get_fact(Command,
+cmd, _sudo=True)` does trigger the real prompt).
+
+**The rule:** `shell_capture`/`shell_ok` (in `common.py`) take a `sudo: bool` keyword —
+use `shell_capture(cmd, sudo=True)`, never `shell_capture(f"sudo {cmd}")`. Queued
+operations already do this correctly via their own `_sudo=True` kwarg (see
+`secrets.py`/`sudo_mfa.py`) — only the immediate-execution (`shell_capture`/`shell_ok`)
+call sites in `homebrew.py`, `nix.py`, and `memory_optimizer.py` had the bug, now fixed.
+
 ## Project layout
 
 - `inventory.py` — single `@local` host, no SSH.
