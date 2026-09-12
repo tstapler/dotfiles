@@ -1,0 +1,7 @@
+{
+  "extensions": {
+    "kibitzer": {
+      "path": "~/dotfiles/plugins/kibitzer/pi/index.ts"
+    }
+  }
+}

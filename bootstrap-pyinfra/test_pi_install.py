@@ -3,7 +3,7 @@
 Run directly: uv run test_pi_install.py
 """
 
-from deploys.pi import PI_NPM_PACKAGE, plan_pi_install
+from deploys.pi import PI_NPM_PACKAGE, pi_hook_install_command, plan_pi_install
 
 
 def test_uses_the_maintained_pi_package() -> None:
@@ -46,6 +46,13 @@ def test_managed_converges_only_on_mismatch() -> None:
     assert current.action == "preserve"
     assert old.action == "update"
     assert unknown.action == "update"
+
+
+def test_pi_hook_install_uses_the_supported_stapler_squad_installer() -> None:
+    command = pi_hook_install_command("/usr/local/bin:/usr/bin")
+    assert 'PATH="/usr/local/bin:/usr/bin"' in command
+    assert "command -v ssq-hooks" in command
+    assert "ssq-hooks install pi" in command
 
 
 def test_rejects_invalid_mode_and_unsafe_version() -> None:

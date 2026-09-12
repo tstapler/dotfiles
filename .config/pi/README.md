@@ -42,6 +42,23 @@ package paths are also allowed.
 Never put credentials, OAuth state, sessions, trust data, or other mutable Pi
 runtime state in these files.
 
+## Hook parity
+
+Pi uses TypeScript extensions rather than Claude Code's shell-hook JSON:
+
+- `plugins/dotfiles-hooks/pi/index.ts` provides command-output compaction,
+  the PR review reminder, `/magic-compact`, and post-compaction context audit.
+- `plugins/ponytail/pi/index.ts` provides Ponytail on demand; Pi starts with it
+  off because always-on full mode is too aggressive for general work.
+- Stapler Squad owns its approval extension. The pyinfra Pi deploy runs the
+  idempotent `ssq-hooks install pi` command instead of copying that generated
+  extension into this repository.
+- Kibitzer owns its own Pi extension and config fragment.
+
+Do not translate arbitrary Claude hook JSON automatically. Pi event contracts
+and Claude hook stdin/stdout contracts differ; add or reuse a reviewed Pi-native
+adapter for each behavior.
+
 ## Installation ownership
 
 The pyinfra bootstrap defaults to `pi_install_mode=auto`: it preserves any Pi
@@ -60,8 +77,11 @@ uv run pyinfra -y inventory.py main.py --data pi_install_mode=managed
 The public pin lives in `bootstrap-pyinfra/group_data/all.py`. Updating it is a
 deliberate reviewed change; `auto` never replaces or downgrades an existing Pi.
 
-Preview only Pi configuration changes with:
+Preview only Pi resource and configuration changes with:
 
 ```bash
 uv run --directory stapler-scripts/llm-sync main.py --target pi --dry-run
 ```
+
+A Pi-only target does not install Claude/Antigravity plugins or rewrite their
+MCP settings.

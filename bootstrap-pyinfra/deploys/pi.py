@@ -72,6 +72,16 @@ def plan_pi_install(
     )
 
 
+def pi_hook_install_command(path_env: str) -> str:
+    """Return an idempotent install command for Stapler Squad's Pi extension."""
+    return (
+        f'PATH="{path_env}"; export PATH; '
+        "if command -v ssq-hooks >/dev/null 2>&1; then "
+        "ssq-hooks install pi; "
+        "else echo 'ssq-hooks unavailable; skipping Pi approval extension'; fi"
+    )
+
+
 def _installed_pi() -> tuple[bool, str | None]:
     code, output = shell_capture(f'PATH="{dev_tools_path_env()}" pi --version')
     if code != 0:
@@ -98,17 +108,24 @@ def pi() -> None:
         raise DeployError(str(error)) from error
 
     print(f"Pi installation: {plan.reason}")
-    if plan.action in {"external", "preserve"}:
-        return
+    if plan.action not in {"external", "preserve"}:
+        npm = f"{brew_prefix()}/bin/npm"
+        package = f"{PI_NPM_PACKAGE}@{target_version}"
+        install_command = (
+            "mkdir -p ~/.local && "
+            f'{npm} install --global --prefix ~/.local --no-audit --no-fund "{package}" && '
+            "~/.local/bin/pi --version"
+        )
+        server.shell(
+            name=f"{plan.action.title()} Pi {target_version} in ~/.local",
+            commands=[install_command],
+        )
 
-    npm = f"{brew_prefix()}/bin/npm"
-    package = f"{PI_NPM_PACKAGE}@{target_version}"
-    install_command = (
-        "mkdir -p ~/.local && "
-        f'{npm} install --global --prefix ~/.local --no-audit --no-fund "{package}" && '
-        "~/.local/bin/pi --version"
-    )
-    server.shell(
-        name=f"{plan.action.title()} Pi {target_version} in ~/.local",
-        commands=[install_command],
-    )
+    # Stapler Squad owns its approval extension and provides an idempotent
+    # installer. Run it after Pi is present rather than reimplementing the
+    # generated extension in dotfiles.
+    if present or plan.action in {"install", "update"}:
+        server.shell(
+            name="Install Stapler Squad Pi approval extension",
+            commands=[pi_hook_install_command(dev_tools_path_env())],
+        )

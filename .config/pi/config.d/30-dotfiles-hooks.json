@@ -1,0 +1,7 @@
+{
+  "extensions": {
+    "dotfiles-hooks": {
+      "path": "~/dotfiles/plugins/dotfiles-hooks/pi/index.ts"
+    }
+  }
+}

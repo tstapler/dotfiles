@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Parse a Claude Code transcript JSONL file and report where context tokens went.
+"""Parse a Claude Code or Pi session JSONL file and report where context tokens went.
 
-Schema notes (empirically verified against a real transcript, not the generic
+Schema notes (empirically verified against real transcripts, not the generic
 `{content: ...}` shape assumed by meta-context-engineering's context_analyzer.py):
 
 - Each line is one JSON object with a top-level "type": mode, permission-mode,
@@ -39,8 +39,8 @@ def block_text(block):
         return block.get("text", "")
     if t == "thinking":
         return block.get("thinking", "")
-    if t == "tool_use":
-        return json.dumps(block.get("input", {}))
+    if t in ("tool_use", "toolCall"):
+        return json.dumps(block.get("input", block.get("arguments", {})))
     if t == "tool_result":
         content = block.get("content", "")
         if isinstance(content, list):
@@ -84,6 +84,26 @@ def analyze(path):
             first_ts = first_ts or ts
             last_ts = ts
 
+        message = entry.get("message", {})
+        # Pi wraps user, assistant, and tool-result messages in a generic
+        # {type: "message", message: {role: ...}} session entry.
+        if etype == "message" and isinstance(message, dict):
+            role = message.get("role")
+            if role in ("user", "assistant"):
+                etype = role
+            elif role == "toolResult":
+                content = message.get("content", [])
+                size = estimate_tokens(
+                    "".join(block_text(block) for block in content)
+                    if isinstance(content, list)
+                    else content
+                )
+                tool_result_tokens += size
+                by_type["toolResult"] += size
+                label = f"tool_result:{message.get('toolName', 'unknown')} @ {ts}"
+                largest.append((size, label))
+                continue
+
         if etype == "attachment":
             size = estimate_tokens(entry.get("attachment", {}))
             attachment_tokens += size
@@ -98,7 +118,6 @@ def analyze(path):
             n_user += 1
         else:
             n_assistant += 1
-            message = entry.get("message", {})
             usage = message.get("usage")
             # Synthetic assistant lines (e.g. Claude Code's internal
             # summarization turns) don't reflect the real conversation's
@@ -134,7 +153,7 @@ def analyze(path):
             elif btype == "text":
                 text_tokens += size
                 largest.append((size, f"{etype} text @ {ts}"))
-            elif btype == "tool_use":
+            elif btype in ("tool_use", "toolCall"):
                 name = block.get("name", "unknown")
                 tool_use_tokens += size
                 by_tool[name] += size
@@ -154,10 +173,14 @@ def analyze(path):
     usage_breakdown = None
     if last_usage:
         usage_breakdown = {
-            "input": last_usage.get("input_tokens", 0),
-            "output": last_usage.get("output_tokens", 0),
-            "cache_creation": last_usage.get("cache_creation_input_tokens", 0),
-            "cache_read": last_usage.get("cache_read_input_tokens", 0),
+            "input": last_usage.get("input_tokens", last_usage.get("input", 0)),
+            "output": last_usage.get("output_tokens", last_usage.get("output", 0)),
+            "cache_creation": last_usage.get(
+                "cache_creation_input_tokens", last_usage.get("cacheWrite", 0)
+            ),
+            "cache_read": last_usage.get(
+                "cache_read_input_tokens", last_usage.get("cacheRead", 0)
+            ),
         }
         actual_total_tokens = sum(usage_breakdown.values())
 

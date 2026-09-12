@@ -2,6 +2,8 @@
   "settings": {
     "defaultProjectTrust": "ask",
     "defaultThinkingLevel": "medium",
-    "theme": "dark"
+    "theme": "dark",
+    "tuiMode": "fullscreen",
+    "quietStartup": true
   }
 }

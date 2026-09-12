@@ -280,6 +280,11 @@ def sync_pi_settings(args) -> None:
         console.print("[dim]Managed Pi settings already converged.[/dim]")
 
 
+def should_sync_non_pi_integrations(target: str, plugins_only: bool) -> bool:
+    """Keep a Pi-only run from mutating Claude and Antigravity state."""
+    return plugins_only or target != "pi"
+
+
 def main():
     parser = argparse.ArgumentParser(description="Sync LLM agents between Claude, Gemini, OpenCode, and Pi")
     parser.add_argument("--dry-run", action="store_true", help="Preview changes")
@@ -328,7 +333,10 @@ def main():
             local_plugins_dir=args.plugins_local_dir,
             claude_settings_file=args.claude_settings_file,
         )
-        sync_plugins(plugin_source, args.dry_run, antigravity_dir=args.antigravity_dir)
+        if should_sync_non_pi_integrations(args.target, args.plugins_only):
+            sync_plugins(plugin_source, args.dry_run, antigravity_dir=args.antigravity_dir)
+        else:
+            console.print("[dim]Pi-only run: skipping Claude/Antigravity plugin installation.[/dim]")
 
         if not args.plugins_only:
             source_params = {}
@@ -387,11 +395,14 @@ def main():
                 global_config_dir=args.mcp_global_config_dir,
                 local_config_dir=args.mcp_local_config_dir,
             )
-            claude_settings = ClaudeSettingsTarget(settings_file=args.claude_settings_file)
-            sync_mcp(mcp_source, claude_settings, args.dry_run)
+            if should_sync_non_pi_integrations(args.target, args.plugins_only):
+                claude_settings = ClaudeSettingsTarget(settings_file=args.claude_settings_file)
+                sync_mcp(mcp_source, claude_settings, args.dry_run)
 
-            antigravity_mcp = AntigravityMcpTarget()
-            sync_mcp(mcp_source, antigravity_mcp, args.dry_run)
+                antigravity_mcp = AntigravityMcpTarget()
+                sync_mcp(mcp_source, antigravity_mcp, args.dry_run)
+            else:
+                console.print("[dim]Pi-only run: skipping Claude/Antigravity MCP writes.[/dim]")
 
             if args.target in ['pi', 'all'] and args.direction in ['to-target', 'both']:
                 sync_pi_settings(args)

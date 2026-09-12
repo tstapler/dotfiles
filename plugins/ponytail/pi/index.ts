@@ -15,7 +15,9 @@ const instructions = require("../hooks/ponytail-instructions.js") as {
 const ENTRY_TYPE = "ponytail-mode";
 
 export default function ponytail(pi: ExtensionAPI) {
-  let mode = config.getDefaultMode();
+  // Pi keeps Ponytail opt-in: its always-on full mode has been too aggressive
+  // for general work. Saved session state still restores an explicitly chosen mode.
+  let mode = "off";
 
   const showStatus = (ctx: { ui: { setStatus(key: string, value?: string): void } }) => {
     ctx.ui.setStatus("ponytail", mode === "off" ? undefined : `ponytail:${mode}`);
@@ -48,14 +50,14 @@ export default function ponytail(pi: ExtensionAPI) {
             (saved.data as { mode: string }).mode,
           )
         : null;
-    mode = savedMode ?? config.getDefaultMode();
+    mode = savedMode ?? "off";
     showStatus(ctx);
   });
 
   pi.registerCommand("ponytail", {
     description: "Enable lazy senior developer mode: off, lite, full, or ultra",
     handler: async (args, ctx) => {
-      const requested = args.trim().toLowerCase() || config.getDefaultMode();
+      const requested = args.trim().toLowerCase() || "full";
       const normalized = config.normalizeConfigMode(requested);
       if (!normalized || normalized === "review") {
         ctx.ui.notify("Usage: /ponytail off|lite|full|ultra", "error");

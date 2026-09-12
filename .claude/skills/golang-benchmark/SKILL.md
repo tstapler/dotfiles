@@ -85,6 +85,8 @@ func BenchmarkAlloc(b *testing.B) {
 b.ReportMetric(float64(totalBytes)/b.Elapsed().Seconds(), "bytes/s") // b.Elapsed() is only valid inside b.Loop()
 ```
 
+**Caveat when one benchmark variant calls `os/exec`**: `-benchmem` only sees the calling process's Go heap, not a spawned subprocess's own memory or its EDR-inflated wall-time floor — → See `samber/cc-skills-golang@golang-performance` skill's [Subprocess overhead](../golang-performance/references/io-networking.md#subprocess-osexec-overhead) section before trusting such a comparison.
+
 ### Sub-benchmarks and table-driven
 
 ```go

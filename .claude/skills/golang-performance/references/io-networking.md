@@ -13,6 +13,7 @@ Network and I/O bottlenecks show up as goroutines blocked on syscalls or waiting
   - [Streaming JSON](#streaming-json)
 - [JSON Performance](#json-performance)
 - [Cgo Overhead](#cgo-overhead)
+- [Subprocess (os/exec) Overhead](#subprocess-osexec-overhead)
 - [Buffered I/O](#buffered-io)
 - [Concurrent Multi-Stage Pipelines](#concurrent-multi-stage-pipelines)
   - [The unusual scenario](#the-unusual-scenario)
@@ -152,6 +153,35 @@ C.batch_sqrt((*C.double)(&values[0]), C.int(len(values))) // amortize overhead
 ```
 
 Additional cgo costs: goroutine is pinned to an OS thread, C code cannot be preempted (may delay GC), and function inlining is blocked at the boundary.
+
+## Subprocess (os/exec) Overhead
+
+**Diagnose:** 1- `go test -bench -benchmem` comparing the in-process implementation against `os/exec` on the *target deployment machine*, not just CI/dev laptop — see the EDR caveat below, the gap between environments can be 10x+ 2- `strace -f -c`/`dtruss` (or `go tool trace`) around the call site — count `fork`/`execve`/`vfork` and their wall time directly if the benchmark's ns/op looks suspiciously high or low 3- if replacing an existing hot-path library call with a shellout (or vice versa), benchmark both across a realistic *input size range*, not one data point — the two approaches often have different scaling curves (fixed-cost-dominated subprocess vs. size-scaling in-process), so a single benchmark can show either one "winning" depending on where you sampled
+
+Shelling out to an external binary (`os/exec.Command`) trades Go-heap allocations for a categorically different cost: process creation. This is not cgo's ~50-100ns boundary crossing — it's milliseconds, and the floor doesn't shrink no matter how small the actual work is:
+
+```go
+// Bad in a hot path — pays full process-spawn cost per call regardless of work size
+for _, repo := range repos {
+    out, _ := exec.CommandContext(ctx, "git", "-C", repo, "diff", "--shortstat", "HEAD").Output()
+    stat := parseShortstat(out)
+    // ...
+}
+
+// Better — batch into one subprocess call if the tool supports it, or keep the
+// work in-process (a well-cached in-process library often has lower amortized
+// cost per call even though it allocates, because it has no per-call floor)
+```
+
+**What actually changes when you replace an in-process computation with a subprocess:**
+
+- **Wall time**: a real measurement (stapler-squad, comparing go-git's in-process diff against `git diff --shortstat` via `os/exec`, Apple M5 Max, no EDR) found the subprocess floor at ~45-70ms per call, *independent of repo size* (50 files to 5,000 files), while the in-process alternative scaled from ~3ms to ~90ms with the data size. The subprocess is not "slow" in absolute terms, but its cost is a step function (pay the fork/exec tax once) rather than proportional to the work — cheap when the in-process alternative would do much more work per call, a net loss when it wouldn't.
+- **Go-heap allocations**: near-zero in the calling process (the same measurement: ~85 allocs/op regardless of size, vs. an in-process alternative's allocations scaling into the hundred-thousands at large input sizes). This is real: it moves GC pressure off your process's GC entirely.
+- **Total memory, not just Go-heap**: a spawned process needs its own RSS for the binary's text/data segments and any dynamic libraries it links — for a tool like `git` this is a few MB, transient (freed at process exit), but it is memory pressure `-benchmem`'s allocs/op number does not capture at all, since that flag only instruments the calling Go process's heap. If a benchmark shows a subprocess variant using "zero memory," that's measuring the wrong process — confirm with `/usr/bin/time -l` (macOS) / `/usr/bin/time -v` (Linux) around a realistic burst of concurrent calls, not the Go benchmark harness alone, before concluding the subprocess approach is cheaper on memory.
+- **Concurrency multiplies the floor**: N concurrent worker goroutines each shelling out multiplies both the wall-time floor and the transient RSS by N at the same instant — a worker pool that's fine at low concurrency can produce a burst of dozens of simultaneous `fork`+`execve` calls under load, which is where the fixed per-call cost stops being negligible and starts contending with itself (process-table churn, page-cache thrashing on the newly-mapped binary/libs, scheduler pressure from the burst of new OS threads).
+- **EDR/security-agent overhead is a real, often-dominant multiplier — measure on the actual target machine.** Endpoint agents (CrowdStrike Falcon and similar) commonly hook `fork`/`exec`/`execve` to scan the new process before it's allowed to run, adding latency *per subprocess spawn* that a synthetic benchmark on an unmonitored CI runner will never show. This is not a one-time cost: it scales with call frequency exactly like the fork/exec floor itself does, so a background poller that shells out once per item on a fleet of monitored developer laptops can be meaningfully slower in the field than the same code benchmarked in CI. If you're proposing a subprocess-based replacement for an in-process hot path: **re-run the benchmark on a real target machine with its actual security agent active**, not just CI, before trusting the comparison — and prefer batching multiple queries into one subprocess call over one-process-per-item when the tool supports it, since that amortizes both the fork/exec floor and the EDR tax across more work per spawn.
+
+**Net guidance**: a subprocess call is not free just because it doesn't show up in `-benchmem`. Weigh it as: (fixed per-call wall-time + EDR tax) × call frequency, against (in-process wall-time + GC pressure from allocations) × call frequency — and get the "call frequency" side right first (see [Caching Patterns](caching.md) for eliminating redundant calls before choosing which implementation to call less often).
 
 ## Buffered I/O
 

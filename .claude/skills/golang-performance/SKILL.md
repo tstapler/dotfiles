@@ -80,6 +80,7 @@ When multiple candidate optimizations compete for the same bottleneck, implement
 | CPU-bound hot loop | function dominates CPU profile | [CPU optimization](references/cpu.md) |
 | GC pauses / OOM | high GC%, container limits | [Runtime tuning](references/runtime.md) |
 | Network / I/O latency | goroutines blocked on I/O | [I/O & networking](references/io-networking.md) |
+| Shelling out to an external binary (`os/exec`) in a hot/frequent path | ns/op has a size-independent floor; low allocs/op but real wall-time cost `-benchmem` under-reports | [Subprocess overhead](references/io-networking.md#subprocess-osexec-overhead) |
 | Repeated expensive work | same computation/fetch multiple times | [Caching patterns](references/caching.md) |
 | Wrong algorithm | O(n²) where O(n) exists | [Algorithmic complexity](references/caching.md#algorithmic-complexity) |
 | Lock contention | mutex/block profile hot | → See `samber/cc-skills-golang@golang-concurrency` skill |
@@ -96,6 +97,7 @@ When multiple candidate optimizations compete for the same bottleneck, implement
 | `unsafe` without benchmark proof | Only justified when profiling shows >10% improvement in a verified hot path |
 | No GC tuning in containers | Set `GOMEMLIMIT` to 80-90% of container memory to prevent OOM kills |
 | `reflect.DeepEqual` in production | 50-200x slower than typed comparison; use `slices.Equal`, `maps.Equal`, `bytes.Equal` |
+| Replacing an allocation-heavy in-process call with `os/exec` based on `-benchmem` alone | `-benchmem` only sees the calling process's Go heap — it misses the subprocess's own RSS, the fork/exec wall-time floor, and (on developer/prod machines running an EDR agent) per-spawn security-hook latency; re-benchmark wall-time on the real target machine, not just allocs/op in CI (→ See [Subprocess overhead](references/io-networking.md#subprocess-osexec-overhead)) |
 
 ## Deep Dives
 

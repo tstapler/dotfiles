@@ -6,8 +6,8 @@ Claude Code plugins managed and installed by `llm-sync`. Each plugin lives in it
 
 | Plugin | Version | What it does |
 |--------|---------|--------------|
-| `sdd` | 0.1.0 | Stapler-Driven Development workflow. 7 numbered phase commands + skills. Enforces spec-before-code. Run `/sdd:status` to find your current phase. |
 | `git-stacked-prs` | 0.1.0 | Stacked PR workflow using git-machete. Evaluate → Plan → Execute → Ship. Requires `brew install git-machete`. |
+| `ponytail` | 4.7.0 | Minimal-solution mode with Claude hooks and an opt-in Pi extension. |
 
 ## Plugin Structure
 
@@ -107,6 +107,11 @@ uv run stapler-scripts/llm-sync/main.py
 | Skills | `~/.claude/skills/<skill-name>/SKILL.md` |
 
 Hooks are deduplicated by command string — reinstalling is safe and idempotent.
+
+Pi does not consume Claude hook JSON. A cross-platform plugin may provide a
+purpose-built adapter under `pi/index.ts`, registered through the tiered files
+in `.config/pi/config.d/`. Pi-only adapters that do not represent a Claude
+plugin live under `plugins/<name>/pi/` but do not need a Claude plugin manifest.
 
 ## Adding a New Plugin
 
