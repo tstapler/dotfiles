@@ -52,17 +52,22 @@ after the project.
   error) but only routed to a `debug` exporter (collector's own stdout) — no
   log backend (e.g. Loki) is wired up yet.
 - **Dashboards**: file-provisioned per project folder under
-  `grafana/dashboards/<project>/`, each with its own explicit provider entry
-  in `grafana/provisioning/dashboards/dashboards.yml` (see that file's
-  comment for why — a single provider with `foldersFromFilesStructure: true`
-  is broken against Grafana's `nestedFolders` toggle, on by default since
-  11.x: https://github.com/grafana/grafana/issues/73271). Currently:
-  `grafana/dashboards/stapler-squad/` — RED-method dashboards for tmux
-  control-mode commands and HTTP/RPC connection saturation, a USE-method
-  cgroup-memory dashboard, and a Pyroscope flamegraph dashboard (CPU/heap/
-  goroutines). To add a new project: create
-  `grafana/dashboards/<project>/`, drop dashboard JSON in it, and add a
-  provider block to `dashboards.yml`.
+  `/var/lib/grafana/dashboards/<project>/` inside the container, each with
+  its own explicit provider entry in
+  `grafana/provisioning/dashboards/dashboards.yml` (see that file's comment
+  for why — a single provider with `foldersFromFilesStructure: true` is
+  broken against Grafana's `nestedFolders` toggle, on by default since 11.x:
+  https://github.com/grafana/grafana/issues/73271). `general/` is local to
+  this repo (`./grafana/dashboards/general`); `stapler-squad/` is bind-mounted
+  directly from that project's own repo
+  (`~/Programming/stapler-squad/docs/observability/grafana/dashboards`, see
+  `docker-compose.yml`'s `grafana` service) — migrated there 2026-09-12 so
+  its dashboards version alongside the metrics they visualize, not in this
+  unrelated repo; edit them there, not here. To add a new project: either
+  drop dashboard JSON directly in `grafana/dashboards/<project>/` here (for
+  something with no repo of its own) or bind-mount that project's own
+  dashboard directory the same way stapler-squad's is, then add a provider
+  block to `dashboards.yml` either way.
 
 ## Pointing a project's profiler at this stack
 

@@ -90,7 +90,13 @@ services:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
       - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
-      - ./grafana/dashboards:/var/lib/grafana/dashboards
+      - ./grafana/dashboards/general:/var/lib/grafana/dashboards/general
+      # stapler-squad's dashboards now live in that repo (docs/observability/),
+      # not here — bind-mounted directly so there's one copy, not two kept in
+      # sync by hand. allowUiUpdates writes straight into that repo's working
+      # tree; `git diff` there after a UI edit. See stapler-squad's
+      # docs/observability/README.md.
+      - /home/tstapler/Programming/stapler-squad/docs/observability/grafana/dashboards:/var/lib/grafana/dashboards/stapler-squad
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
