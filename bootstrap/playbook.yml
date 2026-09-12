@@ -51,3 +51,9 @@
     - role: sudo-mfa
       tags: [sudo-mfa]
       when: sudo_mfa_enabled | default(false) | bool
+    - role: memory-optimizer
+      tags: [memory-optimizer]
+      when: >-
+        memory_optimizer_enabled | default(true) | bool
+        and not is_wsl
+        and ansible_facts['os_family'] != 'Darwin'

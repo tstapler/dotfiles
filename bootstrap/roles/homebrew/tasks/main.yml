@@ -8,6 +8,7 @@
       - git
     state: present
     update_cache: true
+    cache_valid_time: 86400
   become: true
   when: ansible_facts['os_family'] == "Debian"
   tags: [homebrew]
@@ -35,16 +36,53 @@
   when: not homebrew_brew_bin.stat.exists
   tags: [homebrew]
 
-- name: Update Homebrew
+- name: Ensure dotfiles cache dir exists
+  file:
+    path: ~/.cache/dotfiles
+    state: directory
+    mode: "0755"
+  tags: [homebrew]
+
+- name: Check last Homebrew update time
+  stat:
+    path: ~/.cache/dotfiles/homebrew-last-update
+  register: homebrew_update_marker
+  tags: [homebrew]
+
+- name: Update Homebrew (throttled to once per day)
   command: "{{ brew_prefix }}/bin/brew update"
+  when: >-
+    not homebrew_update_marker.stat.exists
+    or (ansible_facts['date_time']['epoch'] | int - homebrew_update_marker.stat.mtime | int) > 86400
   changed_when: false
   environment:
     PATH: "{{ brew_prefix }}/bin:{{ ansible_facts['env']['PATH'] }}"
   tags: [homebrew]
 
+- name: Touch Homebrew update marker
+  file:
+    path: ~/.cache/dotfiles/homebrew-last-update
+    state: touch
+    mode: "0644"
+  when: >-
+    not homebrew_update_marker.stat.exists
+    or (ansible_facts['date_time']['epoch'] | int - homebrew_update_marker.stat.mtime | int) > 86400
+  tags: [homebrew]
+
 - name: Set brewfile path
   set_fact:
     homebrew_brewfile_path: "{{ dotfiles_dir }}/{{ 'Brewfile' if ansible_facts['os_family'] == 'Darwin' else 'Brewfile.linux' }}"
+  tags: [homebrew]
+
+- name: Check if all Brewfile packages are already installed
+  command: >
+    {{ brew_prefix }}/bin/brew bundle check
+    --file={{ homebrew_brewfile_path }}
+  register: homebrew_bundle_check
+  failed_when: false
+  changed_when: false
+  environment:
+    PATH: "{{ brew_prefix }}/bin:{{ ansible_facts['env']['PATH'] }}"
   tags: [homebrew]
 
 - name: Trust all taps in Brewfile (Homebrew 4.x security model)
@@ -63,6 +101,7 @@
       {{ brew_prefix }}/bin/brew trust --tap "$tap" 2>/dev/null || true
     done
   changed_when: false
+  when: homebrew_bundle_check.rc != 0
   environment:
     PATH: "{{ brew_prefix }}/bin:{{ ansible_facts['env']['PATH'] }}"
   tags: [homebrew]
@@ -74,23 +113,13 @@
       {{ brew_prefix }}/bin/brew tap "$tap" ${url:+"$url"} 2>/dev/null || true
     done
   changed_when: false
+  when: homebrew_bundle_check.rc != 0
   environment:
     PATH: "{{ brew_prefix }}/bin:{{ ansible_facts['env']['PATH'] }}"
     GIT_TERMINAL_PROMPT: "0"
     GIT_CONFIG_COUNT: "1"
     GIT_CONFIG_KEY_0: "credential.helper"
     GIT_CONFIG_VALUE_0: ""
-  tags: [homebrew]
-
-- name: Check if all Brewfile packages are already installed
-  command: >
-    {{ brew_prefix }}/bin/brew bundle check
-    --file={{ homebrew_brewfile_path }}
-  register: homebrew_bundle_check
-  failed_when: false
-  changed_when: false
-  environment:
-    PATH: "{{ brew_prefix }}/bin:{{ ansible_facts['env']['PATH'] }}"
   tags: [homebrew]
 
 - name: Install packages from Brewfile
