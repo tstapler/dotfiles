@@ -46,6 +46,18 @@ and Linux, with stable links under `~/.local/bin`; stapler-mcp is built with Car
 the exact commit pinned in `deploys/ai_tools.py`. The source build is a queued operation,
 so `--dry` previews it without compiling or writing files.
 
+**`btrfs_maintenance`** (replaces the never-wired-in
+`stapler-scripts/roles/btrfs-balance/` Ansible role, now deleted): installs the
+`btrfsmaintenance` package (Arch/Manjaro + btrfs-root only) and enables its
+balance/scrub/trim systemd timers, pinning each to `/`. Deliberately never enables
+the defrag timer — it breaks the reflinked extents CoW snapshots (Timeshift, used on
+this machine) depend on. Structurally verified via `pyinfra --debug-operations`
+against this real Arch/btrfs machine: all 7 operations (package install, 3
+mountpoint-pin edits, 3 timer enables) queue in the correct order with `_sudo: True`
+and no defrag step — not run for real yet, since this machine's btrfs volume had
+almost no unallocated space left (a `btrfs balance` was needed first; see git history
+around 2026-09-12). `deploys/btrfs_maintenance.py`
+
 **`zerobrew`** (no Ansible equivalent — new, opt-in): builds/installs `zb`/`zbx` from
 `github.com/tstapler/zerobrew` (branch `linux-reflink-ficlone`, a fork adding a Linux
 btrfs/XFS reflink fast path upstream only has for macOS). Built from source, not a

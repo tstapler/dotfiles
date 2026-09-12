@@ -29,7 +29,7 @@ from pyinfra.api import deploy  # type: ignore[attr-defined]  # pyinfra/#439
 from pyinfra.api.exceptions import DeployError
 from pyinfra.operations import files, server, systemd
 
-from common import shell_capture, shell_ok
+from common import is_btrfs_root, shell_capture, shell_ok
 
 GRUB_PATH = "/etc/default/grub"
 GRUB_CMDLINE_REGEX = r'^(GRUB_CMDLINE_LINUX_DEFAULT="[^"]*)"'
@@ -140,13 +140,11 @@ def _swapfile_exists(swap_file: str) -> bool:
     return shell_ok(f"test -e {swap_file}", sudo=True)
 
 
-def _ensure_swapfile_nocow(swap_file: str, root_fstype: str) -> None:
+def _ensure_swapfile_nocow(swap_file: str) -> None:
     """btrfs requires NoCOW (chattr +C) set before any data is written — a
     swapfile created without it always fails `swapon` with EINVAL. Detect
-    that case and remove the file so it's recreated with the attribute."""
-    if root_fstype != "btrfs":
-        return
-
+    that case and remove the file so it's recreated with the attribute.
+    Only called when the root filesystem is btrfs (see _configure_swapfile)."""
     if _swapfile_exists(swap_file):
         has_nocow = shell_ok(
             f"lsattr {swap_file} | awk '{{print $1}}' | grep -q C", sudo=True
@@ -168,8 +166,8 @@ def _ensure_swapfile_nocow(swap_file: str, root_fstype: str) -> None:
 
 
 def _configure_swapfile(swap_file: str, swap_size_gb: int) -> None:
-    root_fstype = shell_capture("stat -f -c '%T' /")[1].strip()
-    _ensure_swapfile_nocow(swap_file, root_fstype)
+    if is_btrfs_root():
+        _ensure_swapfile_nocow(swap_file)
 
     if not _swapfile_exists(swap_file):
         _run(

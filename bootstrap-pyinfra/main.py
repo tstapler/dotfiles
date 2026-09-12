@@ -12,6 +12,7 @@ from pyinfra import host  # type: ignore[attr-defined]  # pyinfra/#439
 from common import is_fbg_machine, is_macos, is_wsl
 from deploys.ai_tools import ai_tools
 from deploys.asdf import asdf
+from deploys.btrfs_maintenance import btrfs_maintenance
 from deploys.claude import claude
 from deploys.dotfiles import dotfiles
 from deploys.fbg import fbg
@@ -59,3 +60,5 @@ if host.data.get("sudo_mfa_enabled"):
 
 if host.data.get("memory_optimizer_enabled") and not is_wsl() and not is_macos():
     memory_optimizer()
+
+btrfs_maintenance()

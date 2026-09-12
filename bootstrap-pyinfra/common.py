@@ -41,6 +41,11 @@ def is_debian_like() -> bool:
     )
 
 
+def is_btrfs_root() -> bool:
+    output = host.get_fact(Command, "stat -f -c '%T' /")
+    return output.strip() == "btrfs"
+
+
 def brew_prefix() -> str:
     if is_macos():
         return "/opt/homebrew" if host.get_fact(Arch) == "arm64" else "/usr/local"
