@@ -353,3 +353,4 @@ Without SonarQube: PMD (`CyclomaticComplexity`, `CognitiveComplexity`, `Excessiv
 | `code-ast-grep` | Deeper `sg` pattern syntax for the structural-query half of axis 1 |
 | `code-refactoring` | Executing the fix once a target is chosen |
 | `type-driven-design` | If a hotspot's root cause is primitive obsession / missing invariant encoding, not just size |
+| `sdd:fix-hotspot` | One-shot maintenance command: run this analysis, pick the top target, diagnose, refactor, verify, and gate — end to end in one invocation |

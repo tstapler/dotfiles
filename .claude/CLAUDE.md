@@ -110,7 +110,7 @@ Tyler's personal Logseq wiki — daily journals and topic Zettels — lives at `
 
 ## Stapler-Driven Development (SDD) Workflow
 
-For non-trivial features, use `/sdd:full` (or the `sdd` agent) to run the complete 7-phase workflow end to end — ideate → research → plan → validate → implement → verify → ship — with parallel agents at each phase and a fresh session before implementation. For a task that fits in one context window, use `/sdd:quick`; for a bug fix, `/sdd:fix-bug`. Check progress with `/sdd:status`; individual phases (`/sdd:1-ideate` … `/sdd:7-ship`, `/sdd:adr`) are also invocable standalone. Artifacts land in `project_plans/<project>/`. Full docs: `.claude/skills/sdd/skills/`.
+For non-trivial features, use `/sdd:full` (or the `sdd` agent) to run the complete 7-phase workflow end to end — ideate → research → plan → validate → implement → verify → ship — with parallel agents at each phase and a fresh session before implementation. For a task that fits in one context window, use `/sdd:quick`; for a bug fix, `/sdd:fix-bug`; to find and fix the single highest-value structural refactor (complexity × churn hotspot ranking → diagnose → refactor → verify → CI regrowth gate), `/sdd:fix-hotspot`. Check progress with `/sdd:status`; individual phases (`/sdd:1-ideate` … `/sdd:7-ship`, `/sdd:adr`) are also invocable standalone. Artifacts land in `project_plans/<project>/`. Full docs: `.claude/skills/sdd/skills/`.
 
 ---
 
