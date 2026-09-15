@@ -64,6 +64,8 @@ Two totals are reported, on different bases:
    to also record the run in the shared trend db (this is what the
    PostCompact hook does automatically).
 
+   Tests: `python3 -m unittest test_context_audit -v` (run from `scripts/`).
+
 3. Read the output to the user. It reports:
    - Actual tokens (real usage, current context size) and estimated tokens
      (chars/4 heuristic, cumulative) — see **How it works** above for why
