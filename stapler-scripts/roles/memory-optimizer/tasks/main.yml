@@ -159,6 +159,26 @@
   become: yes
   when: zram_stat.stat.exists and zswap_enabled
 
+# ── systemd-oomd ──────────────────────────────────────────────────────────────
+# Kills the offending cgroup (e.g. a runaway browser tab) under memory/swap
+# pressure before the kernel's global OOM killer does — which otherwise picks
+# whatever process looks worst by its heuristic, session-critical processes
+# (the Wayland compositor, plasmashell) included. Disabled by default on
+# Manjaro/Arch, unlike Fedora/Ubuntu.
+
+- name: Check systemd-oomd availability
+  stat:
+    path: /usr/lib/systemd/system/systemd-oomd.service
+  register: oomd_stat
+
+- name: Enable and start systemd-oomd
+  systemd:
+    name: systemd-oomd.service
+    enabled: yes
+    state: started
+  become: yes
+  when: oomd_stat.stat.exists
+
 # ── KSM (kernel same-page merging) ───────────────────────────────────────────
 
 - name: Check KSM availability
