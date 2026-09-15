@@ -57,6 +57,46 @@ remove_glob() {
   remove "$matches" "$label"
 }
 
+# ── Claude Code agent worktrees ─────────────────────────────────────────────
+# ponytail: staleness = no commit in STALE_DAYS. Skips dirty or locked worktrees
+# so nothing in-flight gets discarded; bump STALE_DAYS if that's too aggressive.
+STALE_DAYS=14
+WORKTREE_ROOTS=("$HOME/dotfiles" "$HOME/code")
+
+cleanup_worktrees() {
+  header "Stale Claude agent worktrees (.claude/worktrees/agent-*, >${STALE_DAYS}d since last commit)"
+  local any=false repo_git repo wt now age_days size
+  now=$(date +%s)
+  while IFS= read -r -d '' repo_git; do
+    repo="${repo_git%/.git}"
+    while IFS= read -r wt; do
+      [ -d "$wt" ] || continue
+      any=true
+      if git -C "$repo" worktree list --porcelain | grep -A2 "^worktree $wt\$" | grep -q '^locked'; then
+        $VERBOSE && log "skip $wt (locked)"
+        continue
+      fi
+      age_days=$(( (now - $(git -C "$wt" log -1 --format=%ct 2>/dev/null || echo "$now")) / 86400 ))
+      if [ "$age_days" -lt "$STALE_DAYS" ]; then
+        $VERBOSE && log "skip $wt (${age_days}d since last commit, under threshold)"
+        continue
+      fi
+      if [ -n "$(git -C "$wt" status --porcelain 2>/dev/null)" ]; then
+        log "skip $wt (uncommitted changes, ${age_days}d old)"
+        continue
+      fi
+      size=$(human_size "$wt")
+      if $DRY_RUN; then
+        log "[dry-run] would remove worktree $wt (${age_days}d old, $size)"
+      else
+        git -C "$repo" worktree remove --force "$wt" && log "removed worktree $wt ($size)"
+      fi
+    done < <(find "$repo" -maxdepth 3 -type d -path '*/.claude/worktrees/agent-*' 2>/dev/null)
+    $DRY_RUN || git -C "$repo" worktree prune 2>/dev/null || true
+  done < <(find "${WORKTREE_ROOTS[@]}" -maxdepth 4 -name .git -print0 2>/dev/null)
+  $any || log "none found"
+}
+
 # ── macOS ────────────────────────────────────────────────────────────────────
 cleanup_macos() {
   header "Homebrew"
@@ -118,6 +158,8 @@ cleanup_macos() {
   header "Cargo registry cache"
   remove ~/.cargo/registry/cache "Cargo registry cache"
   remove ~/.cargo/registry/src   "Cargo registry src"
+
+  cleanup_worktrees
 }
 
 # ── Linux ────────────────────────────────────────────────────────────────────
@@ -167,6 +209,8 @@ cleanup_linux() {
       docker system prune -f 2>&1 | tail -2 || true
     fi
   fi
+
+  cleanup_worktrees
 }
 
 # ── Main ─────────────────────────────────────────────────────────────────────
