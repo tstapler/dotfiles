@@ -58,9 +58,41 @@ Ask for each group:
 - Does it consume something introduced in another group? → must come after that group
 - Are there circular dependencies? → the groups need to be split further
 
-Produce a written plan of ordered layers, each naming its branch, purpose, dependency, CI risk, and files touched. Merge order is always bottom-up (Layer 1 first), and each layer must pass CI independently. 3–5 layers is comfortable; beyond 7, consider sub-stacks.
+### Stack structure output
 
-See [references/examples.md](references/examples.md) for the stack-plan output format.
+Produce a plan in this format:
+
+```
+Stack: feat/JIRA-123
+
+Layer 1 (feat/JIRA-123-db-schema)
+  - What: Add users table migration
+  - Why first: all other layers read this table
+  - CI risk: low (additive schema only)
+  - Files: db/migrations/*, models/user.go
+
+Layer 2 (feat/JIRA-123-auth)
+  - What: Auth middleware using users table
+  - Depends on: Layer 1
+  - CI risk: medium (new critical path)
+  - Files: middleware/auth.go, middleware/auth_test.go
+
+Layer 3 (feat/JIRA-123-api)
+  - What: API endpoints behind auth
+  - Depends on: Layer 2
+  - CI risk: low
+  - Files: handlers/user.go, handlers/user_test.go
+
+Layer 4 (feat/JIRA-123-ui)
+  - What: Frontend consuming API
+  - Depends on: Layer 3
+  - CI risk: low
+  - Files: src/components/UserProfile.tsx
+```
+
+**Merge order:** always bottom-up (Layer 1 first). Each layer must pass CI independently.
+
+**Rule of thumb:** 3–5 layers is comfortable. More than 7, consider sub-stacks.
 
 ---
 
@@ -117,22 +149,43 @@ main
         feat/JIRA-123-ui
 ```
 
-### Verify and create PRs
+### Verify the layout
 
 ```bash
 git machete status -l         # shows sync state + commits per branch
 ```
 
-Create GitHub PRs bottom-up, draft first:
+### Create GitHub PRs (bottom-up, draft first)
+
 ```bash
 git checkout feat/JIRA-123-db-schema
 git machete github create-pr --draft
+
+git checkout feat/JIRA-123-auth
+git machete github create-pr --draft
+
 # repeat for all layers, then mark bottom ready for review:
 git checkout feat/JIRA-123-db-schema
 gh pr ready <PR#>
 ```
 
-Every PR body should include a stack table and note which PR to diff against. See [references/examples.md](references/examples.md) for the PR description template.
+### PR description template
+
+Include in every PR:
+
+```markdown
+## Stack
+| # | PR | Status |
+|---|---|---|
+| 1 | #41 feat: add db schema | 👀 **← this PR** |
+| 2 | #42 feat: add auth middleware | 🔲 draft |
+| 3 | #43 feat: add API endpoints | 🔲 draft |
+
+> Diff this PR against its base (`main`), not the full feature branch.
+
+## This PR only
+Add the users table migration. Auth middleware that reads it is in #42.
+```
 
 ---
 
@@ -159,7 +212,43 @@ For each PR in order (bottom → top):
 
 **After each merge,** `git machete traverse -WH` fetches main, rebases remaining branches, and retargets their GitHub PR bases automatically.
 
-If a middle layer changes after PRs are created, or after a squash-merge, see [references/advanced-operations.md](references/advanced-operations.md) for the cascade-rebase and cleanup procedures.
+---
+
+## Cascade Rebase (mid-stack update)
+
+A middle layer changed after PRs were created. Sync the entire stack upward.
+
+```bash
+git checkout feat/JIRA-123-auth
+# ... make changes, commit ...
+
+# Cascade rebase + push all + update GitHub PR bases:
+git machete traverse -WH        # W=fetch, H=GitHub integration
+```
+
+If conflicts occur:
+```bash
+# Resolve conflict in editor, then:
+git add <resolved-files>
+git machete traverse --continue
+```
+
+Always push with:
+```bash
+git push --force-with-lease origin <branch>
+```
+
+---
+
+## After Squash-Merge (most common GitHub config)
+
+The merged branch's local SHA won't match the squash commit on main. Remove it cleanly:
+
+```bash
+git fetch origin
+git machete slide-out --no-rebase feat/JIRA-123-db-schema
+git machete traverse -WH          # rebase remaining stack onto main, update PR bases
+```
 
 ---
 
@@ -172,7 +261,44 @@ git machete status -l             # full stack view with commits
 git machete log                   # scoped git log for current branch
 ```
 
-For the git-machete vs. gh stack vs. Graphite comparison and the full command reference (including the raw-git no-extra-tools alternative), see [references/tool-reference.md](references/tool-reference.md).
+---
+
+## Tool Selection
+
+**git-machete** is the default — free, MIT licensed, actively maintained (v3.43.1, June 2026). Ships an official Claude Code skill:
+```bash
+gh skill install VirtusLab/git-machete git-machete --scope user --agent claude-code
+```
+
+**gh stack** — GitHub's native stacking (private preview, waitlist as of June 2026). The right long-term answer: handles squash cleanup, auto-PR-base updates, merge queue, and server-side "Rebase Stack" button. Monitor for GA.
+
+**Graphite** (`gt`) — full platform (CLI + web UI + merge queue). The upstream open-source CLI was archived July 2023; the community fork (freephite) is single-maintainer. Not recommended for teams.
+
+---
+
+## Tool Reference
+
+### git-machete (default)
+| Command | Purpose |
+|---|---|
+| `git machete status -l` | Full stack view |
+| `git machete traverse -WH` | Fetch + cascade rebase + push + retarget PRs |
+| `git machete update` | Rebase current branch onto parent only |
+| `git machete slide-out --no-rebase <branch>` | Remove merged branch from layout |
+| `git machete github create-pr [--draft]` | Create PR targeting machete parent |
+| `git machete go` | Interactive branch navigation |
+| `git machete edit` | Edit `.git/machete` directly |
+
+### Raw git (no extra tools, git ≥2.38)
+```bash
+# Cascade rebase the whole stack in one command (set permanently: git config rebase.updateRefs true):
+git rebase --update-refs main
+
+# Force-push all branches:
+git push --force-with-lease origin feat/layer-1 feat/layer-2 feat/layer-3
+```
+
+Note: `--update-refs` only updates local branch pointers. It does NOT retarget GitHub PR bases — you still need `gh pr edit --base` per PR after pushing. Use as a supplement to git-machete, not a replacement.
 
 ---
 
