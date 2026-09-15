@@ -1,3 +1,3 @@
 [workspace]
-members = ["steam-clean"]
+members = ["steam-clean", "claude-mem-tree"]
 resolver = "2"
