@@ -114,5 +114,4 @@ For non-trivial features, use `/sdd:full` (or the `sdd` agent) to run the comple
 
 ---
 
-@~/.claude/RTK.md
 @~/.claude/CLAUDE.local.md

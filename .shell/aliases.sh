@@ -108,9 +108,19 @@ alias mmdc="npx -p @mermaid-js/mermaid-cli mmdc"
 # custom Python environments (like Homebrew or Rye) when building AUR packages.
 alias pamac='env PATH=/usr/bin:/bin:/usr/local/bin pamac'
 
-# Alias for running Claude with LiteLLM proxy
-# Unsets CLAUDE_CODE_USE_BEDROCK to prevent direct Bedrock usage
-# Sets ANTHROPIC_BASE_URL to point to local LiteLLM proxy on port 47000
-alias proxy-claude='env -u CLAUDE_CODE_USE_BEDROCK ANTHROPIC_BASE_URL=http://localhost:47000 claude'
+# Alias for running Claude with local proxy (consolette on port 47000, which
+# routes to free OpenRouter models: Laguna-primary, Cohere-fallback).
+# Unsets CLAUDE_CODE_USE_BEDROCK to prevent direct Bedrock usage.
+# CLAUDE_CODE_AUTO_COMPACT_WINDOW=240000 compacts before the smallest backend
+# limit (256K Cohere / 262K Laguna); the session model ID is a known claude-*
+# ID so CLAUDE_CODE_MAX_CONTEXT_TOKENS would be ignored. Raise per-session
+# with /autocompact (e.g. 900k when pinned to the 1M Ultra model).
+alias proxy-claude='env -u CLAUDE_CODE_USE_BEDROCK ANTHROPIC_BASE_URL=http://localhost:47000 CLAUDE_CODE_AUTO_COMPACT_WINDOW=240000 claude'
 alias proxy-claude-passthrough='env -u CLAUDE_CODE_USE_BEDROCK ANTHROPIC_BASE_URL=http://localhost:47000/anthropic claude'
 alias bedrock-claude='env CLAUDE_CODE_USE_BEDROCK=true claude'
+
+# New program: Claude Code via consolette free models. Same proxy as
+# proxy-claude (kept as a named entry so stapler-squad can resolve it as a
+# distinct program); see config.go GetClaudeCommand/GetAvailablePrograms
+# candidates if it should be auto-detected there.
+alias claude-code-free-models='env -u CLAUDE_CODE_USE_BEDROCK ANTHROPIC_BASE_URL=http://localhost:47000 CLAUDE_CODE_AUTO_COMPACT_WINDOW=240000 claude'

@@ -262,8 +262,6 @@ brew "rename"
 brew "renovate"
 # Search tool like grep and The Silver Searcher
 brew "ripgrep"
-# CLI proxy to minimize LLM token consumption
-brew "rtk"
 # Modern Day Portscanner
 brew "rustscan"
 # Package Management Solution for Python

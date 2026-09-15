@@ -60,5 +60,23 @@
       }
     }
   },
-  "$schema": "https://opencode.ai/config.json"
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "consolette": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Consolette",
+      "options": {
+        "baseURL": "http://127.0.0.1:47000/v1",
+        "apiKey": "unused"
+      },
+      "models": {
+        "cohere/north-mini-code:free": {
+          "name": "North Mini Code (via consolette)"
+        },
+        "poolside/laguna-s-2.1:free": {
+          "name": "Laguna S 2.1 (via consolette)"
+        }
+      }
+    }
+  }
 }
