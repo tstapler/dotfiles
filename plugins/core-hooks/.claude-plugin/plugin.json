@@ -1,0 +1,5 @@
+{
+    "name": "core-hooks",
+    "description": "Standing Claude Code hooks: ssq-hooks pre-tool check, SDD phase reminders, and kibitzer post-edit/stop checks. RTK's Bash-rewrite hook is installed separately by the rtk tool itself.",
+    "version": "1.0.0"
+}
