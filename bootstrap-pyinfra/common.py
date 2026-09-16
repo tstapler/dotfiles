@@ -66,6 +66,16 @@ def is_fbg_machine() -> bool:
     return hostname().lower().startswith("fbg-")
 
 
+def is_dev_workspace() -> bool:
+    """
+    Coder-based remote dev-workspace detection, for employers whose paved
+    path provisions one per engineer. Hostname pattern confirmed against a
+    real workspace: `coderworkspace-i-<ec2 instance id>`, home dir
+    `/home/coder`.
+    """
+    return hostname().lower().startswith("coderworkspace-")
+
+
 def github_personal_user() -> str | None:
     return "tstapler" if is_fbg_machine() else None
 
