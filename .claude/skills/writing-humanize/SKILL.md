@@ -44,6 +44,7 @@ Check paragraph-level patterns:
 | Signal | What to Look For | Fix |
 |--------|-----------------|-----|
 | Uniform length | Every paragraph 3–5 sentences, similar word counts | Break one short (1–2 sentences). Expand one long. |
+| Wall of text | 4+ sentences / 100+ words delivered as one unbroken block with no internal line break — the default shape LLMs fall back to in chat, PR/issue comments, and DMs | Break at thought boundaries, one idea per line-group, the way a person actually types a reply. Treat as a **soft signal only** — an ordinary dense human paragraph can share this exact shape, so weight it alongside register and redundant-context tells below, not as a standalone detector. |
 | Formulaic opener | "In today's rapidly evolving landscape..." or similar throat-clearing | Cut entirely or replace with a specific claim or scene |
 | Formulaic closer | "In conclusion, it is clear that..." | End on a specific image, an open question, or a direct call |
 | Transition-word boundary | moreover/furthermore starting 2+ consecutive paragraphs | Remove or replace with a direct pivot sentence |

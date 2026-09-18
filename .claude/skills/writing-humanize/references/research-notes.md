@@ -75,6 +75,30 @@ The symmetric formulaic closer ("In conclusion, it is clear that...") mirrors th
 
 **Fix**: End on an image, a call, a question, or a position. Never summarize what you just said.
 
+### Wall of Text (No Internal Line Breaks)
+
+Separate from uniform-length: a single unbroken paragraph running 4+ sentences / 100+ words with no
+internal line break, especially in short-form contexts (chat replies, PR/issue comments, DMs). The
+[`avoid-ai-writing`](https://github.com/conorbronsdon/avoid-ai-writing) project documents this as
+the shape LLMs default to in exactly those contexts, and traces the mechanism to how the model
+tokenizes: separator/blank-line/heading tokens pull disproportionate attention relative to the words
+between them (SepLLM, [arXiv:2412.12094](https://arxiv.org/abs/2412.12094)), so a model given no
+formatting cues has less signal for where one thought ends and the next begins — it defaults to
+running them together.
+
+**Important caveat, from that same project's own experience**: a first attempt at a standalone
+wall-of-text detector was reverted, because an ordinary dense human paragraph can be structurally
+identical to an AI-generated one — the actual tell is register and redundant context, not paragraph
+shape alone. Treat this signal as corroborating evidence alongside vocabulary/hedging/positivity
+flags, never as a sole trigger.
+
+For **design docs and ADRs specifically** (not chat/PR-comment prose), the more defensible mechanical
+threshold is Google's Developer Documentation Style Guide's own paragraph-structure guidance: a
+paragraph past ~5-6 sentences is *that guide's* signal it's carrying more than one idea — see
+`design-doc-review:readability`'s "Overlong, unbroken paragraph" check, which applies that threshold
+tied to actual multi-idea content rather than shape alone, avoiding this project's false-positive
+trap.
+
 ### Present Participial Clause Overuse
 
 "Leveraging our expertise, we...", "Building on this foundation, the team...", "Recognizing the challenges ahead..."

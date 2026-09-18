@@ -8,6 +8,10 @@ Orchestrator for the general-purpose writing pipeline: establish who this is for
 
 **Target**: {{args}} — a file path. If omitted, use the doc already in context.
 
+See `../../CHECKLIST.md` for the running index of every mechanical check across this pipeline —
+what it catches, the research/citation behind it, and where it's implemented. Add to that file
+(not here) whenever a new pattern is noticed or researched; this file stays about orchestration.
+
 ## Phase 1 — Scope
 
 Run `writing:scope` against the target. Get back `{audience, tone, doc_type, purpose}`. Do not proceed until this resolves — every later phase's agent prompts need it.
