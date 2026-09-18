@@ -1,5 +1,6 @@
 import json
 import re
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -25,25 +26,31 @@ DEFAULT_CLAUDE_SETTINGS_FILE = Path.home() / ".claude" / "settings.json"
 DEFAULT_CLAUDE_SETTINGS_LOCAL_FILE = Path.home() / ".claude" / "settings.local.json"
 
 
+@dataclass(frozen=True)
+class PluginSourceConfig:
+    """Path overrides for PluginSource; unset fields fall back to discovery/defaults."""
+
+    global_plugins_dir: Optional[Path] = None
+    local_plugins_dir: Optional[Path] = None
+    installed_plugins_file: Optional[Path] = None
+    claude_settings_file: Optional[Path] = None
+    claude_settings_local_file: Optional[Path] = None
+
+
 class PluginSource:
-    def __init__(
-        self,
-        global_plugins_dir: Optional[Path] = None,
-        local_plugins_dir: Optional[Path] = None,
-        installed_plugins_file: Optional[Path] = None,
-        claude_settings_file: Optional[Path] = None,
-        claude_settings_local_file: Optional[Path] = None,
-    ):
+    def __init__(self, config: Optional[PluginSourceConfig] = None):
+        config = config or PluginSourceConfig()
+
         # Global: checked into dotfiles (e.g. ./plugins/ relative to dotfiles root)
-        self.global_plugins_dir = global_plugins_dir or self._find_global()
+        self.global_plugins_dir = config.global_plugins_dir or self._find_global()
         # Local: project-specific plugins, lower priority (overrides global by name)
-        self.local_plugins_dir = local_plugins_dir or self._find_local()
+        self.local_plugins_dir = config.local_plugins_dir or self._find_local()
 
         # Marketplace-installed plugins (via `/plugin install`), lowest priority of the
         # three sources (dotfiles-committed plugins always win on a name collision).
-        self.installed_plugins_file = installed_plugins_file or DEFAULT_INSTALLED_PLUGINS_FILE
-        self.claude_settings_file = claude_settings_file or DEFAULT_CLAUDE_SETTINGS_FILE
-        self.claude_settings_local_file = claude_settings_local_file or DEFAULT_CLAUDE_SETTINGS_LOCAL_FILE
+        self.installed_plugins_file = config.installed_plugins_file or DEFAULT_INSTALLED_PLUGINS_FILE
+        self.claude_settings_file = config.claude_settings_file or DEFAULT_CLAUDE_SETTINGS_FILE
+        self.claude_settings_local_file = config.claude_settings_local_file or DEFAULT_CLAUDE_SETTINGS_LOCAL_FILE
         self.marketplace_plugin_dirs = self._find_marketplace_plugins()
 
     def _find_global(self) -> Optional[Path]:
@@ -102,34 +109,39 @@ class PluginSource:
         for key, records in plugins_map.items():
             if key in disabled_keys:
                 continue
-            if isinstance(records, dict):
-                records = [records]
-            elif not isinstance(records, list):
-                continue
-
-            # A key can carry multiple scope records (e.g. user + project); resolve
-            # to a single dir, preferring the "user" scope, falling back to the
-            # first record whose installPath still exists on disk.
-            chosen = None
-            for rec in sorted(
-                (r for r in records if isinstance(r, dict)),
-                key=lambda r: 0 if r.get("scope") == "user" else 1,
-            ):
-                install_path = rec.get("installPath")
-                if not install_path:
-                    continue
-                path = Path(install_path)
-                if path.exists():
-                    chosen = path
-                    break
-
-            if chosen is not None:
-                dirs.append(chosen)
-            else:
+            chosen = self._resolve_marketplace_plugin_dir(records)
+            if chosen is None:
                 console.print(
                     f"[yellow]Warning: no valid installPath found for marketplace plugin {key}[/yellow]"
                 )
+                continue
+            dirs.append(chosen)
         return dirs
+
+    @staticmethod
+    def _resolve_marketplace_plugin_dir(records) -> Optional[Path]:
+        """Resolve one plugin key's scope record(s) to a single install dir.
+
+        A key can carry multiple scope records (e.g. user + project); prefer
+        the "user" scope, falling back to the first record whose installPath
+        still exists on disk.
+        """
+        if isinstance(records, dict):
+            records = [records]
+        elif not isinstance(records, list):
+            return None
+
+        for rec in sorted(
+            (r for r in records if isinstance(r, dict)),
+            key=lambda r: 0 if r.get("scope") == "user" else 1,
+        ):
+            install_path = rec.get("installPath")
+            if not install_path:
+                continue
+            path = Path(install_path)
+            if path.exists():
+                return path
+        return None
 
     def load_plugins(self) -> List[Plugin]:
         plugins: Dict[str, Plugin] = {}

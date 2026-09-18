@@ -9,7 +9,7 @@ try:
     from .sources.claude import ClaudeSource
     from .sources.mcp_config import McpConfigSource
     from .sources.pi_config import PiConfigSource
-    from .sources.plugins import PluginSource
+    from .sources.plugins import PluginSource, PluginSourceConfig
     from .sources.tiered_config import TieredJsonConfig
     from .targets.gemini import GeminiTarget, AntigravityTarget
     from .targets.opencode import OpenCodeTarget
@@ -27,7 +27,7 @@ except ImportError:
     from sources.claude import ClaudeSource
     from sources.mcp_config import McpConfigSource
     from sources.pi_config import PiConfigSource
-    from sources.plugins import PluginSource
+    from sources.plugins import PluginSource, PluginSourceConfig
     from sources.tiered_config import TieredJsonConfig
     from targets.gemini import GeminiTarget, AntigravityTarget
     from targets.opencode import OpenCodeTarget
@@ -329,9 +329,11 @@ def main():
 
     try:
         plugin_source = PluginSource(
-            global_plugins_dir=args.plugins_global_dir,
-            local_plugins_dir=args.plugins_local_dir,
-            claude_settings_file=args.claude_settings_file,
+            PluginSourceConfig(
+                global_plugins_dir=args.plugins_global_dir,
+                local_plugins_dir=args.plugins_local_dir,
+                claude_settings_file=args.claude_settings_file,
+            )
         )
         if should_sync_non_pi_integrations(args.target, args.plugins_only):
             sync_plugins(plugin_source, args.dry_run, antigravity_dir=args.antigravity_dir)
