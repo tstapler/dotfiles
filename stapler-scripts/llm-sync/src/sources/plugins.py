@@ -266,8 +266,41 @@ class PluginSource:
             with open(hooks_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 if isinstance(data, dict) and isinstance(data.get("hooks"), dict):
-                    return data["hooks"]
-                return data
+                    data = data["hooks"]
+                return self._normalize_home_paths(data, hooks_file)
         except Exception as e:
             console.print(f"[red]Error reading hooks {hooks_file}: {e}[/red]")
             return {}
+
+    # A hardcoded /Users/<name> or /home/<name> prefix only works on the machine
+    # (and OS) it was authored on. Plugins are synced across machines and OSes
+    # (see stapler-squad PR history: a Linux-authored /home/tstapler path shipped
+    # straight into a macOS ~/.claude/settings.json and every hook using it
+    # failed with "No such file or directory") — so the tool itself normalizes
+    # any such prefix to the portable $HOME instead of trusting the source file.
+    _HOME_PATH_RE = re.compile(r"(?<![\w/])/(?:Users|home)/[^/\s\"']+")
+
+    @classmethod
+    def _normalize_home_paths(cls, hooks: Dict[str, List[dict]], source: Path) -> Dict[str, List[dict]]:
+        rewritten = 0
+
+        def fix_command(command: str) -> str:
+            nonlocal rewritten
+            new_command, count = cls._HOME_PATH_RE.subn("$HOME", command)
+            rewritten += count
+            return new_command
+
+        for entries in hooks.values():
+            if not isinstance(entries, list):
+                continue
+            for entry in entries:
+                for hook in entry.get("hooks", []):
+                    if "command" in hook:
+                        hook["command"] = fix_command(hook["command"])
+
+        if rewritten:
+            console.print(
+                f"[yellow]Normalized {rewritten} hardcoded home-directory path(s) to "
+                f"$HOME in {source} — fix the source to use $HOME directly.[/yellow]"
+            )
+        return hooks
