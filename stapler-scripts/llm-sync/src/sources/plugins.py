@@ -280,23 +280,23 @@ class PluginSource:
     # any such prefix to the portable $HOME instead of trusting the source file.
     _HOME_PATH_RE = re.compile(r"(?<![\w/])/(?:Users|home)/[^/\s\"']+")
 
-    @classmethod
-    def _normalize_home_paths(cls, hooks: Dict[str, List[dict]], source: Path) -> Dict[str, List[dict]]:
-        rewritten = 0
-
-        def fix_command(command: str) -> str:
-            nonlocal rewritten
-            new_command, count = cls._HOME_PATH_RE.subn("$HOME", command)
-            rewritten += count
-            return new_command
-
+    @staticmethod
+    def _iter_hook_commands(hooks: Dict[str, List[dict]]):
         for entries in hooks.values():
             if not isinstance(entries, list):
                 continue
             for entry in entries:
-                for hook in entry.get("hooks", []):
-                    if "command" in hook:
-                        hook["command"] = fix_command(hook["command"])
+                yield from entry.get("hooks", [])
+
+    @classmethod
+    def _normalize_home_paths(cls, hooks: Dict[str, List[dict]], source: Path) -> Dict[str, List[dict]]:
+        rewritten = 0
+        for hook in cls._iter_hook_commands(hooks):
+            if "command" not in hook:
+                continue
+            new_command, count = cls._HOME_PATH_RE.subn("$HOME", hook["command"])
+            hook["command"] = new_command
+            rewritten += count
 
         if rewritten:
             console.print(
