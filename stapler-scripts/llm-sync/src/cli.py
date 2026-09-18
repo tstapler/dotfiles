@@ -123,7 +123,8 @@ def sync_to_target(
 
     counts = []
     if changed_agents:
-        a_saved = target.save_agents(changed_agents, dry_run=dry_run, force=True) # force=True because we've already filtered
+        # Already filtered by change_detection above, so tell the target to treat every item here as changed.
+        a_saved = target.save_agents(changed_agents, dry_run=dry_run, force=True)
         counts.append(f"{a_saved} agents")
         if mode is not SyncMode.PREVIEW:
             for a in changed_agents: state_manager.set_hash('to-target', target_name, 'agents', a.name, a.get_hash())
