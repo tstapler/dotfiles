@@ -1,8 +1,23 @@
 import argparse
 import sys
+from enum import Enum
 from pathlib import Path
 from typing import List, Set, Dict, Any, Optional
 from rich.console import Console
+
+
+class SyncMode(Enum):
+    """Whether a sync function reports intended changes or actually writes them."""
+
+    APPLY = "apply"
+    PREVIEW = "preview"
+
+
+class ChangeDetection(Enum):
+    """Which items a sync function treats as changed."""
+
+    HASH_DIFF = "hash-diff"  # only items whose content hash differs from last sync
+    ALL = "all"  # --force: treat every item as changed regardless of hash
 
 # Allow running from src directly or as module
 try:
@@ -42,7 +57,7 @@ except ImportError:
 
 console = Console()
 
-def cleanup_legacy_files(target, items: List, dry_run: bool = False):
+def cleanup_legacy_files(target, items: List, mode: SyncMode = SyncMode.APPLY):
     """Remove files that don't match the namespaced version if they exist in the root."""
     target_name = target.__class__.__name__
     namespaced_names = [item.name for item in items if '/' in item.name]
@@ -52,7 +67,7 @@ def cleanup_legacy_files(target, items: List, dry_run: bool = False):
             legacy_name = name.split('/')[-1]
             legacy_file = target.agents_dir / f"{legacy_name}.md"
             if legacy_file.exists():
-                if dry_run: console.print(f"[yellow]Would delete legacy agent {legacy_file}[/yellow]")
+                if mode is SyncMode.PREVIEW: console.print(f"[yellow]Would delete legacy agent {legacy_file}[/yellow]")
                 else:
                     legacy_file.unlink()
                     console.print(f"[red]Deleted legacy agent {legacy_file}[/red]")
@@ -63,59 +78,66 @@ def cleanup_legacy_files(target, items: List, dry_run: bool = False):
             legacy_name = name.split('/')[-1]
             legacy_file = target.commands_dir / f"{legacy_name}{ext}"
             if legacy_file.exists():
-                if dry_run: console.print(f"[yellow]Would delete legacy command {legacy_file}[/yellow]")
+                if mode is SyncMode.PREVIEW: console.print(f"[yellow]Would delete legacy command {legacy_file}[/yellow]")
                 else:
                     legacy_file.unlink()
                     console.print(f"[red]Deleted legacy command {legacy_file}[/red]")
                     deleted_count += 1
     return deleted_count
 
-def sync_to_target(source, target, state_manager: SyncStateManager, dry_run: bool, force: bool):
+def sync_to_target(
+    source,
+    target,
+    state_manager: SyncStateManager,
+    mode: SyncMode,
+    change_detection: ChangeDetection,
+):
     source_name = source.__class__.__name__
     target_name = target.__class__.__name__
-    
+    dry_run = mode is SyncMode.PREVIEW
+
     console.print(f"\n[bold]Syncing {source_name} -> {target_name}...[/bold]")
-    
+
     # Load all items from source
     agents = source.load_agents()
     skills = source.load_skills()
     commands = source.load_commands()
-    
+
     def get_changed(items: List, item_type: str):
         changed = []
         for item in items:
             current_hash = item.get_hash()
             last_hash = state_manager.get_hash('to-target', target_name, item_type, item.name)
-            if force or current_hash != last_hash:
+            if change_detection is ChangeDetection.ALL or current_hash != last_hash:
                 changed.append(item)
         return changed
 
     changed_agents = get_changed(agents, 'agents')
     changed_skills = get_changed(skills, 'skills')
     changed_commands = get_changed(commands, 'commands')
-    
+
     total_found = len(agents) + len(skills) + len(commands)
     total_changed = len(changed_agents) + len(changed_skills) + len(changed_commands)
-    
+
     console.print(f"Detected {total_changed}/{total_found} modified items.")
 
     counts = []
     if changed_agents:
         a_saved = target.save_agents(changed_agents, dry_run=dry_run, force=True) # force=True because we've already filtered
         counts.append(f"{a_saved} agents")
-        if not dry_run:
+        if mode is not SyncMode.PREVIEW:
             for a in changed_agents: state_manager.set_hash('to-target', target_name, 'agents', a.name, a.get_hash())
-            
+
     if changed_skills:
         s_saved = target.save_skills(changed_skills, dry_run=dry_run, force=True)
         counts.append(f"{s_saved} skills")
-        if not dry_run:
+        if mode is not SyncMode.PREVIEW:
             for s in changed_skills: state_manager.set_hash('to-target', target_name, 'skills', s.name, s.get_hash())
-            
+
     if changed_commands:
         c_saved = target.save_commands(changed_commands, dry_run=dry_run, force=True)
         counts.append(f"{c_saved} commands")
-        if not dry_run:
+        if mode is not SyncMode.PREVIEW:
             for c in changed_commands: state_manager.set_hash('to-target', target_name, 'commands', c.name, c.get_hash())
     
     if counts:
@@ -123,25 +145,33 @@ def sync_to_target(source, target, state_manager: SyncStateManager, dry_run: boo
     else:
         console.print("[yellow]Everything is up to date.[/yellow]")
 
-def sync_from_target(source, target, state_manager: SyncStateManager, dry_run: bool, force: bool):
+def sync_from_target(
+    source,
+    target,
+    state_manager: SyncStateManager,
+    mode: SyncMode,
+    change_detection: ChangeDetection,
+):
     source_name = source.__class__.__name__
     target_name = target.__class__.__name__
-    
+    dry_run = mode is SyncMode.PREVIEW
+    force = change_detection is ChangeDetection.ALL
+
     console.print(f"\n[bold]Syncing {target_name} -> {source_name}...[/bold]")
-    
+
     t_agents = target.load_agents()
     t_skills = target.load_skills()
     t_commands = target.load_commands()
-    
+
     def get_new_or_modified(items: List, item_type: str):
         results = []
         for item in items:
             current_hash = item.get_hash()
             last_hash = state_manager.get_hash('from-target', target_name, item_type, item.name)
-            
+
             # For pull, we only care if it's DIFFERENT from what we last saw on this target.
             # This detects updates made ON the target platform.
-            if force or current_hash != last_hash:
+            if change_detection is ChangeDetection.ALL or current_hash != last_hash:
                 results.append(item)
         return results
 
@@ -153,19 +183,19 @@ def sync_from_target(source, target, state_manager: SyncStateManager, dry_run: b
     if new_agents:
         a_saved = source.save_agents(new_agents, dry_run=dry_run, force=force)
         counts.append(f"{a_saved} agents")
-        if not dry_run:
+        if mode is not SyncMode.PREVIEW:
             for a in new_agents: state_manager.set_hash('from-target', target_name, 'agents', a.name, a.get_hash())
-            
+
     if new_skills:
         s_saved = source.save_skills(new_skills, dry_run=dry_run, force=force)
         counts.append(f"{s_saved} skills")
-        if not dry_run:
+        if mode is not SyncMode.PREVIEW:
             for s in new_skills: state_manager.set_hash('from-target', target_name, 'skills', s.name, s.get_hash())
-            
+
     if new_commands:
         c_saved = source.save_commands(new_commands, dry_run=dry_run, force=force)
         counts.append(f"{c_saved} commands")
-        if not dry_run:
+        if mode is not SyncMode.PREVIEW:
             for c in new_commands: state_manager.set_hash('from-target', target_name, 'commands', c.name, c.get_hash())
     
     if counts:
@@ -235,14 +265,14 @@ def sync_plugins(plugin_source: PluginSource, dry_run: bool, antigravity_dir: Op
 
 
 
-def sync_mcp(mcp_source: McpConfigSource, settings_target: ClaudeSettingsTarget, dry_run: bool):
+def sync_mcp(mcp_source: McpConfigSource, settings_target: ClaudeSettingsTarget, mode: SyncMode):
     console.print(f"\n[bold]Syncing MCP servers -> {settings_target.settings_file}...[/bold]")
     servers = mcp_source.load_servers()
     if not servers:
         console.print("[yellow]No MCP servers found.[/yellow]")
         return
-    count = settings_target.save_mcp_servers(servers, dry_run=dry_run)
-    if not dry_run:
+    count = settings_target.save_mcp_servers(servers, dry_run=mode is SyncMode.PREVIEW)
+    if mode is not SyncMode.PREVIEW:
         console.print(f"[green]Wrote {count} MCP servers to {settings_target.settings_file}[/green]")
 
 def sync_pi_settings(args) -> None:
@@ -323,6 +353,9 @@ def main():
 
     args = parser.parse_args()
 
+    sync_mode = SyncMode.PREVIEW if args.dry_run else SyncMode.APPLY
+    change_detection = ChangeDetection.ALL if args.force else ChangeDetection.HASH_DIFF
+
     console.print("[bold]LLM Agent Sync (Hash-based)[/bold]")
 
     state_manager = SyncStateManager(args.state_file)
@@ -382,14 +415,14 @@ def main():
                 agents = claude.load_agents()
                 commands = claude.load_commands()
                 for t in targets:
-                    cleanup_legacy_files(t, agents + commands, dry_run=args.dry_run)
+                    cleanup_legacy_files(t, agents + commands, mode=sync_mode)
 
             for target in targets:
                 if args.direction in ['to-target', 'both']:
-                    sync_to_target(claude, target, state_manager, args.dry_run, args.force)
+                    sync_to_target(claude, target, state_manager, sync_mode, change_detection)
 
                 if args.direction in ['from-target', 'both']:
-                    sync_from_target(claude, target, state_manager, args.dry_run, args.force)
+                    sync_from_target(claude, target, state_manager, sync_mode, change_detection)
 
             mcp_source = McpConfigSource(
                 global_config_file=args.mcp_global_config,
@@ -399,10 +432,10 @@ def main():
             )
             if should_sync_non_pi_integrations(args.target, args.plugins_only):
                 claude_settings = ClaudeSettingsTarget(settings_file=args.claude_settings_file)
-                sync_mcp(mcp_source, claude_settings, args.dry_run)
+                sync_mcp(mcp_source, claude_settings, sync_mode)
 
                 antigravity_mcp = AntigravityMcpTarget()
-                sync_mcp(mcp_source, antigravity_mcp, args.dry_run)
+                sync_mcp(mcp_source, antigravity_mcp, sync_mode)
             else:
                 console.print("[dim]Pi-only run: skipping Claude/Antigravity MCP writes.[/dim]")
 
