@@ -57,6 +57,17 @@ except ImportError:
 
 console = Console()
 
+def _delete_legacy_file(legacy_file: Path, mode: SyncMode, kind: str) -> int:
+    """Delete legacy_file if present, honoring preview mode. Returns 1 if deleted, else 0."""
+    if not legacy_file.exists():
+        return 0
+    if mode is SyncMode.PREVIEW:
+        console.print(f"[yellow]Would delete legacy {kind} {legacy_file}[/yellow]")
+        return 0
+    legacy_file.unlink()
+    console.print(f"[red]Deleted legacy {kind} {legacy_file}[/red]")
+    return 1
+
 def cleanup_legacy_files(target, items: List, mode: SyncMode = SyncMode.APPLY):
     """Remove files that don't match the namespaced version if they exist in the root."""
     target_name = target.__class__.__name__
@@ -66,23 +77,13 @@ def cleanup_legacy_files(target, items: List, mode: SyncMode = SyncMode.APPLY):
         for name in namespaced_names:
             legacy_name = name.split('/')[-1]
             legacy_file = target.agents_dir / f"{legacy_name}.md"
-            if legacy_file.exists():
-                if mode is SyncMode.PREVIEW: console.print(f"[yellow]Would delete legacy agent {legacy_file}[/yellow]")
-                else:
-                    legacy_file.unlink()
-                    console.print(f"[red]Deleted legacy agent {legacy_file}[/red]")
-                    deleted_count += 1
+            deleted_count += _delete_legacy_file(legacy_file, mode, "agent")
     if hasattr(target, 'commands_dir'):
         ext = ".toml" if "Gemini" in target_name else ".md"
         for name in namespaced_names:
             legacy_name = name.split('/')[-1]
             legacy_file = target.commands_dir / f"{legacy_name}{ext}"
-            if legacy_file.exists():
-                if mode is SyncMode.PREVIEW: console.print(f"[yellow]Would delete legacy command {legacy_file}[/yellow]")
-                else:
-                    legacy_file.unlink()
-                    console.print(f"[red]Deleted legacy command {legacy_file}[/red]")
-                    deleted_count += 1
+            deleted_count += _delete_legacy_file(legacy_file, mode, "command")
     return deleted_count
 
 def sync_to_target(
