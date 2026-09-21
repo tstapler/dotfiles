@@ -46,6 +46,9 @@ links:
     os: "Linux Darwin"
   - src: .claude/CLAUDE.md
     os: "Linux Darwin"
+  - src: .claude/CLAUDE.md
+    dest: .pi/agent/AGENTS.md
+    os: "Linux Darwin"
   - src: .claude/agents
     os: "Linux Darwin"
   - src: .claude/agents.md
