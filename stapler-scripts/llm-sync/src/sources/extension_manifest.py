@@ -86,8 +86,19 @@ class ExtensionManifestSource:
             )
 
         entries: dict[str, ManifestEntry] = {}
+        # Map keys are unique by construction (JSON object parsing), so the
+        # only reachable "duplicate id" is two different map keys whose
+        # entries' own `id` fields collide.
+        seen_ids: dict[str, str] = {}
         for entry_id, data in raw["extensions"].items():
-            entries[entry_id] = ExtensionManifestSource._parse_entry(entry_id, data)
+            entry = ExtensionManifestSource._parse_entry(entry_id, data)
+            if entry.id in seen_ids:
+                raise ManifestError(
+                    f"Manifest entries '{seen_ids[entry.id]}' and '{entry_id}' "
+                    f"both resolve to duplicate id '{entry.id}'"
+                )
+            seen_ids[entry.id] = entry_id
+            entries[entry_id] = entry
         return ExtensionManifest(entries=entries)
 
     @staticmethod

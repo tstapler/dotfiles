@@ -210,6 +210,29 @@ def test_approved_entry_with_unverifiable_notes_path_is_rejected_by_name():
                 )
 
 
+def test_extension_manifest_load_raises_on_duplicate_entry_id():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "extensions-manifest.json"
+        first = {**_BASE_FIELDS, "id": "gotgenes-pi-packages", "disposition": "candidate"}
+        second = {**_BASE_FIELDS, "id": "gotgenes-pi-packages", "disposition": "candidate"}
+        _write(
+            path,
+            {
+                "extensions": {
+                    "gotgenes-pi-packages-v1": first,
+                    "gotgenes-pi-packages-v2": second,
+                }
+            },
+        )
+
+        try:
+            ExtensionManifestSource.load(path)
+        except ManifestError as error:
+            assert "gotgenes-pi-packages" in str(error)
+        else:
+            raise AssertionError("duplicate manifest entry id must raise ManifestError")
+
+
 if __name__ == "__main__":
     tests = [value for key, value in list(globals().items()) if key.startswith("test_")]
     for test in tests:

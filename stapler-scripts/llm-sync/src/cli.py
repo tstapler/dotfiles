@@ -7,9 +7,11 @@ from rich.console import Console
 # Allow running from src directly or as module
 try:
     from .sources.claude import ClaudeSource
+    from .sources.extension_manifest import ExtensionManifestSource
     from .sources.mcp_config import McpConfigSource
     from .sources.pi_config import PiConfigSource
     from .sources.plugins import PluginSource
+    from .sources.review_gate import verify_pinned_sources_reviewed
     from .sources.tiered_config import TieredJsonConfig
     from .targets.gemini import GeminiTarget, AntigravityTarget
     from .targets.opencode import OpenCodeTarget
@@ -25,9 +27,11 @@ except ImportError:
     # Fallback if run as script (hacky but useful during dev)
     sys.path.append(str(Path(__file__).parent))
     from sources.claude import ClaudeSource
+    from sources.extension_manifest import ExtensionManifestSource
     from sources.mcp_config import McpConfigSource
     from sources.pi_config import PiConfigSource
     from sources.plugins import PluginSource
+    from sources.review_gate import verify_pinned_sources_reviewed
     from sources.tiered_config import TieredJsonConfig
     from targets.gemini import GeminiTarget, AntigravityTarget
     from targets.opencode import OpenCodeTarget
@@ -266,6 +270,10 @@ def sync_pi_settings(args) -> None:
     for layer in loaded.layers:
         console.print(f"[dim]Loaded Pi configuration layer {layer}[/dim]")
 
+    manifest_path = args.pi_extensions_manifest or config_root / "extensions-manifest.json"
+    manifest = ExtensionManifestSource.load(manifest_path)
+    verify_pinned_sources_reviewed(loaded, manifest, trusted_scopes=loaded.trusted_scopes)
+
     target = PiSettingsTarget(
         settings_path=args.pi_settings_file or agent_dir / "settings.json",
         state_path=args.pi_settings_state_file
@@ -307,6 +315,7 @@ def main():
     parser.add_argument("--pi-local-config-dir", type=Path, help="Override machine-local Pi config.d directory")
     parser.add_argument("--pi-settings-file", type=Path, help="Override generated Pi settings.json path")
     parser.add_argument("--pi-settings-state-file", type=Path, help="Override Pi managed-key state path")
+    parser.add_argument("--pi-extensions-manifest", type=Path, help="Override Pi extension review manifest path")
     parser.add_argument("--mcp-global-config", type=Path, help="Override global MCP servers JSON file")
     parser.add_argument("--mcp-local-config", type=Path, help="Override machine-local MCP servers JSON file")
     parser.add_argument("--mcp-global-config-dir", type=Path, help="Override global MCP servers config.d directory")
