@@ -18,6 +18,8 @@ skill's own instructions — it's the index of *why* a rule exists and *where* t
 | Confidence mismatch | A claim stated as settled fact when the doc's own evidence only supports "probably"/"consistent with" | `CLAUDE.md`: "Label confidence: VERIFIED... vs INFERRED/UNVERIFIED" | `design-doc-review:evidence` |
 | Non-sequitur / unsupported causal leap | Conclusion doesn't follow from the stated evidence (correlation presented as causation) | `CLAUDE.md`: "Consistent-with is not because-of" | `design-doc-review:evidence` |
 | Internal contradiction | Two statements in the same doc that can't both be true | Standard editorial coherence check; no single external citation, just internal logical consistency | `design-doc-review:evidence` |
+| Repetitive sentence structure | 3+ consecutive sentences with the same opening pattern/length, reading stiff and monotonous | [JMU Writing Center: Sentence Structure and Variety](https://www.jmu.edu/learning/writing-center/link-library/grammar-punctuation-style/sentence-structure-variety.shtml); [Purdue OWL: Sentence Variety](https://owl.purdue.edu/owl/general_writing/academic_writing/sentence_variety/index.html) | `design-doc-review:readability` |
+| Missing paragraph break (markdown source) | Two topically distinct ideas run together as one unbroken block with no blank line, even when the prose itself reads fine sentence-by-sentence | [Purdue OWL: On Paragraphs](https://owl.purdue.edu/owl/general_writing/academic_writing/paragraphs_and_paragraphing/index.html) — one idea per paragraph, new paragraph on topic shift or when the reader needs a pause | `design-doc-review:readability` |
 
 ## Planned / candidates for future research
 
