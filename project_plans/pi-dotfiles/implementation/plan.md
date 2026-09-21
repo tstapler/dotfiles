@@ -18,8 +18,13 @@ Before scoping new work, this is what the codebase already does — verified by 
 - **Skills/prompts sync**: `PiTarget` (`stapler-scripts/llm-sync/src/targets/pi.py`) — regression anchor per requirements, untouched by this plan.
 - **Tiered-config-pattern skill**: `.claude/skills/tiered-configuration/SKILL.md` already documents and enforces the config.d model (success metric 9 is already met).
 - **First-party extensions**: kibitzer, ponytail, dotfiles-hooks are already wired via `.config/pi/config.d/{10,20,30}-*.json`.
+- **Project-level instructions (partial parity, zero new work)**: Pi natively loads project instructions by walking up from the current directory looking for `AGENTS.md` or `CLAUDE.md` (with `AGENTS.override.md` taking precedence per-directory) — VERIFIED against Pi's own docs (`pi.dev/docs/latest/quickstart`; `github.com/earendil-works/pi/blob/main/AGENTS.md`). Since this repo's project-level `CLAUDE.md` files (e.g. this repo's own `/home/tstapler/CLAUDE.md`) already exist, Pi already reads them with no dotfiles changes required. Global-level parity (`~/.claude/CLAUDE.md`'s equivalent, `~/.pi/agent/AGENTS.md`) is the genuine gap — scoped as new Story 5.3.2.
 
 What is genuinely missing, and what this plan builds: a **fork-pin-review manifest and enforcement gate** (no third-party extension may render without one), an **ownership ledger for on-disk package artifacts** (today's ledger only covers `settings.json` top-level keys), the **sequenced, human-gated fork-and-enable work** for the Tier 1+ candidates from the research docs, **credential-provider wiring**, and the **rollout/rollback runbook** the requirements' Risk Control section calls for.
+
+### Explicitly deferred
+
+- **Tier 4 session/workflow-utility parity** (session search/handoff, async compaction) is deliberately deferred to a follow-up SDD project, not delivered by this plan. Phase 3 scopes itself to Tier 0-2 extensions only (Tier 3/MCP is partially covered by Epic 3.4's compat shim, which stays in scope). `full-featured-profile-research.md`'s Tier 4 section names the candidates a follow-up would evaluate: session search/handoff via `thurstonsand/pi-sessions` (review anchor `8f2f3d444cc65255bfc61dbb6173e69c21eb5e2c`) and async compaction via `almogdepaz/pi-async-compaction` (review anchor `5b9a70b678f23b7250f66b97789cb2777061cf3c`). This is a stated scope boundary, not a silently dropped requirement — matching this plan's existing practice of recording deferrals explicitly (see Unresolved Questions).
 
 ---
 
@@ -53,7 +58,7 @@ What is genuinely missing, and what this plan builds: a **fork-pin-review manife
 | Disposition | A Manifest Entry's review status: `candidate`, `hold`, `rejected`, or `approved`. | |
 | Approval Gate | The rule that `disposition` can only become `approved` by a human hand-edit — no tool writes that value. | Enforced by Epic 1.3's helper never emitting it. |
 | Fork-and-Pin Helper | The scripted scaffolding tool (`fork_pin_extension.py`) that creates the GitHub fork and a `candidate` Manifest Entry, but cannot approve it. | |
-| Review Gate Specification | The validation rule (`verify_pinned_sources_reviewed`) that blocks any rendered fork source lacking an `approved` Manifest Entry at the matching commit. | |
+| Review Gate Specification | The validation rule (`verify_pinned_sources_reviewed`) that blocks any rendered fork source lacking an `approved` Manifest Entry at the matching commit. | Lives in `stapler-scripts/llm-sync/src/sources/review_gate.py`, not `extension_manifest.py` — it cross-references `PiConfigSource`'s rendered output and the manifest registry, so it's kept out of the manifest-schema-parsing module. |
 | Credential Provider | A Pi extension that resolves secrets at runtime from an OS/desktop credential store without the value passing through tracked config. | e.g. forked `pi-1password`. |
 | Credential Material | Any literal secret value (API key, token, password). | Already rejected by `PiConfigSource._reject_credential_material`. |
 | Package Ledger | New state file (`PiPackageLedger`) extending the ownership-ledger concept to installed package artifacts on disk, not just `settings.json` keys. | Phase 2. |
@@ -74,8 +79,8 @@ What is genuinely missing, and what this plan builds: a **fork-pin-review manife
 | Fork/pin manifest storage | Registry — stable-ID keyed map, same shape as the existing `packages`/`extensions` registries | PoEAA (Registry) | One manifest file per extension under `project_plans/` | Splitting review state across many files defeats a single grep/validate point; matching the existing registry shape keeps the validator and mental model consistent with `PiConfigSource`. |
 | Review Gate Specification | Specification pattern — validate-before-render, extending `PiConfigSource`'s existing credential/pin checks | GoF/DDD Specification | Convention-only documentation (checklist as prose in `extension-audit.md` with no enforcement) | `PiConfigSource` already proves this codebase's answer to "must never happen" is executable validation, not policy text; a prose-only gate is exactly the silent-install failure mode requirements forbid. |
 | Config-fragment renderer / merge engine | Existing tiered override chain (`TieredJsonConfig`) — reused unchanged | Existing implementation | A second, extension-specific merge engine | The current engine already deep-merges objects, replaces arrays, and honors `null`-deletes, fully tested; a second engine would fork behavior for no functional gain. |
-| Ownership/cleanup tracking for installed packages | External Ownership Ledger (Terraform-state-inspired snapshot), a sibling to the existing `managedKeys` ledger for a different resource class | PoEAA (Memento/Snapshot) | Assume Pi's own package manager garbage-collects unused installs | Unverified — Rabbit Holes explicitly flags this as a risk; treating it as self-cleaning without confirming (Epic 2.1's spike) risks the exact stale-entry problem requirements call out. |
-| Credential-provider integration | Adapter — forked `pi-1password` wrapped behind the existing `packages` registry, disabled by default | GoF Adapter | Build a custom Tyler-owned credential extension from scratch | The research doc identifies `jmcombs/pi-1password` as the closest fit to the desired desktop-store model already; building new re-solves native-keyring/OAuth-adjacent risk the fork review already scopes. |
+| Ownership/cleanup tracking for installed packages | External Ownership Ledger (Repository), a sibling to the existing `managedKeys` ledger for a different resource class | Repository — a small ownership-record store, same shape as `PiSettingsTarget`'s `managedKeys` mechanism | Assume Pi's own package manager garbage-collects unused installs | Unverified — Rabbit Holes explicitly flags this as a risk; treating it as self-cleaning without confirming (Epic 2.1's spike) risks the exact stale-entry problem requirements call out. |
+| Credential-provider integration | Registry entry, disabled by default — same mechanism as the other opt-in packages in this table | Registry (matches this table's other opt-in entries) | Build a custom Tyler-owned credential extension from scratch | The research doc identifies `jmcombs/pi-1password` as the closest fit to the desired desktop-store model already; building new re-solves native-keyring/OAuth-adjacent risk the fork review already scopes. No adapter class is built — the extension registers exactly like every other opt-in `packages` entry, so "Adapter" mislabeled what's actually implemented (architecture-review.md Concern #5). |
 | Staged rollout / dry-run | Feature toggle via the existing `enabled` registry flag + tier-ordered promotion checklist | Existing implementation / Fowler feature toggle | A separate environment-variable rollout flag mechanism | A second, untyped flag would bypass the schema validation `PiConfigSource` already performs on the registry it would duplicate. |
 
 ---
@@ -102,6 +107,7 @@ Not N/A: the current macOS machine's `~/.pi/agent/settings.json` already contain
 - **Logs**: `llm_sync()` (`bootstrap-pyinfra/deploys/llm_sync.py`) already prints `main.py`'s full stdout, which itself reports per-resource install/update/disable/skip decisions via `rich.Console`. Phase 1/2 additions (manifest rejections, stale-package reports) extend the same stream with entry-id-named messages, matching the existing `PiConfigError`/`PiSettingsTargetError` style of naming the offending key.
 - **Metrics**: none — this is local bootstrap automation, not an online service (per requirements.md Observability Requirements).
 - **Alerts**: none. Failures surface as a non-zero-exit `DeployError` that halts the pyinfra run, exactly as `deploys/pi.py` already does for install failures.
+- **Pre-bump gate (required, not optional)**: any future `pi_install_version` change (`bootstrap-pyinfra/group_data/all.py`) must first pass a smoke test — start `pi` against a temp `HOME` with every currently-`approved` manifest entry's fork/commit enabled, assert each extension loads without error, and re-run Task 3.3.1c-2's plan-mode/permission-system composition integration test as a regression check (Story 5.1.1, Task 5.1.1c). A core-Pi version bump can silently break an unchanged, already-approved extension's runtime behavior (e.g. fail-soft extension loading masking a broken permission gate), which none of the install/update/skip logging above would surface.
 
 ## Risk Control
 
@@ -134,7 +140,11 @@ Phase 3: Gated          Phase 4: Credential    Phase 2: Ownership
                     v
         Phase 5: Validation, Rollback, Documentation
          (runbook, backup/rollback, compat matrix, doc sync)
+
+Epic 5.2 (Story 5.2.2) ──(must complete first)──▶ Task 3.2.2b
 ```
+
+**Back-edge not drawn above**: Story 5.2.2 (Phase 5, classify the current machine's existing `settings.json` keys) must complete *before* Story 3.2.2's temp-dir validation/real-machine adoption step runs — see Story 3.2.2's and Task 3.2.2b's `Dependencies:` lines. The diagram shows Phase 3 feeding Phase 5 for simplicity; in practice this one Phase-5 story gates a Phase-3 real-machine step and must land first.
 
 ---
 
@@ -178,17 +188,28 @@ Phase 3: Gated          Phase 4: Credential    Phase 2: Ownership
   - *Given* a `ManifestEntry` for id `narumiruna-pi-plan-mode` with `disposition: "approved"` and `approved_by: null`, *When* `ExtensionManifestSource.load()` parses it, *Then* it raises `ManifestError` stating approved entries require `approved_by` and `approved_date`.
 - A `candidate` entry with no `approved_by` loads successfully.
   - *Given* the same entry with `disposition: "candidate"` and `approved_by: null`, *When* loaded, *Then* it returns a `ManifestEntry` with `disposition == "candidate"`.
+- An `approved` entry's `notes` must enumerate real evidence, not a rubber stamp — mechanical check only, not a quality judgment.
+  - *Given* a `ManifestEntry` with `disposition: "approved"`, *When* `ExtensionManifestSource.load()` parses it, *Then* it raises `ManifestError` unless `notes` enumerates at least 5 distinct file paths (one per gate-checklist sub-area: network, subprocess, filesystem, secrets, telemetry) that all exist in the fork tree at `fork_commit`, verified via `gh api repos/tstapler/<fork>/git/trees/<commit>?recursive=1`. This raises the floor by catching empty or copy-pasted notes; it does not and cannot verify that the review itself was competent (see Story 4.1.1's AC for the same honest framing).
 
 **Files**: `stapler-scripts/llm-sync/src/sources/extension_manifest.py`, `stapler-scripts/llm-sync/test_extension_manifest.py`
 
 ##### Task 1.1.2a: Add the invariant check (~3 min)
+- Enforce the "approved requires approved_by/approved_date" invariant in `ManifestEntry.__post_init__` (a frozen dataclass's `__post_init__` still runs on construction), not only in `ExtensionManifestSource.load()` — this makes the type itself reject an illegal state regardless of call site (e.g. `fork_pin_extension.py` or a test constructing a `ManifestEntry` directly, bypassing `.load()`), addressing architecture-review.md Concern #4. Keep the existing load()-time GWT tests as regression coverage of the same invariant, now enforced at the type level.
 - Files: `stapler-scripts/llm-sync/src/sources/extension_manifest.py`
 
 ##### Task 1.1.2b: Add the two GWT-derived tests (~4 min)
 - Files: `stapler-scripts/llm-sync/test_extension_manifest.py`
 
+##### Task 1.1.2c: Add the mechanical notes-evidence check for `approved` entries (~5 min)
+- On `disposition: "approved"`, parse `notes` for ≥5 distinct file paths and confirm each exists in `repos/tstapler/<fork_repo>/git/trees/<fork_commit>?recursive=1` via `gh api`; raise `ManifestError` naming which sub-area(s) are missing evidence if fewer than 5 are found. Checks existence only — it cannot and does not judge whether the cited paths were meaningfully reviewed.
+- Files: `stapler-scripts/llm-sync/src/sources/extension_manifest.py`
+
+##### Task 1.1.2d: Add the notes-evidence GWT tests (~4 min)
+- Covers: an `approved` entry with <5 enumerated paths is rejected; an `approved` entry with 5 real paths (mocked `gh api` tree response) passes; a path not present in the tree response is rejected by name.
+- Files: `stapler-scripts/llm-sync/test_extension_manifest.py`
+
 ### Epic 1.2: Manifest Enforcement in llm-sync
-**Goal**: Wire the manifest into the existing Pi settings sync so a pinned fork source can never render into `settings.json` without a matching `approved` Manifest Entry at the exact same commit.
+**Goal**: Wire the manifest into the existing Pi settings sync so a pinned fork source can never render into `settings.json` without a matching `approved` Manifest Entry at the exact same commit. The cross-referencing gate itself lives in a new sibling module, `review_gate.py`, kept separate from `extension_manifest.py`'s narrower manifest-schema-parsing responsibility.
 
 #### Story 1.2.1: Sync refuses unreviewed fork sources
 **As** Tyler, **I want** `sync_pi_settings` to refuse to write settings when a config.d fork source has no approved manifest entry at that exact commit, **so that** no third-party extension activates without recorded human approval.
@@ -208,19 +229,19 @@ Phase 3: Gated          Phase 4: Credential    Phase 2: Ownership
 - A duplicate manifest entry id is rejected at load time, before the gate ever runs.
   - *Given* `.config/pi/extensions-manifest.json` with two entries that resolve to the same id `gotgenes-pi-packages`, *When* `ExtensionManifestSource.load()` parses it, *Then* it raises `ManifestError` naming the duplicate id.
 
-**Files**: `stapler-scripts/llm-sync/src/sources/extension_manifest.py`, `stapler-scripts/llm-sync/src/cli.py`, `stapler-scripts/llm-sync/test_extension_manifest.py`, `.github/workflows/ci.yml`
+**Files**: `stapler-scripts/llm-sync/src/sources/review_gate.py`, `stapler-scripts/llm-sync/src/sources/extension_manifest.py`, `stapler-scripts/llm-sync/src/sources/pi_config.py`, `stapler-scripts/llm-sync/src/cli.py`, `stapler-scripts/llm-sync/test_review_gate.py`, `stapler-scripts/llm-sync/test_extension_manifest.py`, `.github/workflows/ci.yml`
 
 ##### Task 1.2.1a: Add `verify_pinned_sources_reviewed()` (~5 min)
-- Scans rendered `packages`/`extensions` values for `github.com/tstapler/` fork sources and checks each against the manifest.
-- Files: `stapler-scripts/llm-sync/src/sources/extension_manifest.py`
+- Scans rendered `packages`/`extensions` values for `github.com/tstapler/` fork sources and checks each against the manifest. Lives in `review_gate.py`, which imports `ExtensionManifestSource`/`ManifestEntry` from `extension_manifest.py` and `LoadedPiConfig`/`PiConfigError` from `pi_config.py` — kept out of `extension_manifest.py` itself since this cross-references a sibling module's aggregate, not the manifest's own schema.
+- Files: `stapler-scripts/llm-sync/src/sources/review_gate.py`
 
 ##### Task 1.2.1b: Call it from `sync_pi_settings()` (~4 min)
-- After `PiConfigSource.load()`, before `PiSettingsTarget.save()`.
+- After `PiConfigSource.load()`, before `PiSettingsTarget.save()`; imports `verify_pinned_sources_reviewed()` from `review_gate.py`.
 - Files: `stapler-scripts/llm-sync/src/cli.py`
 
 ##### Task 1.2.1c: Add the three baseline GWT tests (~5 min)
 - No-entry blocks; exact-match passes; commit-mismatch blocks.
-- Files: `stapler-scripts/llm-sync/test_extension_manifest.py`
+- Files: `stapler-scripts/llm-sync/test_review_gate.py`
 
 ##### Task 1.2.1d: Add `--pi-extensions-manifest` CLI override (~4 min)
 - Mirrors the existing `--pi-config-file`-style flags; default `.config/pi/extensions-manifest.json`.
@@ -228,15 +249,20 @@ Phase 3: Gated          Phase 4: Credential    Phase 2: Ownership
 
 ##### Task 1.2.1e: Add the hold/rejected-present and case-insensitive/exact-match commit comparison GWT tests (~5 min)
 - Covers: entry present with `disposition: "hold"` blocks; entry present with `disposition: "rejected"` blocks; uppercase manifest `fork_commit` vs. lowercase config pin passes; lowercase manifest `fork_commit` vs. uppercase config pin passes; a full 40-char manifest `fork_commit` vs. its own 7-char prefix as the config pin is correctly treated as a MISMATCH (proves the comparison is exact-after-case-fold, not prefix-tolerant).
-- Files: `stapler-scripts/llm-sync/test_extension_manifest.py`
+- Files: `stapler-scripts/llm-sync/test_review_gate.py`
 
 ##### Task 1.2.1f: Add the duplicate-manifest-id-at-load-time GWT test (~3 min)
-- Extends `ExtensionManifestSource.load()`'s existing required-field validation (Task 1.1.1c) with a duplicate-id check; test lives alongside the other `verify_pinned_sources_reviewed()` coverage since it protects the same gate.
+- Extends `ExtensionManifestSource.load()`'s existing required-field validation (Task 1.1.1c) with a duplicate-id check; this is a manifest-parsing concern (load-time schema validation), not part of the `review_gate.py` extraction, so it stays in `extension_manifest.py`/`test_extension_manifest.py` alongside Epic 1.1's other schema checks even though it protects the same overall gate.
 - Files: `stapler-scripts/llm-sync/src/sources/extension_manifest.py`, `stapler-scripts/llm-sync/test_extension_manifest.py`
 
 ##### Task 1.2.1g: Wire `make llm-sync-test` into the CI gate (~4 min)
 - Add a step running `make llm-sync-test` to `.github/workflows/ci.yml`'s `test` job (or a sibling job), and add `stapler-scripts/llm-sync/**` and `.config/pi/**` to the workflow's `paths` triggers, so a regression in `verify_pinned_sources_reviewed()` or the manifest loader fails CI instead of only a local run. `make llm-sync-test` (Makefile:40) already exists and runs every `test_*.py` under `stapler-scripts/llm-sync`; it is not currently invoked by any workflow (VERIFIED: no match for `llm-sync` in `.github/workflows/ci.yml` as of this plan).
 - Files: `.github/workflows/ci.yml`
+
+##### Task 1.2.1h: Extract a shared `parse_fork_source()` used by both the config-source pin check and the review gate (~5 min)
+- Addresses architecture-review.md Concern #3 (pinned-fork-source parsing duplicated between `PiConfigSource._is_allowed_package_source` and `verify_pinned_sources_reviewed()`, with no shared parser, risking silent drift between the two). Add `parse_fork_source(source: str) -> SourceRef(repo, commit)` and have both `_is_allowed_package_source` (in `pi_config.py`) and `verify_pinned_sources_reviewed()` (in `review_gate.py`) call it instead of each re-deriving repo/commit independently.
+- Add a metamorphic test asserting both call sites agree on accept/reject and on the extracted repo/commit over the same fixture corpus, so the two can no longer silently diverge if the fork-URL shape is loosened in one and not the other (pre-mortem Failure #2).
+- Files: `stapler-scripts/llm-sync/src/sources/pi_config.py`, `stapler-scripts/llm-sync/src/sources/review_gate.py`, `stapler-scripts/llm-sync/test_review_gate.py`
 
 #### Story 1.2.2: Work/Tyler-owned exemptions carry through
 **As** Tyler, **I want** work-owned and Tyler-owned package sources exempted from the manifest gate, matching the existing `trustedPackageScopes`/`@tstapler` exemptions, **so that** the gate only ever blocks third-party forks, per requirements' explicit carve-out.
@@ -247,13 +273,13 @@ Phase 3: Gated          Phase 4: Credential    Phase 2: Ownership
 - A `@tstapler`-scoped source is exempted the same way.
   - *Given* `npm:@tstapler/pi-claude-compat@1.0.0`, *When* checked, *Then* it is not required to appear in the manifest.
 
-**Files**: `stapler-scripts/llm-sync/src/sources/extension_manifest.py`, `stapler-scripts/llm-sync/test_extension_manifest.py`
+**Files**: `stapler-scripts/llm-sync/src/sources/review_gate.py`, `stapler-scripts/llm-sync/test_review_gate.py`
 
 ##### Task 1.2.2a: Restrict the scan to `github.com/tstapler/`-fork-shaped sources only (~3 min)
-- Files: `stapler-scripts/llm-sync/src/sources/extension_manifest.py`
+- Files: `stapler-scripts/llm-sync/src/sources/review_gate.py`
 
 ##### Task 1.2.2b: Add exemption tests (~4 min)
-- Files: `stapler-scripts/llm-sync/test_extension_manifest.py`
+- Files: `stapler-scripts/llm-sync/test_review_gate.py`
 
 ### Epic 1.3: Fork-and-Pin Helper Script
 **Goal**: Script the mechanical, safe parts of forking and pinning — never the approval itself.
@@ -270,7 +296,7 @@ Phase 3: Gated          Phase 4: Credential    Phase 2: Ownership
 **Files**: `stapler-scripts/llm-sync/scripts/fork_pin_extension.py`, `stapler-scripts/llm-sync/test_fork_pin_extension.py`
 
 ##### Task 1.3.1a: Write the `fork` subcommand (~5 min)
-- uv inline-script, typer CLI per the `python-scripting` skill's conventions; calls `gh repo fork <upstream> --org tstapler --default-branch-only` and captures the resulting commit via `gh api`.
+- uv inline-script, typer CLI per the `python-scripting` skill's conventions; calls `gh repo fork <upstream> --default-branch-only` (target namespace flag TBD — see Unresolved Questions: org-vs-personal `tstapler` namespace is still Tyler's open decision, not to be hardcoded ahead of it) and captures the resulting commit via `gh api`.
 - Files: `stapler-scripts/llm-sync/scripts/fork_pin_extension.py`
 
 ##### Task 1.3.1b: Add manifest-skeleton writing (~5 min)
@@ -285,6 +311,10 @@ Phase 3: Gated          Phase 4: Credential    Phase 2: Ownership
 - Prints the planned fork + manifest diff without calling `gh`.
 - Files: `stapler-scripts/llm-sync/scripts/fork_pin_extension.py`
 
+##### Task 1.3.1e: Add the dry-run-matches-real-run test (~5 min)
+- Per architecture-review.md's remediation for its `fork_pin_extension.py` concern: mock the `gh` subprocess calls (fork creation, commit lookup) and assert that `--dry-run`'s computed manifest-entry diff is identical to the manifest entry a real (non-dry-run) run actually persists to `.config/pi/extensions-manifest.json`. Without this, the no-approval-path guarantee (Task 1.3.1c) could hold for the dry-run code path while the actually-shipped real-run path diverges undetected.
+- Files: `stapler-scripts/llm-sync/test_fork_pin_extension.py`
+
 ### Epic 1.4: Review Process Skill
 **Goal**: Turn `extension-audit.md`'s "Required gate" checklist into a discoverable, reusable skill so no agent (or Tyler, in a hurry) skips a step.
 
@@ -293,13 +323,14 @@ Phase 3: Gated          Phase 4: Credential    Phase 2: Ownership
 
 **Acceptance Criteria**:
 - The skill names the code that enforces the gate, not just convention.
-  - *Given* `.claude/skills/pi-extension-review/SKILL.md`, *When* read, *Then* it names `verify_pinned_sources_reviewed()` in `stapler-scripts/llm-sync/src/sources/extension_manifest.py` as the enforcement point and states that only a human edits `disposition`/`approved_by`/`approved_date`.
+  - *Given* `.claude/skills/pi-extension-review/SKILL.md`, *When* read, *Then* it names `verify_pinned_sources_reviewed()` in `stapler-scripts/llm-sync/src/sources/review_gate.py` as the enforcement point and states that only a human edits `disposition`/`approved_by`/`approved_date`.
 - The skill's checklist matches `extension-audit.md`'s seven-step gate.
   - *Given* the skill file, *When* its checklist section is compared to `project_plans/pi-dotfiles/extension-audit.md`'s "Required gate before enabling any candidate" list, *Then* all seven steps are present.
 
 **Files**: `.claude/skills/pi-extension-review/SKILL.md`
 
 ##### Task 1.4.1a: Write frontmatter + the seven-step checklist (~5 min)
+- The seven-step checklist must include a maintenance-liveness check (last commit date, release cadence, contributor count) recorded in the manifest entry's `notes`, so an unmaintained upstream is caught by the gate itself rather than surfacing only during Task 3.2.1c's review (pre-mortem Failure #3).
 - Files: `.claude/skills/pi-extension-review/SKILL.md`
 
 ##### Task 1.4.1b: Add "how to run the helper + validator" section (~4 min)
@@ -355,6 +386,7 @@ Phase 3: Gated          Phase 4: Credential    Phase 2: Ownership
 **Files**: `stapler-scripts/llm-sync/src/targets/pi_package_ledger.py`, `stapler-scripts/llm-sync/test_pi_package_ledger.py`, `stapler-scripts/llm-sync/src/cli.py`
 
 ##### Task 2.2.1a: Write `PiPackageLedger` (~5 min)
+- Dependencies: Task 2.1.1b
 - `save`/`find_stale`/`prune`, modeled on `PiSettingsTarget`'s atomic-write pattern. Blocked on Epic 2.1's Task 2.1.1b per this story's precondition AC — do not start until that subsection exists.
 - Files: `stapler-scripts/llm-sync/src/targets/pi_package_ledger.py`
 
@@ -402,7 +434,7 @@ Phase 3: Gated          Phase 4: Credential    Phase 2: Ownership
 **As** Tyler, **I want** every fork-and-enable story to declare "a human has recorded approval" as its first acceptance criterion, **so that** an agent can't skip it.
 
 **Acceptance Criteria**:
-- Each story in Epics 3.2-3.5 and 4.1 states the approval precondition before any fork action.
+- Each story in Epics 3.2, 3.3, 3.5, and 4.1 that forks a third-party repo states the approval precondition before any fork action; Epic 3.4 is exempt because it forks nothing (Tyler-owned, local-path extension).
   - *Given* Story 3.2.1, *When* its Acceptance Criteria are read, *Then* the first bullet is the approval precondition, not a fork action.
 - No task in Phase 3 or Phase 4 programmatically sets `disposition: "approved"`.
   - *Given* every task in Phase 3 and Phase 4, *When* scanned for `gh repo fork` invocations or `"approved"`-literal edits, *Then* none appear outside a task explicitly marked `[Tyler, manual]`.
@@ -413,7 +445,7 @@ Phase 3: Gated          Phase 4: Credential    Phase 2: Ownership
 - No files; this story is satisfied structurally by the stories that follow and by Task 1.3.1c's regression test.
 
 ### Epic 3.2: Permission System & Subagents Fork (`gotgenes/pi-packages`)
-**Goal**: Once approved, fork, review, and pin `gotgenes/pi-packages` for the permission system and subagents — the strongest foundation per `full-featured-profile-research.md` — wired disabled by default.
+**Goal**: Once approved, fork, review, and pin `gotgenes/pi-packages` for the permission system and subagents — the strongest foundation per `full-featured-profile-research.md` — wired disabled by default. If `gotgenes/pi-packages` is rejected at Task 3.2.1c's review or found unmaintained (per the new maintenance-liveness check), Tyler records the decision as a new Unresolved Question and either names an alternate Tier-1 candidate from `full-featured-profile-research.md` or scopes a Tyler-owned minimal replacement before Phase 3/4 continue (pre-mortem Failure #3).
 
 #### Story 3.2.1: Fork, review, and pin `gotgenes/pi-packages`
 **As** Tyler, **I want** `@gotgenes/pi-permission-system` and `@gotgenes/pi-subagents` forked, reviewed, and pinned, **so that** plan/subagent workflows have a deny-by-default safety boundary before anything else in the profile is enabled.
@@ -428,13 +460,14 @@ Phase 3: Gated          Phase 4: Credential    Phase 2: Ownership
 **Files**: `.config/pi/extensions-manifest.json`, `.config/pi/config.d/50-gotgenes-permissions.json`
 
 ##### Task 3.2.1a: PRECONDITION — Tyler only, manual — Approve and fork (~5 min)
-- `gh repo fork gotgenes/pi-packages --org tstapler` at the review anchor; record approval date/notes.
+- `gh repo fork gotgenes/pi-packages` (target namespace per Tyler's resolution of the org-vs-personal Unresolved Question) at the review anchor; record approval date/notes.
 
 ##### Task 3.2.1b: Scaffold via the helper (~2 min)
 - `fork_pin_extension.py fork gotgenes/pi-packages --id gotgenes-pi-packages --capability permission-system,subagents`
 
-##### Task 3.2.1c: Manual review, not code — Complete the checklist (~5 min)
+##### Task 3.2.1c: Manual review, not code — Complete the checklist (~2-4 hours, not a code task — a real security review session)
 - Includes: verify fail-closed parser paths, deny/ask defaults for writes/external paths/credentials/git publication/package installation/destructive commands, children don't inherit secrets/capabilities by default, worktree cleanup — per `full-featured-profile-research.md`'s "Required review" list. Record findings in the manifest entry's `notes`.
+- This plan's general "~2-5 min" sizing convention is for mechanical code tasks; it does not apply here — reviewing an unfamiliar codebase's fail-closed paths and deny/ask coverage realistically takes hours, and under-budgeting it risks the rubber-stamp failure mode Step 0.5 and pre-mortem Failure #1 already warn against.
 
 ##### Task 3.2.1d: Approve the manifest entry (~2 min)
 - Hand-edit `disposition` to `"approved"` with `approved_by`/`approved_date`.
@@ -447,6 +480,8 @@ Phase 3: Gated          Phase 4: Credential    Phase 2: Ownership
 #### Story 3.2.2: Validate on the current machine via a temp Pi home first
 **As** Tyler, **I want** the permission system enabled with a conservative deny/ask policy on my current macOS machine only, validated in a temp Pi home first, **so that** I can catch problems before wider rollout.
 
+**Dependencies**: Story 5.2.2 — Tyler's real-machine adoption step (Task 3.2.2b) must not proceed until Story 5.2.2's classification table exists, so a managed sync can never overwrite an unclassified work-only or machine-generated key on the real machine.
+
 **Acceptance Criteria**:
 - A machine-local fragment enables the permission system with deny defaults.
   - *Given* `~/.config/pi/config.local.d/10-permissions.json` (untracked) with `packages.gotgenes-pi-permission-system.enabled: true` and a conservative policy object, *When* rendered in a temp `HOME`, *Then* the resulting `settings.json` shows the package enabled with that policy.
@@ -456,9 +491,11 @@ Phase 3: Gated          Phase 4: Credential    Phase 2: Ownership
 **Files**: none tracked (machine-local by design) — validated via existing `--dry-run`/`--pi-dir` flags.
 
 ##### Task 3.2.2a: Tyler, manual — Author the machine-local fragment (~5 min)
+- Dependencies: Task 3.2.1d
 - Deny/ask defaults per the research doc's required review list.
 
 ##### Task 3.2.2b: Tyler, manual — Validate via temp `--pi-dir`, then adopt (~3 min)
+- Dependencies: Task 3.2.1d, Story 5.2.2 — the "adopt" half of this task (enabling on the real machine, not the temp `--pi-dir` validation) must wait until Story 5.2.2's classification table exists, so the first managed sync on the real machine never overwrites an unclassified key.
 - Per Phase 5's runbook.
 
 ### Epic 3.3: Plan Mode Fork (`narumiruna/pi-extensions`)
@@ -480,8 +517,15 @@ Phase 3: Gated          Phase 4: Credential    Phase 2: Ownership
 
 ##### Task 3.3.1b: Scaffold via the helper (~2 min)
 
-##### Task 3.3.1c: Manual review, not code — Complete the checklist, including an integration test proving plan mode and the permission system compose most-restrictively (~5 min)
-- Per `full-featured-profile-research.md`'s explicit instruction: "add integration tests proving that the two independent gates compose most-restrictively and cannot reactivate a tool denied by the other."
+##### Task 3.3.1c: Manual review, not code — Complete the checklist (~2-4 hours, not a code task — a real security review session)
+- Dependencies: Task 3.2.1d
+- Fail-closed parser paths, deny/ask defaults, children-don't-inherit-secrets/capabilities, worktree cleanup — per `full-featured-profile-research.md`'s "Required review" list, same shape as Task 3.2.1c. Record findings in the manifest entry's `notes`.
+- This plan's general "~2-5 min" sizing convention is for mechanical code tasks; it does not apply here — reviewing an unfamiliar codebase's fail-closed paths and deny/ask coverage realistically takes hours, matching Task 3.2.1c's and 4.1.1c's sizing convention.
+
+##### Task 3.3.1c-2: Write the integration test proving plan mode and the permission system compose most-restrictively (~10-15 min)
+- Dependencies: Task 3.2.1d
+- A separate code-writing deliverable from Task 3.3.1c's manual review — per `full-featured-profile-research.md`'s explicit instruction: "add integration tests proving that the two independent gates compose most-restrictively and cannot reactivate a tool denied by the other." Requires Task 3.2.1's permission-system fork to be approved first, since this test exercises composition with it. Sized separately from the manual-review budget because it's real code (an integration test spanning two forks), not review time.
+- Files: `stapler-scripts/llm-sync/test_review_gate.py` (or a new `stapler-scripts/llm-sync/test_plan_mode_permission_composition.py` if the fixture setup warrants its own file)
 
 ##### Task 3.3.1d: Approve the manifest entry (~2 min)
 - Files: `.config/pi/extensions-manifest.json`
@@ -514,7 +558,7 @@ Phase 3: Gated          Phase 4: Credential    Phase 2: Ownership
 
 ##### Task 3.4.1d: Add a regression test for the local-path exemption (~3 min)
 - Confirms `verify_pinned_sources_reviewed()`'s scan already exempts local `path` sources by construction.
-- Files: `stapler-scripts/llm-sync/test_extension_manifest.py`
+- Files: `stapler-scripts/llm-sync/test_review_gate.py`
 
 ### Epic 3.5: Command-Hook Bridge Fork (`hsingjui/pi-hooks`) — blocked on license
 **Goal**: Fork and pin the Claude-hook-compatible bridge once its missing-license concern is resolved (Unresolved Questions).
@@ -559,7 +603,8 @@ Phase 3: Gated          Phase 4: Credential    Phase 2: Ownership
 
 ##### Task 4.1.1b: Scaffold via the helper (~2 min)
 
-##### Task 4.1.1c: Manual review, not code — Complete the checklist with explicit scoping/redaction/no-inheritance notes (~5 min)
+##### Task 4.1.1c: Manual review, not code — Complete the checklist with explicit scoping/redaction/no-inheritance notes (~2-4 hours, not a code task — a real security review session)
+- This plan's general "~2-5 min" sizing convention is for mechanical code tasks; it does not apply here — verifying vault-item scoping, output redaction, and no-subagent-inheritance in an unfamiliar codebase realistically takes hours.
 
 ##### Task 4.1.1d: Approve the manifest entry (~2 min)
 - Files: `.config/pi/extensions-manifest.json`
@@ -579,16 +624,30 @@ Phase 3: Gated          Phase 4: Credential    Phase 2: Ownership
   - *Given* the full set of files this plan adds or edits, *When* grepped for `auth.json`, *Then* no match exists outside prose documentation.
 - A redaction dry-run never prints a resolved secret value.
   - *Given* a machine-local test with a dummy 1Password reference, *When* the extension resolves it in dry-run/log mode, *Then* the log shows the reference string (e.g. `!op read op://vault/item/field`), not the resolved value — VERIFIED manually by Tyler on his own machine (requires a real 1Password session, not reproducible in CI).
+- A resolved secret does not appear in the model-context transcript, not just stdout logs.
+  - *Given* the same dummy 1Password reference resolved during a live Pi session, *When* the actual tool-call transcript/session-history entry the extension produces is inspected (not stdout), *Then* it shows the reference string, not the resolved value — VERIFIED manually by Tyler (same non-CI-reproducible constraint as the log check, since it requires a real 1Password session).
+- A resolved secret is not inherited by a child/subagent process's environment.
+  - *Given* a subagent spawned (via the Epic 3.2 permission-system/subagents fork) from a session where the credential provider has resolved a value, *When* the subagent process's environment is inspected, *Then* the resolved value is absent — cross-referencing and re-verifying, specifically for the credential provider, Task 3.2.1c's "children don't inherit secrets by default" finding, which as reviewed there is scoped only to the permission-system fork.
 
 **Files**: `.config/pi/config.d/90-credential-1password.json`, `.config/pi/README.md`
 
 ##### Task 4.2.1a: Add the opt-in fragment, disabled by default (~3 min)
+- Dependencies: Task 4.1.1d
 - Files: `.config/pi/config.d/90-credential-1password.json`
 
 ##### Task 4.2.1b: Document the `auth.json`-grep check (~3 min)
 - Files: `.config/pi/README.md`
 
 ##### Task 4.2.1c: Tyler, manual — Perform the redaction dry-run and record the VERIFIED result in the manifest entry's `notes` (~5 min)
+- Files: `.config/pi/extensions-manifest.json`
+
+##### Task 4.2.1d: Tyler, manual — Inspect the tool-call transcript/session-history entry for the resolved value and record the VERIFIED result (~5 min)
+- Same dummy-reference setup as Task 4.2.1c, but inspects the session-history/transcript file Pi writes for the tool call, not stdout — the channel requirements.md's Rabbit Holes names as "model context."
+- Files: `.config/pi/extensions-manifest.json`
+
+##### Task 4.2.1e: Tyler, manual — Confirm no subagent-environment inheritance and record the VERIFIED result (~5 min)
+- Dependencies: Task 3.2.1d — this task needs the Epic 3.2 permission-system/subagents fork approved and available to actually spawn a subagent against; testing subagent-environment inheritance has nothing to test without it. Approval alone is not sufficient to exercise the check: the subagents package is wired disabled-by-default in tracked config (Story 3.2.1e), so this task also requires a temporary/sandbox enablement of the package — reuse Story 3.2.2's temp-`--pi-dir` validation pattern rather than inventing a new mechanism — to actually spawn a subagent against.
+- Spawns a subagent from a session with a resolved credential and inspects its process environment; re-verifies Task 3.2.1c's finding specifically for the credential provider rather than assuming it carries over from the permission-system fork.
 - Files: `.config/pi/extensions-manifest.json`
 
 ---
@@ -605,6 +664,8 @@ Phase 3: Gated          Phase 4: Credential    Phase 2: Ownership
   - *Given* `project_plans/pi-dotfiles/implementation/rollout-runbook.md`, *When* compared to requirements.md's Risk Control list, *Then* each of the five steps has a corresponding runbook section with a runnable command.
 - Step 1 names the exact commands already available.
   - *Given* the runbook's step 1 section, *When* read, *Then* it shows `uv run --directory stapler-scripts/llm-sync main.py --target pi --dry-run --pi-dir /tmp/pi-staging` and `uv run pyinfra -y inventory.py main.py --data pi_install_mode=external --dry`.
+- The runbook states the pre-`pi_install_version`-bump smoke-test gate as required, not optional.
+  - *Given* the runbook, *When* read, *Then* it has a section stating that any `pi_install_version` change must first pass a temp-`HOME` smoke test of every `approved` manifest entry plus a re-run of Task 3.3.1c-2's composition integration test, before the version pin in `bootstrap-pyinfra/group_data/all.py` is edited.
 
 **Files**: `project_plans/pi-dotfiles/implementation/rollout-runbook.md`
 
@@ -614,6 +675,10 @@ Phase 3: Gated          Phase 4: Credential    Phase 2: Ownership
 
 ##### Task 5.1.1b: Write runbook steps 3-5 (~5 min)
 - Adopt+verify macOS; verify idempotency/rollback; roll out Linux families.
+- Files: `project_plans/pi-dotfiles/implementation/rollout-runbook.md`
+
+##### Task 5.1.1c: Write the pre-`pi_install_version`-bump smoke-test runbook section (~5 min)
+- Documents the gate as a required step before editing `pi_install_version` in `bootstrap-pyinfra/group_data/all.py`: start `pi` against a temp `HOME` with every `approved` manifest entry's fork/commit enabled, assert each loads without error, and re-run Task 3.3.1c-2's plan-mode/permission-system composition integration test. Mirrors the Observability Plan's pre-bump gate line item.
 - Files: `project_plans/pi-dotfiles/implementation/rollout-runbook.md`
 
 ### Epic 5.2: Backup/Rollback Procedure
@@ -655,6 +720,8 @@ Phase 3: Gated          Phase 4: Credential    Phase 2: Ownership
 **Acceptance Criteria**:
 - The matrix covers every Claude tool name referenced by the synced skill corpus.
   - *Given* `project_plans/pi-dotfiles/extensions/claude-tool-compat-matrix.md` and a grep of `.claude/skills/**/SKILL.md` for Claude tool names (`AskUserQuestion`, `WebSearch`, `WebFetch`, `Agent`, `TaskCreate`, `Grep`, `Glob`, `LS`), *When* compared, *Then* every found tool name has a matrix row stating its Pi status (native, shimmed via `pi-claude-compat`, extension-provided, or unsupported).
+- Deferred workflow categories are marked, not omitted.
+  - *Given* the matrix's category rows for session/workflow utilities (Tier 4, see "Explicitly deferred" above), *When* read, *Then* they are marked `deferred` with a pointer to the follow-up project, not silently absent from the matrix.
 
 **Files**: `project_plans/pi-dotfiles/extensions/claude-tool-compat-matrix.md`
 
@@ -662,7 +729,25 @@ Phase 3: Gated          Phase 4: Credential    Phase 2: Ownership
 - No file write; Bash/Grep only.
 
 ##### Task 5.3.1b: Write the matrix file (~5 min)
-- One row per discovered tool name and its Pi status.
+- One row per discovered tool name and its Pi status; mark Tier 4 session/workflow-utility categories `deferred` per the "Explicitly deferred" section.
+- Files: `project_plans/pi-dotfiles/extensions/claude-tool-compat-matrix.md`
+
+#### Story 5.3.2: Global and project instructions map to Pi's native loader
+**As** a future coding agent or Tyler setting up a new machine, **I want** the instructions workflow category's Pi mapping documented and the global-level gap closed, **so that** "global and project instructions" parity (requirements.md In-Scope) is actually delivered, not just named in the glossary.
+
+**Acceptance Criteria**:
+- Project-level parity is documented as already-native, with its source cited.
+  - *Given* `project_plans/pi-dotfiles/extensions/claude-tool-compat-matrix.md`'s instructions row, *When* read, *Then* it states Pi natively loads `AGENTS.md`/`CLAUDE.md` walking up from the current directory (citing `pi.dev/docs/latest/quickstart`), so this repo's existing project-level `CLAUDE.md` files already apply with no dotfiles change.
+- Global-level parity is closed via the existing symlink tool, not new tooling.
+  - *Given* `.cfgcaddy.yml`'s existing `.claude/CLAUDE.md` entry (no `dest`, mirrors `$HOME/.claude/CLAUDE.md`), *When* a second entry is added for `dest: .pi/agent/AGENTS.md`, *Then* `~/.pi/agent/AGENTS.md` resolves to the same tracked content Claude already reads globally, giving global-instructions parity without a new mechanism.
+
+**Files**: `.cfgcaddy.yml`, `project_plans/pi-dotfiles/extensions/claude-tool-compat-matrix.md`
+
+##### Task 5.3.2a: Add the `.pi/agent/AGENTS.md` cfgcaddy entry (~3 min)
+- Files: `.cfgcaddy.yml`
+
+##### Task 5.3.2b: Document the mapping in the compat matrix (~3 min)
+- One row: "global/project instructions" — native (project-level, via Pi's own `AGENTS.md`/`CLAUDE.md` loader) + symlinked (global-level, via the new cfgcaddy entry).
 - Files: `project_plans/pi-dotfiles/extensions/claude-tool-compat-matrix.md`
 
 ### Epic 5.4: Documentation Sync

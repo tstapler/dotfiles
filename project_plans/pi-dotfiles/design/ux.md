@@ -26,12 +26,32 @@ Would write to:   .config/pi/extensions-manifest.json
 
 No changes made (dry run). Re-run without --dry-run to fork and write the manifest entry.
 ```
+
+**Representative output/sample (real run, no `--dry-run`):**
+```
+$ uv run fork_pin_extension.py fork gotgenes/pi-packages \
+    --id gotgenes-pi-packages --capability "permission-system,subagents"
+
+Forking:      github.com/gotgenes/pi-packages -> github.com/tstapler/pi-packages
+Forked.       fork_commit = e64946b5ce96ca004b753d98932c8b13106dd132
+Wrote:        .config/pi/extensions-manifest.json
+  + extensions.gotgenes-pi-packages:
+      disposition:    "candidate"
+      capability:     "permission-system,subagents"
+      upstream_repo:  "github.com/gotgenes/pi-packages"
+      fork_repo:      "github.com/tstapler/pi-packages"
+      approved_by:    null
+      approved_date:  null
+
+Manifest entry written. Next: complete the review checklist at
+.claude/skills/pi-extension-review/SKILL.md, then hand-edit disposition to "approved".
+```
 **Acceptance criteria:**
 - Running `fork_pin_extension.py fork <repo> --dry-run` shows the planned fork target and the exact manifest diff without calling `gh repo fork` or writing `.config/pi/extensions-manifest.json` — matching Task 1.3.1d.
 - The dry-run and real-run output both show `disposition: "candidate"` and `approved_by`/`approved_date` as `null` — never any other disposition value, since no flag on this command can write `"approved"` (Task 1.3.1c's static-inspection test enforces this at the code level; the CLI output must not contradict it by implying an approval flag exists).
 - On a real run, the printed `fork_commit` matches the SHA written to the manifest entry — the terminal output and the file are never allowed to diverge (read the mutation back, don't just claim it).
 - Re-running `fork` for an `--id` that already has a manifest entry fails with a message naming the existing entry id and its current `disposition`, not a generic "already exists" — so Tyler knows whether it's safe to re-scaffold (e.g. blocked on an existing `approved` entry) without opening the JSON file.
-- No dead end: the dry-run's closing line states the next concrete action ("Re-run without --dry-run...").
+- No dead end: the dry-run's closing line states the next concrete action ("Re-run without --dry-run..."), and the real run's closing line states the next concrete action in the fork -> review -> approve chain ("Manifest entry written. Next: complete the review checklist..., then hand-edit disposition to \"approved\"") — so the two samples together read as one continuous flow, not two disconnected commands.
 
 ---
 
@@ -47,12 +67,26 @@ Next step: run the pi-extension-review checklist (.claude/skills/pi-extension-re
 then hand-edit .config/pi/extensions-manifest.json to set disposition: "approved".
 Sync aborted; no changes were written to settings.json.
 ```
+
+**Representative output/sample (entry exists but is `hold`/`rejected`):**
+```
+$ uv run --directory stapler-scripts/llm-sync main.py --target pi
+
+PiConfigError: unreviewed fork source in rendered config:
+  git:github.com/tstapler/pi-permission-system@abc1234
+existing entry has disposition: rejected — re-approval requires a fresh review,
+not silently flipping the field.
+Next step: run the pi-extension-review checklist (.claude/skills/pi-extension-review/SKILL.md),
+then hand-edit .config/pi/extensions-manifest.json to set disposition: "approved".
+Sync aborted; no changes were written to settings.json.
+```
 **Acceptance criteria:**
 - A blocked sync's error message names the exact unreviewed source string (e.g. `git:github.com/tstapler/pi-permission-system@abc1234`), not a generic "validation failed" — matching Story 1.2.1's three GWT cases (missing entry, stale/mismatched-commit approval).
 - The stale-approval case (approved at a different commit than the one now configured) produces a message that names both the configured commit and the approved commit, so Tyler can tell at a glance whether the fragment or the manifest is out of date.
 - The message states explicitly that no file was written (`settings.json` unchanged) — a partial or ambiguous write state is never implied.
 - Work-owned and `@tstapler`-scoped sources exempted via `trustedPackageScopes` never appear in this error path, even with an empty manifest — confirming Story 1.2.2's exemption holds in the actual CLI output, not just in unit tests.
 - No dead end: the message's last line names the concrete next action — run the review skill, then hand-edit `disposition` to `"approved"` — exactly as Task 1.4.1a's skill documents.
+- The "no entry at all" case and the "entry exists but is `hold`/`rejected`" case are distinguishable in the message text, not collapsed into the same generic wording — the no-entry case never claims a disposition, and the hold/rejected case names the entry's actual current disposition verbatim (e.g. `existing entry has disposition: rejected`) plus the explicit warning that re-approval requires a fresh review rather than flipping the field. This matters because someone re-approving a previously-rejected extension under time pressure, without noticing it was already rejected, is a real risk this doc and pre-mortem.md's Failure #1 both flag.
 
 ---
 
@@ -92,12 +126,32 @@ $ uv run pyinfra -y inventory.py main.py --data pi_install_mode=external --dry
 --> Loaded 1 host
 [Pi]    Would skip install (pi_install_mode=external; deferring to externally managed Pi)
 ```
+
+**Representative output/sample (piped to a non-TTY, e.g. `| tee sync.log` or CI):**
+```
+$ uv run --directory stapler-scripts/llm-sync main.py --target pi --dry-run --pi-dir /tmp/pi-staging | tee sync.log
+
+Syncing pi_config -> pi...
+Detected 3/12 modified items.
+Would write settings.json keys: packages.gotgenes-pi-permission-system, extensions.claude-compat
+Would delete legacy agent old-agent.md
+No changes made to /tmp/pi-staging (dry run).
+```
+
+**Representative output/sample (happy path — fully approved, clean sync, nothing stale, nothing to prune):**
+```
+$ uv run --directory stapler-scripts/llm-sync main.py --target pi
+
+Synced pi_config -> pi. 0 changes. All sources reviewed.
+```
 **Acceptance criteria:**
 - Every dry-run invocation names the destination it would have written to (`/tmp/pi-staging`, or the real `~/.pi/agent` path when not overridden), so Tyler can visually confirm a staging run never touched the real machine — per requirements' "Dry-run output must show intended changes without exposing credentials or secret values."
 - Dry-run output enumerates each changed key/resource individually (e.g. `packages.gotgenes-pi-permission-system`), not just a count — matching the observability requirement that bootstrap output identify "the effective configuration layers, extension/package actions, and whether each item was installed, updated, disabled, skipped, or already converged."
 - No credential-shaped value ever appears in dry-run output — this is testable by grepping the printed text for common secret-key patterns (`apikey`, `token`, `auth`) after a run against a fixture containing one; `PiConfigSource._reject_credential_material` should have already errored before any dry-run print occurs.
 - `pi_install_mode=external` dry-run output states explicitly that install was skipped and why (deferring to externally managed Pi) — never a silent no-op with no explanation, since a work machine must never look like a failed run when it correctly did nothing.
 - The closing line of every dry-run always states plainly that no changes were made and to what path — no dead end, since the human's next action (re-run without `--dry-run`/`--dry` once satisfied) is either implied by convention already established elsewhere in this doc or stated directly.
+- When stdout is not a TTY (piped to a log file, CI, `grep`), Rich markup (`[yellow]...[/yellow]`-style color codes) must not appear in the output — the underlying text/line format is byte-for-byte identical to the TTY case either way, per Surface 3's greppable-line requirement; only the color wrapping is conditional on TTY detection.
+- A fully-approved, clean sync (every source reviewed, nothing stale, nothing to prune) prints a single-line success summary naming the target and resource, the change count, and that all sources are reviewed (e.g. `Synced pi_config -> pi. 0 changes. All sources reviewed.`) — so a clean run has a recognizable "nothing to do, and nothing to worry about" signal distinct from a run that happened to make zero changes because it was blocked.
 
 ---
 
@@ -136,8 +190,23 @@ $ uv run pyinfra -y inventory.py main.py --data pi_install_mode=external --dry
 +      "approved_date": "2026-09-14"
 +      "disposition": "approved"
 ```
+
+**Representative error sample (notes-evidence check fails — fewer than 5 real file paths cited):**
+```
+$ uv run --directory stapler-scripts/llm-sync main.py --target pi
+
+ManifestError: entry "gotgenes-pi-packages" has disposition: "approved" but its
+notes cite only 2 of the required 5 distinct file paths verified in the fork
+tree at fork_commit e64946b5ce96ca004b753d98932c8b13106dd132.
+Missing evidence for gate sub-area(s): filesystem, secrets, telemetry.
+This does not judge whether the review was competent — it only checks that
+notes name real files an evidence-based reviewer would have looked at.
+Fix: re-open .config/pi/extensions-manifest.json and add cited paths (one per
+missing sub-area) that exist at that commit, per the pi-extension-review checklist.
+```
 **Acceptance criteria:**
 - `ExtensionManifestSource.load()` rejects an `approved` entry missing `approved_by`/`approved_date` with a `ManifestError` naming the entry id and the missing field(s) — so a partially-completed hand-edit is caught immediately on the next sync, not silently accepted (Story 1.1.2).
+- When the mechanical notes-evidence check fails (fewer than 5 distinct real file paths verified against the fork tree at `fork_commit`, per Tasks 1.1.2c/1.1.2d), the raised `ManifestError` names the entry id and lists which gate sub-area(s) (network/subprocess/filesystem/secrets/telemetry) lack cited evidence — not a generic "notes insufficient" — and states plainly that this is a mechanical floor-check, not a judgment on review quality, matching the same honest framing as Story 4.1.1's AC.
 - The `notes` field, once approved, records specific review findings (fail-closed parser paths, deny/ask defaults, no-secret-inheritance, worktree cleanup, or per-extension equivalents like scoping/redaction/no-inheritance for the credential provider) — a generic string like `"reviewed, looks fine"` is a process failure this doc flags but cannot mechanically block; the `pi-extension-review` skill (Task 1.4.1a) is the documented control, not code, since content quality of prose is not machine-checkable the way `disposition` state is.
 - No tool, script, or automation in this codebase (`fork_pin_extension.py` included) writes the literal string `"approved"` to any `disposition` field — verified structurally by Task 1.3.1c's inspection test, and this workflow's diff is the only sanctioned path to that value.
 - The diff is a normal, reviewable git change — `git diff .config/pi/extensions-manifest.json` shows exactly the fields above changed, nothing else in the file touched, so the approval is auditable in `git log`/`git blame` the same way any other code change is.
@@ -147,5 +216,5 @@ $ uv run pyinfra -y inventory.py main.py --data pi_install_mode=external --dry
 
 ## Summary
 
-- **Surfaces designed**: 5 (`fork_pin_extension.py fork` + `--dry-run`; `verify_pinned_sources_reviewed()` blocked-sync error; `--prune-stale-pi-packages` + stale-package report; bootstrap/pyinfra dry-run output; manual manifest-approval hand-edit workflow).
-- **UX acceptance criteria written**: 25 (5 per surface).
+- **Surfaces designed**: 5 (`fork_pin_extension.py fork` + `--dry-run` + real-run; `verify_pinned_sources_reviewed()` blocked-sync error, covering both no-entry and hold/rejected dispositions; `--prune-stale-pi-packages` + stale-package report; bootstrap/pyinfra dry-run output, including non-TTY and happy-path samples; manual manifest-approval hand-edit workflow, including the notes-evidence-failure error).
+- **UX acceptance criteria written**: 29 (5, 6, 5, 7, 6 across the five surfaces respectively).
