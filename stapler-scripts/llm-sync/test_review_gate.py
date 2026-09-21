@@ -165,6 +165,17 @@ def test_verify_pinned_sources_reviewed_only_scans_github_com_tstapler_fork_shap
     verify_pinned_sources_reviewed(loaded, _manifest())
 
 
+def test_claude_compat_extension_path_source_exempt_from_manifest_gate():
+    """Task 3.4.1d: `claude-compat` (`.config/pi/config.d/40-claude-compat.json`)
+    is a first-party, Tyler-owned local-path extension, not a fork.
+    `_render_path` in `pi_config.py` only ever renders a plain path string
+    for it, which `parse_fork_source()` never matches, so the gate must not
+    require a manifest entry — confirmed here against an empty manifest.
+    """
+    loaded = _loaded(extensions=["~/dotfiles/plugins/pi-claude-compat/pi/index.ts"])
+    verify_pinned_sources_reviewed(loaded, _manifest())
+
+
 _METAMORPHIC_SOURCE_CORPUS = (
     "git:github.com/tstapler/pi-tools@0123456789abcdef",
     "https://github.com/tstapler/pi-tools@abc1234",
