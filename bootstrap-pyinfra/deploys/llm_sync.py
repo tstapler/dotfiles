@@ -28,4 +28,8 @@ def llm_sync() -> None:
     if code != 0:
         raise DeployError(f"llm-sync failed: {output}")
 
+    # shell_capture returns main.py's combined stdout+stderr verbatim (see
+    # its docstring), so this already reproduces PiPackageLedger's
+    # `stale Pi package: ...` report lines unmodified -- no pyinfra-side
+    # change needed to surface them (Epic 2.2, Task 2.2.2a).
     print(output)
