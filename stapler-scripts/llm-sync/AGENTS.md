@@ -59,6 +59,12 @@ uv run main.py --help
 - **No agents/sub-agents, no native MCP:** Pi's philosophy deliberately omits both (see its README) — build
   them via extensions if needed. `PiTarget` implements skill/prompt sync; tiered settings provision
   extension/package equivalents for capabilities without native support.
+- **Fork-pin review gate:** a `packages`/`extensions` source pinned to a `github.com/tstapler/*` fork
+  commit must have a matching `approved` entry, at that exact commit, in `.config/pi/extensions-manifest.json`.
+  `verify_pinned_sources_reviewed()` (`stapler-scripts/llm-sync/src/sources/review_gate.py`) enforces this
+  during sync and raises `PiConfigError` if the entry is missing, at the wrong commit, or not yet approved;
+  trusted-scope npm sources, `@tstapler`-scoped packages, and local paths are exempt by construction. See
+  `.claude/skills/pi-extension-review/SKILL.md` for the review process that produces an approved entry.
 
 ### Antigravity
 - **Customizations Root:** `~/.gemini/config` (global) or `.agents` (workspace)

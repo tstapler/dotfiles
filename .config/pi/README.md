@@ -151,3 +151,17 @@ spike, from the repo-pinned 0.84.4 to 0.86.1; reverted with `npm install
 "@earendil-works/pi-coding-agent@0.84.4"`). Any future reconciliation
 tooling must never invoke bare `pi update` — use `pi update --extensions` or
 target specific sources.
+
+## Package ownership ledger
+
+`llm-sync` tracks which Pi package artifacts it installed in a ledger at
+`~/.config/llm-sync/pi-package-state.json` (override with
+`--pi-package-ledger-state-file`), since hand-editing `settings.json` alone
+doesn't prune anything (see Package lifecycle above).
+
+- `--prune-stale-pi-packages` — a package the ledger owns but that's no
+  longer enabled in the rendered config is always reported as stale; this
+  flag actually deletes its on-disk artifact.
+- `--reconcile-pi-package-ledger` — rebuilds ledger entries missing from a
+  prior sync that was interrupted between writing `settings.json` and
+  writing the ledger, from the current config's enabled packages.
