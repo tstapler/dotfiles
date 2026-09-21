@@ -39,6 +39,10 @@ overlay's own tracked fragment can add its scope there because its
 internally managed update channel owns that package's cadence. Local
 package paths are also allowed.
 
+Before forking, pinning, or enabling any third-party extension, follow the
+fork-pin-review gate documented in
+[`.claude/skills/pi-extension-review/SKILL.md`](../../.claude/skills/pi-extension-review/SKILL.md).
+
 Never put credentials, OAuth state, sessions, trust data, or other mutable Pi
 runtime state in these files.
 
