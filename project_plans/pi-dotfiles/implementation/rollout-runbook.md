@@ -169,26 +169,36 @@ machine), remove `~/.config/llm-sync/pi-settings-state.json` instead of
 restoring it, returning to the "never synced" starting state.
 
 **Scope guarantee, per Story 5.2.1's acceptance criteria:** this rollback
-restores exactly the keys that were present in `managedKeys` at backup
-time — no more, no less. Reading `PiSettingsTarget.save()`
-(`stapler-scripts/llm-sync/src/targets/pi_settings.py`) confirms why this
-restore is safe and scoped:
+restores `settings.json` and the state file to their exact backup-time
+contents — a whole-file copy, not a `managedKeys`-scoped patch. In the
+intended workflow (nothing but `PiSettingsTarget` touches these files
+between backup and rollback), that has the same effect as reverting only
+the `managedKeys`-tracked keys, because `PiSettingsTarget.save()` never
+writes a key outside `managedKeys`. But if anything else — Pi itself, a
+manual edit — changes a non-managed key in that window, the whole-file copy
+reverts that too; it is not preserved. Reading `PiSettingsTarget.save()`
+(`stapler-scripts/llm-sync/src/targets/pi_settings.py`) confirms why the
+part of this restore that *is* unconditional is safe and scoped:
 
 - `PiSettingsTarget` only ever reads and writes two paths: `settings_path`
   (`~/.pi/agent/settings.json`) and `state_path`
   (`~/.config/llm-sync/pi-settings-state.json`, or their overrides). It has
   no code path that touches any other file under `~/.pi/agent/`.
 - `auth.json` and session files under `~/.pi/agent/` are therefore **never
-  touched by rollback** — they are never `managedKeys`-tracked, and this
-  restore procedure only copies the two files above.
+  touched by rollback** — the restore procedure only copies the two files
+  above, so it has no path that could reach them, regardless of
+  `managedKeys` state. This part of the guarantee holds unconditionally.
 - Do not re-run `llm-sync main.py --target pi` immediately after a
   rollback copy without first confirming you want managed mode back — the
   restored state file's `managedKeys` will cause the next real sync to
   resume managing exactly those same keys.
 
-This is the manual equivalent of the (planned, not yet implemented)
-automated check `test_rollback_restores_only_managed_keys_and_preserves_auth_and_sessions`
-referenced in `project_plans/pi-dotfiles/implementation/validation.md`'s
-Migration Note section — that test exercises the same guarantee against a
-`tmp_path` fixture with dummy `auth.json`/session files, asserting they are
-byte-identical before and after.
+This is the manual equivalent of the automated check
+`test_rollback_restores_only_managed_keys_and_preserves_auth_and_sessions`
+in `stapler-scripts/llm-sync/test_pi_settings_target.py`, referenced in
+`project_plans/pi-dotfiles/implementation/validation.md`'s Migration Note
+section. That test exercises this section's guarantee against a `tmp_path`
+fixture with dummy `auth.json`/session files, asserting they are
+byte-identical before and after — and also exercises the whole-file-copy
+caveat above: a non-`managedKeys` key changed by something other than
+`PiSettingsTarget` between backup and rollback is reverted too.
