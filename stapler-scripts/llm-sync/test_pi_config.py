@@ -192,6 +192,35 @@ def test_rejects_credential_material_in_nested_settings():
                 raise AssertionError(f"credential-bearing key should be rejected: {key}")
 
 
+def test_rejects_url_shaped_path_for_extension_registry_entry():
+    """A URL-shaped `path` value isn't recognized by the fork-pin-review
+    gate's scan (only `packages`/`extensions` sources routed through
+    `parse_fork_source()` are), so it must be rejected at render time
+    instead of silently passing through unchecked."""
+    rejected = (
+        "https://github.com/someone-else/pi-extension",
+        "git:github.com/someone-else/pi-extension@0123456789abcdef",
+        "npm:@someone-else/pi-extension",
+    )
+    for path in rejected:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write(
+                root / "config.json",
+                {"extensions": {"remote": {"path": path}}},
+            )
+
+            try:
+                _source(root).load()
+            except PiConfigError as error:
+                assert "remote" in str(error)
+                assert "local path" in str(error)
+            else:
+                raise AssertionError(
+                    f"URL-shaped extension path should be rejected: {path}"
+                )
+
+
 def test_rejects_reserved_resource_keys_inside_settings():
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)

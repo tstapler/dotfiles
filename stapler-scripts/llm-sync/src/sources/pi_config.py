@@ -197,6 +197,12 @@ class PiConfigSource:
             raise PiConfigError(
                 f"Pi {resource_key} entry '{entry_id}' requires a non-empty path"
             )
+        if not path.startswith(("/", "./", "../", "~/")):
+            raise PiConfigError(
+                f"Pi {resource_key} entry '{entry_id}' path must be a local path "
+                "(starting with /, ./, ../, or ~/); remote extension sources "
+                "belong in 'packages' and must pass the fork-pin-review gate"
+            )
         return path
 
     def _render_package(self, entry_id: str, entry: dict[str, Any]) -> Any:

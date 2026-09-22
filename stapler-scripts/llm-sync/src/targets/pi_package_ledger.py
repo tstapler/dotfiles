@@ -39,7 +39,14 @@ class PiPackageLedger:
         "unknown, not yet verified" sentinel instead of a guessed path.
         """
         if source.startswith("npm:"):
-            return self.agent_dir / "npm" / "node_modules" / _npm_package_name(source)
+            sandbox = self.agent_dir / "npm" / "node_modules"
+            candidate = Path(os.path.normpath(sandbox / _npm_package_name(source)))
+            if candidate != sandbox and sandbox not in candidate.parents:
+                raise PiPackageLedgerError(
+                    "npm package name derived an artifact path outside the "
+                    f"node_modules sandbox: {source!r} -> {candidate}"
+                )
+            return candidate
         return None
 
     def save(self, enabled_packages: dict[str, str], dry_run: bool = False) -> bool:

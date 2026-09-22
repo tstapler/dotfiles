@@ -158,6 +158,42 @@ def test_pi_package_ledger_save_records_null_for_unverified_source_shape():
         }
 
 
+def test_artifact_path_for_source_strips_version_for_scoped_npm_source():
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        ledger = PiPackageLedger(state_path=root / "state.json", agent_dir=root / "agent")
+
+        path = ledger.artifact_path_for_source("npm:@scope/name@1.2.3")
+
+        assert path == root / "agent" / "npm" / "node_modules" / "@scope" / "name"
+
+
+def test_artifact_path_for_source_strips_version_for_unscoped_npm_source():
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        ledger = PiPackageLedger(state_path=root / "state.json", agent_dir=root / "agent")
+
+        path = ledger.artifact_path_for_source("npm:name@1.2.3")
+
+        assert path == root / "agent" / "npm" / "node_modules" / "name"
+
+
+def test_artifact_path_for_source_rejects_path_traversal_in_package_name():
+    """A crafted source like `npm:@tstapler/../../pwn@1.0.0` passes
+    `pi_config.py`'s allowlist (it matches the `npm:@tstapler/` prefix) but
+    must not be allowed to resolve outside the node_modules sandbox."""
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        ledger = PiPackageLedger(state_path=root / "state.json", agent_dir=root / "agent")
+
+        try:
+            ledger.artifact_path_for_source("npm:@tstapler/../../pwn@1.0.0")
+        except PiPackageLedgerError as error:
+            assert "npm:@tstapler/../../pwn@1.0.0" in str(error)
+        else:
+            raise AssertionError("path-traversal source should raise, not resolve")
+
+
 def test_pi_package_ledger_save_rejects_malformed_ledger_state():
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
@@ -279,6 +315,38 @@ def test_prune_output_silent_for_paths_outside_ledger():
         assert "unmanaged-package" not in output
         assert unmanaged_dir.exists()
         assert not artifact_dir.exists()
+
+
+def test_reconcile_flag_recovers_missing_ledger_entry_through_cli():
+    """Simulates a crash between `PiSettingsTarget.save()` (settings.json
+    already reflects the enabled package) and `PiPackageLedger.save()`
+    (never ran, so the ledger has no entry for it): pre-seed settings.json
+    and its state file so this run's `changed` is False -- otherwise the
+    normal `ledger.save()` path in `sync_pi_settings()` would mask the gap
+    `--reconcile-pi-package-ledger` is meant to recover from.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        entry_id = "gotgenes-pi-packages"
+        _write_json(
+            root / "config.d" / "10-packages.json",
+            {
+                "trustedPackageScopes": ["npm:@gotgenes"],
+                "packages": {entry_id: {"source": _NPM_SOURCE}},
+            },
+        )
+        _write_json(root / "extensions-manifest.json", {"extensions": {}})
+        _write_json(root / "agent" / "settings.json", {"packages": [_NPM_SOURCE]})
+        _write_json(root / "settings-state.json", {"managedKeys": ["packages"]})
+        # No package-state.json: the ledger has no entry for `entry_id`.
+
+        output = _run_sync(_base_args(root, reconcile_pi_package_ledger=True))
+
+        assert f"Reconciled Pi package ledger entry: {entry_id}" in output
+        recorded = json.loads((root / "package-state.json").read_text(encoding="utf-8"))
+        assert recorded == {
+            entry_id: str(root / "agent" / _NPM_ARTIFACT_SUFFIX)
+        }
 
 
 if __name__ == "__main__":
