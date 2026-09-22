@@ -5,7 +5,7 @@
       "hooks": [
         {
           "type": "command",
-          "command": "/home/tstapler/.local/bin/ssq-hooks check"
+          "command": "$HOME/.local/bin/ssq-hooks check"
         }
       ]
     },
@@ -25,7 +25,7 @@
       "hooks": [
         {
           "type": "command",
-          "command": "/home/tstapler/.cargo/bin/kibitzer hook"
+          "command": "kibitzer hook"
         }
       ]
     }
@@ -43,7 +43,7 @@
       "hooks": [
         {
           "type": "command",
-          "command": "/home/tstapler/.cargo/bin/kibitzer hook"
+          "command": "kibitzer hook"
         }
       ]
     }

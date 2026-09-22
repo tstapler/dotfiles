@@ -66,6 +66,21 @@ def is_fbg_machine() -> bool:
     return hostname().lower().startswith("fbg-")
 
 
+def is_dev_workspace() -> bool:
+    """
+    Coder-based remote dev-workspace detection, for employers whose paved
+    path provisions one per engineer. `$CODER=true` is set by the agent on
+    every such workspace (confirmed live) — prefer this over a hostname
+    pattern: a real workspace's hostname is the human-chosen workspace name
+    (e.g. `crimson-wildebeest`), not a fixed convention like
+    `coderworkspace-i-<instance id>`, which turned out to only ever appear
+    in security-tooling documentation about the underlying EC2 instance, not
+    the workspace's own `hostname(1)`.
+    """
+    output = host.get_fact(Command, '[ "$CODER" = "true" ] && echo yes || echo no')
+    return bool(output.strip() == "yes")
+
+
 def github_personal_user() -> str | None:
     return "tstapler" if is_fbg_machine() else None
 

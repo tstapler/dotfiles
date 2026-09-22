@@ -7,7 +7,7 @@ import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from sources.plugins import PluginSource  # noqa: E402
+from sources.plugins import PluginSource, PluginSourceConfig  # noqa: E402
 
 
 def _write_manifest(plugin_dir: Path, name: str) -> None:
@@ -32,11 +32,13 @@ def _source(tmp: Path, installed_plugins=None, settings=None, settings_local=Non
         settings_local_file.write_text(json.dumps(settings_local))
 
     return PluginSource(
-        global_plugins_dir=tmp / "no-global-plugins",
-        local_plugins_dir=tmp / "no-local-plugins",
-        installed_plugins_file=installed_file,
-        claude_settings_file=settings_file,
-        claude_settings_local_file=settings_local_file,
+        PluginSourceConfig(
+            global_plugins_dir=tmp / "no-global-plugins",
+            local_plugins_dir=tmp / "no-local-plugins",
+            installed_plugins_file=installed_file,
+            claude_settings_file=settings_file,
+            claude_settings_local_file=settings_local_file,
+        )
     )
 
 
@@ -122,11 +124,13 @@ def test_bare_dict_record_is_normalized_to_list():
             "plugins": {"foo-plugin@mp": {"scope": "user", "installPath": str(plugin_dir)}},
         }))
         src = PluginSource(
-            global_plugins_dir=tmp / "no-global-plugins",
-            local_plugins_dir=tmp / "no-local-plugins",
-            installed_plugins_file=installed_file,
-            claude_settings_file=tmp / "settings.json",
-            claude_settings_local_file=tmp / "settings.local.json",
+            PluginSourceConfig(
+                global_plugins_dir=tmp / "no-global-plugins",
+                local_plugins_dir=tmp / "no-local-plugins",
+                installed_plugins_file=installed_file,
+                claude_settings_file=tmp / "settings.json",
+                claude_settings_local_file=tmp / "settings.local.json",
+            )
         )
         assert src.marketplace_plugin_dirs == [plugin_dir], src.marketplace_plugin_dirs
 
@@ -223,11 +227,13 @@ def test_local_dotfiles_plugin_overrides_marketplace_by_name():
         }))
 
         src = PluginSource(
-            global_plugins_dir=tmp / "no-global-plugins",
-            local_plugins_dir=local_root,
-            installed_plugins_file=installed_file,
-            claude_settings_file=tmp / "settings.json",
-            claude_settings_local_file=tmp / "settings.local.json",
+            PluginSourceConfig(
+                global_plugins_dir=tmp / "no-global-plugins",
+                local_plugins_dir=local_root,
+                installed_plugins_file=installed_file,
+                claude_settings_file=tmp / "settings.json",
+                claude_settings_local_file=tmp / "settings.local.json",
+            )
         )
         loaded = {p.name: p for p in src.load_plugins()}
         assert loaded["shared-plugin"].source_dir == str(local_plugin_dir)
