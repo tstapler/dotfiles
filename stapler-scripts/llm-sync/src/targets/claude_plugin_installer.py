@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 from typing import List, Optional
 
@@ -10,6 +11,17 @@ except ImportError:
 from rich.console import Console
 
 console = Console()
+
+# Machine-local wrappers (e.g. stapler-scripts/hookmetrics, invoked as
+# `hookmetrics <name> -- <real command>`) change a hook's command string
+# without changing what it does. Strip a wrapper before comparing so
+# re-running plugin install doesn't mistake an already-installed, wrapped
+# hook for a new one and add a duplicate unwrapped copy alongside it.
+_HOOK_WRAPPER_RE = re.compile(r"^\S*/?hookmetrics\s+\S+\s+--\s+")
+
+
+def _effective_command(command: str) -> str:
+    return _HOOK_WRAPPER_RE.sub("", command, count=1)
 
 
 class ClaudePluginInstaller:
@@ -100,7 +112,9 @@ class ClaudePluginInstaller:
         plugin_hooks: dict,
         plugin_name: str,
     ) -> int:
-        """Merge plugin hooks into existing, deduplicating by command string."""
+        """Merge plugin hooks into existing, deduplicating by effective command
+        (post-wrapper-stripping) so a hookmetrics-wrapped hook isn't re-added
+        unwrapped on the next install."""
         added = 0
         for event_type, entries in plugin_hooks.items():
             existing_entries: list = existing.setdefault(event_type, [])
@@ -110,9 +124,10 @@ class ClaudePluginInstaller:
                 new_hooks = []
                 for hook in entry.get("hooks", []):
                     cmd = hook.get("command", "")
-                    if cmd and cmd not in existing_commands:
+                    effective = _effective_command(cmd)
+                    if effective and effective not in existing_commands:
                         new_hooks.append(hook)
-                        existing_commands.add(cmd)
+                        existing_commands.add(effective)
                         added += 1
 
                 if new_hooks:
@@ -129,5 +144,5 @@ class ClaudePluginInstaller:
             for hook in entry.get("hooks", []):
                 cmd = hook.get("command", "")
                 if cmd:
-                    cmds.add(cmd)
+                    cmds.add(_effective_command(cmd))
         return cmds
