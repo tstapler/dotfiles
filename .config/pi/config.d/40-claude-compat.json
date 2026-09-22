@@ -1,0 +1,7 @@
+{
+  "extensions": {
+    "claude-compat": {
+      "path": "~/dotfiles/plugins/pi-claude-compat/pi/index.ts"
+    }
+  }
+}

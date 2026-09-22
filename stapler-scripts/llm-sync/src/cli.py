@@ -22,14 +22,17 @@ class ChangeDetection(Enum):
 # Allow running from src directly or as module
 try:
     from .sources.claude import ClaudeSource
+    from .sources.extension_manifest import ExtensionManifestSource
     from .sources.mcp_config import McpConfigSource
     from .sources.pi_config import PiConfigSource
     from .sources.plugins import PluginSource, PluginSourceConfig
+    from .sources.review_gate import verify_pinned_sources_reviewed
     from .sources.tiered_config import TieredJsonConfig
     from .targets.gemini import GeminiTarget, AntigravityTarget
     from .targets.opencode import OpenCodeTarget
     from .targets.pi import PiTarget
     from .targets.pi_settings import PiSettingsTarget
+    from .targets.pi_package_ledger import PiPackageLedger
     from .targets.claude_settings import ClaudeSettingsTarget
     from .targets.claude_plugin_installer import ClaudePluginInstaller
     from .targets.antigravity_plugin_installer import AntigravityPluginInstaller
@@ -40,14 +43,17 @@ except ImportError:
     # Fallback if run as script (hacky but useful during dev)
     sys.path.append(str(Path(__file__).parent))
     from sources.claude import ClaudeSource
+    from sources.extension_manifest import ExtensionManifestSource
     from sources.mcp_config import McpConfigSource
     from sources.pi_config import PiConfigSource
     from sources.plugins import PluginSource, PluginSourceConfig
+    from sources.review_gate import verify_pinned_sources_reviewed
     from sources.tiered_config import TieredJsonConfig
     from targets.gemini import GeminiTarget, AntigravityTarget
     from targets.opencode import OpenCodeTarget
     from targets.pi import PiTarget
     from targets.pi_settings import PiSettingsTarget
+    from targets.pi_package_ledger import PiPackageLedger
     from targets.claude_settings import ClaudeSettingsTarget
     from targets.claude_plugin_installer import ClaudePluginInstaller
     from targets.antigravity_plugin_installer import AntigravityPluginInstaller
@@ -277,6 +283,31 @@ def sync_mcp(mcp_source: McpConfigSource, settings_target: ClaudeSettingsTarget,
     if mode is not SyncMode.PREVIEW:
         console.print(f"[green]Wrote {count} MCP servers to {settings_target.settings_file}[/green]")
 
+def _enabled_package_sources(source: PiConfigSource) -> Dict[str, str]:
+    """Recover the stable `{entry_id: source}` mapping the rendered array drops.
+
+    `PiConfigSource.load()` renders `packages` into Pi's native flat array of
+    source strings, which discards the stable registry ids `PiPackageLedger`
+    keys its state on (see `_render_registry`/`_render_package` in
+    `sources/pi_config.py`). Re-loading the raw tiered value here recovers
+    them. Safe to call only after a successful `source.load()`: that call
+    has already strictly validated the raw registry (malformed entries,
+    disallowed sources, credential material), so this only needs to repeat
+    the "is this entry enabled" check, not the full validation.
+    """
+    raw_packages = source.config.load().value.get("packages", {})
+    if not isinstance(raw_packages, dict):
+        return {}
+    enabled: Dict[str, str] = {}
+    for entry_id, entry in raw_packages.items():
+        if not isinstance(entry, dict) or not entry.get("enabled", True):
+            continue
+        candidate_source = entry.get("source")
+        if isinstance(candidate_source, str) and candidate_source.strip():
+            enabled[entry_id] = candidate_source
+    return enabled
+
+
 def sync_pi_settings(args) -> None:
     config_root = Path.home() / ".config" / "pi"
     agent_dir = args.pi_dir or Path.home() / ".pi" / "agent"
@@ -298,18 +329,56 @@ def sync_pi_settings(args) -> None:
     for layer in loaded.layers:
         console.print(f"[dim]Loaded Pi configuration layer {layer}[/dim]")
 
+    manifest_path = args.pi_extensions_manifest or config_root / "extensions-manifest.json"
+    manifest = ExtensionManifestSource.load(manifest_path)
+    verify_pinned_sources_reviewed(loaded, manifest)
+
     target = PiSettingsTarget(
         settings_path=args.pi_settings_file or agent_dir / "settings.json",
         state_path=args.pi_settings_state_file
         or Path.home() / ".config" / "llm-sync" / "pi-settings-state.json",
     )
     changed = target.save(loaded, dry_run=args.dry_run)
-    if args.dry_run and changed:
-        console.print("[blue]Would update managed Pi settings[/blue]")
+    if args.dry_run:
+        if changed:
+            console.print(f"[blue]Would update managed Pi settings at {agent_dir}[/blue]")
+        console.print(f"No changes made to {agent_dir} (dry run).")
     elif changed:
         console.print("[green]Updated managed Pi settings[/green]")
     else:
         console.print("[dim]Managed Pi settings already converged.[/dim]")
+
+    enabled_packages = _enabled_package_sources(source)
+    ledger = PiPackageLedger(
+        state_path=args.pi_package_ledger_state_file
+        or Path.home() / ".config" / "llm-sync" / "pi-package-state.json",
+        agent_dir=agent_dir,
+    )
+
+    if args.reconcile_pi_package_ledger:
+        recovered = ledger.reconcile(enabled_packages, dry_run=args.dry_run)
+        for entry_id in recovered:
+            console.print(f"[green]Reconciled Pi package ledger entry: {entry_id}[/green]")
+
+    # Only meaningful when settings actually changed this run -- an
+    # unchanged run's ledger already reflects the current enabled set,
+    # unless a prior run crashed between the settings write and the ledger
+    # write, which is exactly what --reconcile-pi-package-ledger recovers.
+    if changed:
+        ledger.save(enabled_packages, dry_run=args.dry_run)
+
+    stale = ledger.find_stale(set(enabled_packages))
+    for entry_id in stale:
+        print(
+            f"stale Pi package: {entry_id} "
+            "(not pruned; run with --prune-stale-pi-packages)"
+        )
+
+    if args.prune_stale_pi_packages and stale:
+        console.print("[dim]Pruning stale Pi packages...[/dim]")
+        pruned = ledger.prune(stale, dry_run=args.dry_run)
+        for path in pruned:
+            print(f"Pruned: {path}")
 
 
 def should_sync_non_pi_integrations(target: str, plugins_only: bool) -> bool:
@@ -339,6 +408,12 @@ def main():
     parser.add_argument("--pi-local-config-dir", type=Path, help="Override machine-local Pi config.d directory")
     parser.add_argument("--pi-settings-file", type=Path, help="Override generated Pi settings.json path")
     parser.add_argument("--pi-settings-state-file", type=Path, help="Override Pi managed-key state path")
+    parser.add_argument("--pi-extensions-manifest", type=Path, help="Override Pi extension review manifest path")
+    parser.add_argument("--pi-package-ledger-state-file", type=Path, help="Override Pi package ownership ledger state path")
+    parser.add_argument("--prune-stale-pi-packages", action="store_true",
+                        help="Delete on-disk artifacts for Pi packages no longer enabled in config (stale entries are always reported; this flag makes pruning actually delete them)")
+    parser.add_argument("--reconcile-pi-package-ledger", action="store_true",
+                        help="Rebuild Pi package ledger entries missing from a prior interrupted sync, from the current config")
     parser.add_argument("--mcp-global-config", type=Path, help="Override global MCP servers JSON file")
     parser.add_argument("--mcp-local-config", type=Path, help="Override machine-local MCP servers JSON file")
     parser.add_argument("--mcp-global-config-dir", type=Path, help="Override global MCP servers config.d directory")

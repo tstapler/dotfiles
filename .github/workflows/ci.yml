@@ -10,6 +10,8 @@ on:
       - 'bootstrap/**'
       - 'install.sh'
       - '.github/workflows/ci.yml'
+      - 'stapler-scripts/llm-sync/**'
+      - '.config/pi/**'
   pull_request:
     paths:
       - '**/*.py'
@@ -19,6 +21,8 @@ on:
       - 'bootstrap/**'
       - 'install.sh'
       - '.github/workflows/ci.yml'
+      - 'stapler-scripts/llm-sync/**'
+      - '.config/pi/**'
 
 jobs:
   ansible-lint:
@@ -54,6 +58,8 @@ jobs:
         run: |
           cd stapler-scripts/slack-emoji-export
           uv run pytest test_extract_slack_emoji.py
+      - name: Run llm-sync tests
+        run: make llm-sync-test
       - name: Run ruff
         run: |
           cd stapler-scripts/slack-emoji-export

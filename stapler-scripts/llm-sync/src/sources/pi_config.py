@@ -37,6 +37,58 @@ class LoadedPiConfig:
     settings: dict[str, Any]
     managed_keys: set[str]
     layers: tuple[Path, ...]
+    trusted_scopes: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class SourceRef:
+    """A parsed `tstapler`-owned fork source: its repo and pinned commit."""
+
+    repo: str
+    commit: str
+
+
+_FORK_SCHEME_PREFIXES = ("git:", "git@", "https://", "http://", "ssh://", "git://")
+
+
+def normalize_fork_repo(repo: str) -> str:
+    """Canonicalize a fork repo URL/slug to `github.com/tstapler/<repo>` form.
+
+    Lowercases, strips a leading scheme, converts the `git@host:owner/repo`
+    colon separator to a slash, and drops a trailing `.git`/`/`.
+    """
+    normalized = repo.lower().removeprefix("git:")
+    for prefix in ("git://", "https://", "http://", "ssh://", "git@"):
+        normalized = normalized.removeprefix(prefix)
+    normalized = normalized.replace("github.com:tstapler/", "github.com/tstapler/")
+    normalized = normalized.rstrip("/")
+    if normalized.endswith(".git"):
+        normalized = normalized[: -len(".git")]
+    return normalized
+
+
+def parse_fork_source(source: str) -> SourceRef | None:
+    """Parse a package source string as a `tstapler`-owned fork reference.
+
+    Returns `None` when `source` isn't shaped like one at all: wrong scheme,
+    no trailing `@<ref>`, or not a `github.com/tstapler/` (or SSH
+    `github.com:tstapler/`) URL once normalized. Otherwise returns the
+    `(repo, commit)` pair with `repo` normalized via `normalize_fork_repo`
+    and `commit` exactly as given — commit case-folding, if needed, is the
+    caller's job (see `review_gate.py`), not this parser's.
+
+    Does not validate that `commit` looks like an immutable SHA; that check
+    stays in `_is_allowed_package_source`, which layers it on top of this.
+    """
+    if not source.startswith(_FORK_SCHEME_PREFIXES):
+        return None
+    before_ref, separator, ref = source.rpartition("@")
+    if not separator:
+        return None
+    normalized = normalize_fork_repo(before_ref)
+    if "github.com/tstapler/" not in normalized:
+        return None
+    return SourceRef(repo=normalized, commit=ref)
 
 
 class PiConfigSource:
@@ -84,6 +136,7 @@ class PiConfigSource:
             settings=settings,
             managed_keys=set(settings),
             layers=loaded.layers,
+            trusted_scopes=self._trusted_scopes,
         )
 
     @staticmethod
@@ -144,6 +197,12 @@ class PiConfigSource:
             raise PiConfigError(
                 f"Pi {resource_key} entry '{entry_id}' requires a non-empty path"
             )
+        if not path.startswith(("/", "./", "../", "~/")):
+            raise PiConfigError(
+                f"Pi {resource_key} entry '{entry_id}' path must be a local path "
+                "(starting with /, ./, ../, or ~/); remote extension sources "
+                "belong in 'packages' and must pass the fork-pin-review gate"
+            )
         return path
 
     def _render_package(self, entry_id: str, entry: dict[str, Any]) -> Any:
@@ -184,15 +243,9 @@ class PiConfigSource:
             package_spec = source.removeprefix("npm:")
             package_name, separator, version = package_spec.rpartition("@")
             return bool(separator and package_name and version and version != "latest")
-        if source.startswith(
-            ("git:", "git@", "https://", "http://", "ssh://", "git://")
-        ):
-            before_ref, separator, ref = source.rpartition("@")
-            normalized = before_ref.lower().removeprefix("git:")
-            owned_fork = (
-                "github.com/tstapler/" in normalized
-                or "github.com:tstapler/" in normalized
-            )
-            immutable_commit = bool(re.fullmatch(r"[0-9a-fA-F]{7,64}", ref))
-            return bool(separator and owned_fork and immutable_commit)
+        if source.startswith(_FORK_SCHEME_PREFIXES):
+            ref = parse_fork_source(source)
+            if ref is None:
+                return False
+            return bool(re.fullmatch(r"[0-9a-fA-F]{7,64}", ref.commit))
         return False

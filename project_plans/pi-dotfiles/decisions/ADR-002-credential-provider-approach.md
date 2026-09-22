@@ -33,12 +33,15 @@ wired in.
    `.config/pi/config.d/90-credential-1password.json` with `enabled: false` —
    activation is a machine-local override the user makes deliberately, never
    a tracked default.
-3. Treat the extension as an **Adapter** (GoF) around Pi's existing
-   `packages`/`extensions` registry mechanism, not as a bespoke Tyler-owned
-   credential system. Dotfiles never generate, copy, or touch
-   `~/.pi/agent/auth.json`; setup of the actual `!op read ...` reference
-   remains an explicit local action the user performs outside any tracked
-   config.
+3. Treat the extension as a **Registry entry, disabled by default** — the same
+   mechanism as every other opt-in package in the Pattern Decisions table
+   (`packages`/`extensions` registry), not as a bespoke Tyler-owned credential
+   system. No adapter class is built; there is no interface translation for a
+   future reader to find, just a disabled-by-default registration like the
+   permission system, plan mode, and the compat shim. Dotfiles never generate,
+   copy, or touch `~/.pi/agent/auth.json`; setup of the actual `!op read ...`
+   reference remains an explicit local action the user performs outside any
+   tracked config.
 4. Require the manifest entry's review `notes` to record, specifically: vault
    item least-privilege scoping, per-tool/per-project scoping, output
    redaction, and confirmation that resolved values are not inherited into
