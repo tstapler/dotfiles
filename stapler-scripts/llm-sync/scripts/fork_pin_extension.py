@@ -68,7 +68,7 @@ PENDING_COMMIT = "<pending: captured from `gh repo fork` / `gh api` after fork c
 PLACEHOLDER_LICENSE = "UNKNOWN (confirm license during human review)"
 
 
-class GhCommandError(RuntimeError):
+class GhCommandError(ValueError):
     """A `gh` subprocess invocation failed."""
 
 
@@ -83,6 +83,7 @@ def run_gh_fork(upstream: str) -> None:
         capture_output=True,
         text=True,
         check=False,
+        timeout=60,
     )
     if result.returncode != 0:
         raise GhCommandError(
@@ -101,6 +102,7 @@ def run_gh_head_commit(fork_repo_slug: str) -> str:
         capture_output=True,
         text=True,
         check=False,
+        timeout=60,
     )
     if result.returncode != 0:
         raise GhCommandError(
@@ -196,24 +198,12 @@ def _validate_entry(entry_dict: dict) -> None:
     """Reuse `ManifestEntry`'s own constructor for its invariant checks.
 
     Defense in depth alongside the round-trip load in `_execute_fork`, even
-    though disposition is always "candidate" here.
+    though disposition is always "candidate" here. `entry_dict`'s keys match
+    `ManifestEntry`'s fields one-for-one (both originate from
+    `build_entry_dict`), so `**entry_dict` is a safe drop-in for the
+    field-by-field constructor call this replaced.
     """
-    ManifestEntry(
-        id=entry_dict["id"],
-        capability=entry_dict["capability"],
-        upstream_repo=entry_dict["upstream_repo"],
-        upstream_commit=entry_dict["upstream_commit"],
-        license=entry_dict["license"],
-        fork_repo=entry_dict["fork_repo"],
-        fork_commit=entry_dict["fork_commit"],
-        package_paths=None,
-        disposition=entry_dict["disposition"],
-        reviewer=None,
-        review_date=None,
-        notes=None,
-        approved_by=None,
-        approved_date=None,
-    )
+    ManifestEntry(**entry_dict)
 
 
 def _execute_fork(

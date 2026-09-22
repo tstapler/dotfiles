@@ -233,6 +233,28 @@ def test_extension_manifest_load_raises_on_duplicate_entry_id():
             raise AssertionError("duplicate manifest entry id must raise ManifestError")
 
 
+def test_load_returns_empty_registry_when_manifest_file_missing():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "does-not-exist.json"
+
+        manifest = ExtensionManifestSource.load(path)
+
+        assert manifest.entries == {}
+
+
+def test_load_raises_manifest_error_on_malformed_json():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "extensions-manifest.json"
+        path.write_text("{not valid json", encoding="utf-8")
+
+        try:
+            ExtensionManifestSource.load(path)
+        except ManifestError as error:
+            assert str(path) in str(error)
+        else:
+            raise AssertionError("malformed manifest JSON must raise ManifestError")
+
+
 if __name__ == "__main__":
     tests = [value for key, value in list(globals().items()) if key.startswith("test_")]
     for test in tests:

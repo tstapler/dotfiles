@@ -79,7 +79,12 @@ class ExtensionManifestSource:
 
     @staticmethod
     def load(path: Path) -> ExtensionManifest:
-        raw = json.loads(path.read_text(encoding="utf-8"))
+        if not path.exists():
+            return ExtensionManifest(entries={})
+        try:
+            raw = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as error:
+            raise ManifestError(f"Cannot read manifest file '{path}': {error}") from error
         if not isinstance(raw, dict) or not isinstance(raw.get("extensions"), dict):
             raise ManifestError(
                 f"Manifest file '{path}' must be a JSON object with an 'extensions' map"
@@ -152,15 +157,14 @@ class ExtensionManifestSource:
         """
         candidates = ExtensionManifestSource._extract_candidate_paths(entry.notes or "")
         if len(candidates) < _MIN_EVIDENCE_PATHS:
-            missing_areas = _GATE_SUBAREAS[len(candidates) :]
             raise ManifestError(
                 f"Manifest entry '{entry.id}' has disposition 'approved' but "
                 f"'notes' cites only {len(candidates)} distinct file path(s); "
-                f"at least {_MIN_EVIDENCE_PATHS} are required (one per review "
-                f"sub-area). Evidence looks missing for: "
-                f"{', '.join(missing_areas)}. This check only confirms cited "
-                "paths exist — it does not judge whether they were "
-                "meaningfully reviewed."
+                f"at least {_MIN_EVIDENCE_PATHS} are required (roughly one per "
+                f"review sub-area: {', '.join(_GATE_SUBAREAS)}). This check "
+                "only confirms cited paths exist — it does not judge whether "
+                "they were meaningfully reviewed, or which sub-area(s) they "
+                "actually cover."
             )
 
         tree_paths = ExtensionManifestSource._fetch_fork_tree_paths(
@@ -198,6 +202,7 @@ class ExtensionManifestSource:
             capture_output=True,
             text=True,
             check=False,
+            timeout=60,
         )
         if result.returncode != 0:
             raise ManifestError(
@@ -205,5 +210,10 @@ class ExtensionManifestSource:
                 f"{result.stderr.strip() or 'unknown gh error'}"
             )
 
-        payload = json.loads(result.stdout)
+        try:
+            payload = json.loads(result.stdout)
+        except json.JSONDecodeError as error:
+            raise ManifestError(
+                f"'gh api {endpoint}' returned malformed JSON: {error}"
+            ) from error
         return {item["path"] for item in payload.get("tree", []) if "path" in item}

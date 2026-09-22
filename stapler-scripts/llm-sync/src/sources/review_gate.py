@@ -15,7 +15,6 @@ _SCANNED_RESOURCE_KEYS = ("packages", "extensions")
 def verify_pinned_sources_reviewed(
     loaded: LoadedPiConfig,
     manifest: ExtensionManifest,
-    trusted_scopes: tuple[str, ...] = (),
 ) -> None:
     """Raise `PiConfigError` if any rendered fork source lacks an approved
     manifest entry at the exact pinned commit.
@@ -23,12 +22,8 @@ def verify_pinned_sources_reviewed(
     Only sources `parse_fork_source()` recognizes as `github.com/tstapler/`
     fork-shaped are checked. Everything else — trusted-scope sources,
     `@tstapler` npm sources, local paths — is exempt by construction, since
-    `parse_fork_source()` returns `None` for all of them. `trusted_scopes` is
-    accepted for interface symmetry with the config source but is not used
-    to special-case anything here (see Task 1.2.2a).
+    `parse_fork_source()` returns `None` for all of them.
     """
-    del trusted_scopes  # exemption is structural (parse_fork_source), not scope-based
-
     for resource_key in _SCANNED_RESOURCE_KEYS:
         for entry in loaded.settings.get(resource_key, []):
             source = entry["source"] if isinstance(entry, dict) else entry

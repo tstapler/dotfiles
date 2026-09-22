@@ -299,7 +299,7 @@ def sync_pi_settings(args) -> None:
 
     manifest_path = args.pi_extensions_manifest or config_root / "extensions-manifest.json"
     manifest = ExtensionManifestSource.load(manifest_path)
-    verify_pinned_sources_reviewed(loaded, manifest, trusted_scopes=loaded.trusted_scopes)
+    verify_pinned_sources_reviewed(loaded, manifest)
 
     target = PiSettingsTarget(
         settings_path=args.pi_settings_file or agent_dir / "settings.json",

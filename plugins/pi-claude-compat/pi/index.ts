@@ -58,7 +58,8 @@ interface AskUserQuestionAnswer {
 // Pi's native ask-user primitive is ctx.ui.select() — a single-choice
 // dialog. There is no native multi-select prompt, so a `multiSelect: true`
 // question still only returns one answer here; that is a known gap, not a
-// silent no-op (see plugins/pi-claude-compat/pi/index.ts's Task 3.4.1a report).
+// silent no-op (see project_plans/pi-dotfiles/implementation/plan.md's Task
+// 3.4.1a).
 async function executeAskUserQuestion(
   _toolCallId: string,
   params: AskUserQuestionInput,
@@ -73,7 +74,9 @@ async function executeAskUserQuestion(
   const answers: AskUserQuestionAnswer[] = [];
   for (const q of params.questions) {
     const title = q.header ? `${q.header}: ${q.question}` : q.question;
-    const labels = q.options.map((option) => option.label);
+    const labels = q.options.map((option) =>
+      option.description ? `${option.label} — ${option.description}` : option.label,
+    );
     const choice = await ctx.ui.select(title, labels, { signal });
     answers.push({ header: q.header, question: q.question, answer: choice ?? "(no answer)" });
   }
