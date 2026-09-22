@@ -7,7 +7,6 @@ Claude Code plugins managed and installed by `llm-sync`. Each plugin lives in it
 | Plugin | Version | What it does |
 |--------|---------|--------------|
 | `git-stacked-prs` | 0.1.0 | Stacked PR workflow using git-machete. Evaluate → Plan → Execute → Ship. Requires `brew install git-machete`. |
-| `ponytail` | 4.7.0 | Minimal-solution mode with Claude hooks and an opt-in Pi extension. |
 
 ## Plugin Structure
 

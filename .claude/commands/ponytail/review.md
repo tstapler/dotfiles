@@ -1,1 +1,0 @@
-../../skills/ponytail/skills/review/SKILL.md

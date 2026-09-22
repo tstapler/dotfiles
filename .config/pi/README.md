@@ -52,8 +52,6 @@ Pi uses TypeScript extensions rather than Claude Code's shell-hook JSON:
 
 - `plugins/dotfiles-hooks/pi/index.ts` provides command-output compaction,
   the PR review reminder, `/magic-compact`, and post-compaction context audit.
-- `plugins/ponytail/pi/index.ts` provides Ponytail on demand; Pi starts with it
-  off because always-on full mode is too aggressive for general work.
 - Stapler Squad owns its approval extension. The pyinfra Pi deploy runs the
   idempotent `ssq-hooks install pi` command instead of copying that generated
   extension into this repository.

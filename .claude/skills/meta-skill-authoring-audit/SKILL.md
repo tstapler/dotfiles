@@ -86,13 +86,13 @@ Three distinct structures that look similar at a glance — know which one a giv
 |---|---|---|
 | Flat top-level skill | `.claude/skills/<name>/SKILL.md` | One self-contained skill, no sub-skills |
 | Namespaced family | `.claude/skills/<ns>/skills/<sub>/SKILL.md` + a near-empty `.claude/skills/<ns>/.claude-plugin/plugin.json` (often just `{"name": "<ns>"}`) | 2+ related skills invoked as `/ns:sub`, sharing a namespace but not meant for distribution outside this repo |
-| Real plugin | `plugins/<name>/.claude-plugin/plugin.json` with full metadata (description, version, author, sometimes `upstream`) at repo root | A skill/hook bundle meant to be distributable/shareable on its own — e.g. `plugins/ponytail`, `plugins/git-stacked-prs` |
+| Real plugin | `plugins/<name>/.claude-plugin/plugin.json` with full metadata (description, version, author, sometimes `upstream`) at repo root | A skill/hook bundle meant to be distributable/shareable on its own — e.g. `plugins/git-stacked-prs` |
 
 **Open question this audit surfaces but doesn't auto-resolve:** `.claude-plugin/marketplace.json`'s
-`plugins` array is currently empty while `plugins/ponytail` and `plugins/git-stacked-prs` exist with
-full distributable metadata. Whether they belong there depends on how this repo's plugin system is
-actually meant to be consumed (marketplace install vs. the direct hook-path wiring already present in
-`settings.json`) — a judgment call for the repo owner, not something to script around.
+`plugins` array is currently empty while `plugins/git-stacked-prs` exists with full distributable
+metadata. Whether it belongs there depends on how this repo's plugin system is actually meant to be
+consumed (marketplace install vs. the direct hook-path wiring already present in `settings.json`) —
+a judgment call for the repo owner, not something to script around.
 
 A namespaced family with only one sub-skill is a signal the namespace was premature — collapse it
 back to a flat top-level skill.

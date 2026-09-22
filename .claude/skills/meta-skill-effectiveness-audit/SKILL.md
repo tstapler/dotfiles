@@ -198,4 +198,3 @@ worked because the diff looked right.
 | `meta-persona-hardening` | Where a top-ranked candidate from Step 4 actually gets fixed — this skill only supplies the incident (Step 5) |
 | `meta-claude-technique-evaluator` | Evaluating a *new* skill/technique for adoption, not auditing existing usage — different direction of analysis |
 | `code-hotspot-analysis` | The same "usage/churn signal, not a full audit" idea applied to source files instead of skills |
-| `ponytail` | If Step 2's read shows a skill's own output is bloated/over-engineered rather than the invocation pattern being wasteful |
