@@ -307,8 +307,10 @@ def sync_pi_settings(args) -> None:
         or Path.home() / ".config" / "llm-sync" / "pi-settings-state.json",
     )
     changed = target.save(loaded, dry_run=args.dry_run)
-    if args.dry_run and changed:
-        console.print("[blue]Would update managed Pi settings[/blue]")
+    if args.dry_run:
+        if changed:
+            console.print(f"[blue]Would update managed Pi settings at {agent_dir}[/blue]")
+        console.print(f"No changes made to {agent_dir} (dry run).")
     elif changed:
         console.print("[green]Updated managed Pi settings[/green]")
     else:

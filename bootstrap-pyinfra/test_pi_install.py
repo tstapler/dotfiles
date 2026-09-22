@@ -55,6 +55,19 @@ def test_pi_hook_install_uses_the_supported_stapler_squad_installer() -> None:
     assert "ssq-hooks install pi" in command
 
 
+def test_external_install_mode_dry_run_states_skip_reason_explicitly() -> None:
+    """`pi()` prints `f"Pi installation: {plan.reason}"` unconditionally --
+    that line runs at deploy-definition time, not as a queued operation, so
+    it appears under `--dry` too. Assert the plan this print consumes
+    actually states why nothing will be installed, not just that it won't be.
+    """
+    plan = plan_pi_install(
+        "external", pi_present=False, installed_version=None, target_version="0.84.4"
+    )
+    assert plan.action == "external"
+    assert "externally managed" in plan.reason
+
+
 def test_rejects_invalid_mode_and_unsafe_version() -> None:
     invalid = (
         ("surprise", "0.84.4"),
