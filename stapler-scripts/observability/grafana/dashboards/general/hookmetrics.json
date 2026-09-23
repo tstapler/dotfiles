@@ -1,0 +1,131 @@
+{
+  "uid": "hookmetrics-overview",
+  "title": "Claude Code Hook Metrics",
+  "description": "RED metrics for Claude Code hooks pushed by stapler-scripts/hookmetrics.",
+  "tags": ["claude-code", "hooks"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "refresh": "30s",
+  "time": { "from": "now-24h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "hook",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+        "query": "label_values(claude_hook_duration_ms, hook)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "current": { "text": "All", "value": "$__all" }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Invocations per minute",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "targets": [
+        {
+          "expr": "sum by (hook) (count_over_time(claude_hook_duration_ms{hook=~\"$hook\"}[1m]))",
+          "legendFormat": "{{hook}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Error rate",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "targets": [
+        {
+          "expr": "sum by (hook) (count_over_time(claude_hook_duration_ms{hook=~\"$hook\", status=\"error\"}[5m]))",
+          "legendFormat": "{{hook}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "p95 duration by hook",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "fieldConfig": { "defaults": { "unit": "ms" }, "overrides": [] },
+      "targets": [
+        {
+          "expr": "quantile_over_time(0.95, claude_hook_duration_ms{hook=~\"$hook\"}[5m]) by (hook)",
+          "legendFormat": "{{hook}} p95"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Max duration by hook",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "fieldConfig": { "defaults": { "unit": "ms" }, "overrides": [] },
+      "targets": [
+        {
+          "expr": "max_over_time(claude_hook_duration_ms{hook=~\"$hook\"}[5m]) by (hook)",
+          "legendFormat": "{{hook}} max"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Total invocations & avg duration (last 24h)",
+      "type": "table",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 16 },
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "targets": [
+        {
+          "expr": "sum by (hook) (count_over_time(claude_hook_duration_ms{hook=~\"$hook\"}[24h]))",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "A"
+        },
+        {
+          "expr": "avg by (hook) (avg_over_time(claude_hook_duration_ms{hook=~\"$hook\"}[24h]))",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "B"
+        },
+        {
+          "expr": "sum by (hook) (count_over_time(claude_hook_duration_ms{hook=~\"$hook\", status=\"error\"}[24h]))",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "C"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": {
+              "Value #A": "invocations (24h)",
+              "Value #B": "avg duration (ms)",
+              "Value #C": "errors (24h)"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

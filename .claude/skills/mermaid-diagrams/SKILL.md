@@ -1,6 +1,6 @@
 ---
 name: mermaid-diagrams
-description: Generate beautiful, well-styled Mermaid diagrams. Use when asked to create architecture diagrams, flowcharts, sequence diagrams, state machines, ER schemas, or any visual diagram using Mermaid syntax. Produces professional output with correct syntax, appropriate diagram type selection, and polished styling.
+description: Generate beautiful, well-styled Mermaid diagrams. Use when asked to create architecture diagrams, flowcharts, sequence diagrams, state machines, ER schemas, or any visual diagram using Mermaid syntax. Produces professional output with correct syntax, appropriate diagram type selection, and polished styling. To review or improve a diagram that already exists (legend, shape/color notation, C4 abstraction level, post-render readability) rather than generate a new one, use diagram-design-review.
 ---
 
 # Mermaid Diagram Generator
@@ -133,3 +133,4 @@ For detailed templates: see `templates.md`
 | `knowledge-confluence-sync` | Publish markdown with Mermaid diagrams to Confluence |
 | `knowledge-synthesis` | Add diagrams to Zettelkasten notes or concept maps |
 | `code-architecture-best-practices` | Document architecture decisions with C4 or flowchart diagrams |
+| `diagram-design-review` | Review an existing diagram for legend, shape/color notation, C4 level, and readability once rendered |

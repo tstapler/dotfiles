@@ -1,0 +1,39 @@
+#!/usr/bin/env python3
+"""ponytail: RED metrics for Claude Code hooks, pushed to local VictoriaMetrics.
+Usage: hookmetrics <hook-name> -- <command> [args...]
+Runs the wrapped command with stdio inherited untouched, then pushes one
+duration sample. Metric push failure/timeout never affects the hook's exit code.
+"""
+import os
+import sys
+import time
+import subprocess
+import urllib.request
+
+
+def main() -> int:
+    argv = sys.argv[1:]
+    name, rest = argv[0], argv[1:]
+    if rest and rest[0] == "--":
+        rest = rest[1:]
+
+    start_ms = int(time.time() * 1000)
+    code = subprocess.call(rest)
+    dur_ms = int(time.time() * 1000) - start_ms
+    status = "ok" if code == 0 else "error"
+
+    vm = os.environ.get("HOOKMETRICS_VM_URL", "http://localhost:8428")
+    line = f'claude_hook_duration_ms{{hook="{name}",status="{status}"}} {dur_ms} {start_ms}\n'
+    try:
+        req = urllib.request.Request(
+            f"{vm}/api/v1/import/prometheus", data=line.encode(), method="POST"
+        )
+        urllib.request.urlopen(req, timeout=0.3)
+    except Exception:
+        pass  # ponytail: metrics are best-effort, never fail the hook over them
+
+    return code
+
+
+if __name__ == "__main__":
+    sys.exit(main())

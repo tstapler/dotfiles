@@ -1,5 +1,5 @@
 ---
-description: Check a design doc for prose that should be a diagram (architecture/sequence/flowchart/state) or a comparison table, based on mechanical structural signals in the text (step counts, participant counts, repeated comparison templates) — not taste. Does not evaluate content completeness (see design-doc-review:outline) or prose quality (see design-doc-review:readability). One check in the design-doc-review pipeline — run standalone or via design-doc-review:review.
+description: Check a design doc for prose that should be a diagram (architecture/sequence/flowchart/state) or a comparison table, based on mechanical structural signals in the text (step counts, participant counts, repeated comparison templates) — not taste. Does not evaluate content completeness (see design-doc-review:outline) or prose quality (see design-doc-review:readability). Does not evaluate the quality of a diagram that already exists (see diagram-design-review). One check in the design-doc-review pipeline — run standalone or via design-doc-review:review.
 ---
 
 # design-doc-review:visuals
@@ -78,6 +78,8 @@ Return only this structured summary:
 ## When invoked standalone (not via the coordinator)
 
 Print findings as a table (Section | Kind | Suggested type | Severity | Note) rather than raw JSON. Ask the author before inserting a drafted diagram (mermaid) or table skeleton — never auto-insert visuals, since the correct diagram type/exact table columns require domain judgment the check can't verify from prose alone; propose the skeleton and the extracted axes, let the author fill and confirm.
+
+Once a diagram exists (drafted here or already in the doc), this check doesn't evaluate its quality — it only decides *whether* a diagram should exist. For legend/shape/color notation, C4 abstraction level, and post-render readability of a diagram that's already there, use `diagram-design-review`.
 
 ## False-positive guardrails — do NOT flag
 
