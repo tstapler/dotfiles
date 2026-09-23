@@ -27,8 +27,10 @@ Generate professional Mermaid diagrams with correct syntax, good styling, and ap
 - "What states can this be in" → State
 - "What exists and how it relates" → ER or Class
 - "How the system is structured" → C4 or Architecture (not Flowchart)
-- 5+ parallel branches in a flowchart → switch to `LR`, not `TD`
-- More than ~15 nodes flat → decompose into subgraphs
+- Default to `TD` for flowcharts. Only reach for `LR` when nodes are a genuinely sequential handoff (a short pipeline of 3-5 steps) — not merely because a diagram has many parallel branches.
+- More than ~15 nodes flat → decompose into subgraphs, not a switch to `LR`
+
+**When the diagram will be embedded in a fixed-width document** (e.g. pushed to Google Docs via docspan, or any page/PDF target): prefer `TD`/vertical layouts even more strongly. A page's width is capped but its height isn't, and a rendered diagram gets scaled as a whole to fit that fixed width — a wide `LR` diagram with many parallel branches gets crushed down until its text is illegible, while the same content in `TD` grows downward instead, keeping text at a readable size. Widen with subgraphs stacked vertically rather than spreading nodes horizontally.
 
 ## Styling: Always Apply These
 
@@ -108,7 +110,7 @@ See `templates.md` for four copy-paste templates: architecture flowchart, API se
 ## Generation Workflow
 
 1. **Identify the diagram type** from the use case (use table above)
-2. **Choose orientation**: `LR` for processes/pipelines, `TD` for hierarchies/trees
+2. **Choose orientation**: default to `TD` (vertical); use `LR` only for a short, genuinely sequential pipeline (3-5 steps) — see the fixed-width-document rule above if this diagram is headed for a page-width target
 3. **Draft the nodes and edges** with clear, short labels
 4. **Apply `%%{init}%%`** with `base` theme + color variables matching the site's palette
 5. **Define `classDef` groups** for semantic categories (primary, success, warning, danger)
