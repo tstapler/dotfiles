@@ -120,17 +120,27 @@ After the document, append a **Compression log** (2–4 bullets: what was cut an
 
 **Gate 3**: Print the draft. Ask: "Does this draft work? Options:
 1. ✅ Done — I'll take it as-is
-2. 🔍 Run clarity review (`/docs:review-clarity`)
-3. ✏️ Polish the writing (`/docs:refine-writing`)
-4. 🔄 Revise — [describe what to change]"
+2. 🔎 Full review (`/writing:full`) — structure, tone, humanize, and (if this is a design doc) the
+   design-doc-review pipeline, all as parallel checks with an auto-fix loop. The comprehensive option.
+3. 🔍 Clarity only (`/docs:review-clarity`) — narrower, faster, just the Three Questions + cognitive-load pass
+4. ✏️ Polish only (`/docs:refine-writing`) — narrower, faster, just compression and style
+5. 🔄 Revise — [describe what to change]"
+
+Default to option 2 unless the draft is small enough that a full pipeline dispatch is overkill —
+`writing:full` already reuses `docs:review-clarity`'s and `docs:refine-writing`'s concerns via its
+own `technical-writing-coach`/tone checks, so 3 and 4 are for when you want just one narrow pass, not
+the standard path.
 
 ---
 
 ## Phase 4: Review (if requested)
 
-If the user selects option 2 (clarity review), apply the full Three Questions Framework + cognitive load review from `/docs:review-clarity`.
+If the user selects option 2 (full review), run `/writing:full` against the draft. It handles its
+own scope/dispatch/fix-loop/report; take its final report as this phase's output.
 
-If the user selects option 3 (polish), apply compression and style rules from `/docs:refine-writing`.
+If the user selects option 3 (clarity only), apply the full Three Questions Framework + cognitive load review from `/docs:review-clarity`.
+
+If the user selects option 4 (polish only), apply compression and style rules from `/docs:refine-writing`.
 
 Deliver the revised document. Return to Gate 3.
 

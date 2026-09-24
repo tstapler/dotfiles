@@ -113,3 +113,8 @@ Ask: "Should I save this to `doc_plans/<topic>/outline.md`?"
 ## Next Step
 
 Run `/docs:draft` with this outline as input to write the document.
+
+`writing:full`, when later run against the drafted doc, reads this same `outline.md` back as known
+structure context (its Phase 0) instead of re-deriving the skeleton, and rewrites it in place with
+the doc's real final section titles once the doc stabilizes — this file stays live, not a one-time
+planning artifact.
