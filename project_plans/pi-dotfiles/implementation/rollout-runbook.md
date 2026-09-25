@@ -122,13 +122,36 @@ staged-rollout steps above. It must run before any future edit to
 3. Re-run plan.md's Task 3.3.1c-2 plan-mode/permission-system composition
    integration test as a regression check.
 
-**Forward reference — this test does not exist yet.** As of this plan's
-current implementation state, Task 3.3.1c-2's composition integration test
-is blocked on Epics 3.2/3.3, which are themselves blocked on Tyler's manual
-fork-and-review steps (see plan.md's Unresolved Questions and Dependency
-Visualization). Do not treat step 3 above as already satisfied by an
-existing test — confirm the test exists and passes at the time of the
-version bump, not by reference to this runbook.
+**Steps 1-2 are now implemented — built 2026-09-25**, headlessly and
+without a TUI, via
+`stapler-scripts/llm-sync/scripts/pi_extension_smoke_test.py`:
+
+```sh
+uv run --directory stapler-scripts/llm-sync scripts/pi_extension_smoke_test.py
+```
+
+It calls `discoverAndLoadExtensions` — exported from
+`@earendil-works/pi-coding-agent`'s public entrypoint, the exact function
+Pi's own startup path uses — via a small Node harness
+(`pi_extension_smoke_test.mjs`), against every extension path the real
+tracked+local Pi config currently renders as enabled (auto-discovered via
+`PiConfigSource`, not hand-listed), plus the global
+`~/.pi/agent/extensions/` directory. For a pinned-fork `packages` entry it
+clones (or reuses a cached clone of) the exact pinned commit and resolves
+the entry's declared `extensions` paths against it. Reports each
+extension's registered tools/commands/handlers and any load errors as
+JSON; exits non-zero on any error. Verified 2026-09-25 against this
+machine's real config: 5/5 extensions loaded with zero errors
+(`dotfiles-hooks`, `kibitzer`, `pi-claude-compat`, `ssq-approval`,
+`gotgenes-pi-subagents`).
+
+**Step 3 does not exist yet.** Task 3.3.1c-2's composition integration test
+is still blocked on Epic 3.3 (`narumiruna/pi-extensions` plan-mode fork,
+in progress) and needs rethinking now that permission enforcement runs via
+stapler-squad's `ssq-approval.ts` extension rather than
+`gotgenes-pi-permission-system` (see plan.md's Unresolved Questions). Do
+not treat step 3 as satisfied by an existing test — confirm it exists and
+passes at the time of the version bump, not by reference to this runbook.
 
 Rationale (mirrors the Observability Plan's pre-bump gate line item in
 plan.md): a core-Pi version bump can silently break an unchanged,
