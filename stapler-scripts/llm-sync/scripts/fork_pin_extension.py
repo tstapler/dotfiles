@@ -77,20 +77,34 @@ class CommandError(ValueError):
     """A `git` subprocess invocation failed."""
 
 
-def run_git(args: list[str], *, cwd: Path | None = None) -> str:
+_DEFAULT_GIT_TIMEOUT_SECONDS = 120
+# `git subtree split` rewrites every commit that ever touched the target
+# path -- CPU-bound history rewriting, not a network call, so it scales
+# with the upstream's total commit count rather than network latency.
+# 120s was too tight for a real monorepo (narumiruna/pi-extensions, ~3800
+# commits, timed out); this budget is deliberately generous.
+_SUBTREE_SPLIT_TIMEOUT_SECONDS = 900
+
+
+def run_git(
+    args: list[str], *, cwd: Path | None = None, timeout: int = _DEFAULT_GIT_TIMEOUT_SECONDS
+) -> str:
     """Run a git subcommand, returning stripped stdout. Raises `CommandError` on failure.
 
     A thin, mockable wrapper — tests monkeypatch this (or the higher-level
     functions below) instead of shelling out to real git/network operations.
     """
-    result = subprocess.run(
-        ["git", *args],
-        cwd=cwd,
-        capture_output=True,
-        text=True,
-        check=False,
-        timeout=120,
-    )
+    try:
+        result = subprocess.run(
+            ["git", *args],
+            cwd=cwd,
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired as error:
+        raise CommandError(f"'git {' '.join(args)}' timed out after {timeout}s") from error
     if result.returncode != 0:
         raise CommandError(
             f"'git {' '.join(args)}' failed: {result.stderr.strip() or 'unknown git error'}"
@@ -128,11 +142,15 @@ def _split_upstream_subdir(
     fetchable from it by the caller via a local-path `git fetch`.
     """
     upstream_clone_dir = workdir / "upstream"
-    run_git(["clone", f"https://github.com/{upstream}.git", str(upstream_clone_dir)])
+    run_git(
+        ["clone", f"https://github.com/{upstream}.git", str(upstream_clone_dir)],
+        timeout=_SUBTREE_SPLIT_TIMEOUT_SECONDS,
+    )
     run_git(["checkout", upstream_commit], cwd=upstream_clone_dir)
     split_commit = run_git(
         ["subtree", "split", f"--prefix={upstream_subdir}", upstream_commit],
         cwd=upstream_clone_dir,
+        timeout=_SUBTREE_SPLIT_TIMEOUT_SECONDS,
     )
     run_git(["branch", "-f", "subtree-split", split_commit], cwd=upstream_clone_dir)
     return upstream_clone_dir

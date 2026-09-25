@@ -428,7 +428,7 @@ def test_run_subtree_import_without_subdir_fetches_upstream_directly():
     """No monorepo scoping requested: fetch the upstream URL/commit as before."""
     calls: list[list[str]] = []
 
-    def _fake_run_git(args, *, cwd=None):
+    def _fake_run_git(args, *, cwd=None, timeout=None):
         calls.append(args)
         if args[0] == "rev-parse":
             return _FIXED_FORK_SHA
@@ -461,7 +461,7 @@ def test_run_subtree_import_with_subdir_splits_upstream_before_fetching():
     calls: list[list[str]] = []
     split_commit_sha = "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
 
-    def _fake_run_git(args, *, cwd=None):
+    def _fake_run_git(args, *, cwd=None, timeout=None):
         calls.append(args)
         if args[0] == "subtree" and args[1] == "split":
             return split_commit_sha
