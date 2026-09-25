@@ -296,6 +296,8 @@ brew "tnftp"
 brew "unison"
 # Tool for writing command-line pipes with instant live preview
 brew "up"
+# Syntax-aware linter for prose, with configurable style rules
+brew "vale"
 # Tool for creating isolated virtual python environments
 brew "virtualenv"
 # Executes a program periodically, showing output fullscreen
