@@ -33,7 +33,7 @@ one-line annotation each) for Phase 2 to work from, and Phase 6 writes it to dis
 
 ## Phase 1 — Scope
 
-Run `writing:scope` against the target. Get back `{audience, tone, doc_type, purpose}`. Do not proceed until this resolves — every later phase's agent prompts need it.
+Run `writing:scope` against the target. Get back `{audience, tone, doc_type, purpose, voiceProfile}`. Do not proceed until this resolves — every later phase's agent prompts need it.
 
 ## Phase 2 — Outline review (flow)
 
@@ -70,21 +70,21 @@ skeleton that's about to move wastes the round.
 
 ```
 Agent "design-doc-review": run design-doc-review:review against <path>. Return its final report (already includes its own fix loop).
-Agent "tone": run writing:tone against <path>. Scope: {audience, tone, doc_type, purpose}. Return only its JSON summary.
-Agent "humanize": run writing-humanize against <path>. Return its structured audit output.
+Agent "tone": run writing:tone against <path>. Scope: {audience, tone, doc_type, purpose, voiceProfile}. Return only its JSON summary.
+Agent "humanize": run writing-humanize against <path>. Scope: {voiceProfile} if present — check drift against the profile's named dimensions, not a generic AI-tell list alone. Return its structured audit output.
 ```
 
 **Otherwise** (blog post, PR description, general doc, personal note): dispatch the general-purpose checks directly:
 
 ```
 Agent "structure": run technical-writing-coach against <path>, focused on the SUCCESS framework and decision-oriented density for this doc_type/purpose. Return findings with severity.
-Agent "tone": run writing:tone against <path>. Scope: {audience, tone, doc_type, purpose}. Return only its JSON summary.
-Agent "humanize": run writing-humanize against <path>. Return its structured audit output.
+Agent "tone": run writing:tone against <path>. Scope: {audience, tone, doc_type, purpose, voiceProfile}. Return only its JSON summary.
+Agent "humanize": run writing-humanize against <path>. Scope: {voiceProfile} if present. Return its structured audit output.
 ```
 
 Launch all agents for the chosen branch **in a single message** (tier A, per `lean-agent-loop`). If parallel dispatch is unavailable, drop to the next tier in that skill's degraded-mode table and say which tier ran.
 
-Skip `writing-humanize` entirely when scope's `tone` is not "match my own voice" and the doc_type is a design doc or other structured technical document where AI-authorship is disclosed/expected (check the doc's own header, e.g. this repo's "Discovery — AI-accelerated" status convention) — running an AI-detection-evasion audit on a document that says it's AI-accelerated is answering a question nobody asked. Still run it when `tone` is "match my own voice" regardless of doc_type, since voice-preservation is the point either way.
+Always dispatch `writing-humanize`, regardless of doc_type or whether the doc discloses AI-accelerated drafting (e.g. a "Discovery — AI-accelerated" status header). The goal of this whole pipeline isn't "pass an AI-detector" — it's that generated text reads as a seamless extension of the author, not a distinguishable voice standing next to theirs. A doc disclosing how it was drafted doesn't change whether it should sound like the author; disclosure and voice are orthogonal, so don't treat one as license to skip the other.
 
 ## Phase 4 — Triage
 
@@ -98,6 +98,18 @@ Present both lists before touching the file. Ask which mechanically-fixable find
 ## Phase 5 — Fix loop
 
 Same shape as `design-doc-review:review`'s Phase 3: apply approved fixes directly (this coordinator edits, it doesn't delegate the edit to a lean agent), then re-dispatch **fresh** agents for every check that wasn't already passing — no memory of the prior round's findings fed in. Round cap: 3. A finding that persists after round 3 gets reported, not silently dropped.
+
+When `voiceProfile` is set, two additions to every round (TICL-style in-context personalization —
+front-loads the correction into the prompt rather than a fine-tune or extra inference step):
+
+- **Restate the profile every round**, not just once at Phase 1. A model drifts back toward its own
+  defaults over a long fix session even with the profile in initial context — treat it as a
+  standing constraint block re-injected into each fix-agent's prompt, not a one-time framing.
+- **Carry a growing drift log.** When a passage gets flagged as reading generic/AI (a `writing-tone`
+  voice-drift or `writing-humanize` finding), have the fix agent write one line explaining *why*
+  that specific phrasing drifted from the profile — not just the corrected text — and append it to
+  a running list threaded into every subsequent round's prompt. This builds a doc-specific "what not
+  to do and why" list instead of re-discovering the same drift pattern each round.
 
 ## Phase 6 — Report
 

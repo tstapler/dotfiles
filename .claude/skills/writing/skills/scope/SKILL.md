@@ -47,11 +47,51 @@ questions:
 
 Never infer "formal" as the default just because the source reads dense — that density might itself be the problem this whole workflow was invoked to fix. Ask rather than assume when the current draft's register and the target register might be the same mistake.
 
+## Step 2.5 — Voice profile (only when `tone` = "match my own voice")
+
+"Conversational" and "direct" are adjectives a model fills in from its own defaults — every check
+downstream of a vague tone label drifts back toward generic AI prose no matter how the label is
+worded. When tone resolves to "match my own voice" (the design-docs repo declares this as its
+*always* value, per its `CLAUDE.md`; other repos may reach it by explicit user choice in Step 2),
+replace the adjective with an evidence-backed profile instead of passing the label downstream as-is.
+
+**Look for a cached profile first**: `<repo root>/.claude/voice-profile.md`, scoped to the
+repo/author, not the individual doc — the same person's voice doesn't change doc to doc, so this is
+built once and reused, not re-derived per review. If it exists and the author hasn't obviously
+changed since (check its own date stamp against how stale it looks — no hard TTL), read it and
+carry it forward as-is.
+
+**If it doesn't exist, build it**: pull 2-3 *unmodified* passages of the author's own prior writing
+in this repo (verbatim — a summarized/flattened sample loses the sentence-rhythm and pacing that
+carry most of the voice signal). Run an extraction prompt framed as "a forensic linguist analyzing
+writing samples from one author," producing a profile across these named dimensions, each backed by
+a quoted phrase from the samples as evidence, not an abstract adjective:
+
+- **Tone & formality** — where on the spectrum, with a quoted example at that register
+- **Vocabulary** — characteristic word choices, avoided words
+- **Sentence structure** — length pattern, fragment/run-on tolerance, punctuation habits
+- **Rhetorical moves** — how they open a section, transition, close, use questions/lists/asides
+- **Perspective** — first person vs. we vs. passive, and when each shows up
+- **Quirks** — anything person-specific and recurring (a phrase, a structural habit)
+- **Emotional texture** — where certainty/hedging/humor actually appears, not where a generic writer would put it
+
+Write the result to `<repo root>/.claude/voice-profile.md` so the next review in this repo reads
+instead of re-derives it.
+
+**Set expectations honestly**: even rigorous profile extraction narrows the gap between generated
+and authentic text, it doesn't close it — treat the profile as a real quality improvement over a
+vague adjective, not a claim that output becomes indistinguishable from the author's own writing.
+
 ## Step 3 — Record the scope
 
-Hold the answer as: `{audience, tone, doc_type, purpose}`. Don't write a sidecar file for a one-off review — that's persistence for something used once in this session. Only write `<target>.writing-scope.md` if the user says this doc will go through multiple review rounds across sessions and wants the scope to persist; otherwise pass it directly into the next phase's agent prompts.
+Hold the answer as: `{audience, tone, doc_type, purpose, voiceProfile}` (`voiceProfile` is `null`
+unless Step 2.5 ran). Don't write a sidecar file for a one-off review — that's persistence for
+something used once in this session; the voice profile is the one exception since it's repo-scoped
+and reused across every future review, not a one-off. Otherwise pass scope directly into the next
+phase's agent prompts.
 
-State the resolved scope back to the user in one line before proceeding: `Scope: <doc_type>, audience=<audience>, tone=<tone>.`
+State the resolved scope back to the user in one line before proceeding: `Scope: <doc_type>,
+audience=<audience>, tone=<tone>[, voice profile: cached|built|none].`
 
 ## Handoff
 
