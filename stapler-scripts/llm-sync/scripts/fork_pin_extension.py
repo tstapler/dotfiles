@@ -22,6 +22,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 import typer
@@ -50,17 +51,21 @@ def _callback() -> None:
     and leaves room for future subcommands without changing this one's shape.
     """
 
-# The only namespace this script forks into. Epic 1.3's plan.md left
-# org-vs-personal as an open decision (see plan.md's "Unresolved Questions"),
-# but the plan's own acceptance criteria fix the fork target at
-# "github.com/tstapler/<repo>", so that's what's implemented here.
+# ADR-003: all forks land as a git-subtree import into this one consolidated
+# repo (`third-party/<entry-id>` prefix) instead of a native `gh repo fork`
+# per upstream. Epic 1.3's plan.md left org-vs-personal as an open decision
+# (see plan.md's "Unresolved Questions"); this keeps Tyler's own namespace.
 FORK_OWNER = "tstapler"
+CONSOLIDATED_FORK_REPO_SLUG = "pi-extensions"
+CONSOLIDATED_FORK_URL = f"https://github.com/{FORK_OWNER}/{CONSOLIDATED_FORK_REPO_SLUG}.git"
 
 DEFAULT_MANIFEST_FILE = _REPO_ROOT / ".config" / "pi" / "extensions-manifest.json"
 
-# Dry-run never calls `gh`, so it cannot know the real commit yet. This
-# sentinel stands in for it in the printed preview.
-PENDING_COMMIT = "<pending: captured from `gh repo fork` / `gh api` after fork creation>"
+# Dry-run never calls `git`/network, so it cannot know either real commit yet
+# (upstream_commit needs a live `git ls-remote`/fetch to confirm it resolves;
+# fork_commit only exists after the subtree import + push). This sentinel
+# stands in for both in the printed preview.
+PENDING_COMMIT = "<pending: captured from git ls-remote/subtree/push after import>"
 
 # License isn't fetched by this script (not in scope per Task 1.3.1a/b); the
 # human reviewer fills this in for real during review, before hand-editing
@@ -68,77 +73,96 @@ PENDING_COMMIT = "<pending: captured from `gh repo fork` / `gh api` after fork c
 PLACEHOLDER_LICENSE = "UNKNOWN (confirm license during human review)"
 
 
-class GhCommandError(ValueError):
-    """A `gh` subprocess invocation failed."""
+class CommandError(ValueError):
+    """A `git` subprocess invocation failed."""
 
 
-def run_gh_fork(upstream: str) -> None:
-    """Fork `upstream` (owner/repo) into `github.com/tstapler/<repo>` via `gh repo fork`.
+def run_git(args: list[str], *, cwd: Path | None = None) -> str:
+    """Run a git subcommand, returning stripped stdout. Raises `CommandError` on failure.
 
-    A thin, mockable wrapper — tests monkeypatch this instead of shelling
-    out to a real `gh repo fork`.
+    A thin, mockable wrapper — tests monkeypatch this (or the higher-level
+    functions below) instead of shelling out to real git/network operations.
     """
     result = subprocess.run(
-        ["gh", "repo", "fork", upstream, "--default-branch-only"],
+        ["git", *args],
+        cwd=cwd,
         capture_output=True,
         text=True,
         check=False,
-        timeout=60,
+        timeout=120,
     )
     if result.returncode != 0:
-        raise GhCommandError(
-            f"'gh repo fork {upstream}' failed: {result.stderr.strip() or 'unknown gh error'}"
+        raise CommandError(
+            f"'git {' '.join(args)}' failed: {result.stderr.strip() or 'unknown git error'}"
         )
+    return result.stdout.strip()
 
 
-def run_gh_head_commit(fork_repo_slug: str) -> str:
-    """Return the current HEAD commit SHA of `github.com/tstapler/<fork_repo_slug>`.
+def resolve_upstream_head(upstream: str) -> str:
+    """Return `upstream`'s current default-branch HEAD commit SHA via `git ls-remote`.
 
-    A thin, mockable wrapper around `gh api` — see `run_gh_fork`.
+    Used only when `--upstream-commit` isn't given explicitly. A thin,
+    mockable wrapper — see `run_git`.
     """
-    endpoint = f"repos/{FORK_OWNER}/{fork_repo_slug}/commits/HEAD"
-    result = subprocess.run(
-        ["gh", "api", endpoint, "--jq", ".sha"],
-        capture_output=True,
-        text=True,
-        check=False,
-        timeout=60,
-    )
-    if result.returncode != 0:
-        raise GhCommandError(
-            f"'gh api {endpoint}' failed: {result.stderr.strip() or 'unknown gh error'}"
-        )
-    sha = result.stdout.strip()
+    output = run_git(["ls-remote", f"https://github.com/{upstream}.git", "HEAD"])
+    sha, _, _ref = output.partition("\t")
     if not sha:
-        raise GhCommandError(f"'gh api {endpoint}' returned an empty commit SHA")
+        raise CommandError(f"'git ls-remote' returned no HEAD SHA for {upstream!r}")
     return sha
 
 
-def _repo_slug(upstream: str) -> str:
-    return upstream.rstrip("/").rsplit("/", 1)[-1]
+def run_subtree_import(*, upstream: str, upstream_commit: str, entry_id: str, workdir: Path) -> str:
+    """Subtree-import `upstream` at `upstream_commit` into `pi-extensions`.
+
+    Clones `CONSOLIDATED_FORK_URL` into `workdir`, fetches the exact upstream
+    commit (GitHub permits fetching by full SHA even when it isn't an
+    advertised branch/tag tip — verified live against a real upstream before
+    this design was adopted; see ADR-003), squash-imports it under
+    `third-party/<entry_id>`, pushes to feature branch `extension/<entry_id>`
+    (never `main` — a human still reviews/merges the diff), and returns the
+    resulting commit SHA on `pi-extensions`. A thin, mockable wrapper — see
+    `run_git`.
+    """
+    clone_dir = workdir / CONSOLIDATED_FORK_REPO_SLUG
+    run_git(["clone", CONSOLIDATED_FORK_URL, str(clone_dir)])
+    run_git(["fetch", f"https://github.com/{upstream}.git", upstream_commit], cwd=clone_dir)
+    prefix = f"third-party/{entry_id}"
+    run_git(
+        [
+            "subtree", "add", f"--prefix={prefix}", "FETCH_HEAD", "--squash",
+            "-m", f"Import {upstream}@{upstream_commit[:12]} at {prefix} (ADR-003)",
+        ],
+        cwd=clone_dir,
+    )
+    branch = f"extension/{entry_id}"
+    run_git(["checkout", "-b", branch], cwd=clone_dir)
+    run_git(["push", "origin", branch], cwd=clone_dir)
+    return run_git(["rev-parse", "HEAD"], cwd=clone_dir)
 
 
-def build_entry_dict(*, entry_id: str, capability: str, upstream: str, commit: str) -> dict:
+def build_entry_dict(
+    *, entry_id: str, capability: str, upstream: str, upstream_commit: str, fork_commit: str
+) -> dict:
     """Build the manifest-entry dict. The one function both code paths call.
 
-    `commit` is the only value that comes from `gh`; everything else is
-    derived from CLI arguments. The real run passes the SHA `gh` returned;
-    the dry-run preview passes `PENDING_COMMIT`. Routing both paths through
-    this single function is what makes
+    `upstream_commit`/`fork_commit` are the only values that come from
+    `git`; everything else is derived from CLI arguments. The real run
+    passes the SHAs the subtree import produced; the dry-run preview passes
+    `PENDING_COMMIT` for both. Routing both paths through this single
+    function is what makes
     `test_fork_pin_extension_dry_run_matches_real_run_manifest_diff` a real
     regression guard rather than two independently-hand-written dicts that
     could silently drift apart.
     """
-    repo_slug = _repo_slug(upstream)
     return {
         "id": entry_id,
         "capability": capability,
         "upstream_repo": f"https://github.com/{upstream}",
-        "upstream_commit": commit,
+        "upstream_commit": upstream_commit,
         "license": PLACEHOLDER_LICENSE,
-        "fork_repo": f"https://github.com/{FORK_OWNER}/{repo_slug}",
-        "fork_commit": commit,
-        "package_paths": None,
+        "fork_repo": CONSOLIDATED_FORK_URL.removesuffix(".git"),
+        "fork_commit": fork_commit,
+        "package_paths": [f"third-party/{entry_id}"],
         "disposition": "candidate",
         "reviewer": None,
         "review_date": None,
@@ -184,9 +208,13 @@ def _reject_if_id_exists(raw_manifest: dict, entry_id: str) -> None:
 def _show_dry_run_plan(
     *, entry_id: str, capability: str, upstream: str, fork_target: str, manifest_file: Path
 ) -> None:
-    """Print the fork + manifest plan. Makes zero `gh`/subprocess calls."""
+    """Print the fork + manifest plan. Makes zero `git`/subprocess/network calls."""
     planned = build_entry_dict(
-        entry_id=entry_id, capability=capability, upstream=upstream, commit=PENDING_COMMIT
+        entry_id=entry_id,
+        capability=capability,
+        upstream=upstream,
+        upstream_commit=PENDING_COMMIT,
+        fork_commit=PENDING_COMMIT,
     )
     typer.echo(f"Would fork: {upstream} -> {fork_target}")
     typer.echo(f"Would write to: {manifest_file}")
@@ -211,21 +239,31 @@ def _execute_fork(
     entry_id: str,
     capability: str,
     upstream: str,
+    upstream_commit: str | None,
     fork_target: str,
-    fork_repo_slug: str,
     manifest_file: Path,
     raw_manifest: dict,
 ) -> None:
-    """Create the fork via `gh`, then write and validate the manifest entry."""
+    """Subtree-import the fork via `git` (see ADR-003), then write and validate the manifest entry."""
     try:
-        run_gh_fork(upstream)
-        commit = run_gh_head_commit(fork_repo_slug)
-    except GhCommandError as error:
+        resolved_upstream_commit = upstream_commit or resolve_upstream_head(upstream)
+        with tempfile.TemporaryDirectory() as tmp:
+            fork_commit = run_subtree_import(
+                upstream=upstream,
+                upstream_commit=resolved_upstream_commit,
+                entry_id=entry_id,
+                workdir=Path(tmp),
+            )
+    except CommandError as error:
         typer.echo(f"Error: {error}", err=True)
         raise typer.Exit(1)
 
     entry_dict = build_entry_dict(
-        entry_id=entry_id, capability=capability, upstream=upstream, commit=commit
+        entry_id=entry_id,
+        capability=capability,
+        upstream=upstream,
+        upstream_commit=resolved_upstream_commit,
+        fork_commit=fork_commit,
     )
     _validate_entry(entry_dict)
 
@@ -240,7 +278,7 @@ def _execute_fork(
     # for validation").
     ExtensionManifestSource.load(manifest_file)
 
-    typer.echo(f"Forked {upstream} -> {fork_target}")
+    typer.echo(f"Imported {upstream}@{resolved_upstream_commit} -> {fork_target}")
     typer.echo(f"Wrote manifest entry to: {manifest_file}")
     _print_entry(entry_dict, heading="Manifest entry:")
 
@@ -256,8 +294,13 @@ def fork(
     capability: str = typer.Option(
         ..., "--capability", help="Comma-separated capability tag(s) for the entry"
     ),
+    upstream_commit: str = typer.Option(
+        None,
+        "--upstream-commit",
+        help="Exact upstream commit/review-anchor to import (defaults to upstream's current HEAD)",
+    ),
     dry_run: bool = typer.Option(
-        False, "--dry-run", help="Print the plan only: no gh calls, no manifest write"
+        False, "--dry-run", help="Print the plan only: no git/network calls, no manifest write"
     ),
     manifest_file: Path = typer.Option(
         DEFAULT_MANIFEST_FILE,
@@ -265,7 +308,7 @@ def fork(
         help="Path to the extension review manifest JSON",
     ),
 ) -> None:
-    """Fork UPSTREAM and scaffold a candidate manifest entry for it.
+    """Subtree-import UPSTREAM into pi-extensions and scaffold a candidate manifest entry (ADR-003).
 
     Always writes disposition "candidate" with approved_by/approved_date set
     to null; nothing here ever sets the terminal review state, which is a
@@ -274,8 +317,7 @@ def fork(
     raw_manifest = _load_raw_manifest(manifest_file)
     _reject_if_id_exists(raw_manifest, entry_id)
 
-    fork_repo_slug = _repo_slug(upstream)
-    fork_target = f"github.com/{FORK_OWNER}/{fork_repo_slug}"
+    fork_target = f"github.com/{FORK_OWNER}/{CONSOLIDATED_FORK_REPO_SLUG} (third-party/{entry_id})"
 
     if dry_run:
         _show_dry_run_plan(
@@ -291,8 +333,8 @@ def fork(
         entry_id=entry_id,
         capability=capability,
         upstream=upstream,
+        upstream_commit=upstream_commit,
         fork_target=fork_target,
-        fork_repo_slug=fork_repo_slug,
         manifest_file=manifest_file,
         raw_manifest=raw_manifest,
     )

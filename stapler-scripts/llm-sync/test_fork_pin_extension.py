@@ -9,7 +9,8 @@
 
 Run directly: uv run test_fork_pin_extension.py
 
-Every `gh` call is mocked -- no real network/GitHub access happens here.
+Every `git`/network call is mocked -- no real network/GitHub access happens
+here.
 """
 
 import contextlib
@@ -36,9 +37,6 @@ _SCRIPT_PATH = Path(__file__).parent / "scripts" / "fork_pin_extension.py"
 # not `"approved_by"` or `"approved_date"`, which are real, required field
 # names this script legitimately references (always to set them to null).
 _APPROVED_LITERAL_RE = re.compile(r"""(['"])approved\1""")
-
-_FIXED_SHA = "cafef00d0123456789abcdef0123456789abcdef"
-
 
 def _write(path: Path, value: object) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -99,32 +97,75 @@ def test_fork_pin_extension_argparser_has_no_flag_that_writes_approved_dispositi
         assert "approved" != str(param.default).lower()
 
 
+_FIXED_UPSTREAM_SHA = "e64946b5ce96ca004b753d98932c8b13106dd132"
+_FIXED_FORK_SHA = "cafef00d0123456789abcdef0123456789abcdef"
+
+
 def test_fork_pin_extension_fork_creates_candidate_manifest_entry_with_fork_commit():
     with tempfile.TemporaryDirectory() as tmp:
         manifest_file = Path(tmp) / "extensions-manifest.json"
 
         with (
-            patch.object(fork_pin_extension, "run_gh_fork") as mock_fork,
-            patch.object(fork_pin_extension, "run_gh_head_commit", return_value=_FIXED_SHA),
+            patch.object(
+                fork_pin_extension, "resolve_upstream_head", return_value=_FIXED_UPSTREAM_SHA
+            ) as mock_head,
+            patch.object(
+                fork_pin_extension, "run_subtree_import", return_value=_FIXED_FORK_SHA
+            ) as mock_subtree,
         ):
             stdout, stderr, exit_code = _run_fork(
                 upstream="gotgenes/pi-packages",
                 entry_id="gotgenes-pi-packages",
                 capability="permission-system,subagents",
+                upstream_commit=None,
                 dry_run=False,
                 manifest_file=manifest_file,
             )
 
         assert exit_code is None, f"unexpected failure: {stderr}"
-        mock_fork.assert_called_once_with("gotgenes/pi-packages")
+        mock_head.assert_called_once_with("gotgenes/pi-packages")
+        mock_subtree.assert_called_once()
+        assert mock_subtree.call_args.kwargs["upstream"] == "gotgenes/pi-packages"
+        assert mock_subtree.call_args.kwargs["upstream_commit"] == _FIXED_UPSTREAM_SHA
+        assert mock_subtree.call_args.kwargs["entry_id"] == "gotgenes-pi-packages"
 
         written = json.loads(manifest_file.read_text(encoding="utf-8"))
         entry = written["extensions"]["gotgenes-pi-packages"]
         assert entry["disposition"] == "candidate"
-        assert entry["fork_repo"] == "https://github.com/tstapler/pi-packages"
-        assert entry["fork_commit"] == _FIXED_SHA
+        assert entry["fork_repo"] == "https://github.com/tstapler/pi-extensions"
+        assert entry["package_paths"] == ["third-party/gotgenes-pi-packages"]
+        assert entry["upstream_commit"] == _FIXED_UPSTREAM_SHA
+        assert entry["fork_commit"] == _FIXED_FORK_SHA
         assert entry["approved_by"] is None
         assert entry["approved_date"] is None
+
+
+def test_fork_pin_extension_fork_uses_explicit_upstream_commit_without_resolving_head():
+    with tempfile.TemporaryDirectory() as tmp:
+        manifest_file = Path(tmp) / "extensions-manifest.json"
+
+        with (
+            patch.object(fork_pin_extension, "resolve_upstream_head") as mock_head,
+            patch.object(
+                fork_pin_extension, "run_subtree_import", return_value=_FIXED_FORK_SHA
+            ) as mock_subtree,
+        ):
+            stdout, stderr, exit_code = _run_fork(
+                upstream="gotgenes/pi-packages",
+                entry_id="gotgenes-pi-packages",
+                capability="permission-system,subagents",
+                upstream_commit=_FIXED_UPSTREAM_SHA,
+                dry_run=False,
+                manifest_file=manifest_file,
+            )
+
+        assert exit_code is None, f"unexpected failure: {stderr}"
+        mock_head.assert_not_called()
+        assert mock_subtree.call_args.kwargs["upstream_commit"] == _FIXED_UPSTREAM_SHA
+
+        written = json.loads(manifest_file.read_text(encoding="utf-8"))
+        entry = written["extensions"]["gotgenes-pi-packages"]
+        assert entry["upstream_commit"] == _FIXED_UPSTREAM_SHA
 
 
 def test_fork_pin_extension_fork_fails_when_id_already_has_manifest_entry():
@@ -136,21 +177,22 @@ def test_fork_pin_extension_fork_fails_when_id_already_has_manifest_entry():
         )
 
         with (
-            patch.object(fork_pin_extension, "run_gh_fork") as mock_fork,
-            patch.object(fork_pin_extension, "run_gh_head_commit") as mock_commit,
+            patch.object(fork_pin_extension, "resolve_upstream_head") as mock_head,
+            patch.object(fork_pin_extension, "run_subtree_import") as mock_subtree,
         ):
             stdout, stderr, exit_code = _run_fork(
                 upstream="gotgenes/pi-packages",
                 entry_id="existing-id",
                 capability="permission-system",
+                upstream_commit=None,
                 dry_run=False,
                 manifest_file=manifest_file,
             )
 
         assert exit_code == 1
         assert "existing-id" in stderr
-        mock_fork.assert_not_called()
-        mock_commit.assert_not_called()
+        mock_head.assert_not_called()
+        mock_subtree.assert_not_called()
 
 
 def test_fork_pin_extension_dry_run_prints_plan_without_calling_gh():
@@ -162,6 +204,7 @@ def test_fork_pin_extension_dry_run_prints_plan_without_calling_gh():
                 upstream="gotgenes/pi-packages",
                 entry_id="gotgenes-pi-packages",
                 capability="permission-system",
+                upstream_commit=None,
                 dry_run=True,
                 manifest_file=manifest_file,
             )
@@ -178,16 +221,17 @@ def test_fork_dry_run_shows_planned_target_and_manifest_diff_without_writing():
         original_bytes = manifest_file.read_bytes()
 
         def _fail_loudly(*_args, **_kwargs):
-            raise AssertionError("gh must not be called during --dry-run")
+            raise AssertionError("git must not be called during --dry-run")
 
         with (
-            patch.object(fork_pin_extension, "run_gh_fork", side_effect=_fail_loudly),
-            patch.object(fork_pin_extension, "run_gh_head_commit", side_effect=_fail_loudly),
+            patch.object(fork_pin_extension, "resolve_upstream_head", side_effect=_fail_loudly),
+            patch.object(fork_pin_extension, "run_subtree_import", side_effect=_fail_loudly),
         ):
             stdout, stderr, exit_code = _run_fork(
                 upstream="gotgenes/pi-packages",
                 entry_id="gotgenes-pi-packages",
                 capability="permission-system",
+                upstream_commit=None,
                 dry_run=True,
                 manifest_file=manifest_file,
             )
@@ -207,19 +251,23 @@ def test_fork_output_shows_candidate_disposition_and_null_approval_fields_always
             upstream="gotgenes/pi-packages",
             entry_id="gotgenes-pi-packages",
             capability="permission-system",
+            upstream_commit=None,
             dry_run=True,
             manifest_file=dry_manifest,
         )
         assert dry_exit is None
 
         with (
-            patch.object(fork_pin_extension, "run_gh_fork"),
-            patch.object(fork_pin_extension, "run_gh_head_commit", return_value=_FIXED_SHA),
+            patch.object(
+                fork_pin_extension, "resolve_upstream_head", return_value=_FIXED_UPSTREAM_SHA
+            ),
+            patch.object(fork_pin_extension, "run_subtree_import", return_value=_FIXED_FORK_SHA),
         ):
             real_stdout, real_stderr, real_exit = _run_fork(
                 upstream="gotgenes/pi-packages",
                 entry_id="gotgenes-pi-packages",
                 capability="permission-system",
+                upstream_commit=None,
                 dry_run=False,
                 manifest_file=real_manifest,
             )
@@ -236,13 +284,16 @@ def test_fork_real_run_printed_commit_matches_manifest_written_commit():
         manifest_file = Path(tmp) / "extensions-manifest.json"
 
         with (
-            patch.object(fork_pin_extension, "run_gh_fork"),
-            patch.object(fork_pin_extension, "run_gh_head_commit", return_value=_FIXED_SHA),
+            patch.object(
+                fork_pin_extension, "resolve_upstream_head", return_value=_FIXED_UPSTREAM_SHA
+            ),
+            patch.object(fork_pin_extension, "run_subtree_import", return_value=_FIXED_FORK_SHA),
         ):
             stdout, stderr, exit_code = _run_fork(
                 upstream="gotgenes/pi-packages",
                 entry_id="gotgenes-pi-packages",
                 capability="permission-system",
+                upstream_commit=None,
                 dry_run=False,
                 manifest_file=manifest_file,
             )
@@ -253,7 +304,7 @@ def test_fork_real_run_printed_commit_matches_manifest_written_commit():
         written_entry = written["extensions"]["gotgenes-pi-packages"]
 
         assert printed["fork_commit"] == written_entry["fork_commit"]
-        assert printed["fork_commit"] == _FIXED_SHA
+        assert printed["fork_commit"] == _FIXED_FORK_SHA
 
 
 def test_fork_rerun_existing_id_fails_naming_id_and_current_disposition():
@@ -277,6 +328,7 @@ def test_fork_rerun_existing_id_fails_naming_id_and_current_disposition():
             upstream="gotgenes/pi-packages",
             entry_id="gotgenes-pi-packages",
             capability="permission-system",
+            upstream_commit=None,
             dry_run=False,
             manifest_file=manifest_file,
         )
@@ -294,6 +346,7 @@ def test_fork_dry_run_closing_line_states_next_concrete_action():
             upstream="gotgenes/pi-packages",
             entry_id="gotgenes-pi-packages",
             capability="permission-system",
+            upstream_commit=None,
             dry_run=True,
             manifest_file=manifest_file,
         )
@@ -316,11 +369,13 @@ def test_fork_pin_extension_dry_run_matches_real_run_manifest_diff():
         }
 
         with (
-            patch.object(fork_pin_extension, "run_gh_fork"),
-            patch.object(fork_pin_extension, "run_gh_head_commit", return_value=_FIXED_SHA),
+            patch.object(
+                fork_pin_extension, "resolve_upstream_head", return_value=_FIXED_UPSTREAM_SHA
+            ),
+            patch.object(fork_pin_extension, "run_subtree_import", return_value=_FIXED_FORK_SHA),
         ):
             _, real_stderr, real_exit = _run_fork(
-                dry_run=False, manifest_file=real_manifest, **fixture
+                upstream_commit=None, dry_run=False, manifest_file=real_manifest, **fixture
             )
         assert real_exit is None, f"unexpected failure: {real_stderr}"
         persisted = json.loads(real_manifest.read_text(encoding="utf-8"))["extensions"][
@@ -328,19 +383,19 @@ def test_fork_pin_extension_dry_run_matches_real_run_manifest_diff():
         ]
 
         def _fail_loudly(*_args, **_kwargs):
-            raise AssertionError("gh must not be called during --dry-run")
+            raise AssertionError("git must not be called during --dry-run")
 
         with (
-            patch.object(fork_pin_extension, "run_gh_fork", side_effect=_fail_loudly),
-            patch.object(fork_pin_extension, "run_gh_head_commit", side_effect=_fail_loudly),
+            patch.object(fork_pin_extension, "resolve_upstream_head", side_effect=_fail_loudly),
+            patch.object(fork_pin_extension, "run_subtree_import", side_effect=_fail_loudly),
         ):
             dry_stdout, dry_stderr, dry_exit = _run_fork(
-                dry_run=True, manifest_file=dry_manifest, **fixture
+                upstream_commit=None, dry_run=True, manifest_file=dry_manifest, **fixture
             )
         assert dry_exit is None, f"unexpected failure: {dry_stderr}"
         planned = _extract_json_block(dry_stdout, "Planned manifest entry:")
 
-        # Every field that doesn't depend on `gh` output must be byte-for-byte
+        # Every field that doesn't depend on `git` output must be byte-for-byte
         # identical between the dry-run preview and what the real run wrote --
         # proving the two code paths cannot silently diverge in how they build
         # the entry (architecture-review.md's fork_pin_extension.py concern).
@@ -352,18 +407,19 @@ def test_fork_pin_extension_dry_run_matches_real_run_manifest_diff():
 
         assert planned["fork_commit"] == fork_pin_extension.PENDING_COMMIT
         assert planned["upstream_commit"] == fork_pin_extension.PENDING_COMMIT
-        assert persisted["fork_commit"] == _FIXED_SHA
-        assert persisted["upstream_commit"] == _FIXED_SHA
+        assert persisted["fork_commit"] == _FIXED_FORK_SHA
+        assert persisted["upstream_commit"] == _FIXED_UPSTREAM_SHA
 
         # Tightest possible version of the same guarantee: feed the shared
-        # entry-builder the exact commit the real run used, and require an
+        # entry-builder the exact commits the real run used, and require an
         # exact match against what was persisted -- proving both paths route
         # through the very same function, not just similarly-shaped ones.
         replayed = fork_pin_extension.build_entry_dict(
             entry_id=fixture["entry_id"],
             capability=fixture["capability"],
             upstream=fixture["upstream"],
-            commit=_FIXED_SHA,
+            upstream_commit=_FIXED_UPSTREAM_SHA,
+            fork_commit=_FIXED_FORK_SHA,
         )
         assert replayed == persisted
 

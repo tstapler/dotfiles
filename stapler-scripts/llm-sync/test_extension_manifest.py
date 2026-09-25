@@ -48,9 +48,16 @@ def _write_approved_entry(path: Path, notes: str) -> None:
     _write(path, {"extensions": {"narumiruna-pi-plan-mode": entry}})
 
 
-def test_tracked_manifest_file_parses_to_empty_extensions_registry():
+def test_tracked_manifest_file_parses_without_error():
+    """The real, tracked manifest must always parse and validate cleanly.
+
+    Was `parses_to_empty_extensions_registry` while the manifest had zero
+    entries; now that real entries exist (e.g. `gotgenes-pi-packages`,
+    ADR-003), the meaningful invariant is that `ExtensionManifestSource.load`
+    doesn't raise -- not that the registry stays empty forever.
+    """
     manifest = ExtensionManifestSource.load(_TRACKED_MANIFEST)
-    assert manifest.entries == {}
+    assert isinstance(manifest.entries, dict)
 
 
 def test_load_raises_on_entry_missing_required_field():
