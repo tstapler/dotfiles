@@ -80,20 +80,18 @@ Rate 🟢 production-ready / 🟡 gaps / 🔴 ships blind.
 
 ## Step 2.5 — Wait for CI to Complete
 
-**Never issue 🚀 SHIP IT while any CI run is in-progress or queued.** After launching the 7 reviewers (they run concurrently while CI runs), poll until all CI runs reach `completed`:
+**Never issue 🚀 SHIP IT while any CI run is in-progress or queued.** After launching the 7 reviewers (they run concurrently while CI runs), delegate the CI wait to a single fresh, minimal-context subagent rather than polling from this thread — this coordinator is already holding all 7 reviewer reports, and re-reading that full context on every 60-second poll is wasted cost a check like this doesn't need (lean-agent-loop pattern: one small agent, one job, no inherited history):
 
-```bash
-gh run list --branch $(git branch --show-current) --limit 5 --json databaseId,status,conclusion,name
-```
+> Run `gh run list --branch <branch> --limit 5 --json databaseId,status,conclusion,name`. Repeat every 60 seconds until no run has `status` of `in_progress` or `queued`. Return ONLY: `{"conclusion": "success"|"failure"|"cancelled", "failing_run_ids": [...]}` — no other text.
 
-Repeat every 60 seconds until no run has `status` of `in_progress` or `queued`. Then:
-- All conclusions `success` → CI 🟢, proceed to Step 3
-- Any conclusion `failure` or `cancelled` → CI 🔴, fetch logs before Step 3:
+Then, in this thread, act on the single returned result:
+- `success` → CI 🟢, proceed to Step 3
+- `failure` or `cancelled` → CI 🔴, fetch logs before Step 3:
   ```bash
   gh run view <RUN_ID> --log-failed
   ```
 
-If CI is still running when all 7 reviewers have returned, wait for CI before synthesizing — do not skip this gate.
+If CI is still running when all 7 reviewers have returned, wait for the watcher subagent's result before synthesizing — do not skip this gate.
 
 ---
 
