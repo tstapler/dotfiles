@@ -62,6 +62,28 @@ prompt: |
 
   ---
 
+  ## Linked-Issue Closing Keyword Check
+
+  Run once per entry, before Gate 1a — cheap and idempotent, so it's safe to re-run on every wakeup.
+
+  GitHub only auto-closes an issue when the PR body contains a **closing keyword** immediately before the reference — `Closes #N`, `Fixes #N`, `Resolves #N` (also accepts `close/closed`, `fix/fixed`, `resolve/resolved`). A bare `#N` mention elsewhere in the body, or a reference only in a commit message, does **not** trigger auto-close on merge.
+
+  ```bash
+  BODY=$(gh pr view "$PR" --json body --jq '.body')
+  echo "$BODY" | grep -qiE '\b(clos(e|es|ed)|fix(e|es|ed)?|resolv(e|es|ed))[[:space:]]+#[0-9]+'
+  ```
+
+  - **Keyword already present**: nothing to do, continue to Gate 1a.
+  - **No closing keyword found**: scan the body for bare `#[0-9]+` issue references (exclude anything already matched by the grep above). If exactly **one** distinct issue number is referenced anywhere in the body — e.g. the PR was opened to fix that issue but the literal `Closes #N` line was dropped, edited out, or never added — append a `Closes #<N>` line to the body:
+    ```bash
+    gh pr edit "$PR" --body "$(printf '%s\n\nCloses #%s' "$BODY" "$N")"
+    ```
+    Log the addition in the Decision Log with the issue number.
+  - **Zero or multiple** distinct issue numbers referenced with no keyword: do not guess which one this PR closes. Leave the body alone and note in the Decision Log that the PR isn't unambiguously linked to exactly one issue, so no auto-close keyword was added — surface this to the user rather than silently skipping if you're reporting a final status.
+  - Never invent an issue number that isn't already referenced somewhere in the PR body.
+
+  ---
+
   ## Context Discipline — Orchestrator Only
 
   **This skill is an orchestrator, not a worker.** Delegate all file editing, compiling, and committing to fresh subagents. Never accumulate file contents or diffs in this context — only gate status and state file updates. This is the `lean-agent-loop` skill pattern: the state file is the coordinator's memory, each fresh subagent is a Ralph Wiggum agent, and the five gates are the loop condition.
