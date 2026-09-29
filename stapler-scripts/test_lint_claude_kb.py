@@ -208,6 +208,32 @@ class InvalidSkillLocationTests(unittest.TestCase):
             self.assertEqual(lint.check_invalid_location(p, skills_dir), [])
 
 
+class BrokenFrontmatterKeyTests(unittest.TestCase):
+    def test_paths_string_form_is_flagged(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = write(Path(d) / "SKILL.md",
+                      '---\nname: x\ndescription: "y"\npaths: "**/*.go"\n---\nbody\n')
+            findings = lint.check_broken_frontmatter_keys(p)
+            self.assertEqual([f.check for f in findings], ["broken-frontmatter-key"])
+
+    def test_paths_list_form_is_flagged(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = write(Path(d) / "SKILL.md",
+                      '---\nname: x\ndescription: "y"\npaths:\n  - "**/*.go"\n---\nbody\n')
+            findings = lint.check_broken_frontmatter_keys(p)
+            self.assertEqual([f.check for f in findings], ["broken-frontmatter-key"])
+
+    def test_no_paths_key_is_clean(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = write(Path(d) / "SKILL.md", '---\nname: x\ndescription: "y"\n---\nbody\n')
+            self.assertEqual(lint.check_broken_frontmatter_keys(p), [])
+
+    def test_no_frontmatter_is_clean(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = write(Path(d) / "SKILL.md", "just body text\n")
+            self.assertEqual(lint.check_broken_frontmatter_keys(p), [])
+
+
 class WindowsPathTests(unittest.TestCase):
     def test_backslash_path_is_flagged_with_line_number(self):
         text = "line one\nsee scripts\\helper.py for details\n"

@@ -1,7 +1,6 @@
 ---
 name: rust-parallel-processing
 description: Exploit CPU, GPU, and multi-machine parallelism in Rust. Covers rayon (data parallelism), tokio (task/async parallelism), SIMD (auto-vectorization + wide crate), wgpu/cudarc/candle (GPU compute and ML), tonic/tarpc/quinn (multi-machine RPC), MPI/ractor/DataFusion (HPC and distributed), algorithm patterns (map-reduce, pipeline, work-stealing, SPMD), profiling parallel programs, and common anti-patterns. Companion to rust-profiling (collect data first) and rust-perf-tuning (single-core fixes).
-paths: "**/*.rs"
 metadata:
   type: feedback
 ---

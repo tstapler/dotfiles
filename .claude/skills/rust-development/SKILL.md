@@ -1,7 +1,6 @@
 ---
 name: rust-development
 description: Hub skill for Rust development. Covers the full workflow from profiling → performance diagnosis → CPU/memory optimization → parallelism. Routes to the right specialist skill based on the symptom. Links all four Rust skills: rust-profiling, rust-perf-tuning, rust-memory-optimization, rust-parallel-processing.
-paths: "**/*.rs"
 metadata:
   type: feedback
 ---

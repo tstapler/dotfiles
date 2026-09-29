@@ -1,7 +1,6 @@
 ---
 name: python-development
 description: Apply idiomatic, well-structured Python development practices. Use when writing, reviewing, or refactoring Python code. Covers type annotations, package management with uv, Pydantic DTOs, Typer CLIs, pytest patterns, PEP 8 style, architecture, and type-driven design.
-paths: "**/*.py,**/pyproject.toml,**/*.toml"
 ---
 
 # Python Development

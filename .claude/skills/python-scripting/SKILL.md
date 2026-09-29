@@ -1,7 +1,6 @@
 ---
 name: python-scripting
 description: Standards for writing standalone Python scripts — UV inline deps, loguru logging, typer CLI, exit codes, and the canonical script template. References python-dependency-management for dep management.
-paths: "**/*.py"
 ---
 
 # Python Scripting Standards

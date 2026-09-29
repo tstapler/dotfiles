@@ -1,7 +1,6 @@
 ---
 name: rust-memory-optimization
 description: Reduce Rust memory usage, eliminate allocation churn, size types precisely, apply custom allocators and arenas, build bounded telemetry buffers, and detect leaks. Covers the full cycle: measure → diagnose → fix → verify. Companion to rust-profiling (CPU flamegraphs) and rust-perf-tuning (CPU throughput).
-paths: "**/*.rs"
 metadata:
   type: feedback
 ---

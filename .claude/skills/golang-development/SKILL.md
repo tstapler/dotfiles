@@ -1,7 +1,6 @@
 ---
 name: golang-development
 description: Apply idiomatic, well-structured Go development practices. Use when writing, reviewing, or refactoring Go code. Covers Go Proverbs, concurrency fundamentals, type-system maximization (generics, embedding, iota, receivers), primitive-obsession fixes, and anti-patterns based on Effective Go, Go Code Review Comments, and Go Proverbs. For error handling, naming, interfaces/structs, project layout, testing, and design patterns, see the dedicated `golang-error-handling`, `golang-naming`, `golang-structs-interfaces`, `golang-project-layout`, `golang-testing`, and `golang-design-patterns` skills.
-paths: "**/*.go"
 ---
 
 # Go Development

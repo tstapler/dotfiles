@@ -1,7 +1,6 @@
 ---
 name: rust-idioms
 description: Idiomatic review for Rust — async/Tokio daemon design, ports-and-adapters trait boundaries, and thiserror/anyhow error handling. Use when reviewing or writing Rust code that defines async trait "ports" (dependency-inversion boundaries), runs a single-threaded Tokio daemon (current_thread runtime + LocalSet/spawn_local), or crosses a wire/domain type boundary. Covers async fn in traits vs async-trait, Rc/RefCell vs Arc/Mutex, tokio::select! cancel-safety, blocking calls in async context, thiserror-vs-anyhow error typing, wire/domain type separation, and common anti-patterns (clone in hot loops, overly generic port bounds). NOT for pure performance/profiling work (see rust-profiling, rust-perf-tuning, rust-memory-optimization, rust-parallel-processing) or unsafe/CLI/wasm-bindgen review (no dedicated skill yet — use the sdd:6-verify research-agent fallback for those).
-paths: "**/*.rs"
 metadata:
   type: feedback
 ---

@@ -36,6 +36,25 @@ https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices
   dangling-symlink    a symlink under .claude/{skills,agents,commands} whose
                        target doesn't resolve (node_modules/.venv/.git skipped —
                        those legitimately don't exist until installed)
+  broken-frontmatter-key  a frontmatter key that's real and documented but has
+                       an open Claude Code bug making it actively harmful to use
+                       right now. `paths:` is the current entry: it's a genuine
+                       Claude Code extension field (glob-scoped auto-activation —
+                       https://code.claude.com/docs/en/skills#frontmatter-reference),
+                       not part of the portable Agent Skills spec, but
+                       https://github.com/anthropics/claude-code/issues/49835
+                       (reproduced by an Anthropic collaborator on 2.1.233, kept
+                       open as a usability issue despite the stale-bot auto-close)
+                       means a `paths:`-scoped skill stays absent from the
+                       available-skills listing AND fails explicit `Skill`-tool
+                       invocation ("Unknown skill") until Claude happens to touch
+                       a matching file first in that session — verified live
+                       against Claude Code CLI 2.1.284 by bisecting 44 golang-*
+                       skills: every one with a `paths:` key (string or YAML
+                       list) was unreachable; every sibling without it loaded
+                       fine. Revisit once #49835 ships a fix — add more keys to
+                       BROKEN_FRONTMATTER_KEYS below if another one is found to
+                       have the same failure mode.
 
 Exit code is nonzero iff any error-tier finding exists (name-mismatch,
 broken-skill-ref, oversized-no-split >500 lines, dangling-symlink, and the
@@ -306,6 +325,25 @@ def check_dangling_symlinks(base: Path) -> list[Finding]:
     return findings
 
 
+BROKEN_FRONTMATTER_KEYS = {
+    "paths": "github.com/anthropics/claude-code#49835 — stays absent from skill "
+             "discovery until Claude happens to touch a matching file first",
+}
+
+
+def check_broken_frontmatter_keys(path: Path) -> list[Finding]:
+    """See the `broken-frontmatter-key` entry in the module docstring — these
+    are real, documented fields with an open Claude Code bug that makes them
+    actively harmful to ship right now, not fields to avoid on principle."""
+    fm = parse_frontmatter(path.read_text(encoding="utf-8", errors="replace"))
+    if not fm:
+        return []
+    return [
+        Finding("error", "broken-frontmatter-key", path, f"`{key}:` {reason} — remove it")
+        for key, reason in BROKEN_FRONTMATTER_KEYS.items() if key in fm
+    ]
+
+
 def check_invalid_location(path: Path, skills_dir: Path) -> list[Finding]:
     """Claude Code's own spec is unambiguous: "Create Skills as directories
     with SKILL.md files. Claude discovers and uses them automatically" —
@@ -348,6 +386,7 @@ def main() -> int:
         findings += check_oversized(path, expected_id)
         findings += check_nested_references(path.parent)
         findings += check_invalid_location(path, SKILLS)
+        findings += check_broken_frontmatter_keys(path)
     for path, expected_id in iter_agent_files():
         findings += check_name_and_description(path, expected_id, is_agent=True)
 

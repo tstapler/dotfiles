@@ -1,7 +1,6 @@
 ---
 name: python-dependency-management
 description: How to manage Python dependencies with UV — inline script metadata (PEP 723), project mode, tool running, and when to use each approach. Always use UV; never pip directly.
-paths: "**/*.py,**/pyproject.toml,**/*.toml,**/*.sh"
 ---
 
 # Python Dependency Management with UV

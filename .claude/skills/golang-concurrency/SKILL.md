@@ -1,7 +1,6 @@
 ---
 name: golang-concurrency
 description: Choose and apply the right Go concurrency primitive — channels, mutexes, atomics, copy-on-write, singleflight, and lock-free data structures. Use when designing concurrent access to shared state, diagnosing lock contention (paired with golang-profiling), choosing between sync.RWMutex and atomic.Pointer copy-on-write, evaluating concurrent map options (sync.Map vs xsync.MapOf), implementing singleflight request coalescing, or reaching for a lock-free queue/ring-buffer library. Covers stdlib sync/atomic, golang.org/x/sync, puzpuzpuz/xsync, Workiva/go-datastructures, and golang-design/lockfree.
-paths: "**/*.go"
 ---
 
 # Go Concurrency
