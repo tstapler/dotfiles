@@ -51,19 +51,23 @@ Before any managed sync touches the real machine, back up the current
 This step is the same action as Task 5.2.1a below — see **"Backup before
 adopting"** for the exact commands; it isn't duplicated here.
 
-**Scope note (Story 5.2.2, explicitly out of scope for this runbook as
-written):** requirements.md's step 2 also implies classifying *which*
-existing `settings.json` keys are universal, work-only, or
-machine-generated, so a managed sync never silently overwrites an
-unclassified key. That classification is plan.md's Story 5.2.2
-(Task 5.2.2a), a Tyler-only manual step against his real machine's
-`~/.pi/agent/settings.json` — it requires data not available in this
-environment and is **not done by this document**. Per plan.md's
-Dependency Visualization ("back-edge" note) and Task 3.2.2b's
-`Dependencies:` line, Story 5.2.2's classification table must exist
-*before* Story 3.2.2's real-machine adoption step (Step 3 below) runs on
-the actual machine — backing up and dry-running (this step and Step 1) can
-proceed without it, but adopting on the real machine cannot.
+**Story 5.2.2 classification (Task 5.2.2a) — recorded 2026-09-24**, from
+Tyler's real macOS machine's `~/.pi/agent/settings.json` at the time the
+`packages` registry key was first introduced by
+`.config/pi/config.d/50-gotgenes-pi-packages.json`:
+
+| Key | Bucket | Disposition |
+|---|---|---|
+| `defaultProjectTrust`, `defaultThinkingLevel`, `extensions`, `quietStartup`, `theme`, `tuiMode` | Universal | Already managed (pre-existing `managedKeys`); unaffected. |
+| `agentBeach.slackApprovals` | Work-only | ExampleCorp Slack-approval bot token paths/operator email — not a `_RESOURCE_KEYS` entry and never placed under our tracked `settings`, so it is never touched by a managed sync regardless of classification. Left unmanaged by design. |
+| `defaultModel` (`"gpt-5.6-sol"`), `defaultProvider` (`"ex-openai"`) | Work-only | ExampleCorp-internal model routing. Same reasoning as above — not managed, left as-is. |
+| `lastChangelogVersion` | Machine-generated | Pi writes this itself on update; not a `_RESOURCE_KEYS` entry, never managed. |
+| `packages` (was `["npm:@example-internal/pi-agent"]`) | Work-only, **now managed** | The one key that actually needed action: `packages` *is* a `_RESOURCE_KEYS` entry, so once any layer defines a `packages` registry, the rendered array **replaces** the existing value wholesale — it would have silently dropped `npm:@example-internal/pi-agent` (needed for Pi itself to run under ExampleCorp's `newt` wrapper). Fixed by adding a `example-internal-pi-agent` entry to ndotfiles' `.config/pi/config.d/50-example.json` (ExampleCorp-specific, so it lives in `ndotfiles`, not this repo, per that repo's own placement convention) so the rendered `packages` array preserves it. Verified via `uv run python <script using PiConfigSource>` against the real `~/.config/pi` tree: `packages` renders as `['npm:@example-internal/pi-agent']` with both `gotgenes-pi-*` entries still disabled. |
+
+This satisfies Task 3.2.2b's dependency on Story 5.2.2 — every top-level key
+in the real `settings.json` is now classified, and the one key that needed
+a fix (`packages`) has been fixed and verified. Story 3.2.2's real-machine
+adoption step (Step 3 below) may now proceed.
 
 ## Steps 3-5: Adopt, verify, and roll out
 

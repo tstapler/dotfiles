@@ -1,0 +1,18 @@
+{
+  "packages": {
+    "gotgenes-pi-permission-system": {
+      "enabled": false,
+      "source": "git:github.com/tstapler/pi-extensions@6cbd813808f365457f092aa1998580617a883f82",
+      "extensions": [
+        "third-party/gotgenes-pi-packages/packages/pi-permission-system/src/index.ts"
+      ]
+    },
+    "gotgenes-pi-subagents": {
+      "enabled": false,
+      "source": "git:github.com/tstapler/pi-extensions@6cbd813808f365457f092aa1998580617a883f82",
+      "extensions": [
+        "third-party/gotgenes-pi-packages/packages/pi-subagents/src/index.ts"
+      ]
+    }
+  }
+}
