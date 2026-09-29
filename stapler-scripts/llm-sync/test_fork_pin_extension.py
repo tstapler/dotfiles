@@ -424,6 +424,81 @@ def test_fork_pin_extension_dry_run_matches_real_run_manifest_diff():
         assert replayed == persisted
 
 
+def test_run_subtree_import_without_subdir_fetches_upstream_directly():
+    """No monorepo scoping requested: fetch the upstream URL/commit as before."""
+    calls: list[list[str]] = []
+
+    def _fake_run_git(args, *, cwd=None):
+        calls.append(args)
+        if args[0] == "rev-parse":
+            return _FIXED_FORK_SHA
+        return ""
+
+    with patch.object(fork_pin_extension, "run_git", side_effect=_fake_run_git):
+        with tempfile.TemporaryDirectory() as tmp:
+            fork_pin_extension.run_subtree_import(
+                upstream="gotgenes/pi-packages",
+                upstream_commit=_FIXED_UPSTREAM_SHA,
+                entry_id="gotgenes-pi-packages",
+                workdir=Path(tmp),
+            )
+
+    fetch_calls = [c for c in calls if c[0] == "fetch"]
+    assert len(fetch_calls) == 1, calls
+    assert fetch_calls[0] == ["fetch", "https://github.com/gotgenes/pi-packages.git", _FIXED_UPSTREAM_SHA]
+    assert not any(c[0] == "subtree" and c[1] == "split" for c in calls), calls
+
+
+def test_run_subtree_import_with_subdir_splits_upstream_before_fetching():
+    """Monorepo scoping requested: split the subdir out of a full upstream
+
+    clone first, and fetch *that* filtered commit -- never the raw upstream
+    URL/commit directly -- so unrelated sibling packages under the same
+    upstream repo never enter pi-extensions. Regression test for the
+    `narumiruna/pi-extensions` fork attempt that pulled in an unrelated
+    package's test fixture and tripped a pre-push content-scanning hook.
+    """
+    calls: list[list[str]] = []
+    split_commit_sha = "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+
+    def _fake_run_git(args, *, cwd=None):
+        calls.append(args)
+        if args[0] == "subtree" and args[1] == "split":
+            return split_commit_sha
+        if args[0] == "rev-parse":
+            return _FIXED_FORK_SHA
+        return ""
+
+    with patch.object(fork_pin_extension, "run_git", side_effect=_fake_run_git):
+        with tempfile.TemporaryDirectory() as tmp:
+            fork_pin_extension.run_subtree_import(
+                upstream="narumiruna/pi-extensions",
+                upstream_commit=_FIXED_UPSTREAM_SHA,
+                entry_id="narumiruna-pi-plan-mode",
+                workdir=Path(tmp),
+                upstream_subdir="packages/pi-plan-mode",
+            )
+
+    # The raw upstream repo must never be fetched directly by URL -- only
+    # ever cloned in full (required for `subtree split` to see the whole
+    # history), then split, then fetched from the *local* split clone.
+    assert not any(
+        c[0] == "fetch" and c[1] == "https://github.com/narumiruna/pi-extensions.git"
+        for c in calls
+    ), calls
+
+    clone_calls = [c for c in calls if c[0] == "clone"]
+    assert any(c[1] == "https://github.com/narumiruna/pi-extensions.git" for c in clone_calls), calls
+
+    split_calls = [c for c in calls if c[0] == "subtree" and c[1] == "split"]
+    assert len(split_calls) == 1, calls
+    assert split_calls[0] == ["subtree", "split", "--prefix=packages/pi-plan-mode", _FIXED_UPSTREAM_SHA]
+
+    fetch_calls = [c for c in calls if c[0] == "fetch"]
+    assert len(fetch_calls) == 1, calls
+    assert fetch_calls[0][2] == "subtree-split"
+
+
 if __name__ == "__main__":
     tests = [value for key, value in list(globals().items()) if key.startswith("test_")]
     for test in tests:

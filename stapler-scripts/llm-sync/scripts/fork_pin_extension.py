@@ -111,7 +111,41 @@ def resolve_upstream_head(upstream: str) -> str:
     return sha
 
 
-def run_subtree_import(*, upstream: str, upstream_commit: str, entry_id: str, workdir: Path) -> str:
+def _split_upstream_subdir(
+    *, upstream: str, upstream_commit: str, upstream_subdir: str, workdir: Path
+) -> Path:
+    """Full-clone `upstream`, then `git subtree split` `upstream_subdir` at
+    `upstream_commit` into its own filtered, squashed-per-path history.
+
+    Required for a monorepo-shaped upstream: importing the whole fetched ref
+    (the pre-fix behavior) pulls in every unrelated package under the same
+    repo, including their test fixtures/docs — which is exactly how the
+    `narumiruna/pi-extensions` fork attempt tripped the repo's pre-push
+    content-scan hook on an unrelated sibling package's test fixture. `subtree
+    split` needs the *full* history of the paths involved, so this clones
+    `upstream` in full (no `--depth`) rather than fetching a single commit.
+    Returns the upstream clone's directory; the split commit is `FETCH_HEAD`-
+    fetchable from it by the caller via a local-path `git fetch`.
+    """
+    upstream_clone_dir = workdir / "upstream"
+    run_git(["clone", f"https://github.com/{upstream}.git", str(upstream_clone_dir)])
+    run_git(["checkout", upstream_commit], cwd=upstream_clone_dir)
+    split_commit = run_git(
+        ["subtree", "split", f"--prefix={upstream_subdir}", upstream_commit],
+        cwd=upstream_clone_dir,
+    )
+    run_git(["branch", "-f", "subtree-split", split_commit], cwd=upstream_clone_dir)
+    return upstream_clone_dir
+
+
+def run_subtree_import(
+    *,
+    upstream: str,
+    upstream_commit: str,
+    entry_id: str,
+    workdir: Path,
+    upstream_subdir: str | None = None,
+) -> str:
     """Subtree-import `upstream` at `upstream_commit` into `pi-extensions`.
 
     Clones `CONSOLIDATED_FORK_URL` into `workdir`, fetches the exact upstream
@@ -122,10 +156,25 @@ def run_subtree_import(*, upstream: str, upstream_commit: str, entry_id: str, wo
     (never `main` — a human still reviews/merges the diff), and returns the
     resulting commit SHA on `pi-extensions`. A thin, mockable wrapper — see
     `run_git`.
+
+    When `upstream_subdir` is given (a monorepo-shaped upstream — one
+    package among several under the same repo), `upstream_commit`'s full
+    tree is never imported directly: `_split_upstream_subdir` filters it down
+    to just that subdirectory's history first, and *that* filtered commit is
+    what gets fetched and subtree-added.
     """
     clone_dir = workdir / CONSOLIDATED_FORK_REPO_SLUG
     run_git(["clone", CONSOLIDATED_FORK_URL, str(clone_dir)])
-    run_git(["fetch", f"https://github.com/{upstream}.git", upstream_commit], cwd=clone_dir)
+    if upstream_subdir:
+        upstream_clone_dir = _split_upstream_subdir(
+            upstream=upstream,
+            upstream_commit=upstream_commit,
+            upstream_subdir=upstream_subdir,
+            workdir=workdir,
+        )
+        run_git(["fetch", str(upstream_clone_dir), "subtree-split"], cwd=clone_dir)
+    else:
+        run_git(["fetch", f"https://github.com/{upstream}.git", upstream_commit], cwd=clone_dir)
     prefix = f"third-party/{entry_id}"
     run_git(
         [
@@ -240,6 +289,7 @@ def _execute_fork(
     capability: str,
     upstream: str,
     upstream_commit: str | None,
+    upstream_subdir: str | None,
     fork_target: str,
     manifest_file: Path,
     raw_manifest: dict,
@@ -253,6 +303,7 @@ def _execute_fork(
                 upstream_commit=resolved_upstream_commit,
                 entry_id=entry_id,
                 workdir=Path(tmp),
+                upstream_subdir=upstream_subdir,
             )
     except CommandError as error:
         typer.echo(f"Error: {error}", err=True)
@@ -299,6 +350,15 @@ def fork(
         "--upstream-commit",
         help="Exact upstream commit/review-anchor to import (defaults to upstream's current HEAD)",
     ),
+    upstream_subdir: str = typer.Option(
+        None,
+        "--upstream-subdir",
+        help=(
+            "Subdirectory to import when upstream is a monorepo, e.g. "
+            "packages/pi-plan-mode. Filtered via `git subtree split` before "
+            "import, so unrelated sibling packages never enter pi-extensions."
+        ),
+    ),
     dry_run: bool = typer.Option(
         False, "--dry-run", help="Print the plan only: no git/network calls, no manifest write"
     ),
@@ -334,6 +394,7 @@ def fork(
         capability=capability,
         upstream=upstream,
         upstream_commit=upstream_commit,
+        upstream_subdir=upstream_subdir,
         fork_target=fork_target,
         manifest_file=manifest_file,
         raw_manifest=raw_manifest,
