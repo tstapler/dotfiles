@@ -15,16 +15,9 @@ console = Console()
 
 
 def _to_antigravity_hook_spec(entries: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """Convert Claude Code's per-event hook list into Antigravity's hooks.json shape.
-
-    Claude's settings.json represents each lifecycle event as a *list* of
-    {matcher, hooks} groups. Antigravity's plugin loader (jsonhook.JSONHookSpec,
-    confirmed empirically against a live agy 1.2.14 session — it fails with
-    "cannot unmarshal array into Go struct field .<Event> of type
-    jsonhook.JSONHookSpec" otherwise) expects a *single* {matcher, hooks} object
-    per event. Multiple Claude matcher groups collapse into one: matchers are
-    unioned (broadest one wins if any group is unscoped/"*"/".*"), and hook
-    commands are concatenated in order with exact duplicates removed.
+    """Antigravity wants one {matcher, hooks} object per lifecycle event; Claude
+    gives a list of {matcher, hooks} groups. Merge matchers (broadest wins) and
+    concatenate hooks in order, deduping exact repeats.
     """
     matchers: List[str] = []
     hooks: List[Dict[str, Any]] = []
@@ -53,9 +46,7 @@ class AntigravityPluginInstaller:
         self.target_dir = target_dir or Path.home() / ".gemini" / "config" / "plugins"
 
     def install_plugins(self, plugins: List[Plugin], dry_run: bool = False) -> int:
-        import subprocess
         import shutil
-        import tempfile
 
         installed = 0
         for plugin in plugins:
@@ -66,33 +57,41 @@ class AntigravityPluginInstaller:
                     f"[green]Installed Antigravity plugin '{plugin.name}' "
                     f"({count} items) -> {self.target_dir}[/green]"
                 )
-
-                # Check if 'agy' executable exists before running it
                 if shutil.which("agy"):
-                    # `agy plugin install <path>` copies FROM <path> into agy's own
-                    # plugin store and registers it in agy's import ledger (the step
-                    # that actually makes hooks/skills take effect — a plugin dropped
-                    # on disk without this never gets loaded). It refuses to run when
-                    # <path> already IS that plugin store (self.target_dir / name is
-                    # exactly that when target_dir is agy's own default), so hand it a
-                    # throwaway copy instead of the path we just wrote to.
-                    plugin_base = self.target_dir / plugin.name
-                    with tempfile.TemporaryDirectory(prefix="llm-sync-agy-") as staging:
-                        staging_path = Path(staging) / plugin.name
-                        shutil.copytree(plugin_base, staging_path)
-                        try:
-                            subprocess.run(
-                                ["agy", "plugin", "install", str(staging_path)],
-                                check=True,
-                                capture_output=True,
-                            )
-                            console.print(f"[green]Registered plugin '{plugin.name}' with agy[/green]")
-                        except subprocess.CalledProcessError as e:
-                            console.print(f"[red]Failed to register '{plugin.name}' with agy: {e.stderr.decode().strip()}[/red]")
+                    self._register_with_agy(plugin)
                 else:
                     console.print("[yellow]agy CLI not found in PATH; skipping registration[/yellow]")
 
         return installed
+
+    def _register_with_agy(self, plugin: Plugin) -> None:
+        """`agy plugin install <path>` refuses a path that's already its own
+        plugin store, so stage a throwaway copy of what we just wrote and hand
+        it that instead. Degrades per-plugin on failure — never aborts the loop.
+        """
+        import subprocess
+        import shutil
+        import tempfile
+
+        plugin_base = self.target_dir / plugin.name
+        try:
+            with tempfile.TemporaryDirectory(prefix="llm-sync-agy-") as staging:
+                staging_path = Path(staging) / plugin.name
+                shutil.copytree(plugin_base, staging_path)
+                subprocess.run(
+                    ["agy", "plugin", "install", str(staging_path)],
+                    check=True,
+                    capture_output=True,
+                    timeout=30,
+                )
+            console.print(f"[green]Registered plugin '{plugin.name}' with agy[/green]")
+        except subprocess.TimeoutExpired:
+            console.print(f"[red]Timed out registering '{plugin.name}' with agy after 30s[/red]")
+        except subprocess.CalledProcessError as e:
+            stderr = e.stderr.decode().strip() if e.stderr else ""
+            console.print(f"[red]Failed to register '{plugin.name}' with agy: {stderr}[/red]")
+        except OSError as e:
+            console.print(f"[red]Failed to stage '{plugin.name}' for agy registration: {e}[/red]")
 
     def _install_plugin(self, plugin: Plugin, dry_run: bool) -> int:
         plugin_base = self.target_dir / plugin.name
@@ -119,22 +118,26 @@ class AntigravityPluginInstaller:
                 f.write("\n")
         return 1
 
+    def _write_skill_markdown(
+        self, dest: Path, name: str, description: str, content: str, dry_run: bool
+    ) -> None:
+        frontmatter = {"name": name, "description": description}
+        fm_yaml = yaml.dump(frontmatter, sort_keys=False)
+        full_content = f"---\n{fm_yaml}---\n\n{content}"
+
+        if dry_run:
+            console.print(f"[blue]Would write Antigravity skill {dest}[/blue]")
+        else:
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_text(full_content, encoding="utf-8")
+
     def _install_skills(self, plugin_base: Path, plugin: Plugin, dry_run: bool) -> int:
         skills_base = plugin_base / "skills"
         for skill in plugin.skills:
             dest = skills_base / skill.name / "SKILL.md"
-            frontmatter = {
-                "name": skill.name,
-                "description": skill.description or f"Skill {skill.name}",
-            }
-            fm_yaml = yaml.dump(frontmatter, sort_keys=False)
-            content = f"---\n{fm_yaml}---\n\n{skill.content}"
-
-            if dry_run:
-                console.print(f"[blue]Would write Antigravity skill {dest}[/blue]")
-            else:
-                dest.parent.mkdir(parents=True, exist_ok=True)
-                dest.write_text(content, encoding="utf-8")
+            self._write_skill_markdown(
+                dest, skill.name, skill.description or f"Skill {skill.name}", skill.content, dry_run
+            )
         return len(plugin.skills)
 
     def _install_commands(self, plugin_base: Path, plugin: Plugin, dry_run: bool) -> int:
@@ -145,19 +148,10 @@ class AntigravityPluginInstaller:
             # Replace slashes with hyphens for flat skill naming structure
             normalized_name = cmd.name.replace("/", "-")
             dest = skills_base / normalized_name / "SKILL.md"
-            frontmatter = {
-                "name": normalized_name,
-                "description": cmd.description or f"Command {normalized_name}",
-            }
-            fm_yaml = yaml.dump(frontmatter, sort_keys=False)
             clean_content = self._strip_frontmatter(cmd.content)
-            content = f"---\n{fm_yaml}---\n\n{clean_content}"
-
-            if dry_run:
-                console.print(f"[blue]Would write Antigravity command skill {dest}[/blue]")
-            else:
-                dest.parent.mkdir(parents=True, exist_ok=True)
-                dest.write_text(content, encoding="utf-8")
+            self._write_skill_markdown(
+                dest, normalized_name, cmd.description or f"Command {normalized_name}", clean_content, dry_run
+            )
         return len(plugin.commands)
 
     def _install_hooks(self, plugin_base: Path, plugin: Plugin, dry_run: bool) -> int:
