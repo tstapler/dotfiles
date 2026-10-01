@@ -8,7 +8,7 @@ Drive PR `${1:-$(gh pr list --head $(git branch --show-current) --json number --
 
 ## State File
 
-All progress is tracked in `/tmp/pr-ship-${REPO_SLUG}-${BRANCH_SLUG}-${PR}.md`. Read it at the start of every iteration to understand what's already done. Update it after every action. This is your working memory across ScheduleWakeup wakeups.
+All progress is tracked in `/tmp/pr-ship-${REPO_SLUG}-${BRANCH_SLUG}-${PR}.md`. Read it at the start of every iteration to understand what's already done. Update it after every action. This is your working memory across loop iterations and polling-agent wakeups.
 
 **State file format** (initialize if missing):
 ```markdown
@@ -163,7 +163,7 @@ Then check:
 gh pr checks "$PR" --watch=false
 ```
 
-- **Pending/in_progress**: use `ScheduleWakeup` (see Pacing section) and stop. Do not mark gate.
+- **Pending/in_progress**: dispatch the CI-wait polling agent (see **Background Polling** below) and stop — do not `ScheduleWakeup`. Do not mark gate.
 - **All success**: check for any new PR review comments added since the push (re-run Gate 3 check). If new unresolved threads exist, reset Gate 3 to `[ ]` and loop. Otherwise mark Gate 4 `[x]`.
 - **Failing**: collect the logs:
   ```bash
@@ -172,7 +172,7 @@ gh pr checks "$PR" --watch=false
     --jq '.[] | select(.conclusion == "failure") | .databaseId'
   gh run view <RUN_ID> --log-failed
   ```
-  Delegate to a fresh agent with the exact error lines. Agent commits locally. Then re-run Gate 3 (address any new comments), then push again and set a ScheduleWakeup.
+  Delegate to a fresh agent with the exact error lines. Agent commits locally. Then re-run Gate 3 (address any new comments), then push again and dispatch a fresh CI-wait polling agent (see **Background Polling** below).
 
 ### Gate 5 — Merge Conflicts
 
@@ -224,16 +224,24 @@ Do NOT merge automatically — leave the final merge to the user.
 
 ---
 
-## Pacing with ScheduleWakeup
+## Background Polling — Cheap Model, Fresh Context
 
-`ScheduleWakeup` is for waits on **state this session cannot observe directly** — Gate 4's remote CI is the only such wait in this loop. It is never for waiting on Gate 1b's test run or Gate 2's review/fix agents: those are dispatched with the `Agent` tool from this same session, and the harness notifies this thread automatically when they return. Block on the `Agent` call's result instead of scheduling a wakeup to poll for it — a `ScheduleWakeup` fired while an `Agent` call you dispatched is still outstanding is always wrong, regardless of delay length.
+Gate 4's remote-CI wait is pure status polling with zero reasoning required. **Never use `ScheduleWakeup` for it** — it re-wakes *this* session, on *this* session's model, carrying the full accumulated gate-loop context, just to run `gh pr checks`. That's expensive and slow for no reason. It's also never the right tool for waiting on Gate 1b's test run or Gate 2's review/fix agents: those are dispatched with the `Agent` tool from this same session, and the harness notifies this thread automatically when they return — block on the `Agent` call's result instead.
 
-For Gate 4's remote CI wait only:
-- Pending < 2 min → `delaySeconds: 90`
-- Pending 2–10 min → `delaySeconds: 270`
-- Pending > 10 min → `delaySeconds: 600`
+Instead, for Gate 4's CI wait, dispatch a plain `Agent` call — no `subagent_type: "fork"` (a fork inherits this session's full context, which is exactly what polling doesn't need) — with `model: "haiku"`, the cheapest and fastest model available, since nothing here requires reasoning. End this turn; the agent's completion notification resumes the loop.
 
-Always pass `prompt: "/github:pr-ship <PR_NUMBER>"` so the loop re-enters and reads the state file (the repo/branch slug is re-derived from the live PR on each entry).
+**Polling agent prompt template** (keep it this terse — the agent doesn't need skill context, gate history, or the state file):
+```
+Repo: <owner>/<repo>. PR: <PR number>.
+Poll `gh pr checks "<PR>" --watch=false` on a loop until it exits something other than 8
+(0 = all passed, 1 = a check failed) or 90 minutes elapse, sleeping between attempts:
+< 2 min elapsed -> 90s; 2-10 min -> 270s; > 10 min -> 600s.
+Report back in under 80 words: the final state (resolved-pass / resolved-fail / timed-out)
+and, if failed, which check(s) and a one-line reason from the log. No narrative, no
+suggested fixes, no restating these instructions — just the verdict.
+```
+
+When the polling agent's report arrives, resume Gate 4 directly from its verdict — don't re-run `gh pr checks` yourself first. Only fall back to a direct check if the agent's report is ambiguous or incomplete.
 
 ---
 

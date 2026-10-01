@@ -7,7 +7,7 @@ prompt: |
 
   ## State File
 
-  All progress is tracked in `/tmp/pr-ship-${REPO_SLUG}-${BRANCH_SLUG}-${PR}.md`. Read it at the start of every iteration to understand what's already done. Update it after every action. This is your working memory across ScheduleWakeup wakeups.
+  All progress is tracked in `/tmp/pr-ship-${REPO_SLUG}-${BRANCH_SLUG}-${PR}.md`. Read it at the start of every iteration to understand what's already done. Update it after every action. This is your working memory across loop iterations and polling-agent wakeups.
 
   **State file format** (initialize if missing):
   ```markdown
@@ -164,7 +164,7 @@ prompt: |
   Decision:
   - **`COPILOT_REVIEWED == true`** → include Copilot's review comments in Gate 3 processing below (treat like any other reviewer).
   - **`COPILOT_REVIEWED == false` + `COPILOT_RATE_LIMITED == true`** → log "Copilot rate-limited — skipping Copilot review" in Decision Log and proceed to thread processing.
-  - **`COPILOT_REVIEWED == false` + `COPILOT_RATE_LIMITED == false`** → Copilot review is still pending. Use `ScheduleWakeup` with `delaySeconds: 90` and stop. Do **not** advance Gate 3. Log "Waiting for Copilot review" in Decision Log.
+  - **`COPILOT_REVIEWED == false` + `COPILOT_RATE_LIMITED == false`** → Copilot review is still pending. Dispatch the Copilot-wait polling agent (see **Background Polling** below) and stop — do **not** advance Gate 3, do **not** `ScheduleWakeup`. Log "Waiting for Copilot review — polling agent dispatched" in Decision Log.
 
   #### Thread Processing
 
@@ -196,7 +196,7 @@ prompt: |
   gh pr checks "$PR" --watch=false
   ```
 
-  - **Pending/in_progress**: use `ScheduleWakeup` (see Pacing section) and stop. Do not mark gate.
+  - **Pending/in_progress**: dispatch the CI-wait polling agent (see **Background Polling** below) and stop — do not `ScheduleWakeup`. Do not mark gate.
   - **All success**: re-run the Gate 3 staleness check using the **same shared script** `github-address-pr-comments` uses for thread fetching — this is the fix for a real incident where a bot comment landed after Gate 3's last check and the loop never re-polled GitHub because it trusted a stale "all green" state file:
     ```bash
     python3 ~/.claude/scripts/pr-threads.py summary \
@@ -212,7 +212,7 @@ prompt: |
       --jq '.[] | select(.conclusion == "failure") | .databaseId'
     gh run view <RUN_ID> --log-failed
     ```
-    Delegate to a fresh agent with the exact error lines. Apply the same Good Samaritan rule as Gate 1b: fix flaky or pre-existing CI failures too, not just failures caused by this PR's diff. Agent commits locally. Then re-run Gate 3 (address any new comments), then push again and set a ScheduleWakeup.
+    Delegate to a fresh agent with the exact error lines. Apply the same Good Samaritan rule as Gate 1b: fix flaky or pre-existing CI failures too, not just failures caused by this PR's diff. Agent commits locally. Then re-run Gate 3 (address any new comments), then push again and dispatch a fresh CI-wait polling agent (see **Background Polling** below).
 
   ### Gate 5 — Merge Conflicts
 
@@ -264,14 +264,26 @@ prompt: |
 
   ---
 
-  ## Pacing with ScheduleWakeup
+  ## Background Polling — Cheap Model, Fresh Context
 
-  When Remote CI checks are still running:
-  - Pending < 2 min → `delaySeconds: 90`
-  - Pending 2–10 min → `delaySeconds: 270`
-  - Pending > 10 min → `delaySeconds: 600`
+  Two waits in this loop are pure status polling with zero reasoning required: Gate 3's Copilot-review wait and Gate 4's remote-CI wait. **Never use `ScheduleWakeup` for either** — it re-wakes *this* session, on *this* session's model, carrying the full accumulated gate-loop context, just to run `gh pr checks` or check for a comment. That's expensive and slow for no reason. Instead, dispatch a plain `Agent` call — no `subagent_type: "fork"` (a fork inherits this session's full context, which is exactly what polling doesn't need) — with `model: "haiku"`, the cheapest and fastest model available, since nothing here requires reasoning. End this turn; the agent's completion notification resumes the loop.
 
-  Always pass `prompt: "/github:pr-ship <PR_NUMBER>"` so the loop re-enters and reads the state file (the repo/branch slug is re-derived from the live PR on each entry).
+  This is also strictly better than `ScheduleWakeup` on its own terms: `ScheduleWakeup` always re-enters by re-running `/github:pr-ship <PR_NUMBER>` from scratch (re-reading the state file, re-deriving the repo/branch slug), where a polling agent instead reports a verdict directly into this same conversation — one less round trip, and the only context cost is the agent's short report.
+
+  **Polling agent prompt template** (fill in the condition — keep it this terse, the agent doesn't need skill context, gate history, or the state file):
+  ```
+  Repo: <owner>/<repo>. PR: <PR number>.
+  Poll <condition command> on a loop until it resolves or <timeout> elapses, sleeping between
+  attempts: < 2 min elapsed -> 90s; 2-10 min -> 270s; > 10 min -> 600s.
+  Report back in under 80 words: the final state (resolved-pass / resolved-fail / timed-out)
+  and, if failed, which check(s) and a one-line reason from the log. No narrative, no
+  suggested fixes, no restating these instructions — just the verdict.
+  ```
+
+  - **Gate 3 Copilot wait** — condition: re-run the `COPILOT_REVIEWED`/`COPILOT_RATE_LIMITED` checks above until one flips true. Timeout: 15 minutes (Copilot review assignment is normally fast; past that, report timed-out so the orchestrator can log it as a MAJOR and proceed rather than blocking indefinitely).
+  - **Gate 4 CI wait** — condition: `gh pr checks "$PR" --watch=false` exits something other than `8` (`0` = all passed, `1` = a check failed). Timeout: 90 minutes — Bazel/Android CI can legitimately run that long; don't shorten this just to report back sooner.
+
+  When the polling agent's report arrives, resume the gate directly from its verdict — don't re-run the check yourself first. Only fall back to a direct check if the agent's report is ambiguous or incomplete.
 
   ---
 
