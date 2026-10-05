@@ -48,9 +48,19 @@ def _write_approved_entry(path: Path, notes: str) -> None:
     _write(path, {"extensions": {"narumiruna-pi-plan-mode": entry}})
 
 
-def test_tracked_manifest_file_parses_to_empty_extensions_registry():
+def test_tracked_manifest_file_parses_without_error():
+    # Regression coverage, not a content check: loading raises ManifestError
+    # on a malformed entry or on an "approved" entry missing its approver/
+    # evidence gate, so a clean load here is itself the signal. The id/
+    # disposition assertions just pin the known candidates so an id typo or
+    # an accidental silent approval shows up as a diff here too.
     manifest = ExtensionManifestSource.load(_TRACKED_MANIFEST)
-    assert manifest.entries == {}
+    assert set(manifest.entries) == {
+        "gotgenes-pi-packages",
+        "jmcombs-pi-1password",
+        "narumiruna-pi-extensions-plan-mode",
+    }
+    assert all(entry.disposition == "candidate" for entry in manifest.entries.values())
 
 
 def test_load_raises_on_entry_missing_required_field():
