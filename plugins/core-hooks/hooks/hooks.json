@@ -25,7 +25,7 @@
       "hooks": [
         {
           "type": "command",
-          "command": "kibitzer hook"
+          "command": "$HOME/.cargo/bin/kibitzer hook"
         }
       ]
     }
@@ -43,7 +43,7 @@
       "hooks": [
         {
           "type": "command",
-          "command": "kibitzer hook"
+          "command": "$HOME/.cargo/bin/kibitzer hook"
         }
       ]
     }
