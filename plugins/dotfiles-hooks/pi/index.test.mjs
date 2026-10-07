@@ -76,9 +76,10 @@ test("does not rewrite trivial, heredoc, or already wrapped commands", async () 
   assert.equal(await compactBashCommand(pi, "rtk git status"), "rtk git status");
 });
 
-test("registers Pi lifecycle hooks and blocks a PR lifecycle command once", async () => {
+test("registers Pi lifecycle hooks and advises once without blocking a PR lifecycle command", async () => {
   const handlers = new Map();
   const commands = new Map();
+  const notifications = [];
   const pi = {
     on(name, handler) { handlers.set(name, handler); },
     registerCommand(name, command) { commands.set(name, command); },
@@ -93,9 +94,15 @@ test("registers Pi lifecycle hooks and blocks a PR lifecycle command once", asyn
   assert.equal(commands.has("magic-compact"), true);
 
   const event = { toolName: "bash", input: { command: "gh pr merge 42" } };
-  const first = await handlers.get("tool_call")(event, { signal: undefined });
-  const second = await handlers.get("tool_call")(event, { signal: undefined });
-  assert.equal(first.block, true);
-  assert.match(first.reason, /review gate/i);
+  const context = {
+    signal: undefined,
+    ui: { notify(message, level) { notifications.push([message, level]); } },
+  };
+  const first = await handlers.get("tool_call")(event, context);
+  const second = await handlers.get("tool_call")(event, context);
+  assert.equal(first, undefined);
   assert.equal(second, undefined);
+  assert.equal(notifications.length, 1);
+  assert.match(notifications[0][0], /review gate/i);
+  assert.equal(notifications[0][1], "warning");
 });
