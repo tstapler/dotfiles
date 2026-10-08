@@ -111,7 +111,7 @@ export default function dotfilesHooks(pi: ExtensionAPI): void {
     const original = input.command;
     if (isPrLifecycleCommand(original) && !reviewGateSeen.has(original)) {
       reviewGateSeen.add(original);
-      return { block: true, reason: REVIEW_GATE };
+      ctx.ui.notify(REVIEW_GATE, "warning");
     }
 
     input.command = await compactBashCommand(pi, original, ctx.signal);
