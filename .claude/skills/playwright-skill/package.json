@@ -1,0 +1,12 @@
+{
+  "name": "playwright-skill",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Runner and helpers for the playwright-skill Claude Code skill",
+  "scripts": {
+    "setup": "npm install && npx playwright install chromium"
+  },
+  "dependencies": {
+    "playwright": "^1.55.0"
+  }
+}
