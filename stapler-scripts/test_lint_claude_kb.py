@@ -234,6 +234,45 @@ class BrokenFrontmatterKeyTests(unittest.TestCase):
             self.assertEqual(lint.check_broken_frontmatter_keys(p), [])
 
 
+class UnknownFrontmatterKeyTests(unittest.TestCase):
+    def _check(self, fm: str):
+        with tempfile.TemporaryDirectory() as d:
+            p = write(Path(d) / "SKILL.md", f"---\n{fm}---\nbody\n")
+            return lint.check_unknown_frontmatter_keys(p)
+
+    def test_documented_keys_are_clean(self):
+        self.assertEqual(self._check('name: x\ndescription: "y"\nallowed-tools: Bash\nwhen_to_use: z\nmetadata:\n  version: "1"\n'), [])
+
+    def test_tools_key_gets_allowed_tools_hint(self):
+        findings = self._check('name: x\ndescription: "y"\ntools:\n  - Bash\n')
+        self.assertEqual([f.check for f in findings], ["unknown-frontmatter-key"])
+        self.assertIn("allowed-tools", findings[0].detail)
+        self.assertEqual(findings[0].level, "error")
+
+    def test_version_key_is_flagged_with_metadata_hint(self):
+        findings = self._check('name: x\ndescription: "y"\nversion: 1.0.0\n')
+        self.assertIn("metadata", findings[0].detail)
+
+    def test_no_frontmatter_is_clean(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = write(Path(d) / "SKILL.md", "just body\n")
+            self.assertEqual(lint.check_unknown_frontmatter_keys(p), [])
+
+
+class RemovedBuiltinTests(unittest.TestCase):
+    def test_removed_command_is_flagged_with_line(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = write(Path(d) / "SKILL.md", "intro\nrun /pr-comments now\n")
+            findings = lint.check_removed_builtins(p)
+            self.assertEqual([(f.level, f.check) for f in findings], [("warn", "removed-builtin-command")])
+            self.assertIn("line 2", findings[0].detail)
+
+    def test_path_and_namespaced_lookalikes_are_clean(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = write(Path(d) / "SKILL.md", "see docs/vim/notes and /vim-plugin and git:/pr-comments\n")
+            self.assertEqual(lint.check_removed_builtins(p), [])
+
+
 class WindowsPathTests(unittest.TestCase):
     def test_backslash_path_is_flagged_with_line_number(self):
         text = "line one\nsee scripts\\helper.py for details\n"

@@ -56,9 +56,19 @@ https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices
                        BROKEN_FRONTMATTER_KEYS below if another one is found to
                        have the same failure mode.
 
+  unknown-frontmatter-key  a SKILL.md frontmatter key outside the fields documented at
+                       https://code.claude.com/docs/en/skills#frontmatter-reference
+                       (snapshot in SKILL_FRONTMATTER_KEYS, Claude Code 2.1.296) — Claude
+                       Code silently ignores it. Known mistakes get a specific fix hint
+                       (`tools:` is NOT a skill field — `allowed-tools:` is, and it
+                       pre-approves rather than restricts; `version:` etc. belong under
+                       `metadata:`). Skills only: agents and commands have their own sets.
+  removed-builtin-command  a body reference to a built-in slash command the docs list as
+                       removed (REMOVED_BUILTIN_COMMANDS). Warning.
+
 Exit code is nonzero iff any error-tier finding exists (name-mismatch,
-broken-skill-ref, oversized-no-split >500 lines, dangling-symlink, and the
-frontmatter-limit checks). missing-description, the 300-500 line
+broken-skill-ref, oversized-no-split >500 lines, dangling-symlink,
+unknown-frontmatter-key, and the frontmatter-limit checks). missing-description, the 300-500 line
 oversized-no-split tier, nested-references, and windows-path are warnings and
 do not fail the run.
 """
@@ -344,6 +354,44 @@ def check_broken_frontmatter_keys(path: Path) -> list[Finding]:
     ]
 
 
+# Skill frontmatter fields per the Claude Code docs (+ Agent Skills spec fields
+# `license`/`compatibility`/`metadata`). Re-sync with the `meta-claude-feature-audit`
+# skill after Claude Code upgrades — its scan.py parses the live docs table.
+SKILL_FRONTMATTER_KEYS = {
+    "name", "description", "when_to_use", "argument-hint", "arguments",
+    "disable-model-invocation", "user-invocable", "allowed-tools", "disallowed-tools",
+    "model", "effort", "context", "agent", "background", "hooks", "paths", "shell",
+    "metadata", "license", "compatibility",
+}
+UNKNOWN_KEY_HINTS = {
+    "tools": "not a skill field (agents use it); use `allowed-tools:` — note that pre-approves, not restricts",
+    "prompt": "not a skill field; put the instructions in the markdown body",
+}
+REMOVED_BUILTIN_COMMANDS = {"pr-comments", "ultraplan", "vim"}  # docs: commands.md, "Removed"
+REMOVED_CMD_RE = re.compile(r"(?<![\w:/.-])/(" + "|".join(REMOVED_BUILTIN_COMMANDS) + r")(?![\w-])")
+
+
+def check_unknown_frontmatter_keys(path: Path) -> list[Finding]:
+    """See `unknown-frontmatter-key` in the module docstring."""
+    fm = parse_frontmatter(path.read_text(encoding="utf-8", errors="replace"))
+    if not fm:
+        return []
+    return [
+        Finding("error", "unknown-frontmatter-key", path,
+                f"`{key}:` {UNKNOWN_KEY_HINTS.get(key, 'is ignored by Claude Code — move it under `metadata:` or delete it')}")
+        for key in fm if key not in SKILL_FRONTMATTER_KEYS
+    ]
+
+
+def check_removed_builtins(path: Path) -> list[Finding]:
+    text = path.read_text(encoding="utf-8", errors="replace")
+    return [
+        Finding("warn", "removed-builtin-command", path,
+                f"line {text.count(chr(10), 0, m.start()) + 1}: `/{m.group(1)}` was removed from Claude Code")
+        for m in REMOVED_CMD_RE.finditer(text)
+    ]
+
+
 def check_invalid_location(path: Path, skills_dir: Path) -> list[Finding]:
     """Claude Code's own spec is unambiguous: "Create Skills as directories
     with SKILL.md files. Claude discovers and uses them automatically" —
@@ -387,6 +435,7 @@ def main() -> int:
         findings += check_nested_references(path.parent)
         findings += check_invalid_location(path, SKILLS)
         findings += check_broken_frontmatter_keys(path)
+        findings += check_unknown_frontmatter_keys(path)
     for path, expected_id in iter_agent_files():
         findings += check_name_and_description(path, expected_id, is_agent=True)
 
@@ -410,6 +459,7 @@ def main() -> int:
     )
     for path in all_text_files:
         findings += check_broken_refs(path, valid_ids)
+        findings += check_removed_builtins(path)
         findings += check_windows_paths(path, path.read_text(encoding="utf-8", errors="replace"))
 
     errors = [f for f in findings if f.level == "error"]
