@@ -110,6 +110,12 @@ class SystemInfo:
     has_nvme: bool = False
     root_free_gb: float = 0.0
 
+    # Environment: containers share the host kernel (no bootloader to edit) and
+    # usually have an overlayfs root, which the kernel refuses as swap backing.
+    in_container: bool = False
+    root_is_overlay: bool = False
+    swap_dir: str = ""      # directory a swap file can live in ("" = nowhere suitable)
+
     # Kernel & distro
     kernel_version: str = ""
     kernel_major: int = 0
@@ -153,6 +159,49 @@ class SystemInfo:
     damon_reclaim_enabled: bool = False
 
 
+def _run_ok(*cmd: str) -> bool:
+    try:
+        return subprocess.run(cmd, capture_output=True).returncode == 0
+    except FileNotFoundError:
+        return False
+
+
+def _fstype(path: str) -> str:
+    try:
+        return subprocess.check_output(
+            ["findmnt", "-n", "-o", "FSTYPE", "-T", path], stderr=subprocess.DEVNULL, text=True
+        ).strip()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return ""
+
+
+# Mount points that hold container/system plumbing, not user data.
+_SWAP_DIR_SKIP = ("/etc", "/usr", "/logs", "/boot", "/var/lib/docker", "runc", "metatron")
+
+
+def _find_swap_dir(root_is_overlay: bool, needed_gb: int) -> str:
+    """Pick a directory whose filesystem can back a swap file.
+
+    A normal root works as-is ("/"). On an overlayfs root swapon fails with
+    EINVAL, so look for a real ext4/xfs/btrfs mount with room to spare.
+    """
+    if not root_is_overlay:
+        return "/"
+    try:
+        mounts = subprocess.check_output(
+            ["findmnt", "-rn", "-t", "ext4,xfs,btrfs", "-o", "TARGET"], text=True
+        ).splitlines()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return ""
+    for target in mounts:
+        if any(skip in target for skip in _SWAP_DIR_SKIP) or not Path(target).is_dir():
+            continue
+        st = os.statvfs(target)
+        if (st.f_bavail * st.f_frsize) / (1024 ** 3) > needed_gb * 2:
+            return target
+    return ""
+
+
 def _extract_bracket(raw: str) -> str:
     """Extract the [selected] option from a sysfs file like 'always [madvise] never'."""
     m = re.search(r"\[(.+?)\]", raw)
@@ -183,6 +232,10 @@ def detect() -> SystemInfo:
     # Disk space
     st = os.statvfs("/")
     info.root_free_gb = (st.f_bavail * st.f_frsize) / (1024 ** 3)
+
+    info.in_container = _run_ok("systemd-detect-virt", "--container", "--quiet")
+    info.root_is_overlay = _fstype("/") == "overlay"
+    info.swap_dir = _find_swap_dir(info.root_is_overlay, needed_gb=8)
 
     # Kernel version
     info.kernel_version = read_file("/proc/sys/kernel/osrelease")
