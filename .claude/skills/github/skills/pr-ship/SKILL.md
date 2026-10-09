@@ -412,4 +412,4 @@ prompt: |
 
 **Usage**: `/github:pr-ship` (current branch) or `/github:pr-ship 61`
 
-Gates run in order: local compile → local tests (scoped) → code review → **PR comments** → remote CI → merge conflicts. Push only happens at Gate 4, after all local work and reviewer feedback is incorporated. After CI passes, re-check for new comments before marking done. State tracked in `/tmp/pr-ship-<owner>-<repo>-<branch-slug>-<PR>.md`.
+Gates run in order: local compile → local tests (scoped) → code review → **PR comments** → remote CI → merge conflicts. Push only happens at Gate 4, after all local work and reviewer feedback is incorporated. After CI passes, re-check for new comments before marking done. To run unattended, set `/goal` first (e.g. `/goal PR <N> has all five gates checked in the state file and the state file contents printed, or stop after 8 turns`) — the evaluator only reads the transcript, so print the state file at the end of each iteration. A `## Hold` still needs your own message to clear; goal turns do not count as one. State tracked in `/tmp/pr-ship-<owner>-<repo>-<branch-slug>-<PR>.md`.
