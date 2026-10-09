@@ -2,7 +2,8 @@
 name: github-actions-authoring
 description: Use when writing, reviewing, or designing GitHub Actions workflows. Covers
   the full decision framework (composite actions vs reusable workflows), security
-  tooling (actionlint, zizmor, pinact), anti-patterns from real incident reviews, and
+  tooling (actionlint, zizmor, pinact), local testing with act before pushing,
+  anti-patterns from real incident reviews, and
   the long-term direction toward a CUE-based config generator.
 ---
 
@@ -136,6 +137,36 @@ updates:
       github-actions:
         patterns: ["*"]
 ```
+
+---
+
+## Test Locally Before Pushing
+
+Cheapest check first; each layer catches what the one above cannot:
+
+1. **`actionlint`** (above): syntax, expression types, `shellcheck` on `run:` blocks.
+2. **`act`** ([nektos/act](https://github.com/nektos/act), `brew install act`, needs a running Docker daemon): runs the real workflow steps in a container.
+3. **A draft PR** for everything `act` cannot reproduce (below).
+
+```bash
+act -l -W .github/workflows/ci.yml                 # list jobs
+act -n push -j <job>                               # dry run: validate only, no containers
+act push -j <job> -W .github/workflows/ci.yml \
+  -P ubuntu-latest=ghcr.io/catthehacker/ubuntu:act-latest \
+  --artifact-server-path /tmp/act-artifacts        # real run; artifact path lets upload-artifact steps succeed
+# Secrets and env: --secret-file .secrets --env-file .env  (gitignored, never committed)
+# Apple Silicon: containers are arm64 unless you add --container-architecture linux/amd64
+#   (matches hosted x86_64 runners, but emulated and slow)
+```
+
+**What it caught in practice:** `act` validates the workflow schema, so it rejected `${{ runner.temp }}` in a *job-level* `env` ("Unknown Variable Access runner") before a push; `runner` is only valid inside steps. It also ran the real e2e job end to end in a clean Linux container, which a script run on the host does not prove.
+
+**What it cannot tell you** (use a draft PR): OIDC/Workload Identity Federation auth, `pull_request_target` and `workflow_dispatch` input behavior, macOS/Windows runners, hosted-image tool versions, caches, `permissions:` enforcement, and race timing on slow shared runners. Guard deploy and secret-dependent jobs so they do not run under `act` (act sets an `ACT` env var per its docs; not verified here, so check `act` output once).
+
+**Make CI testable:**
+- Keep logic in scripts (`scripts/e2e.sh`) that run with plain `bash` on a laptop; keep the workflow to checkout, build, and `run: bash scripts/...`. Then `act` only has to prove the wiring.
+- Give scripts bounded readiness waits that fail fast when a service dies, fresh ports on retry, proxy-free bounded `curl`, and a log dump on any failure; those are the usual causes of "passes locally, fails on the runner".
+- Give each job a `timeout-minutes`, and upload logs as an artifact `if: failure()`.
 
 ---
 

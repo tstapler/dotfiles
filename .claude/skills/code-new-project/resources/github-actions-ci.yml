@@ -1,3 +1,6 @@
+# Test locally before pushing: `actionlint`, then
+# `act push -j <job> -P ubuntu-latest=ghcr.io/catthehacker/ubuntu:act-latest`
+# (see /github-actions-authoring). OIDC/WIF deploy and Neon jobs only run remotely.
 name: CI
 
 on:
