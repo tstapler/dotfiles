@@ -83,7 +83,7 @@ prompt: |
 
   To clear: rewrite the `Held on SHA` line under `## Hold` as `- Cleared (<user go-ahead | foreign push>, <ISO8601 UTC timestamp>, <live head SHA>) — was: held on <old SHA>, <reason>` (or delete the section), and add a Decision Log line. Do this **before** running any gate, so a later re-entry sees a cleared hold and does not stop again. A new escalation appends a fresh `Held on SHA` line.
 
-  If the state file doesn't exist, initialize it. Populate **Changed Files** once using:
+  **State initialization (Entry Check, before the hold check).** If the state file doesn't exist, initialize it. Populate **Changed Files** once using:
   ```bash
   gh pr diff "$PR" --name-only
   ```
