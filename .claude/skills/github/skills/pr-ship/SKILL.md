@@ -71,6 +71,8 @@ prompt: |
   gh pr view "$PR" --json number,title,state,mergeable,mergeStateStatus,headRefName,headRefOid,baseRefName
   ```
 
+  **Headless:** the `PR=` fallback above contains a command substitution that the headless template may deny. Require the PR number as an argument and use `PR="${1:?usage: <PR>}"` instead.
+
   `headRefOid` is the live (remote) head SHA used by the hold check below. Timestamps in the state file come from `date -u +%Y-%m-%dT%H:%M:%SZ`, which the headless template allows in exactly that form. When `GH_HOST` is set to a non-github.com host, add `--hostname "$GH_HOST"` to every `pr-threads.py` call (shown as `[--hostname <host>]` below); omit it on github.com.
 
   If the PR is already merged or closed, report that and stop.
@@ -291,6 +293,7 @@ prompt: |
   ```bash
   gh pr checks "$PR" --watch=false
   ```
+  Within 5 minutes of a push, "no checks reported" (`gh pr checks` exit `1`) means pending, not Failing.
 
   - **Pending/in_progress**: first rewrite `## Baseline` (head SHA = the pushed SHA, already in Push History as skill-made), then dispatch the CI-wait polling agent (see **Background Polling** below) and end your turn. Do not mark gate.
   - **All success**: re-run the Gate 3 staleness check using the **same shared script** `github-address-pr-comments` uses for thread fetching — this is the fix for a real incident where a bot comment landed after Gate 3's last check and the loop never re-polled GitHub because it trusted a stale "all green" state file:
