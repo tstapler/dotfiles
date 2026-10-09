@@ -91,7 +91,7 @@ gh run rerun <run-id> --failed
 ### Reproduce locally with `act`
 
 Before another push-and-wait cycle, run the failing job in a container:
-`act push -j <job> -W .github/workflows/ci.yml -P ubuntu-latest=ghcr.io/catthehacker/ubuntu:act-latest`.
+`act push -j <job> -W .github/workflows/ci.yml` (runner image pinned by digest in `.actrc`; never use a moving tag like `:act-latest`).
 It will not reproduce runner-only causes (OIDC, hosted image versions, slow-runner races, other OSes);
 if it passes locally but fails remotely, suspect those. Flags and limits: `/github-actions-authoring` → "Test Locally Before Pushing".
 

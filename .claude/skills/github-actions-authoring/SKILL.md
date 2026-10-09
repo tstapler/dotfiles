@@ -148,12 +148,23 @@ Cheapest check first; each layer catches what the one above cannot:
 2. **`act`** ([nektos/act](https://github.com/nektos/act), `brew install act`, needs a running Docker daemon): runs the real workflow steps in a container.
 3. **A draft PR** for everything `act` cannot reproduce (below).
 
+**Pin the runner image by digest, never `:act-latest`.** A moving tag makes a local pass or
+fail irreproducible and silently changes the toolchain under you. Commit the pin once in a
+repo-root `.actrc`, and bump it deliberately in its own commit (`docker buildx imagetools inspect <image>:<tag>`
+prints the current index digest; use the multi-arch index digest so arm64 and amd64 hosts both work):
+
+```
+# .actrc
+-P ubuntu-latest=ghcr.io/catthehacker/ubuntu@sha256:62d572b92f9f32d3427b6d220ad1f9dca9c7b6ffad37d295425037dbff78abaf
+--artifact-server-path /tmp/act-artifacts
+```
+
+(That digest is the `act-latest` image as of 2026-10-09: Ubuntu 24.04, linux/amd64 + linux/arm64.)
+
 ```bash
 act -l -W .github/workflows/ci.yml                 # list jobs
 act -n push -j <job>                               # dry run: validate only, no containers
-act push -j <job> -W .github/workflows/ci.yml \
-  -P ubuntu-latest=ghcr.io/catthehacker/ubuntu:act-latest \
-  --artifact-server-path /tmp/act-artifacts        # real run; artifact path lets upload-artifact steps succeed
+act push -j <job> -W .github/workflows/ci.yml      # real run; picks up .actrc
 # Secrets and env: --secret-file .secrets --env-file .env  (gitignored, never committed)
 # Apple Silicon: containers are arm64 unless you add --container-architecture linux/amd64
 #   (matches hosted x86_64 runners, but emulated and slow)
