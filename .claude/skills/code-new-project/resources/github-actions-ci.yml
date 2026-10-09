@@ -1,3 +1,7 @@
+# Test locally before pushing: `actionlint`, then
+# `act push -j <job>`, with the runner image pinned by digest in a committed
+# `.actrc`, never a moving tag (see /github-actions-authoring). OIDC/WIF deploy
+# and Neon jobs only run remotely.
 name: CI
 
 on:

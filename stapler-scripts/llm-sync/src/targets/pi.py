@@ -36,8 +36,24 @@ def _short_hash(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()[:8]
 
 
-def _normalize_skill_name(name: str) -> str:
-    """Convert a source name to a valid, stable Agent Skills identifier."""
+def _canonical_skill_name(name: str) -> str:
+    """Remove nested plugin layout directories from a Claude skill identity.
+
+    Claude plugins conventionally store a skill at
+    ``<plugin>/skills/<skill>/SKILL.md``.  ``ClaudeSource`` preserves that
+    on-disk path as (for example) ``sdd/skills/full``.  The intermediate
+    ``skills`` segment is packaging structure, not part of the invocation
+    name; retaining it makes Pi advertise the less discoverable
+    ``sdd-skills-full`` instead of ``sdd-full``.
+    """
+    parts = str(name).replace("\\", "/").split("/")
+    return "/".join(
+        part for index, part in enumerate(parts) if part != "skills" or index == 0
+    )
+
+
+def _normalize_name(name: str) -> str:
+    """Convert a name to a valid, stable Agent Skills identifier."""
     ascii_name = unicodedata.normalize("NFKD", str(name)).encode(
         "ascii", "ignore"
     ).decode("ascii")
@@ -54,6 +70,16 @@ def _normalize_skill_name(name: str) -> str:
     return normalized
 
 
+def _normalize_skill_name(name: str) -> str:
+    """Convert a source skill name to its Pi-facing identifier."""
+    return _normalize_name(_canonical_skill_name(name))
+
+
+def _legacy_normalize_skill_name(name: str) -> str:
+    """Return the Pi identifier emitted before plugin-layout normalization."""
+    return _normalize_name(name)
+
+
 def _flatten(name: str) -> str:
     """Flatten a namespaced command name for Pi's non-recursive prompts dir."""
     return name.replace("/", "-")
@@ -64,6 +90,10 @@ def _description_for_pi(description: str) -> str:
 
 
 class PiTarget(SyncTarget, SyncSource):
+    # Changing this invalidates only Pi skill state, forcing a safe one-time
+    # rewrite when the target's naming rules change.
+    _SKILL_NAMING_VERSION = "2"
+
     def __init__(self, agent_dir: Optional[Path] = None):
         base = agent_dir or Path.home() / ".pi" / "agent"
         self.skills_dir = base / "skills"
@@ -113,6 +143,13 @@ class PiTarget(SyncTarget, SyncSource):
         except Exception as e:
             console.print(f"[red]Error reading Pi item {item_file}: {e}[/red]")
         return None
+
+    def get_sync_hash(self, item, item_type: str) -> str:
+        """Version Pi skill state when its output layout changes."""
+        item_hash = item.get_hash()
+        if item_type == "skills":
+            return f"pi-skill-name-v{self._SKILL_NAMING_VERSION}:{item_hash}"
+        return item_hash
 
     def _pi_names(self, skills: List[Skill]) -> dict[int, str]:
         """Resolve normalized names and deterministically disambiguate collisions."""
@@ -195,6 +232,52 @@ class PiTarget(SyncTarget, SyncSource):
                 saved_count += 1
 
         return saved_count
+
+    def cleanup_legacy_skill_layout(
+        self, skills: List[Skill], dry_run: bool = False
+    ) -> int:
+        """Remove prior generated names after a naming-format migration.
+
+        Only remove a directory when its frontmatter proves it was generated
+        using the old name, and never when that name remains a current output.
+        """
+        valid_skills = [
+            skill for skill in skills if _description_for_pi(skill.description)
+        ]
+        pi_names = self._pi_names(valid_skills)
+        current_names = set(pi_names.values())
+        removed = 0
+
+        for skill in valid_skills:
+            old_name = _legacy_normalize_skill_name(skill.name)
+            new_name = pi_names[id(skill)]
+            if old_name == new_name or old_name in current_names:
+                continue
+
+            old_dir = self.skills_dir / old_name
+            old_file = old_dir / "SKILL.md"
+            new_file = self.skills_dir / new_name / "SKILL.md"
+            # State may have been updated by a separate --pi-dir run. Never
+            # delete a legacy output until the canonical replacement exists
+            # at this target location.
+            if not old_file.is_file() or not new_file.is_file():
+                continue
+            try:
+                metadata = yaml.safe_load(
+                    old_file.read_text(encoding="utf-8").split("---", 2)[1]
+                ) or {}
+            except (IndexError, OSError, yaml.YAMLError):
+                continue
+            if metadata.get("name") != old_name:
+                continue
+
+            if dry_run:
+                console.print(f"[blue]Would remove legacy Pi skill {old_dir}[/blue]")
+            else:
+                shutil.rmtree(old_dir)
+            removed += 1
+
+        return removed
 
     def save_commands(
         self, commands: List[Command], dry_run: bool = False, force: bool = False
