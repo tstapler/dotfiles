@@ -62,7 +62,7 @@ Deny rules win over allow rules.
   "permissions": {
     "allow": [
       "Read", "Grep", "Glob", "Agent",
-      "Edit(./**)",
+      "Edit(./**)", "Edit(//tmp/pr-ship-*)",
       "Bash(git status:*)", "Bash(git diff:*)", "Bash(git log:*)", "Bash(git reflog show:*)",
       "Bash(git fetch origin)",
       "Bash(git add:*)", "Bash(git commit:*)", "Bash(git rev-parse HEAD)",
@@ -70,6 +70,7 @@ Deny rules win over allow rules.
       "Bash(gh pr view:*)", "Bash(gh pr diff:*)", "Bash(gh pr checks:*)", "Bash(gh pr list:*)",
       "Bash(gh run list:*)", "Bash(gh run view:*)", "Bash(gh repo view:*)",
       "Bash(python3 ~/.claude/scripts/pr-threads.py:*)",
+      "Bash(date -u +%Y-%m-%dT%H:%M:%SZ)",
       "Bash(grep:*)", "Bash(tr:*)", "Bash(cut:*)", "Bash(echo:*)", "Bash(sleep:*)"
     ],
     "deny": [
@@ -96,6 +97,19 @@ Deny rules win over allow rules.
 - **`Write(...)` rules are inert.** Claude Code consults only `Edit(path)` and `Read(path)` for
   file permissions; a `Write(path)` rule is "accepted but never consulted" (it warns at startup).
   `Edit(...)` covers Write, so the template has no `Write` entries.
+- **State file in `/tmp`.** `Edit(./**)` is cwd-relative and does not cover `/tmp`; an
+  absolute path needs the `//` form (`Edit(//tmp/scratch.txt)` in the docs). The template
+  therefore adds the narrow `Edit(//tmp/pr-ship-*)`, which covers the state file
+  (`/tmp/pr-ship-<owner>-<repo>-<branch-slug>-<PR>.md`) and a commit-message file
+  (`/tmp/pr-ship-msg-<PR>.md`) for `git commit -F`. Write both with the Edit/Write tool, not
+  shell redirects. An interactive run is unaffected: it uses the normal edit prompts.
+- **`pr-threads.py` rule is literal text.** `Bash(python3 ~/.claude/scripts/pr-threads.py:*)`
+  matches the characters `~/.claude/...`, not the expanded home directory. The agent must
+  invoke it with the literal `~` form; an absolute path or `$HOME` matches nothing. To use an
+  absolute path instead, put that exact path in the rule and in the launcher prompt.
+- **`printf`, `date`, `export` are not in the docs' read-only set.** The skill's snippets use
+  `echo` instead of `printf`, and the template allows only the exact `date -u
+  +%Y-%m-%dT%H:%M:%SZ` form for timestamps.
 - **Path patterns** use gitignore syntax. `Edit(./**)` is relative to the current directory,
   so it allows edits anywhere under the checkout. A bare name like `Edit(.git)` matches at any
   depth. In a **deny** rule a single-segment directory pattern such as `.github/**` also matches
@@ -164,7 +178,8 @@ settings, token and checkout isolation contain them.
 - **In a git worktree `.git` is a file**, not a directory, so `Edit(.git/**)` does not match
   it; `Edit(.git)` does, but the real `.git` directory (shared config, hooks) lives outside
   the working directory. Use a fresh clone to avoid the ambiguity.
-- **Hold state in `/tmp`.** The Push History used by the hold-clear check is an untrusted
+- **Hold state in `/tmp`.** The hold records the live remote `headRefOid`, and local-only
+  commits never clear it. The Push History used by the hold-clear check is an untrusted
   local file; the skill also consults the checkout's reflog (`update by push` entries on
   `refs/remotes/origin/<branch>`), which exists only in the same checkout. If neither can
   be consulted, a hold is not auto-cleared.
@@ -187,6 +202,8 @@ escalate and hold**.
 | Gate 1b scoped test derivation (`sed`, `sort`, `xargs` pipelines) | `sed -i`, `sort -o` and `xargs` can write or run arbitrary commands | Run the stack's full test command if opted in; otherwise Tier 3 |
 | Gate 1a/1b build and test | Not allowed by default (runs repo code) | Opt in per stack, or Tier 3 |
 | `export GH_HOST=...` inside a command | Environment is set by the launcher | Set it before `claude -p` |
+| PR number defaulted from the current branch (`git branch --show-current`) | `git branch` is not allowed | Pass the PR number as the argument |
+| Closing Keyword Check's `sort`-based issue extraction | `sort` is not allowed (and `gh pr edit` is denied anyway) | Unavailable headless (see the closing-keyword row above) |
 | Raw `gh api` reads | Denied (see Notes) | Use `gh pr view --json` or `pr-threads.py` |
 | Ending the turn to wait for a polling agent | Under `claude -p` the process exits when the turn ends | Keep the polling agent in the foreground inside the invocation, or re-invoke from an external scheduler (see SKILL.md, Background Polling) |
 
