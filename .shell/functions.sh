@@ -168,6 +168,12 @@ function repo_dir {
   _repo_code_dir "$1"
 }
 
+# Print the canonical location of the shared experimental investigations repo.
+# This does not require the repo to be cloned.
+function experimental_dir {
+  repo_dir "https://git.netflix.net/tstapler/experimental.git"
+}
+
 # Clone a repo into ~/code/<host>/<owner>/<repo>, creating the host/owner
 # directories as needed, then cd into the new clone.
 function tyclone {

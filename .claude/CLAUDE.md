@@ -100,6 +100,7 @@ its own passive-voice examples).
 
 - New clones go under `~/code/<host>/<owner>/<repo>` (e.g. `~/code/github.com/tstapler/dotfiles`)
 - Use `tyclone <url>` (defined in `~/dotfiles/.shell/functions.sh`) to clone into that layout automatically; `repo_dir <url>` prints the resulting path without cloning
+- Put cross-project investigation writeups in Tyler's shared experimental repo. `experimental_dir` prints its canonical path (`~/code/git.netflix.net/tstapler/experimental`); clone it with `tyclone https://git.netflix.net/tstapler/experimental.git` if absent.
 - Existing repos outside this layout (e.g. `~/dotfiles` itself) are left in place — this convention only applies going forward, not as a retroactive migration
 
 ## Personal Notes (Logseq Wiki)
