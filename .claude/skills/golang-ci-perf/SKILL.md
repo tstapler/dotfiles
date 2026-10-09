@@ -20,6 +20,27 @@ Don't skip straight to `t.Parallel()`. A test suite that's slow because every te
 
 ---
 
+## Step 0 — Histogram + Amdahl (start here for architectural decisions)
+
+One package at a time, serially (concurrent suites inflate each other's per-test durations):
+
+```bash
+scripts/collect.sh mcp ./server/mcp -tags=integration -race   # writes /tmp/test-profile/<name>.*; prints report
+scripts/test-profile.py --json x.json --cpu x.cpu --bin x.test --time x.time   # re-run the report
+```
+
+Read the report in this order:
+1. **Duration histogram + Pareto** — is time concentrated (fix the top N) or diffuse (fix a shared helper)?
+2. **Serial fraction** — serial top-level tests are a hard floor on wall. `ceiling = 1 / serial_share`; if it's ~1.1×, more cores/`t.Parallel()` on the rest cannot help.
+3. **CPU cost classes** — `/usr/bin/time -l` tree CPU vs profiled CPU. Large unprofiled remainder = child processes (git, tmux) + compile/link. Low utilization = waiting, not computing, so use `-trace` / block profile (`golang-profiling` Step 8), not CPU pprof.
+4. **Amdahl table** — a class's share is only the ceiling if wall scales with CPU; discount by utilization.
+
+Caveats: per-test durations are inflated by contention (relative weights only); identical durations across many parallel tests mean they waited on one shared resource (lock, pool, migration mutex), not that each did that work.
+
+Then hand off: CPU-bound hotspot → `golang-profiling` (annotated tree) + `golang-performance` (decision tree, one change at a time); before/after claims → `golang-benchmark` (`benchstat`, `-count=6`); unexplained stalls/races → `golang-troubleshooting`.
+
+---
+
 ## Step 1 — Measure Before Fixing
 
 Never guess which test is slow — profile the test run itself first.
