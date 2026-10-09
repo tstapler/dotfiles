@@ -3,16 +3,16 @@ name: github-oss-readme
 description: Create, improve, or audit a GitHub project's README and open-source community-health files (LICENSE, CONTRIBUTING.md, CODE_OF_CONDUCT.md, issue/PR templates). Use when the user asks for a README, README quality/readability/accuracy/examples, or wants a repo's "open source credentials" / community-standards readiness checked. Do not use for full docs sites, API-reference-only work, or general code review.
 license: MIT
 compatibility: Agent Skills clients including Codex, OpenCode, Pi, Gemini CLI, and Claude Code.
-references:
-  - references/anatomy.md
-  - references/examples.md
-  - references/quality-checklist.md
-  - references/anti-patterns.md
-  - references/oss-credentials.md
 metadata:
   author: adewale (README modes) + tstapler (OSS-credentials extension)
   version: "0.2.0"
   upstream: https://github.com/adewale/good-readme
+  references:
+    - references/anatomy.md
+    - references/examples.md
+    - references/quality-checklist.md
+    - references/anti-patterns.md
+    - references/oss-credentials.md
 ---
 
 # github-oss-readme

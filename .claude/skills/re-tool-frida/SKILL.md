@@ -7,7 +7,7 @@ description: >
   hooks. NOTE: Direct Frida attachment to Wine processes crashes — use frida-gadget.dll
   injection instead (documented below).
   Called from code-reverse-engineering-binary (Phase 5) and code-re-qt5 (Phase 3c).
-tools:
+allowed-tools:
   - Bash
   - Read
   - Write

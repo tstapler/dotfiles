@@ -1,7 +1,8 @@
 ---
 name: composable-integrations
 description: This skill should be used when the user asks to design a plugin system, add an integration, create an extension point, compose providers, define a connector or adapter interface, use ConnectRPC for integrations, or design secure config.d-based integration discovery and lifecycle.
-version: 0.1.0
+metadata:
+  version: 0.1.0
 ---
 
 # Composable Integrations

@@ -6,7 +6,7 @@ description: >
   identification, per-section analysis, capability detection with capa, obfuscated
   string extraction with FLOSS, imphash, rich header fingerprinting, and .NET detection.
   Called from code-reverse-engineering-binary (Phase 1) and code-re-qt5 (Phase 1).
-tools:
+allowed-tools:
   - Bash
   - Read
   - Write

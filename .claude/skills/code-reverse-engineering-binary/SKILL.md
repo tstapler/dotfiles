@@ -6,7 +6,7 @@ description: >
   Use for: "analyze this DLL", "what does this EXE do", "decode this binary protocol",
   "trace Windows API calls", "find the network protocol", "reverse this file format",
   "hook send/recv on this process". For confirmed Qt5 targets, use code-re-qt5 instead.
-tools:
+allowed-tools:
   - Bash
   - Read
   - Write

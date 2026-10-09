@@ -7,7 +7,8 @@ description: >-
   LLM-powered pipelines. Covers context fundamentals, degradation patterns, optimization
   techniques (compaction, masking, caching), compression strategies, memory architectures,
   multi-agent patterns, LLM-as-Judge evaluation, tool design, and project development.
-version: 1.0.0
+metadata:
+  version: 1.0.0
 ---
 
 # Context Engineering

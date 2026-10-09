@@ -2,7 +2,8 @@
 name: pm-brand-strategy
 description: "Establish or iterate on the brand strategy and marketing direction for a project. Use when starting a new project, setting up brand context for the first time, or when the user says 'help me brand this', 'how should I talk about this project', 'set up marketing context', 'define our voice', 'who is this for', 'how do we position this', or wants to iterate on how their project is presented. Writes .claude/product-marketing-context.md which all other brand/design skills read automatically. Supports: Open Source Software, SaaS, Craft Sales."
 license: MIT
-source: adapted from https://github.com/alirezarezvani/claude-skills/tree/main/marketing-skill/marketing-context
+metadata:
+  source: adapted from https://github.com/alirezarezvani/claude-skills/tree/main/marketing-skill/marketing-context
 ---
 
 # Brand Strategy

@@ -8,16 +8,17 @@ description: >
   Never hand-edits at scale. Covers: rename, extract, inline, introduce-variable,
   change-signature, move. Triggers on: Core 6, Belshee, mechanical refactor, rename method,
   extract function, inline call, introduce variable, change signature, move class.
-triggers:
-  - "refactor"
-  - "rename"
-  - "extract function"
-  - "inline"
-  - "introduce variable"
-  - "change signature"
-  - "move symbol"
-  - "mechanical refactor"
-  - "core 6"
+metadata:
+  triggers:
+    - "refactor"
+    - "rename"
+    - "extract function"
+    - "inline"
+    - "introduce variable"
+    - "change signature"
+    - "move symbol"
+    - "mechanical refactor"
+    - "core 6"
 ---
 
 # Core 6 Mechanical Refactoring

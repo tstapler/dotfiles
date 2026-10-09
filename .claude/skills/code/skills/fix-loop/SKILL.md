@@ -1,7 +1,8 @@
 ---
-title: Fix Loop
 description: Run parallel minimal-context checks across all failure dimensions, fix everything found, and repeat until all pass or max iterations reached.
 arguments: [max_iterations]
+metadata:
+  title: Fix Loop
 ---
 
 # Fix Loop — Parallel Check → Fix → Repeat

@@ -2,8 +2,9 @@
 name: code-debugging
 description: Systematic debugging frameworks for finding and fixing bugs - includes root cause analysis, defense-in-depth validation, and verification protocols
 when_to_use: when encountering bugs, test failures, unexpected behavior, or needing to validate fixes before claiming completion
-version: 1.0.0
-languages: all
+metadata:
+  version: 1.0.0
+  languages: all
 ---
 
 # Debugging Skills

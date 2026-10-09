@@ -6,7 +6,7 @@ description: >
   Python 3 or Java), using FlatProgramAPI, recovering C++ types/vtables, running
   QtREAnalyzer, or generating JSON function output for downstream analysis.
   Called from code-reverse-engineering-binary (Phase 3) and code-re-qt5 (Phase 2).
-tools:
+allowed-tools:
   - Bash
   - Read
   - Write

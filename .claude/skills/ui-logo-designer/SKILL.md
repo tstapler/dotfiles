@@ -4,9 +4,10 @@ description: |
   Design and iterate on logos using SVG. Use this skill when the user asks to
   "create a logo", "design a logo", "make me a logo", "iterate on this logo",
   "logo for my project", or discusses logo design, branding icons, or wordmarks.
-version: 1.0.0
 license: MIT
-source: https://github.com/tstapler/logo-designer-skill (forked from neonwatty/logo-designer-skill)
+metadata:
+  version: 1.0.0
+  source: https://github.com/tstapler/logo-designer-skill (forked from neonwatty/logo-designer-skill)
 ---
 
 # Logo Designer

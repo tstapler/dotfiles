@@ -5,7 +5,7 @@ description: >
   running under Wine: WINEDEBUG relay logging, WineDbg, GDB attach to Wine process,
   observing file access, network connections, registry reads, DLL load order, or SEH.
   Called from code-reverse-engineering-binary (Phase 4) and code-re-qt5 (Phase 3).
-tools:
+allowed-tools:
   - Bash
   - Read
   - Write

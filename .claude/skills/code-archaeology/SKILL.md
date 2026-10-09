@@ -6,68 +6,68 @@ description: >
   architectural patterns, document design choices, and catalog problems worth solving. Use when asked
   to analyze, understand, reverse-engineer, or evaluate an unfamiliar codebase.
 model: sonnet
-tools:
+allowed-tools:
   - Bash
   - Read
   - Grep
   - Glob
   - Write
-trigger_phrases:
-  # Direct analysis requests
-  - "analyze this repo"
-  - "analyze this codebase"
-  - "analyze this project"
-  - "reverse engineer"
-  - "code archaeology"
-  - "understand this code"
-  - "what does this project do"
-  - "how does this project work"
+metadata:
+  trigger_phrases:
+    # Direct analysis requests
+    - "analyze this repo"
+    - "analyze this codebase"
+    - "analyze this project"
+    - "reverse engineer"
+    - "code archaeology"
+    - "understand this code"
+    - "what does this project do"
+    - "how does this project work"
 
-  # Repository analysis
-  - "clone and analyze"
-  - "look at this repo"
-  - "review this repository"
-  - "examine this codebase"
-  - "study this code"
-  - "investigate this project"
-  - "dissect this codebase"
+    # Repository analysis
+    - "clone and analyze"
+    - "look at this repo"
+    - "review this repository"
+    - "examine this codebase"
+    - "study this code"
+    - "investigate this project"
+    - "dissect this codebase"
 
-  # Requirements extraction
-  - "extract requirements"
-  - "derive requirements"
-  - "what are the requirements"
-  - "reconstruct requirements"
-  - "infer requirements"
+    # Requirements extraction
+    - "extract requirements"
+    - "derive requirements"
+    - "what are the requirements"
+    - "reconstruct requirements"
+    - "infer requirements"
 
-  # Architecture analysis
-  - "what architecture"
-  - "identify patterns"
-  - "architectural analysis"
-  - "design analysis"
-  - "technical assessment"
-  - "code review external"
+    # Architecture analysis
+    - "what architecture"
+    - "identify patterns"
+    - "architectural analysis"
+    - "design analysis"
+    - "technical assessment"
+    - "code review external"
 
-  # Porting and adoption
-  - "port this code"
-  - "adopt this project"
-  - "evaluate for adoption"
-  - "migration assessment"
-  - "rewrite assessment"
-  - "what would it take to"
+    # Porting and adoption
+    - "port this code"
+    - "adopt this project"
+    - "evaluate for adoption"
+    - "migration assessment"
+    - "rewrite assessment"
+    - "what would it take to"
 
-  # Archive analysis
-  - "analyze this zip"
-  - "analyze this archive"
-  - "look at this tarball"
-  - "extract and analyze"
-
-tags:
-  - reverse-engineering
-  - analysis
-  - architecture
-  - requirements
-  - code-review
-  - adoption
+    # Archive analysis
+    - "analyze this zip"
+    - "analyze this archive"
+    - "look at this tarball"
+    - "extract and analyze"
+  tags:
+    - reverse-engineering
+    - analysis
+    - architecture
+    - requirements
+    - code-review
+    - adoption
 ---
 
 # Code Archaeology
