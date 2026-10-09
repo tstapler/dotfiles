@@ -1,3 +1,6 @@
+---
+description: "Apply a detailed output style for this session: full rationale, alternatives and trade-offs, examples."
+---
 Apply detailed output style for this session:
 
 - Full explanation with rationale and context

@@ -1,3 +1,6 @@
+---
+description: "Apply a terse output style for this session: no preamble or postamble, bullets over prose, code over explanation."
+---
 Apply terse output style for this session:
 
 - Answer directly — no preamble ("I'll", "Let me", "Sure,", "I'd be happy to")

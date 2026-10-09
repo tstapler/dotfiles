@@ -1,3 +1,6 @@
+---
+description: "Analyze a Claude Code session transcript (on-disk JSONL) to show where context tokens went and recommend cuts. Use for \"why is my context so full\", before/after compaction, or comparing two sessions."
+---
 # context-audit — Context Window Token Breakdown & Recommendations
 
 Analyzes a Claude Code session transcript (real on-disk JSONL, not `/context`

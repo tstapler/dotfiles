@@ -1,3 +1,6 @@
+---
+description: "Configure, debug, or extend a Bazel 9 (Bzlmod) build for a Kotlin JVM project: MODULE.bazel, rules_kotlin, rules_jvm_external, Gazelle, toolchains, Maven lockfile."
+---
 # Bazel + Kotlin JVM Configuration (Bazel 9.x / Bzlmod)
 
 ## When to use this skill

@@ -1,3 +1,6 @@
+---
+description: "Write Confluence-compatible markdown for publishing via the markdown-confluence tool: syntax, frontmatter, directory structure. Use when creating markdown that will be synced to Confluence."
+---
 # Confluence Markdown Writing
 
 Write Confluence-compatible markdown for publishing via markdown-confluence tool. Covers syntax, frontmatter, directory structure, and Confluence-specific features.

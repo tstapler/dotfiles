@@ -1,3 +1,6 @@
+---
+description: "Generate a self-contained HTML Sankey diagram of Claude Code context window usage from /context output. Use when asked to visualize context usage."
+---
 # context-viz — Context Window Sankey Visualizer
 
 Generates a self-contained HTML artifact showing Claude Code context window usage as a Sankey diagram flowing from total capacity → categories → top sub-items.
