@@ -113,7 +113,11 @@ def sync_to_target(
     def get_changed(items: List, item_type: str):
         changed = []
         for item in items:
-            current_hash = item.get_hash()
+            current_hash = (
+                target.get_sync_hash(item, item_type)
+                if hasattr(target, "get_sync_hash")
+                else item.get_hash()
+            )
             last_hash = state_manager.get_hash('to-target', target_name, item_type, item.name)
             if change_detection is ChangeDetection.ALL or current_hash != last_hash:
                 changed.append(item)
@@ -140,7 +144,16 @@ def sync_to_target(
         s_saved = target.save_skills(changed_skills, dry_run=dry_run, force=True)
         counts.append(f"{s_saved} skills")
         if mode is not SyncMode.PREVIEW:
-            for s in changed_skills: state_manager.set_hash('to-target', target_name, 'skills', s.name, s.get_hash())
+            for s in changed_skills:
+                state_manager.set_hash(
+                    'to-target', target_name, 'skills', s.name,
+                    target.get_sync_hash(s, 'skills') if hasattr(target, "get_sync_hash") else s.get_hash(),
+                )
+
+    if hasattr(target, "cleanup_legacy_skill_layout"):
+        removed = target.cleanup_legacy_skill_layout(skills, dry_run=dry_run)
+        if removed:
+            counts.append(f"{removed} legacy skills removed")
 
     if changed_commands:
         c_saved = target.save_commands(changed_commands, dry_run=dry_run, force=True)
