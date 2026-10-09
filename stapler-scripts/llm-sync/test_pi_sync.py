@@ -69,7 +69,7 @@ def test_pi_writes_agent_skills_compatible_names_and_descriptions():
         paths = sorted((Path(tmp) / "skills").glob("*/SKILL.md"))
         assert {path.parent.name for path in paths} == {
             "academic-cv-builder",
-            "code-skills-fix-loop",
+            "code-fix-loop",
         }
         for path in paths:
             metadata = _frontmatter(path)
@@ -77,6 +77,42 @@ def test_pi_writes_agent_skills_compatible_names_and_descriptions():
             assert len(metadata["name"]) <= 64
             assert 1 <= len(metadata["description"]) <= 1024
             assert metadata["name"] == path.parent.name
+
+
+def test_pi_omits_plugin_skills_layout_segment_from_names():
+    with tempfile.TemporaryDirectory() as tmp:
+        target = PiTarget(agent_dir=Path(tmp))
+        target.save_skills(
+            [
+                Skill(
+                    name="sdd/skills/full",
+                    description="Runs the complete SDD workflow.",
+                    content="# SDD full",
+                )
+            ]
+        )
+
+        assert (Path(tmp) / "skills" / "sdd-full" / "SKILL.md").exists()
+        assert not (Path(tmp) / "skills" / "sdd-skills-full").exists()
+
+
+def test_pi_removes_only_proven_legacy_plugin_layout_output():
+    with tempfile.TemporaryDirectory() as tmp:
+        target = PiTarget(agent_dir=Path(tmp))
+        skill = Skill(
+            name="sdd/skills/full",
+            description="Runs the complete SDD workflow.",
+            content="# SDD full",
+        )
+        target.save_skills([skill])
+        legacy = Path(tmp) / "skills" / "sdd-skills-full"
+        legacy.mkdir(parents=True)
+        (legacy / "SKILL.md").write_text(
+            "---\nname: sdd-skills-full\ndescription: Old output.\n---\n\n# Old", encoding="utf-8"
+        )
+
+        assert target.cleanup_legacy_skill_layout([skill]) == 1
+        assert not legacy.exists()
 
 
 def test_pi_skips_skills_without_descriptions():
