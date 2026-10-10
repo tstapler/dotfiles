@@ -146,3 +146,7 @@ esac
 [[ ":$PATH:" != *":$HOME/.nopctl/bin:"* ]] && export PATH="$HOME/.nopctl/bin:${PATH}"
 [[ ":$PATH:" != *":$HOME/.nopctl/bin:"* ]] && export PATH="$HOME/.nopctl/bin:${PATH}"
 [[ ":$PATH:" != *":$HOME/.nopctl/bin:"* ]] && export PATH="$HOME/.nopctl/bin:${PATH}"
+
+
+# Added by Antigravity CLI installer
+export PATH="/home/tstapler/.local/bin:$PATH"

@@ -101,6 +101,7 @@ def test_llm_sync_deploy_prints_stale_pi_package_report_line() -> None:
             capture_output=True,
             text=True,
             timeout=60,
+            check=False,
         )
 
         assert result.returncode == 0, result.stdout + result.stderr
@@ -120,7 +121,7 @@ def test_bootstrap_llm_sync_reproduces_exact_stale_report_line() -> None:
 
         inner_command = "uv run " + " ".join(_main_py_args(root))
         wrapped = (
-            f'OUT=$({inner_command} 2>&1); CODE=$?; '
+            f"OUT=$({inner_command} 2>&1); CODE=$?; "
             f'printf "%s{_SHELL_CAPTURE_MARKER}%d" "$OUT" "$CODE"'
         )
 
@@ -130,12 +131,11 @@ def test_bootstrap_llm_sync_reproduces_exact_stale_report_line() -> None:
             capture_output=True,
             text=True,
             timeout=60,
+            check=False,
         )
 
         assert result.returncode == 0, result.stdout + result.stderr
-        captured_output, _, exit_code = result.stdout.rpartition(
-            _SHELL_CAPTURE_MARKER
-        )
+        captured_output, _, exit_code = result.stdout.rpartition(_SHELL_CAPTURE_MARKER)
 
         assert exit_code == "0", result.stdout
         assert _STALE_LINE in captured_output.splitlines()

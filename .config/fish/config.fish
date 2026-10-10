@@ -9,3 +9,7 @@ set PYENV_ROOT $HOME/.pyenv
 set -x PATH $PYENV_ROOT/shims $PYENV_ROOT/bin $PATH
 pyenv rehash
 status --is-interactive; and . (pyenv init - | psub)
+
+
+# Added by Antigravity CLI installer
+set -gx PATH "/home/tstapler/.local/bin" $PATH

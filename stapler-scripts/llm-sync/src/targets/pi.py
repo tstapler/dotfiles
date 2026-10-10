@@ -178,6 +178,16 @@ class PiTarget(SyncTarget, SyncSource):
         if source_file.name != "SKILL.md" or not source_file.parent.is_dir():
             return
 
+        # dirs_exist_ok only covers directory creation and overwriting files
+        # it can write to -- re-copying a stale symlink still raises
+        # FileExistsError (os.symlink never overwrites), and re-copying a
+        # read-only file (e.g. a bundled venv's 0444 activate script) raises
+        # PermissionError. Clear any previous copy first; SKILL.md is
+        # (re)written by the caller right after this returns, so dropping it
+        # here too is safe.
+        if skill_dir.exists():
+            shutil.rmtree(skill_dir)
+
         shutil.copytree(
             source_file.parent,
             skill_dir,

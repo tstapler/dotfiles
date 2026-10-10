@@ -76,9 +76,11 @@ Copy-paste-ready templates. Adjust section depth to match feature complexity.
 
 | Feature Size | PRD Depth | Sections Required |
 |-------------|----------|-------------------|
-| Small (< 1 day) | Lightweight | Problem, Solution, Scope, Stories |
-| Medium (1-5 days) | Standard | All sections, brief |
-| Large (1+ weeks) | Full | All sections, detailed + research |
+| Small (≤ 0.5M tokens) | Lightweight | Problem, Solution, Scope, Stories |
+| Medium (0.5-3M tokens) | Standard | All sections, brief |
+| Large (3M+ tokens) | Full | All sections, detailed + research |
+
+*(Token bands for LLM-executed work, per `~/.claude/skills/sdd/skills/ESTIMATION.md`; for human-executed work read these as < 1 day / 1-5 days / 1+ weeks.)*
 
 ## User Story Template
 

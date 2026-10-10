@@ -18,9 +18,11 @@ Transform high-level features into well-structured project documentation followi
 ### **AIC Framework (ATOMIC-INVEST-CONTEXT)**
 
 **Epic → Story → Task Hierarchy:**
-- **Epics**: Complete features or system components (weeks to months)
-- **Stories**: Cohesive functional units delivering standalone value (1-2 weeks)
-- **Tasks**: Atomic work units with strict context boundaries (1-4 hours)
+- **Epics**: Complete features or system components
+- **Stories**: Cohesive functional units delivering standalone value
+- **Tasks**: Atomic work units with strict context boundaries
+
+**Sizing units — who executes decides:** for work an LLM agent will execute (the default in this repo's SDD flow), size by *context and token cost*, never by human time: a task is one worker-agent run (3-5 files) with a cost class XS/S/M/L, a story is its tasks plus a ×1.5-2 verification multiplier, and calendar time comes only from wall-clock blockers (owner decisions, soak windows, device/CI runs). See `~/.claude/skills/sdd/skills/ESTIMATION.md`. The "1-4 hour" / "1-2 week" figures below apply only when a *human* will do the work.
 
 **Context Boundary Enforcement:**
 - Maximum 3-5 files per task
