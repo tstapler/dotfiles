@@ -176,6 +176,47 @@ def test_pi_copies_bundled_skill_resources():
         assert copied.read_text(encoding="utf-8") == "guide"
 
 
+def test_pi_resyncs_bundled_resources_over_a_stale_readonly_symlinked_copy():
+    # Regression for a real crash: shutil.copytree(dirs_exist_ok=True) still
+    # raises FileExistsError recreating a symlink that's already at the
+    # destination, and PermissionError overwriting a read-only file (both
+    # true of a typical venv's bin/ dir) -- so a second sync of an unchanged
+    # bundled-resource skill (force=True, as cli.py always passes for Pi)
+    # used to blow up every time instead of being a no-op.
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_path = Path(tmp)
+        source_dir = tmp_path / "source" / "venv-skill"
+        bin_dir = source_dir / "bin"
+        bin_dir.mkdir(parents=True)
+        source_file = source_dir / "SKILL.md"
+        source_file.write_text("source", encoding="utf-8")
+
+        real_python = tmp_path / "real-python"
+        real_python.write_text("#!/bin/sh\n", encoding="utf-8")
+        (bin_dir / "python").symlink_to(real_python)
+        activate = bin_dir / "activate"
+        activate.write_text("# activate\n", encoding="utf-8")
+        activate.chmod(0o444)
+
+        target = PiTarget(agent_dir=tmp_path / "pi")
+        skill = Skill(
+            name="Venv Skill",
+            description="Uses a bundled venv.",
+            content="# Venv Skill",
+            source_file=str(source_file),
+        )
+
+        # First sync creates the stale copy this test exercises re-syncing over.
+        target.save_skills([skill])
+        # force=True mirrors cli.py's save_skills(changed_skills, force=True)
+        # call -- every sync re-copies bundled resources, changed or not.
+        target.save_skills([skill], force=True)
+
+        dest_bin = tmp_path / "pi" / "skills" / "venv-skill" / "bin"
+        assert dest_bin.joinpath("python").is_symlink()
+        assert dest_bin.joinpath("activate").read_text(encoding="utf-8") == "# activate\n"
+
+
 if __name__ == "__main__":
     tests = [value for key, value in list(globals().items()) if key.startswith("test_")]
     for test in tests:
