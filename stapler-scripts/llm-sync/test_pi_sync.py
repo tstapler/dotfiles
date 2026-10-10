@@ -254,8 +254,6 @@ def test_pi_resyncs_bundled_resources_over_a_stale_readonly_symlinked_copy():
 
 
 if __name__ == "__main__":
-    tests = [value for key, value in list(globals().items()) if key.startswith("test_")]
-    for test in tests:
-        test()
-        print(f"ok  {test.__name__}")
-    print(f"\n{len(tests)} checks passed")
+    from _test_runner import run_tests
+
+    run_tests(globals())

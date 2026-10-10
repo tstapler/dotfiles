@@ -69,8 +69,6 @@ def test_legacy_toml_path_still_substitutes_args():
 
 
 if __name__ == "__main__":
-    tests = [v for k, v in list(globals().items()) if k.startswith("test_")]
-    for test in tests:
-        test()
-        print(f"ok  {test.__name__}")
-    print(f"\n{len(tests)} checks passed")
+    from _test_runner import run_tests
+
+    run_tests(globals())

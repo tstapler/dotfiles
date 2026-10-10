@@ -142,8 +142,6 @@ def test_bootstrap_llm_sync_reproduces_exact_stale_report_line() -> None:
 
 
 if __name__ == "__main__":
-    tests = [value for key, value in list(globals().items()) if key.startswith("test_")]
-    for test in tests:
-        test()
-        print(f"ok  {test.__name__}")
-    print(f"\n{len(tests)} checks passed")
+    from _test_runner import run_tests
+
+    run_tests(globals())

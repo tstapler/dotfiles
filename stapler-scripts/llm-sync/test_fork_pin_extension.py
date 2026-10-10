@@ -500,8 +500,6 @@ def test_run_subtree_import_with_subdir_splits_upstream_before_fetching():
 
 
 if __name__ == "__main__":
-    tests = [value for key, value in list(globals().items()) if key.startswith("test_")]
-    for test in tests:
-        test()
-        print(f"ok  {test.__name__}")
-    print(f"\n{len(tests)} checks passed")
+    from _test_runner import run_tests
+
+    run_tests(globals())
