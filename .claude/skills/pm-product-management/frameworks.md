@@ -15,7 +15,9 @@ Use these frameworks when ranking features, analyzing trade-offs, or deciding wh
 
 **Formula**: `RICE = (Reach x Impact x Confidence) / Effort`
 
-**Solo dev adaptation**: Use person-days for Effort. Reach can be "times I encounter this problem per week" for internal tools.
+**LLM-executed work**: score Effort by token cost class of the whole scope (1 = Small ≤0.5M tokens, 2 = Medium, 3 = Large, 4 = XL), not person-days; calendar time comes from wall-clock blockers. See `~/.claude/skills/sdd/skills/ESTIMATION.md`.
+
+**Solo dev adaptation** (human-executed work): Use person-days for Effort. Reach can be "times I encounter this problem per week" for internal tools.
 
 ### Scoring Process
 

@@ -61,7 +61,7 @@ Rate: `not-ready` / `needs-work` / `ready`
 
 ### Agent 3 — Engineering Lens
 Use the `project-coordinator` agent to assess:
-- Can this be broken into atomic 1-4h tasks?
+- Can this be broken into tasks that each fit one worker-agent run (3-5 files, cost class XS-M)? Is effort stated as price-weighted cost + agent waves + wall-clock blockers (see `~/.claude/skills/sdd/skills/ESTIMATION.md`), not human hours/weeks? Do not fail a plan for being large, "not fitting N weeks", or exceeding a budget — the owner pursues the full scope by default; judge only whether the estimate is coherent and the blockers are named. Do not recommend downscaling or ask the owner to.
 - Are technical dependencies identified?
 - Are there open bugs that block this feature?
 - Is the scope compatible with the current codebase architecture?

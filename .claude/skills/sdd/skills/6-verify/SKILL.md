@@ -260,7 +260,7 @@ with the unresolved list. Do not proceed to <next step>.
      code, and any pattern that will be painful to change in 6 months.
      Flag only things introduced in this diff — do not suggest out-of-scope changes.
      Diff: `<full diff>`"
-   - Output: prioritised list of refactors with estimated effort
+   - Output: prioritised list of refactors with estimated effort (token cost class, not human time; see ESTIMATION.md)
 
 5. **Wait for all Layer 1 and Layer 2 agents to complete.**
 
@@ -270,7 +270,7 @@ with the unresolved list. Do not proceed to <next step>.
    |---|---|
    | Any BLOCKER from architecture review | Enter repair loop |
    | ≥3 MUST FIX idiom findings in a single file | Enter repair loop |
-   | SUGGEST / CONCERN findings | Apply inline if <30 min total; otherwise note as follow-up |
+   | SUGGEST / CONCERN findings | Apply inline if the fixes fit one small worker run (cost class XS/S, see ESTIMATION.md); otherwise note as follow-up |
    | NITPICK findings | Note only; do not block |
 
    **Repair loop** — run only if BLOCKER or MUST FIX findings exist. Apply the repair loop

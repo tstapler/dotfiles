@@ -49,7 +49,7 @@ Do not discuss implementation approaches, technology choices, or architecture un
    - Problem statement (what breaks or is missing, for whom)
    - Baseline (what users do today without this)
    - Success metric (measurable behavior change — not "shipped")
-   - Appetite (time budget that constrains scope)
+   - Size (derive it, do NOT ask): the owner pursues the full scope by default and does not want downscaling questions ([ESTIMATION.md](../ESTIMATION.md) "Scope default"). Ask about appetite or cuts only if the owner has said they want to limit scope. Do ask what wall-clock blockers exist (owner decisions, soak windows, device/CI runs); never ask for a duration in weeks
 
    **Required unless clearly inferable from context:**
    - Hard constraints (deadline, compliance, performance target)
@@ -69,7 +69,7 @@ Do not discuss implementation approaches, technology choices, or architecture un
    - You have a problem statement (not a solution statement)
    - The baseline is captured so success can be measured against it
    - The success metric describes a behavior change, not just delivery
-   - Appetite is captured (the time budget that constrains scope)
+   - Size band is derived (informational) and wall-clock blockers are captured; no downscale question was asked
    - Alternatives, feasibility risks, and rabbit holes are captured
    - **Complexity score derived** — assign 1–4:
      - **1** = Bug fix or small refactor with Small appetite
@@ -99,9 +99,10 @@ Do not discuss implementation approaches, technology choices, or architecture un
 ## Success Metrics
 <measurable outcomes — tied to the baseline above: what changes, by how much, compared to what>
 
-## Appetite
-<Small (1–2 days) | Medium (1–2 weeks) | Large (3–6 weeks) | TBD>
-*(Scope must fit the appetite. If it doesn't fit, cut scope — do not move the deadline.)*
+## Size
+<Small (≤ 0.5M CU) | Medium (0.5–3M) | Large (3–15M) | XL (> 15M)> — informational estimate in price-weighted cost units for all agents incl. review/verify (bands INFERRED, see ESTIMATION.md). Full scope is the default; this is not a gate and not a question for the owner. Downscale only if the owner explicitly asks.
+
+**Wall-clock blockers** (owner decisions, soak/observation windows, device or CI runs, dependency branches awaiting merge): <list with owner, or "none">. These, not code, set the calendar.
 
 ## Constraints
 <hard constraints: deadlines, team size, budget>
