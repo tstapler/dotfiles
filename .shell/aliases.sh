@@ -1,7 +1,11 @@
-# Make some possibly destructive commands more interactive.
-alias rm="rm -i"
-alias mv="mv -i"
-alias cp="cp -i"
+# Make some possibly destructive commands more interactive. Skipped under Claude
+# Code (CLAUDECODE=1): its shell snapshot inherits aliases, and a y/n prompt with
+# no TTY hangs the agent's command forever.
+if [ -z "${CLAUDECODE:-}" ]; then
+  alias rm="rm -i"
+  alias mv="mv -i"
+  alias cp="cp -i"
+fi
  
 # Add some easy shortcuts for formatted directory listings
 alias ll="ls -lF"
