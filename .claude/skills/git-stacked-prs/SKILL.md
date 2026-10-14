@@ -169,6 +169,18 @@ git checkout feat/JIRA-123-db-schema
 gh pr ready <PR#>
 ```
 
+If `git machete github` cannot infer the repo (the remote URL is an alias or SSH host
+that differs from the GitHub host), set the four keys once per repo, then record PR
+numbers in `.git/machete` so `status` shows them:
+
+```bash
+git config machete.github.domain <github-host>
+git config machete.github.organization <org>
+git config machete.github.repository <repo>
+git config machete.github.remote origin
+git machete github anno-prs
+```
+
 ### PR description template
 
 Include in every PR:
@@ -238,6 +250,35 @@ Always push with:
 git push --force-with-lease origin <branch>
 ```
 
+### Fix a middle commit (one commit per branch)
+
+When each branch holds a single commit, commit the fix on top of the owning branch as a
+fixup, then fold it and move every branch above it:
+
+```bash
+git commit --fixup=<owning-commit> -- <files>      # stage specific files only
+GIT_SEQUENCE_EDITOR=true git rebase -i --autosquash --update-refs <base>
+```
+
+Then confirm with `git machete status` that the chain is still linear. Prefer
+`git machete traverse -WH` for syncing onto a moved main; use the raw rebase above only
+for the fold itself.
+
+### Fork-point warnings
+
+A yellow edge ("fork point probably incorrectly inferred") usually comes from backup
+branches in the reflog. Either delete them once the stack is verified, or pin the edge:
+
+```bash
+git machete fork-point --override-to-parent <branch>
+```
+
+### Delegating stack operations to subagents
+
+Subagents do not inherit this skill. When briefing one, paste the exact commands from
+this file; an improvised `git rebase --update-refs --onto` in the brief becomes the
+method, and `traverse`/`github` integration is silently skipped.
+
 ---
 
 ## After Squash-Merge (most common GitHub config)
@@ -298,7 +339,7 @@ git rebase --update-refs main
 git push --force-with-lease origin feat/layer-1 feat/layer-2 feat/layer-3
 ```
 
-Note: `--update-refs` only updates local branch pointers. It does NOT retarget GitHub PR bases — you still need `gh pr edit --base` per PR after pushing. Use as a supplement to git-machete, not a replacement.
+Note: `--update-refs` only updates local branch pointers. It does NOT retarget GitHub PR bases — you still need `gh pr edit --base` per PR after pushing. Use it for the fixup fold above or when machete is unavailable; for syncing onto a moved main use `git machete traverse -WH`.
 
 ---
 
