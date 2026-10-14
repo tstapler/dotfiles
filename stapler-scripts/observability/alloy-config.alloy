@@ -1,15 +1,19 @@
 // Scrapes stapler-squad's net/http/pprof endpoint (exposed only when the app
 // is run with --profile, default port 6060 — see docs/how-to/profile-lockups.md
 // in the stapler-squad repo) and forwards profiles to the local Pyroscope
-// server. Target is `localhost`, not `host.docker.internal`: the alloy
-// service runs with network_mode: host (see docker-compose.yml) because
-// stapler-squad's pprof server binds to loopback only, which
-// host.docker.internal (the bridge gateway IP) can't reach.
+// server. Target is host.docker.internal: on Docker Desktop for Mac it reaches
+// the app's loopback-only listener, whereas host networking does not (see
+// docker-compose.yml).
 pyroscope.scrape "stapler_squad" {
   targets = [
-    {"__address__" = "localhost:6060", "service_name" = "stapler-squad"},
+    {"__address__" = "host.docker.internal:6060", "service_name" = "stapler-squad"},
   ]
   forward_to = [pyroscope.write.local.receiver]
+
+  // The default timeout fails mutex/block/allocs with "failed to read body:
+  // context deadline exceeded" — the app serves these cumulative profiles slowly.
+  scrape_interval = "60s"
+  scrape_timeout  = "55s"
 
   // stapler-squad uses plain net/http/pprof (docs/how-to/profile-lockups.md),
   // not the github.com/grafana/pyroscope-go/godeltaprof handlers — so the
@@ -46,8 +50,6 @@ pyroscope.scrape "stapler_squad" {
 
 pyroscope.write "local" {
   endpoint {
-    // Compose service-name DNS ("pyroscope") isn't available under
-    // network_mode: host — reach it via its published port on localhost instead.
-    url = "http://localhost:4040"
+    url = "http://pyroscope:4040"
   }
 }
