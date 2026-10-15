@@ -261,8 +261,9 @@ GIT_SEQUENCE_EDITOR=true git rebase -i --autosquash --update-refs <base>
 ```
 
 Then confirm with `git machete status` that the chain is still linear. Prefer
-`git machete traverse -WH` for syncing onto a moved main; use the raw rebase above only
-for the fold itself.
+`git machete traverse -WH` for syncing onto a moved main when the local root branch is current;
+use the raw rebase above for the fold itself, and see "When `traverse` rebases onto a stale base"
+below when it is not.
 
 ### Fork-point warnings
 
@@ -272,6 +273,31 @@ branches in the reflog. Either delete them once the stack is verified, or pin th
 ```bash
 git machete fork-point --override-to-parent <branch>
 ```
+
+### When `traverse` rebases onto a stale base
+
+`traverse` rebases onto the local root branch (usually `main`). If the local root is behind
+`origin/main` and checked out in another worktree, nothing can fast-forward it from here, and
+`traverse` rebases onto the stale base and reports conflicts that upstream already resolved. Check
+`git rev-list --count main..origin/main`; if it is non-zero and you cannot fast-forward `main`,
+sync with a plain rebase onto the remote tip instead:
+
+```bash
+git fetch origin
+git rebase -i --autosquash --update-refs --onto origin/main <old-base> <tip-branch>
+# the rewrite resets inferred fork points: re-pin each edge
+git machete fork-point --override-to-parent <branch>
+```
+
+`<old-base>` is the `origin/main` commit the stack was last built on.
+
+### Branches checked out in other worktrees
+
+`--update-refs` and `traverse` cannot move a branch that is checked out in another worktree, and an
+aborted `traverse` can leave a worktree switched onto a stack branch. Run `git worktree list`
+before rebasing and again after an abort. If a stack branch is checked out elsewhere, inspect that
+worktree first (`git -C <path> status`); once you know it holds nothing to keep, free the branch with
+`git -C <path> switch --detach`, which moves HEAD only and leaves every file as it is.
 
 ### Delegating stack operations to subagents
 
