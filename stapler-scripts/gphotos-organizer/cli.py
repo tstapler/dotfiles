@@ -15,6 +15,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+import time
 from pathlib import Path
 from typing import List, Optional
 
@@ -30,7 +31,13 @@ from metadata import update_album_metadata
 from models import AlbumMapping, ScanResults
 from report import generate_markdown_report
 from scanner import scan_usb_drive
-from uploader import load_manifest, upload_album_to_gphotos, verify_rclone_remote
+from uploader import (
+    QuotaExceeded,
+    load_manifest,
+    seconds_until_quota_reset,
+    upload_album_to_gphotos,
+    verify_rclone_remote,
+)
 
 app = typer.Typer(
     name="gphotos-organizer",
@@ -408,12 +415,19 @@ def upload_cmd(
             logger.info(f"Skipping already uploaded album '{album.album_name}'")
             continue
 
-        ok, msg = upload_album_to_gphotos(
-            album,
-            remote_name=remote,
-            dry_run=dry_run,
-            manifest_path=manifest_file if apply else None,
-        )
+        while True:
+            try:
+                ok, msg = upload_album_to_gphotos(
+                    album,
+                    remote_name=remote,
+                    dry_run=dry_run,
+                    manifest_path=manifest_file if apply else None,
+                )
+                break
+            except QuotaExceeded:
+                wait = seconds_until_quota_reset()
+                logger.warning(f"Quota exceeded on '{album.album_name}'; sleeping {wait / 3600:.1f}h until reset, then retrying")
+                time.sleep(wait)
         if ok and apply:
             album.upload_status = "completed"
 
