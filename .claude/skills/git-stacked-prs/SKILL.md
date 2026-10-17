@@ -169,18 +169,6 @@ git checkout feat/JIRA-123-db-schema
 gh pr ready <PR#>
 ```
 
-If `git machete github` cannot infer the repo (the remote URL is an alias or SSH host
-that differs from the GitHub host), set the four keys once per repo, then record PR
-numbers in `.git/machete` so `status` shows them:
-
-```bash
-git config machete.github.domain <github-host>
-git config machete.github.organization <org>
-git config machete.github.repository <repo>
-git config machete.github.remote origin
-git machete github anno-prs
-```
-
 ### PR description template
 
 Include in every PR:
@@ -250,61 +238,6 @@ Always push with:
 git push --force-with-lease origin <branch>
 ```
 
-### Fix a middle commit (one commit per branch)
-
-When each branch holds a single commit, commit the fix on top of the owning branch as a
-fixup, then fold it and move every branch above it:
-
-```bash
-git commit --fixup=<owning-commit> -- <files>      # stage specific files only
-GIT_SEQUENCE_EDITOR=true git rebase -i --autosquash --update-refs <base>
-```
-
-Then confirm with `git machete status` that the chain is still linear. Prefer
-`git machete traverse -WH` for syncing onto a moved main when the local root branch is current;
-use the raw rebase above for the fold itself, and see "When `traverse` rebases onto a stale base"
-below when it is not.
-
-### Fork-point warnings
-
-A yellow edge ("fork point probably incorrectly inferred") usually comes from backup
-branches in the reflog. Either delete them once the stack is verified, or pin the edge:
-
-```bash
-git machete fork-point --override-to-parent <branch>
-```
-
-### When `traverse` rebases onto a stale base
-
-`traverse` rebases onto the local root branch (usually `main`). If the local root is behind
-`origin/main` and checked out in another worktree, nothing can fast-forward it from here, and
-`traverse` rebases onto the stale base and reports conflicts that upstream already resolved. Check
-`git rev-list --count main..origin/main`; if it is non-zero and you cannot fast-forward `main`,
-sync with a plain rebase onto the remote tip instead:
-
-```bash
-git fetch origin
-git rebase -i --autosquash --update-refs --onto origin/main <old-base> <tip-branch>
-# the rewrite resets inferred fork points: re-pin each edge
-git machete fork-point --override-to-parent <branch>
-```
-
-`<old-base>` is the `origin/main` commit the stack was last built on.
-
-### Branches checked out in other worktrees
-
-`--update-refs` and `traverse` cannot move a branch that is checked out in another worktree, and an
-aborted `traverse` can leave a worktree switched onto a stack branch. Run `git worktree list`
-before rebasing and again after an abort. If a stack branch is checked out elsewhere, inspect that
-worktree first (`git -C <path> status`); once you know it holds nothing to keep, free the branch with
-`git -C <path> switch --detach`, which moves HEAD only and leaves every file as it is.
-
-### Delegating stack operations to subagents
-
-Subagents do not inherit this skill. When briefing one, paste the exact commands from
-this file; an improvised `git rebase --update-refs --onto` in the brief becomes the
-method, and `traverse`/`github` integration is silently skipped.
-
 ---
 
 ## After Squash-Merge (most common GitHub config)
@@ -365,7 +298,7 @@ git rebase --update-refs main
 git push --force-with-lease origin feat/layer-1 feat/layer-2 feat/layer-3
 ```
 
-Note: `--update-refs` only updates local branch pointers. It does NOT retarget GitHub PR bases — you still need `gh pr edit --base` per PR after pushing. Use it for the fixup fold above or when machete is unavailable; for syncing onto a moved main use `git machete traverse -WH`.
+Note: `--update-refs` only updates local branch pointers. It does NOT retarget GitHub PR bases — you still need `gh pr edit --base` per PR after pushing. Use as a supplement to git-machete, not a replacement.
 
 ---
 
