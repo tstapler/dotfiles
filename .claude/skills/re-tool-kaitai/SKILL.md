@@ -7,10 +7,6 @@ description: >
   generating Python/Rust/C++ parsers, or debugging a failing parse.
   Called from code-reverse-engineering-binary (Phase 7) and code-re-qt5 (Phase 4–5).
   Current stable: Kaitai Struct v0.11 (2025).
-allowed-tools:
-  - Bash
-  - Read
-  - Write
 model: claude-sonnet-4-6
 ---
 

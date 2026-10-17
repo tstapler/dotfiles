@@ -10,16 +10,16 @@ Library-wide gap analysis: current docs vs. what our skills use. Produces a rank
 ## Phase 1 — Snapshot the docs
 
 ```bash
-~/.claude/skills/meta-claude-feature-audit/scripts/fetch-docs.sh /tmp/ccdocs
+~/.claude/skills/meta-claude-feature-audit/scripts/fetch-docs.sh   # prints the docs dir (a fresh mktemp -d); pass it to scan.py below
 claude --version   # record it; flag features newer than the installed version
 ```
 
-Downloads commands, skills, goal, hooks, sub-agents, workflows, scheduled-tasks, and the CHANGELOG to `/tmp/ccdocs`. Docs index for anything else: `https://code.claude.com/docs/llms.txt`.
+Downloads commands, skills, goal, hooks, sub-agents, workflows, scheduled-tasks, and the CHANGELOG to a fresh temp dir (path printed; pass a dir arg to override). Docs index for anything else: `https://code.claude.com/docs/llms.txt`.
 
 ## Phase 2 — Mechanical scan
 
 ```bash
-python3 -I ~/.claude/skills/meta-claude-feature-audit/scripts/scan.py ~/.claude/skills /tmp/ccdocs
+python3 -I ~/.claude/skills/meta-claude-feature-audit/scripts/scan.py ~/.claude/skills <docs_dir>
 ```
 
 Reports: frontmatter keys not in the docs (silently ignored), documented keys we never use, skills without a `description`, which built-ins skills reference, and skills with hand-rolled loop language. Valid keys and command names are parsed from the docs, so the report tracks them.

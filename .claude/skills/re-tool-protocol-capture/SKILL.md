@@ -7,10 +7,6 @@ description: >
   tshark (JSON output, decode-as, statistics), ngrep, USB capture, and TLS interception
   via ecapture for Wine targets.
   Called from code-reverse-engineering-binary (Phase 6) and code-re-qt5 (Phase 4).
-allowed-tools:
-  - Bash
-  - Read
-  - Write
 model: claude-sonnet-4-6
 ---
 
