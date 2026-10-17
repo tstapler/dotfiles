@@ -7,10 +7,6 @@ description: >
   Covers r2's command language: analysis (aa/aaa/avrr), info (ii/iS/iE/ir/iee/ic),
   search (/w /R /v4), type system (td/to/tp), r2pipe Python API, and radiff2.
   Called from code-reverse-engineering-binary and code-re-qt5 (Phase 1–2 deep analysis).
-allowed-tools:
-  - Bash
-  - Read
-  - Write
 model: claude-sonnet-4-6
 ---
 

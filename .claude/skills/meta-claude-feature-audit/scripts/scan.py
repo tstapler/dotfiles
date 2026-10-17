@@ -12,10 +12,18 @@ import sys
 
 skills_dir, docs_dir = map(pathlib.Path, sys.argv[1:3])
 
+for name in ("skills.md", "commands.md"):
+    if not (docs_dir / name).is_file():
+        sys.exit(f"scan.py: {docs_dir / name} not found; run fetch-docs.sh first")
 skills_doc = (docs_dir / "skills.md").read_text()
-fm_section = skills_doc.split("### Frontmatter reference", 1)[1].split("#### Using skill frontmatter", 1)[0]
+START, END = "### Frontmatter reference", "#### Using skill frontmatter"
+if START not in skills_doc or END not in skills_doc.split(START, 1)[-1]:
+    sys.exit(f"scan.py: skills.md is missing the '{START}' / '{END}' markers; docs layout changed, update scan.py")
+fm_section = skills_doc.split(START, 1)[1].split(END, 1)[0]
 valid_keys = set(re.findall(r"^\| `([a-z_-]+)` \|", fm_section, re.M))
 commands = sorted(set(re.findall(r"^\| `/([a-z][a-z-]*)", (docs_dir / "commands.md").read_text(), re.M)))
+if not valid_keys or not commands:
+    sys.exit(f"scan.py: parsed {len(valid_keys)} frontmatter keys and {len(commands)} commands; docs table format changed, update scan.py")
 LOOP_RE = re.compile(r"(?i)max (iterations|rounds)|loop until|until (green|clean|passing)|repeat until|poll(ing)? (every|until)")
 
 used = collections.Counter()

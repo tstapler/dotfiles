@@ -6,12 +6,6 @@ description: >
   architectural patterns, document design choices, and catalog problems worth solving. Use when asked
   to analyze, understand, reverse-engineer, or evaluate an unfamiliar codebase.
 model: sonnet
-allowed-tools:
-  - Bash
-  - Read
-  - Grep
-  - Glob
-  - Write
 metadata:
   trigger_phrases:
     # Direct analysis requests

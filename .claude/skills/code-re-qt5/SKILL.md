@@ -9,11 +9,6 @@ description: >
   network", "recover class names from this DLL", "decode this scanner file format", "write
   a Kaitai struct for this protocol", or any task combining Ghidra + QtREAnalyzer, Wine
   WINEDEBUG relay tracing, or Frida hooking against a Wine process.
-allowed-tools:
-  - Bash
-  - Read
-  - Write
-  - Edit
 model: claude-sonnet-4-6
 ---
 
