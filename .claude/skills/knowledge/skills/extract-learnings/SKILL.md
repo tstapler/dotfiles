@@ -16,9 +16,9 @@ This command captures what was learned in this session and writes durable instin
 
 ## Step 1: Extract Learnings
 
-Ask the user: **"What are the 3–7 most useful things you learned or confirmed in this session?"**
+**Default to deriving them from context; do not ask.** Only ask the user "What are the 3–7 most useful things you learned or confirmed in this session?" when the invocation is interactive *and* the conversation holds too little to go on. When called from another workflow (e.g. `/sdd:7-ship` step 7) or by an autonomous agent, never block on this question.
 
-If the user says "figure it out from context", review the conversation and identify:
+Review the conversation and identify:
 - Decisions made (and why)
 - Patterns confirmed or refuted
 - Tools/commands that worked well or poorly
@@ -54,13 +54,26 @@ Append to `~/.claude/MEMORY.md`:
 
 If project-specific learnings exist, append to the project memory file.
 
-Find the project memory path: `~/.claude/projects/<project-slug>/memory/MEMORY.md`
+Use the current project's memory directory (the one named in the session's auto-memory instructions, `~/.claude/projects/<project-slug>/memory/`), not a hard-coded slug.
 
-For the personal-wiki project: `~/.claude/projects/-Users-tylerstapler-Documents-personal-wiki/memory/MEMORY.md`
+Write one file per fact, with frontmatter, then add a one-line pointer to that directory's `MEMORY.md` index (index lines only, never content):
+
+```markdown
+---
+name: <short-kebab-case-slug>
+description: <one-line summary used to decide relevance>
+metadata:
+  type: project | feedback | reference | user
+---
+
+<the fact; for feedback/project add **Why:** and **How to apply:** lines>
+```
+
+Before writing, check for an existing file covering the same fact and update it instead of duplicating. Skip anything the repo already records (code, git history, CLAUDE.md).
 
 ## Step 5: Logseq Journal Entry (Optional)
 
-Ask: **"Add a session summary to today's Logseq journal? (y/n)"**
+Add the journal entry by default when the wiki repo exists; ask "Add a session summary to today's Logseq journal? (y/n)" only in an interactive run with no clear signal. Skip silently if `$(wiki_path)/logseq/journals` is missing.
 
 **Locating the Logseq library**: Default path is `~/Documents/personal-wiki/logseq`. A shell function `wiki_path` (in `~/.shell/functions.sh`) returns the wiki root; the logseq subdirectory is `$(wiki_path)/logseq`. Today's journal is at `$(wiki_path)/logseq/journals/$(date +%Y_%m_%d).md`.
 
@@ -75,12 +88,14 @@ If yes, append to the journal file:
 
 ## Step 6: Surface Wiki Candidates
 
-Ask: **"Any concepts from this session worth turning into a permanent Zettelkasten note?"**
-
-If yes, for each concept:
+Decide from context which concepts deserve a permanent note (ask only in an interactive run). For each one chosen:
 - Check if `logseq/pages/<Concept Name>.md` already exists
 - If missing, create a stub with `[[Needs Synthesis]]` tag
 - Use `/knowledge:create_zettle` or `/knowledge:synthesize-knowledge` in a fresh session to flesh it out
+
+## Unattended runs
+
+When invoked from another workflow, finish all steps without prompting, make the classification decisions yourself, and report in the Output format below. Stop for the user only on a genuinely blocking ambiguity (e.g. the memory directory cannot be determined).
 
 ## Output
 
