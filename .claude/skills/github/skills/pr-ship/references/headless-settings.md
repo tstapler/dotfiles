@@ -69,7 +69,7 @@ Deny rules win over allow rules.
       "Bash(git push origin HEAD)",
       "Bash(gh pr view:*)", "Bash(gh pr diff:*)", "Bash(gh pr checks:*)", "Bash(gh pr list:*)",
       "Bash(gh run list:*)", "Bash(gh run view:*)", "Bash(gh repo view:*)",
-      "Bash(python3 ~/.claude/scripts/pr-threads.py:*)",
+      "Bash(python3 ~/.claude/skills/github-address-pr-comments/scripts/pr-threads.py:*)",
       "Bash(date -u +%Y-%m-%dT%H:%M:%SZ)",
       "Bash(grep:*)", "Bash(tr:*)", "Bash(cut:*)", "Bash(echo:*)", "Bash(sleep:*)"
     ],
@@ -105,7 +105,7 @@ Deny rules win over allow rules.
   shell redirects. An interactive run is unaffected: it uses the normal edit prompts.
   On macOS `/tmp` resolves to `/private/tmp`, and an allow rule applies only when both the requested
   and the resolved path match, so the template also allows `Edit(//private/tmp/pr-ship-*)`.
-- **`pr-threads.py` rule is literal text.** `Bash(python3 ~/.claude/scripts/pr-threads.py:*)`
+- **`pr-threads.py` rule is literal text.** `Bash(python3 ~/.claude/skills/github-address-pr-comments/scripts/pr-threads.py:*)`
   matches the characters `~/.claude/...`, not the expanded home directory. The agent must
   invoke it with the literal `~` form; an absolute path or `$HOME` matches nothing. To use an
   absolute path instead, put that exact path in the rule and in the launcher prompt.

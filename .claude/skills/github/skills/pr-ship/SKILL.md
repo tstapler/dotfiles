@@ -135,7 +135,7 @@ prompt: |
   When re-entered (loop, polling-agent verdict, or an external wakeup), do not re-run every gate blindly. Cheaply compare live state to `## Baseline` in the state file:
   ```bash
   gh pr view "$PR" --json headRefOid,comments,reviews,statusCheckRollup,mergeable,mergeStateStatus
-  python3 ~/.claude/scripts/pr-threads.py summary --owner "$OWNER" --repo "$REPO_NAME" --pr "$PR" [--hostname <host>]   # unresolved_count
+  python3 ~/.claude/skills/github-address-pr-comments/scripts/pr-threads.py summary --owner "$OWNER" --repo "$REPO_NAME" --pr "$PR" [--hostname <host>]   # unresolved_count
   ```
   If every baseline field matches — head SHA, latest comment/review IDs, failing-check names, pending-check names, `mergeable`/`mergeStateStatus`, unresolved-thread count — and no gate is pending a poll verdict, log "no change" in the Decision Log and take no action. If you were waiting on CI or Copilot, re-dispatch the polling agent with the next backoff step as its starting interval (see Background Polling). Any difference re-opens the affected gate: new push, new comment/review, a changed failing set, a check moving **pending to green or failed** (re-open Gate 4), a `mergeable`/`mergeStateStatus` change (re-open Gate 5), or an unresolved-thread count change (re-open Gate 3). Rewrite `## Baseline` at the end of every iteration.
 
@@ -265,7 +265,7 @@ prompt: |
   #### Thread Processing
 
   Use the `github-address-pr-comments` skill (`~/.claude/skills/github-address-pr-comments/SKILL.md`) to:
-  1. Fetch all unresolved threads (single GraphQL call) — via the shared `~/.claude/scripts/pr-threads.py fetch` script, the same one Gate 4's staleness re-check and `/code:review` use, so all three stay in sync on one aggregation implementation instead of drifting.
+  1. Fetch all unresolved threads (single GraphQL call) — via the shared `~/.claude/skills/github-address-pr-comments/scripts/pr-threads.py fetch` script, the same one Gate 4's staleness re-check and `/code:review` use, so all three stay in sync on one aggregation implementation instead of drifting.
   2. For each thread: fix/decline/defer per decision rules below
   3. Reply + resolve each thread
   4. Commit any code changes locally (do NOT push yet — push happens in Gate 4)
@@ -298,7 +298,7 @@ prompt: |
   - **Pending/in_progress**: first rewrite `## Baseline` (head SHA = the pushed SHA, already in Push History as skill-made), then dispatch the CI-wait polling agent (see **Background Polling** below) and end your turn. Do not mark gate.
   - **All success**: re-run the Gate 3 staleness check using the **same shared script** `github-address-pr-comments` uses for thread fetching — this is the fix for a real incident where a bot comment landed after Gate 3's last check and the loop never re-polled GitHub because it trusted a stale "all green" state file:
     ```bash
-    python3 ~/.claude/scripts/pr-threads.py summary \
+    python3 ~/.claude/skills/github-address-pr-comments/scripts/pr-threads.py summary \
       --owner "$OWNER" --repo "$REPO_NAME" --pr "$PR" \
       --since "<Gate 3 last verified timestamp from state file>" \
       [--hostname <enterprise-host-if-applicable>]
