@@ -12,28 +12,96 @@
 # inherits a dirty state. https://github.com/anthropics/claude-code/issues/10375
 printf '\e[?1004l\e[?1000l\e[?1002l\e[?1003l\e[?1006l'
 
-# Check if zplug is installed
-if [[ ! -d ~/.zplug ]]; then
-  # Ignore the system .gitconfig in case it tries to force SSH
-  GIT_CONFIG_NOSYSTEM=1 git clone https://github.com/tstapler/zplug $HOME/.zplug
-fi
-
-
+# Plugins are sourced straight from the zplug checkout (~/.zplug/repos) in a
+# fixed order instead of running `zplug check`/`zplug load` on every shell,
+# which cost ~1s of forks and flock. Anything missing falls back to the full
+# zplug flow below; `zplug` (install/update/...) is loaded on first use.
 export ZPLUG_LOADFILE=$HOME/.zplug_packages.zsh
-source $HOME/.zplug/init.zsh
+_zp=$HOME/.zplug/repos
+_zp_plugins=(
+  $_zp/willghatch/zsh-hooks/zsh-hooks.plugin.zsh
+  $_zp/zsh-users/zsh-completions/zsh-completions.plugin.zsh
+  $_zp/Tarrasch/zsh-autoenv/autoenv.plugin.zsh
+  $_zp/zsh-users/zaw/zaw.plugin.zsh
+  $_zp/robbyrussell/oh-my-zsh/lib/completion.zsh
+  $_zp/robbyrussell/oh-my-zsh/plugins/kubectl/kubectl.plugin.zsh
+  $_zp/robbyrussell/oh-my-zsh/lib/functions.zsh
+  $_zp/robbyrussell/oh-my-zsh/plugins/aws/aws.plugin.zsh
+  $_zp/aswitalski/oh-my-zsh-sensei-git-plugin/sensei-git.plugin.zsh
+  $_zp/robbyrussell/oh-my-zsh/lib/git.zsh
+  $_zp/robbyrussell/oh-my-zsh/plugins/git/git.plugin.zsh
+  $_zp/djui/alias-tips/alias-tips.plugin.zsh
+  $_zp/robbyrussell/oh-my-zsh/plugins/asdf/asdf.plugin.zsh
+  $_zp/tarruda/zsh-autosuggestions/zsh-autosuggestions.plugin.zsh
+  $_zp/zsh-users/zsh-syntax-highlighting/zsh-syntax-highlighting.plugin.zsh
+  $_zp/zsh-users/zsh-history-substring-search/zsh-history-substring-search.plugin.zsh
+  $_zp/romkatv/powerlevel10k/powerlevel10k.zsh-theme
+  $_zp/romkatv/powerlevel10k/powerlevel9k.zsh-theme
+)
 
-# Install packages that have not been installed yet
-if ! zplug check --verbose; then
-    printf "Install? [y/N]: "
-    if read -q; then
-        echo; zplug install
-    else
-        echo
-    fi
+_zp_ok=1
+for _zp_file in $_zp_plugins; do [[ -r $_zp_file ]] || { _zp_ok=0; break; }; done
+
+if (( _zp_ok )); then
+  # Same ZSH/ZSH_CACHE_DIR zplug exports before loading oh-my-zsh files
+  export ZSH=$_zp/robbyrussell/oh-my-zsh ZSH_CACHE_DIR=$_zp/robbyrussell/oh-my-zsh/cache/
+  path=($HOME/.zplug/bin $path)
+  fpath=($_zp/zsh-users/zsh-completions/src $ZSH/plugins/httpie $HOME/.zplug/misc/completions $fpath)
+
+  # zplug exports these from .zplug_packages.zsh on every load
+  case $CPUTYPE in x86_64) ARCHITECTURE_NAME=amd64 ;; *) ARCHITECTURE_NAME=$CPUTYPE ;; esac
+  export ARCHITECTURE_NAME PLATFORM_ARCHITECTURE_GLOB="*${OSTYPE%%[-0-9.]*}*$ARCHITECTURE_NAME*"
+
+  # One compinit: trust the dump (-C) and rebuild it at most once a day
+  autoload -Uz compinit
+  _zp_dump=( $HOME/.zplug/zcompdump(N.mh-24) )
+  if (( $#_zp_dump )); then compinit -C -d $HOME/.zplug/zcompdump; else compinit -d $HOME/.zplug/zcompdump; fi
+  unset _zp_dump
+
+  # git.plugin.zsh forks `git version` on every shell (~0.26s under endpoint-security
+  # exec scans); answer it from a cache keyed on the git binary instead.
+  () {
+    local exe=${commands[git]} dir=${XDG_CACHE_HOME:-$HOME/.cache}/shell-eval; local -A st
+    [[ -n $exe ]] && zmodload -F zsh/stat b:zstat && zstat -H st -- $exe || return
+    local f=$dir/git-version.${st[mtime]}-${st[size]}
+    [[ -s $f ]] || { mkdir -p $dir && command git version >| $f 2>/dev/null || return; }
+    _zp_git_version=$(<$f)
+    git() { if [[ $1 == version ]]; then print -r -- $_zp_git_version; else command git "$@"; fi }
+  }
+
+  # zplug sent plugin stderr to its own log; keep shells quiet the same way
+  for _zp_file in $_zp_plugins; do source $_zp_file 2>/dev/null; done
+  (( $+functions[git] )) && unfunction git
+  unset _zp_git_version
+  setopt prompt_subst  # zplug does this when loading a theme
+
+  zplug() {
+    unfunction zplug
+    source $HOME/.zplug/init.zsh && zplug "$@"
+  }
+else
+  # Check if zplug is installed
+  if [[ ! -d ~/.zplug ]]; then
+    # Ignore the system .gitconfig in case it tries to force SSH
+    GIT_CONFIG_NOSYSTEM=1 git clone https://github.com/tstapler/zplug $HOME/.zplug
+  fi
+
+  source $HOME/.zplug/init.zsh
+
+  # Install packages that have not been installed yet
+  if ! zplug check --verbose; then
+      printf "Install? [y/N]: "
+      if read -q; then
+          echo; zplug install
+      else
+          echo
+      fi
+  fi
+
+  # Then, source plugins and add commands to $PATH
+  zplug load
 fi
-
-# Then, source plugins and add commands to $PATH
-zplug load
+unset _zp _zp_plugins _zp_ok _zp_file
 
 # Load the zshell mv module
 autoload -U zmv
@@ -98,7 +166,7 @@ export ZPLUG_FILTER=fzy:fzf-tmux:fzf:peco:percol:zaw
 
 # pathadd is defined in ~/.shell/exports.sh (sourced below).
 
-if [[ -x "/home/linuxbrew/.linuxbrew/bin/brew" ]]; then
+if [[ $OSTYPE == linux* && -x "/home/linuxbrew/.linuxbrew/bin/brew" ]]; then
     eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 fi
 
@@ -106,7 +174,9 @@ fi
 source $HOME/.shell/languages.sh
 
 if hash keychain 2>/dev/null; then
-	eval `keychain --quick --quiet --noask`
+	# Without --eval keychain prints nothing, so only its side effects matter
+	# (agent running, ~/.keychain/* refreshed): run it off the startup path.
+	keychain --quick --quiet --noask >/dev/null 2>&1 &!
 fi
 
 # Prompt Config
@@ -133,7 +203,7 @@ if [[ "$WORKIVA" == true ]] ; then
 fi
 
 # By operating system
-OS=$(uname -a)
+: ${OS:=$(uname -a)}  # normally already set by .zshenv
 case $OS in
 	*Darwin*)
 		source ~/.shell/osx.sh
@@ -149,4 +219,4 @@ esac
 
 
 # Added by Antigravity CLI installer
-export PATH="/home/tstapler/.local/bin:$PATH"
+[[ $OSTYPE == linux* ]] && export PATH="$HOME/.local/bin:$PATH"  # Linux-only: on macOS this path lives under /Users

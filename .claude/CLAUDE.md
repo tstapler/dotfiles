@@ -61,7 +61,7 @@ Use the serena MCP server for complex multi-file structural edits when available
 
 - **Self-explanatory code first.** A good name or a clean structure removes the need for a comment; reach for one only after that fails.
 - **Why, not what.** Comment a hidden constraint, a non-obvious tradeoff, or a workaround for a specific bug — never restate what the code already says.
-- **Short beats long.** One line over a paragraph. If a comment needs more than a line, the code usually needs a rename instead.
+- **Short beats long.** One line over a paragraph, and never more than 5 lines or one paragraph — the same ceiling `code:review`'s Code Quality check flags as MAJOR, so writing past it just means a reviewer sends it back. If a comment covers more than one distinct rationale (root cause vs. an accepted tradeoff vs. a pointer to a test), split it or cut to the single fact a reviewer would actually ask for — don't stack every consideration into one block.
 - **Docstrings on entry points only.** Give a public function or module an overview when its purpose isn't obvious from its name and signature; skip it for private helpers.
 - **Name assumptions and limits.** If a function assumes sorted input, a bounded range, or has a known failure mode, say so once at the point of use.
 

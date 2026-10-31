@@ -220,19 +220,24 @@ with the unresolved list. Do not proceed to <next step>.
    ### Layer 2 — Architecture & Design Quality (always two agents, regardless of technology)
 
    **Step 0: kibitzer mechanical pre-pass (optional, degrades gracefully)**
-   - If an MCP connection to `kibitzer` is available and the repo has a `.claude/inspect.json`:
-     call its `architecture_assessment` tool scoped (via `scope`) to the packages/modules
-     touched by the diff. If MCP isn't connected but `kibitzer` is on `PATH`, use the CLI
-     equivalent instead: `kibitzer run <touched-dir> --trigger batch`. This is a mechanical
-     pre-pass, not a replacement for the architecture-review agent below — it covers what's
-     cheaply checkable (import cycles, layering violations, coupling thresholds, a Mermaid
-     dependency diagram via MCP, plus — if `.claude/inspect.json` declares
+   - `.claude/inspect.json` is NOT required — kibitzer's built-in checks (import cycles,
+     layering violations, coupling thresholds) run against any repo out of the box. The file
+     only adds optional custom rules on top (`architecture.components`/`dependency_rules`/
+     `content_rules`/`naming_rules`) — treat its absence as "no custom rules," not "kibitzer
+     unavailable."
+   - If an MCP connection to `kibitzer` is available: call its `architecture_assessment` tool
+     scoped (via `scope`) to the packages/modules touched by the diff. If MCP isn't connected
+     but `kibitzer` is on `PATH`, use the CLI equivalent instead: `kibitzer run <touched-dir>
+     --trigger batch`. This is a mechanical pre-pass, not a replacement for the
+     architecture-review agent below — it covers what's cheaply checkable (import cycles,
+     layering violations, coupling thresholds, a Mermaid dependency diagram via MCP, plus —
+     if `.claude/inspect.json` exists and declares
      `architecture.components`/`dependency_rules`/`content_rules`/`naming_rules` — cross-component
      dependency, content, and naming-convention violations), not qualitative judgment (SOLID,
      testability, over-engineering).
-   - If neither is reachable, or the repo has no `.claude/inspect.json`: skip this step
-     silently and proceed straight to the architecture-review agent with no pre-pass context.
-     Phase 6 must never fail or stall because kibitzer isn't set up.
+   - If kibitzer is neither MCP-connected nor on `PATH`: skip this step silently and proceed
+     straight to the architecture-review agent with no pre-pass context. Phase 6 must never
+     fail or stall because kibitzer isn't installed.
    - If it returns findings: pass its raw output (findings text + Mermaid diagram, if any) into
      the architecture-review agent's prompt below as grounding context.
 

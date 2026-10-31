@@ -7,6 +7,14 @@ pathadd() {
     fi
 }
 
+# `_cache_output` (cached completion generators) uses zsh-only syntax, so it lives in
+# cache-output.zsh; bash gets a stub that reports "no cache" and callers fall through.
+if [ -n "$ZSH_VERSION" ]; then
+    source "$HOME/.shell/cache-output.zsh"
+else
+    _cache_output() { return 1; }
+fi
+
 # Add Rust/cargo-installed binaries (e.g. stapler-mcp, self-built rtk fork) to PATH
 pathadd "$HOME/.cargo/bin"
 
@@ -102,7 +110,7 @@ fi
 export GIT_EDITOR=$EDITOR
 
 # Fixes git + gpg error inside of tmux
-export GPG_TTY=$(tty)
+export GPG_TTY=${TTY:-$(tty)}
 
 
 # Completions for NativeScript
@@ -116,7 +124,7 @@ if hash hunspell 2>/dev/null; then
 fi
 
 if hash helm 2>/dev/null; then
-	source <(helm completion zsh)
+	_cache_output helm completion zsh && source "$REPLY"
 fi
 
 if hash aws_completer 2>/dev/null; then
@@ -124,30 +132,26 @@ if hash aws_completer 2>/dev/null; then
 fi
 
 if hash aws-vault 2>/dev/null; then 
-	eval "$(aws-vault --completion-script-zsh)"
+	_cache_output aws-vault --completion-script-zsh && source "$REPLY"
 	export AWS_VAULT_BIOMETRICS=true
 fi
 
 if hash gr 2>/dev/null; then
   unalias gr 2>/dev/null
-  source <(gr completion)
+  _cache_output gr completion && source "$REPLY"
 fi
 
 
 if hash flux 2>/dev/null; then
-  source <(flux completion zsh)
+  _cache_output flux completion zsh && source "$REPLY"
 fi
 
 if hash kubectl 2>/dev/null; then
-  source <(kubectl completion zsh)
+  _cache_output kubectl completion zsh && source "$REPLY"
 fi
 
 # Add krew the kubectl plugin manager to path
 pathadd "${KREW_ROOT:-$HOME/.krew}/bin"
-
-if hash helm 2>/dev/null; then
-  source <(helm completion zsh)
-fi
 
 pathadd "$HOME/.yarn/bin"
 pathadd "$HOME/.config/yarn/global/node_modules/.bin"
@@ -165,15 +169,16 @@ export PATH="$PATH"
 # SSH agent priority: 1Password → GPG → ~/.ssh/agent/* fallback.
 # environment.d/ssh-agent.conf handles the systemd user instance (Claude Code, services).
 if [ -z "$SSH_AUTH_SOCK" ] || [ ! -S "$SSH_AUTH_SOCK" ]; then
-  _gpg_sock="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/gnupg/S.gpg-agent.ssh"
+  _gpg_sock="${XDG_RUNTIME_DIR:-/run/user/${UID:-$(id -u)}}/gnupg/S.gpg-agent.ssh"
   _op_sock="$HOME/.1password/agent.sock"
-  _fb_sock=$(ls -t "$HOME/.ssh/agent"/s.*.agent.* 2>/dev/null | head -1)
   if [ -S "$_op_sock" ]; then
     export SSH_AUTH_SOCK="$_op_sock"
   elif [ -S "$_gpg_sock" ]; then
     export SSH_AUTH_SOCK="$_gpg_sock"
-  elif [ -n "$_fb_sock" ] && [ -S "$_fb_sock" ]; then
-    export SSH_AUTH_SOCK="$_fb_sock"
+  else
+    # only fork for the newest fallback socket when the others are absent
+    _fb_sock=$(ls -t "$HOME/.ssh/agent"/s.*.agent.* 2>/dev/null | head -1)
+    [ -n "$_fb_sock" ] && [ -S "$_fb_sock" ] && export SSH_AUTH_SOCK="$_fb_sock"
   fi
   unset _gpg_sock _op_sock _fb_sock
 fi

@@ -4,4 +4,4 @@
 
 
 # Added by Antigravity CLI installer
-export PATH="/home/tstapler/.local/bin:$PATH"
+[[ $OSTYPE == linux* ]] && export PATH="$HOME/.local/bin:$PATH"  # Linux-only: on macOS this path lives under /Users

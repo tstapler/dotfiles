@@ -5,11 +5,15 @@
 # Source shared functions
 . "$HOME/dotfiles/stapler-scripts/git_shared.sh"
 
-ORIGIN_URL=$(git ls-remote --get-url 'origin')
+ORIGIN_URL=${GIT_HOOK_ORIGIN_URL-$(git ls-remote --get-url 'origin')}
 
 export GIT_AUTHOR_NAME="Tyler Stapler"
 export GIT_COMMITTER_NAME=$GIT_AUTHOR_NAME
-git config --local user.name "$GIT_AUTHOR_NAME"
+# Check before writing: a write takes .git/config's lock, which every worktree
+# and parallel agent session in the repo shares.
+if [ "$(git config --local --get user.name)" != "$GIT_AUTHOR_NAME" ]; then
+  git config --local user.name "$GIT_AUTHOR_NAME"
+fi
 
 # get_git_email prints nothing when it has no rule for this remote. Writing
 # anything in that case is what silently rewrote work commits to the personal

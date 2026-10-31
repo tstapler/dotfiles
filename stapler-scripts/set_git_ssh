@@ -2,14 +2,14 @@
 
 # vim: ai ts=2 sw=2 et sts=2 ft=sh
 
-ORIGIN_URL=$(git ls-remote --get-url 'origin')
+ORIGIN_URL=${GIT_HOOK_ORIGIN_URL-$(git ls-remote --get-url 'origin')}
 SSH_KEY="$HOME/.ssh/personal"
 
 # Check if we're pushing to a personal repository
 case $ORIGIN_URL in
   *github.com/tstapler*|*github.com:tstapler*)
-    # Only use personal key if it exists
-    if [ -f "$SSH_KEY" ]; then
+    # Only use personal key if it exists; skip the write (shared config lock) when unchanged
+    if [ -f "$SSH_KEY" ] && [ "$(git config --get core.sshCommand)" != "ssh -i $SSH_KEY" ]; then
       git config core.sshCommand "ssh -i $SSH_KEY"
     fi
     ;;

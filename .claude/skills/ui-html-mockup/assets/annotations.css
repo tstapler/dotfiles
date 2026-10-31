@@ -1,0 +1,19 @@
+/* Figma-style annotation pins, notes panel and guided tour. Pair with annotations.js. */
+.hbtn { appearance:none; font:inherit; min-height:28px; padding:3px 10px; border:1px solid #e3e6eb; background:#fff; border-radius:6px; cursor:pointer; }
+.hbtn[aria-pressed=true] { background:#2a5fae; color:#fff; border-color:#2a5fae; }
+#annoLayer { position:absolute; left:0; top:0; width:0; height:0; z-index:50; }
+.pin { position:absolute; width:24px; height:24px; border-radius:50% 50% 50% 4px; border:2px solid #fff; background:#1d2330; color:#fff; font:600 12px/1 system-ui; cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,.4); }
+.pin.changed { background:#8a5200; } .pin.new { background:#1f6b43; } .pin.question { background:#2a5fae; border-radius:4px; } /* shape differs for question: not colour alone */
+.annospot { position:fixed; z-index:59; border:3px solid #2a5fae; border-radius:8px; pointer-events:none; }
+.annopop { position:fixed; z-index:60; width:330px; background:#fff; border:1px solid #1d2330; border-radius:8px; padding:12px; box-shadow:0 6px 24px rgba(0,0,0,.25); }
+.annopop dl, .tourcard dl { margin:6px 0; } .annopop dt, .tourcard dt { font-size:10px; text-transform:uppercase; letter-spacing:.04em; color:#586072; margin-top:6px; } .annopop dd, .tourcard dd { margin:0; }
+.ahead { display:flex; gap:8px; align-items:center; }
+.atag { font-size:11px; border-radius:10px; padding:1px 7px; background:#eef0f4; } .atag.new { background:#dff2e7; color:#1f6b43; } .atag.changed { background:#fbf0d3; color:#8a6410; } .atag.question { background:#e3eefb; color:#25599f; }
+#annoPanel summary { cursor:pointer; min-height:24px; }
+#annoPanel { position:fixed; left:12px; bottom:12px; z-index:55; width:300px; max-height:46vh; overflow:auto; background:#fff; border:1px solid #1d2330; border-radius:8px; padding:10px 12px; box-shadow:0 4px 16px rgba(0,0,0,.2); }
+#annoPanel ol { list-style:none; margin:6px 0; padding:0; } #annoPanel li { padding:2px 0; }
+#annoPanel .lk, .annopop .lk { appearance:none; background:none; border:0; font:inherit; color:#2a5fae; text-decoration:underline; cursor:pointer; padding:2px 0; min-height:24px; text-align:left; }
+#tourLayer .spot { position:fixed; z-index:70; border-radius:8px; box-shadow:0 0 0 9999px rgba(20,25,40,.6); pointer-events:none; outline:3px solid #fff; }
+.tourcard { position:fixed; z-index:80; left:50%; bottom:20px; transform:translateX(-50%); width:min(330px,calc(100vw - 24px)); background:#fff; border:1px solid #1d2330; border-radius:10px; padding:14px 16px; box-shadow:0 8px 32px rgba(0,0,0,.35); }
+.tbtn { appearance:none; font:inherit; min-height:28px; padding:3px 12px; border:1px solid #e3e6eb; background:#fff; border-radius:6px; cursor:pointer; } .tbtn.primary { background:#2a5fae; color:#fff; border-color:#2a5fae; } .tbtn:disabled { opacity:.5; cursor:default; }
+button:focus-visible { outline:3px solid #1d2330; outline-offset:2px; }
