@@ -1,5 +1,11 @@
 #!/usr/bin/env sh
 
+# Resolve origin once and share it: every `git` fork costs ~100s of ms under load,
+# and set_git_emails plus each drop-in used to re-run `ls-remote` themselves.
+# Drop-ins read ${GIT_HOOK_ORIGIN_URL-...} so they still work if run standalone.
+GIT_HOOK_ORIGIN_URL=$(git ls-remote --get-url origin 2>/dev/null)
+export GIT_HOOK_ORIGIN_URL
+
 # Set the appropriate email based on repository
 $HOME/dotfiles/stapler-scripts/set_git_emails
 
