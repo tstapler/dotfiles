@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mockup shell</title>
+<!-- Starter for a single-file mockup. Replace DATA with a trimmed snapshot of real data; keep names/IDs out of it.
+     Copy assets/annotations.css into the <style> below (or link it) and annotations.js into the last <script>. -->
+<style>
+  :root { --bg:#f6f7f9; --panel:#fff; --line:#e3e6eb; --text:#1d2330; --mute:#586072; --link:#2a5fae; --on-accent:#fff; --banner-bg:#fff8e1; --banner-line:#e6c776; }
+  [data-theme=dark] { --bg:#0f141b; --panel:#171d27; --line:#2e3846; --text:#e6e9ef; --mute:#a9b3c3; --link:#8dbbf7; --on-accent:#0f141b; --banner-bg:#3a3012; --banner-line:#7a6420; } /* every colour a variable so the dark theme is one block */
+  * { box-sizing:border-box; } body { margin:0; font:13px/1.4 system-ui,sans-serif; color:var(--text); background:var(--bg); }
+  header { display:flex; gap:12px; align-items:center; padding:10px 16px; background:var(--panel); border-bottom:1px solid var(--line); }
+  select { font:inherit; min-height:28px; }
+  h1 { font-size:13px; font-weight:400; margin:0; color:var(--mute); } .spacer { flex:1; }
+  .seg button { appearance:none; font:inherit; color:var(--text); min-height:28px; padding:3px 12px; border:1px solid var(--line); background:var(--panel); cursor:pointer; } .seg button[aria-current=page] { background:var(--link); color:var(--on-accent); }
+  main { padding:16px; } .card { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:12px; margin-bottom:10px; overflow-x:auto; }
+  .panel { text-align:center; padding:28px; } .panel button, button.lk { appearance:none; font:inherit; background:none; border:0; color:var(--link); text-decoration:underline; cursor:pointer; min-height:24px; padding:2px 4px; }
+  .skel { background:linear-gradient(90deg,#e9ecf1,#f4f5f8,#e9ecf1); border-radius:6px; height:48px; }
+  .banner { border:1px solid var(--banner-line); background:var(--banner-bg); border-radius:8px; padding:8px 12px; margin-bottom:10px; }
+  .hbtn { color:var(--text); }
+  /* ANNOTATIONS_CSS */
+</style>
+</head>
+<body>
+<header>
+  <nav class="seg" id="pagetabs" aria-label="Pages"></nav>
+  <h1>Product · Mockup</h1><span class="spacer"></span>
+  <button id="annoBtn" class="hbtn" aria-pressed="false" onclick="MOCKUP.toggle()">Annotations</button>
+  <button id="tourBtn" class="hbtn" onclick="MOCKUP.start()">Start tour</button><button class="hbtn" aria-pressed="false" onclick="const d=document.documentElement;const on=d.dataset.theme!=='dark';d.dataset.theme=on?'dark':'';this.setAttribute('aria-pressed',on)">Dark theme</button>
+  <label>State <select id="state" onchange="STATE=this.value;render()"><option value="live">Live</option><option value="loading">Loading</option><option value="empty">Empty</option><option value="error">Error</option><option value="stale">Stale</option><option value="noaccess">No access</option></select></label>
+</header>
+<main><div id="banner"></div><div id="content"></div></main>
+<div id="annoLayer"></div><div id="tourLayer"></div>
+<details id="annoPanel" style="display:none"><summary><b>Notes on this page</b> <span id="annoCount"></span></summary><ol id="annoList"></ol></details>
+<script>
+const DATA = { items:[{name:'Item A',status:'Healthy'},{name:'Item B',status:'Degraded'}] };
+let PAGE = 'summary', STATE = 'live';
+const PAGES = { summary:'Summary', detail:'Detail' };
+const states = {
+  loading:'<div role="status">Loading…</div><div class="card skel"></div>',
+  empty:'<div class="card panel"><h2>Nothing to show</h2><p>Explain why, then offer the next action.</p><button onclick="STATE=\'live\';render()">Clear filters</button></div>',
+  error:'<div class="card panel" role="alert"><h2>Couldn\'t load this page</h2><p>Show the real cause here.</p><button onclick="STATE=\'live\';render()">Retry</button></div>',
+  noaccess:'<div class="card panel"><h2>No access</h2><p>Say who can grant it.</p><button>Request access</button></div>',
+};
+function render(){
+  document.getElementById('pagetabs').innerHTML = Object.entries(PAGES).map(([k,l]) => `<button ${k===PAGE?'aria-current="page"':''} onclick="MOCKUP.go('${k}')">${l}</button>`).join('');
+  document.getElementById('banner').innerHTML = STATE==='stale' ? '<div class="banner" role="status"><b>Showing last-known state.</b> Source stale since 13:41. Do not dim the page: dimming breaks contrast.</div>' : '';
+  document.getElementById('content').innerHTML = states[STATE] || (PAGE==='summary'
+    ? `<div class="card" id="sum"><h2>Summary</h2>${DATA.items.map(i=>`<div>${i.name}: ${i.status}</div>`).join('')}<button class="lk" onclick="MOCKUP.go('detail')">Open Detail</button></div>`
+    : `<div class="card" id="det"><h2>Detail</h2><p>Replace with the real page.</p></div>`);
+  MOCKUP.afterRender?.();
+}
+window.MOCKUP = {
+  pages: PAGES, getPage: () => PAGE,
+  go: p => { PAGE = p; render(); },
+  annos: [
+    {id:'sum', page:'summary', sel:'#sum', type:'New', title:'Summary card', was:'Not shown in the current design.', now:'One card with the key facts and a link.', data:'Source and field names here.', ask:'Question for the partner team.'},
+    {id:'det', page:'detail', sel:'#det', type:'Changed', title:'Detail page', was:'What the current design does (verified).', now:'What this mockup does instead.', data:'Where each number comes from.', ask:'What is undecided?'},
+  ],
+  tour: ['sum','det'],
+};
+render();
+/* TABS_JS */
+/* ANNOTATIONS_JS */
+</script>
+</body>
+</html>
