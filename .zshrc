@@ -219,4 +219,4 @@ esac
 
 
 # Added by Antigravity CLI installer
-[[ $OSTYPE == linux* ]] && export PATH="/home/tstapler/.local/bin:$PATH"  # macOS /home is autofs: every PATH lookup spawns od_user_homes
+[[ $OSTYPE == linux* ]] && export PATH="$HOME/.local/bin:$PATH"  # Linux-only: on macOS this path lives under /Users
