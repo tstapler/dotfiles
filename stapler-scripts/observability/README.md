@@ -94,3 +94,89 @@ target.
 (itself a systemd/launchd service), so no separate service wrapper is
 needed, unlike `../litellm-proxy` (which runs its main process natively,
 not in a container).
+
+## Host contention (macOS Activity Monitor view)
+
+Alloy and the other containers run in the Docker VM, so a node exporter there
+reports the VM, not the Mac. `host-collector/host_collector.py` (Python 3
+stdlib, no root) runs natively, serves Prometheus text on
+`127.0.0.1:64891/metrics` (port = `61000 + CRC32("host-collector") % 4525`, per
+the `local-dev-port-management` batch convention), and Alloy scrapes it at
+`host.docker.internal:64891` every 15 s with `job="host"`, then remote-writes
+to VictoriaMetrics (`alloy-config.alloy`).
+
+Dashboard: Grafana > folder `host` > "Host contention" (uid `host-contention`).
+Alerts: Grafana alerting, folder `host`, group `host-contention`
+(`grafana/provisioning/alerting/host-alerts.yml`).
+
+### Install (run these yourself; nothing here loads a launchd job for you)
+
+```bash
+cd ~/dotfiles/stapler-scripts/observability
+# 1. Foreground test
+python3 host-collector/host_collector.py &  sleep 15; curl -s localhost:64891/metrics | head; kill %1
+# 2. Pick up the new Alloy scrape + Grafana mounts. Restart (not just reload):
+#    Docker Desktop's file mount can serve the old alloy-config.alloy otherwise.
+docker compose up -d alloy grafana && docker compose restart alloy
+# 3. Run it at login (render the template, then bootstrap)
+PLIST=~/Library/LaunchAgents/com.tstapler.host-collector.plist
+sed -e "s#__PYTHON3__#/usr/bin/python3#" -e "s#__DOTFILES__#$HOME/dotfiles#" \
+  host-collector/com.tstapler.host-collector.plist.template > "$PLIST"
+launchctl bootstrap gui/$(id -u) "$PLIST"
+launchctl print gui/$(id -u)/com.tstapler.host-collector | head -5
+```
+
+Uninstall: `launchctl bootout gui/$(id -u)/com.tstapler.host-collector && rm ~/Library/LaunchAgents/com.tstapler.host-collector.plist`.
+Logs: `/tmp/host-collector.log`. Env knobs: `HOST_COLLECTOR_PORT`, `_BIND`, `_INTERVAL` (sample seconds, default 10), `_DOCKER_INTERVAL` (default 30).
+
+### Metrics
+
+| Metric | Labels | Meaning |
+|---|---|---|
+| `host_cpu_percent` / `host_cpu_seconds_total` | `mode` system,user,idle(,nice) | whole-host CPU share (all cores = 100) / cumulative core-seconds since collector start |
+| `host_load1/5/15`, `host_cpu_count` | | load average and logical cores |
+| `host_memory_bytes`, `host_memory_total_bytes` | `state` free,active,inactive,wired,compressed,speculative | `vm_stat` |
+| `host_swap_used_bytes`, `host_swap_total_bytes` | | `vm.swapusage` (total = swap currently allocated, it grows on demand) |
+| `host_memory_pressure_level` | | 1 normal, 2 warn, 4 critical |
+| `host_vm_{pagein,pageout,swapin,swapout}_bytes_total` | | cumulative since boot, use `rate()` |
+| `host_filesystem_free_bytes`, `host_filesystem_size_bytes` | `mount="/System/Volumes/Data"` | excludes APFS purgeable space |
+| `host_disk_io_bytes_total` | `direction` | summed over block devices (`ioreg`) |
+| `host_process_count`, `host_thread_count` | | totals |
+| `host_process_cpu_percent`, `_rss_bytes`, `_threads`, `_instances` | `group` | allowlist groups, `~name` for the current top 10 others, and `other` (bounded: about 30 series) |
+| `host_docker_container_cpu_percent` | `name`, `image` | `docker stats`, top 10 containers plus `other` |
+| `host_docker_up`, `host_thermal_warning`, `host_thermal_cpu_speed_limit_percent` | | thermal limit only appears when `pmset` reports one |
+| `host_collector_errors_total{source}`, `host_collector_sample_duration_seconds`, `host_collector_cpu_seconds_total` | | self-monitoring |
+
+Process CPU is 100 = one core (Activity Monitor units), computed from cumulative
+CPU-time deltas between samples.
+
+### Alerts
+
+| Rule | Condition |
+|---|---|
+| data volume free < 5 GB (warning) | for 2 m |
+| data volume free < 1 GB (critical) | for 1 m |
+| swap used > 90% | for 10 m |
+| memory pressure >= 2 | for 10 m |
+| load1 / cores > 4 | for 15 m |
+| `up{job="host"}` < 1 (collector blind) | for 5 m |
+
+No contact point is provisioned; alerts are visible in Grafana only until you add one.
+
+### Host vs app contention
+
+The last dashboard row puts stapler-squad's `go_runtime_sched_latency_seconds`
+(p50/p99) and `go_runtime_mutex_wait_seconds_total` rate beside host CPU busy %,
+with a shared crosshair.
+
+- Host busy near 100%, high load per core, and sched latency rising together while the mutex-wait rate stays flat: the OS is not scheduling the app. Check the contention row for EDR, Docker VM, fseventsd, builds.
+- Mutex wait rising while host CPU has idle headroom: the app's own lock contention.
+- High system CPU with little user CPU: kernel or filesystem-event work (EDR, fseventsd, Spotlight), not your code.
+
+### Limits (what unprivileged macOS does not give us)
+
+- `kernel_task` CPU reads 0 (not visible to unprivileged `ps`); it appears only as unexplained system CPU. No per-process disk IO or GPU either (`powermetrics` needs root).
+- Processes that start and exit between two 10 s samples (short `compile` runs) are not seen individually; sustained build load still shows.
+- `host_cpu_seconds_total` and the paging/IO counters restart at zero when the collector restarts (fine for `rate()`).
+- `docker stats` shows per-core percentages of the Docker VM, and it is itself slow when the host is starved, so it is sampled every 30 s in a separate thread.
+- Verified on macOS 26 (Darwin 25.6, Apple Silicon). `pmset -g therm` text, `ioreg` statistics keys and `kern.memorystatus_vm_pressure_level` can differ on other macOS versions; failures only bump `host_collector_errors_total`.
