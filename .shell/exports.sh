@@ -7,6 +7,24 @@ pathadd() {
     fi
 }
 
+# Print-and-cache for slow `<tool> completion zsh` style generators: sets REPLY to a
+# cache file keyed on the binary's mtime+size, so the tool only runs after an upgrade.
+# zsh only (returns 1 elsewhere). Usage: _cache_output kubectl completion zsh && source "$REPLY"
+_cache_output() {
+    [ -n "$ZSH_VERSION" ] || return 1
+    local exe=${commands[$1]} dir=${XDG_CACHE_HOME:-$HOME/.cache}/shell-eval name=${(j:_:)@}
+    [[ -n $exe ]] || return 1
+    local -A st
+    zmodload -F zsh/stat b:zstat && zstat -H st -- $exe || return 1
+    REPLY=$dir/$name.${st[mtime]}-${st[size]}
+    [[ -s $REPLY ]] && return 0
+    local -a stale
+    mkdir -p $dir && "$@" >| $REPLY.$$ 2>/dev/null && [[ -s $REPLY.$$ ]] && mv -f $REPLY.$$ $REPLY || { rm -f $REPLY.$$; return 1; }
+    stale=( $dir/$name.*(N) ); stale=( ${stale:#$REPLY} )
+    (( $#stale )) && rm -f -- $stale
+    return 0
+}
+
 # Add Rust/cargo-installed binaries (e.g. stapler-mcp, self-built rtk fork) to PATH
 pathadd "$HOME/.cargo/bin"
 
@@ -102,7 +120,7 @@ fi
 export GIT_EDITOR=$EDITOR
 
 # Fixes git + gpg error inside of tmux
-export GPG_TTY=$(tty)
+export GPG_TTY=${TTY:-$(tty)}
 
 
 # Completions for NativeScript
@@ -116,7 +134,7 @@ if hash hunspell 2>/dev/null; then
 fi
 
 if hash helm 2>/dev/null; then
-	source <(helm completion zsh)
+	_cache_output helm completion zsh && source "$REPLY"
 fi
 
 if hash aws_completer 2>/dev/null; then
@@ -124,30 +142,26 @@ if hash aws_completer 2>/dev/null; then
 fi
 
 if hash aws-vault 2>/dev/null; then 
-	eval "$(aws-vault --completion-script-zsh)"
+	_cache_output aws-vault --completion-script-zsh && source "$REPLY"
 	export AWS_VAULT_BIOMETRICS=true
 fi
 
 if hash gr 2>/dev/null; then
   unalias gr 2>/dev/null
-  source <(gr completion)
+  _cache_output gr completion && source "$REPLY"
 fi
 
 
 if hash flux 2>/dev/null; then
-  source <(flux completion zsh)
+  _cache_output flux completion zsh && source "$REPLY"
 fi
 
 if hash kubectl 2>/dev/null; then
-  source <(kubectl completion zsh)
+  _cache_output kubectl completion zsh && source "$REPLY"
 fi
 
 # Add krew the kubectl plugin manager to path
 pathadd "${KREW_ROOT:-$HOME/.krew}/bin"
-
-if hash helm 2>/dev/null; then
-  source <(helm completion zsh)
-fi
 
 pathadd "$HOME/.yarn/bin"
 pathadd "$HOME/.config/yarn/global/node_modules/.bin"

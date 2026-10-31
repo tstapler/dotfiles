@@ -4,4 +4,4 @@
 
 
 # Added by Antigravity CLI installer
-export PATH="/home/tstapler/.local/bin:$PATH"
+[[ "$(uname)" == Linux ]] && export PATH="/home/tstapler/.local/bin:$PATH"  # macOS /home is autofs: every PATH lookup spawns od_user_homes

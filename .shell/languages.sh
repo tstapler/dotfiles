@@ -35,7 +35,7 @@ if [ -f "$HOME/.rye/env" ]; then
   . "$HOME/.rye/env"
 fi
 
-if [ -d /home/linuxbrew/.linuxbrew/bin ]; then
+if [ "$(uname)" = Linux ] && [ -d /home/linuxbrew/.linuxbrew/bin ]; then
   eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)
 fi
 
