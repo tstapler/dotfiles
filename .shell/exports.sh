@@ -7,23 +7,13 @@ pathadd() {
     fi
 }
 
-# Print-and-cache for slow `<tool> completion zsh` style generators: sets REPLY to a
-# cache file keyed on the binary's mtime+size, so the tool only runs after an upgrade.
-# zsh only (returns 1 elsewhere). Usage: _cache_output kubectl completion zsh && source "$REPLY"
-_cache_output() {
-    [ -n "$ZSH_VERSION" ] || return 1
-    local exe=${commands[$1]} dir=${XDG_CACHE_HOME:-$HOME/.cache}/shell-eval name=${(j:_:)@}
-    [[ -n $exe ]] || return 1
-    local -A st
-    zmodload -F zsh/stat b:zstat && zstat -H st -- $exe || return 1
-    REPLY=$dir/$name.${st[mtime]}-${st[size]}
-    [[ -s $REPLY ]] && return 0
-    local -a stale
-    mkdir -p $dir && "$@" >| $REPLY.$$ 2>/dev/null && [[ -s $REPLY.$$ ]] && mv -f $REPLY.$$ $REPLY || { rm -f $REPLY.$$; return 1; }
-    stale=( $dir/$name.*(N) ); stale=( ${stale:#$REPLY} )
-    (( $#stale )) && rm -f -- $stale
-    return 0
-}
+# `_cache_output` (cached completion generators) uses zsh-only syntax, so it lives in
+# cache-output.zsh; bash gets a stub that reports "no cache" and callers fall through.
+if [ -n "$ZSH_VERSION" ]; then
+    source "$HOME/.shell/cache-output.zsh"
+else
+    _cache_output() { return 1; }
+fi
 
 # Add Rust/cargo-installed binaries (e.g. stapler-mcp, self-built rtk fork) to PATH
 pathadd "$HOME/.cargo/bin"
@@ -179,15 +169,16 @@ export PATH="$PATH"
 # SSH agent priority: 1Password → GPG → ~/.ssh/agent/* fallback.
 # environment.d/ssh-agent.conf handles the systemd user instance (Claude Code, services).
 if [ -z "$SSH_AUTH_SOCK" ] || [ ! -S "$SSH_AUTH_SOCK" ]; then
-  _gpg_sock="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/gnupg/S.gpg-agent.ssh"
+  _gpg_sock="${XDG_RUNTIME_DIR:-/run/user/${UID:-$(id -u)}}/gnupg/S.gpg-agent.ssh"
   _op_sock="$HOME/.1password/agent.sock"
-  _fb_sock=$(ls -t "$HOME/.ssh/agent"/s.*.agent.* 2>/dev/null | head -1)
   if [ -S "$_op_sock" ]; then
     export SSH_AUTH_SOCK="$_op_sock"
   elif [ -S "$_gpg_sock" ]; then
     export SSH_AUTH_SOCK="$_gpg_sock"
-  elif [ -n "$_fb_sock" ] && [ -S "$_fb_sock" ]; then
-    export SSH_AUTH_SOCK="$_fb_sock"
+  else
+    # only fork for the newest fallback socket when the others are absent
+    _fb_sock=$(ls -t "$HOME/.ssh/agent"/s.*.agent.* 2>/dev/null | head -1)
+    [ -n "$_fb_sock" ] && [ -S "$_fb_sock" ] && export SSH_AUTH_SOCK="$_fb_sock"
   fi
   unset _gpg_sock _op_sock _fb_sock
 fi

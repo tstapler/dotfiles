@@ -58,8 +58,21 @@ if (( _zp_ok )); then
   if (( $#_zp_dump )); then compinit -C -d $HOME/.zplug/zcompdump; else compinit -d $HOME/.zplug/zcompdump; fi
   unset _zp_dump
 
+  # git.plugin.zsh forks `git version` on every shell (~0.26s under endpoint-security
+  # exec scans); answer it from a cache keyed on the git binary instead.
+  () {
+    local exe=${commands[git]} dir=${XDG_CACHE_HOME:-$HOME/.cache}/shell-eval; local -A st
+    [[ -n $exe ]] && zmodload -F zsh/stat b:zstat && zstat -H st -- $exe || return
+    local f=$dir/git-version.${st[mtime]}-${st[size]}
+    [[ -s $f ]] || { mkdir -p $dir && command git version >| $f 2>/dev/null || return; }
+    _zp_git_version=$(<$f)
+    git() { if [[ $1 == version ]]; then print -r -- $_zp_git_version; else command git "$@"; fi }
+  }
+
   # zplug sent plugin stderr to its own log; keep shells quiet the same way
   for _zp_file in $_zp_plugins; do source $_zp_file 2>/dev/null; done
+  (( $+functions[git] )) && unfunction git
+  unset _zp_git_version
   setopt prompt_subst  # zplug does this when loading a theme
 
   zplug() {
@@ -153,7 +166,7 @@ export ZPLUG_FILTER=fzy:fzf-tmux:fzf:peco:percol:zaw
 
 # pathadd is defined in ~/.shell/exports.sh (sourced below).
 
-if [[ "$(uname)" == Linux && -x "/home/linuxbrew/.linuxbrew/bin/brew" ]]; then
+if [[ $OSTYPE == linux* && -x "/home/linuxbrew/.linuxbrew/bin/brew" ]]; then
     eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 fi
 
@@ -190,7 +203,7 @@ if [[ "$WORKIVA" == true ]] ; then
 fi
 
 # By operating system
-OS=$(uname -a)
+: ${OS:=$(uname -a)}  # normally already set by .zshenv
 case $OS in
 	*Darwin*)
 		source ~/.shell/osx.sh
@@ -206,4 +219,4 @@ esac
 
 
 # Added by Antigravity CLI installer
-[[ "$(uname)" == Linux ]] && export PATH="/home/tstapler/.local/bin:$PATH"  # macOS /home is autofs: every PATH lookup spawns od_user_homes
+[[ $OSTYPE == linux* ]] && export PATH="/home/tstapler/.local/bin:$PATH"  # macOS /home is autofs: every PATH lookup spawns od_user_homes

@@ -245,6 +245,7 @@ secrets.fbg.op.sh.tpl
 # scripts. Any new file in .shell/ stays out of the repo until added here.
 .shell/*
 !.shell/aliases.sh
+!.shell/cache-output.zsh
 !.shell/exports.sh
 !.shell/functions.sh
 !.shell/languages.sh

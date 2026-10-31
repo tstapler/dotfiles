@@ -1,4 +1,5 @@
-OS=`uname -a`
+# .zshenv runs for every zsh (scripts included): skip the uname fork on macOS
+case $OSTYPE in darwin*) OS=Darwin ;; *) OS=`uname -a` ;; esac
 
 case $OS in
   '\1#-Microsoft')
