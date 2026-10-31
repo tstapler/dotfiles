@@ -21,17 +21,6 @@
       "_requires": "Installed from tstapler/homebrew-tap by bootstrap-pyinfra and exposed through the stable ~/.local/bin path. Provides first-party session and compaction tools over stdio MCP.",
       "env": {}
     },
-    "playwright": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@playwright/mcp@latest",
-        "--config",
-        "${HOME}/.config/mcp/playwright-mcp-config.json"
-      ],
-      "_note": "--config forces headless + --disable-gpu: Chrome's GPU process was deterministically crashing (exit_code=139/SIGSEGV) in headed mode on this NVIDIA-driver machine, blocking browser automation (2026-09-07).",
-      "env": {}
-    },
     "1password": {
       "command": "1password-mcp",
       "args": [],
