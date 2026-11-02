@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Print the ~/code/<host>/<owner>/<repo> path a git URL would clone to, without touching the
+# filesystem. Single source of truth for tyclone and the repo_dir shell function.
+set -euo pipefail
+
+url=${1:?usage: repo-dir <git-url>}
+stripped=${url%.git}
+
+case "$stripped" in
+  git@*)  # scp-like: git@host:owner/repo
+    hostpart=${stripped#*@}
+    host=${hostpart%%:*}
+    path=${hostpart#*:}
+    ;;
+  *://*)  # scheme://host/owner/repo
+    path=${stripped#*://}
+    host=${path%%/*}
+    host=${host#*@}
+    path=${path#*/}
+    ;;
+  *)
+    echo "repo-dir: unrecognized git URL: $url" >&2
+    exit 1
+    ;;
+esac
+
+echo "$HOME/code/$host/${path%/*}/${path##*/}"

@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Print the root of the personal-wiki repo (override with $WIKI_PATH).
+echo "${WIKI_PATH:-$HOME/Documents/personal-wiki}"

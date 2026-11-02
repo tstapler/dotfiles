@@ -16,14 +16,9 @@ function logseq_path {
   fi
 }
 
-# Return the root of the personal-wiki repo
+# Return the root of the personal-wiki repo (see stapler-scripts/wiki-path)
 function wiki_path {
-  local default="$HOME/Documents/personal-wiki"
-  if [[ -n "$WIKI_PATH" ]]; then
-    echo "$WIKI_PATH"
-  else
-    echo "$default"
-  fi
+  "$HOME/dotfiles/stapler-scripts/wiki-path"
 }
 
 function gen_pass {
@@ -130,48 +125,18 @@ check_multi_arch(){
   find $image_name | xargs -n 300 file | awk -F',' '/ELF/{ print $2 }' | sort -u
 }
 
-# Echo the ~/code/<host>/<owner>/<repo> path a git URL would clone to,
-# without touching the filesystem. Shared by tyclone and repo_dir below.
+# Path helpers live in stapler-scripts (on PATH as repo-dir, experimental-dir, wiki-path) so
+# non-interactive shells and agents can call them too; these functions just delegate.
 function _repo_code_dir {
-  local url=$1
-  local stripped=${url%.git}
-  local host owner repo
-
-  case "$stripped" in
-    git@*|ssh://git@*)
-      # scp-like syntax: git@host:owner/repo
-      local hostpart=${stripped#*@}
-      host=${hostpart%%:*}
-      local path=${hostpart#*:}
-      owner=${path%/*}
-      repo=${path##*/}
-      ;;
-    *://*)
-      # scheme://host/owner/repo
-      local path=${stripped#*://}
-      host=${path%%/*}
-      path=${path#*/}
-      owner=${path%/*}
-      repo=${path##*/}
-      ;;
-    *)
-      echo "_repo_code_dir: unrecognized git URL: $url" >&2
-      return 1
-      ;;
-  esac
-
-  echo "$HOME/code/$host/$owner/$repo"
+  "$HOME/dotfiles/stapler-scripts/repo-dir" "$@"
 }
 
-# Print the ~/code/<host>/<owner>/<repo> path a git URL would clone to.
 function repo_dir {
-  _repo_code_dir "$1"
+  _repo_code_dir "$@"
 }
 
-# Print the canonical location of the shared experimental investigations repo.
-# This does not require the repo to be cloned.
 function experimental_dir {
-  repo_dir "https://git.netflix.net/tstapler/experimental.git"
+  "$HOME/dotfiles/stapler-scripts/experimental-dir"
 }
 
 # Clone a repo into ~/code/<host>/<owner>/<repo>, creating the host/owner

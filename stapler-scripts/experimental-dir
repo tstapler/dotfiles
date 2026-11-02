@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Print the canonical location of the shared experimental investigations repo (need not be cloned).
+exec "$(dirname "$(readlink -f "$0")")/repo-dir" "https://git.netflix.net/tstapler/experimental.git"

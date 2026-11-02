@@ -101,13 +101,13 @@ its own passive-voice examples).
 ## Repo Placement
 
 - New clones go under `~/code/<host>/<owner>/<repo>` (e.g. `~/code/github.com/tstapler/dotfiles`)
-- Use `tyclone <url>` (defined in `~/dotfiles/.shell/functions.sh`) to clone into that layout automatically; `repo_dir <url>` prints the resulting path without cloning
-- Put cross-project investigation writeups in Tyler's shared experimental repo. `experimental_dir` prints its canonical path (`~/code/git.netflix.net/tstapler/experimental`); clone it with `tyclone https://git.netflix.net/tstapler/experimental.git` if absent.
+- Use `tyclone <url>` (defined in `~/dotfiles/.shell/functions.sh`) to clone into that layout automatically; `repo-dir <url>` (a script on PATH, so it also works in non-interactive Bash) prints the resulting path without cloning
+- Put cross-project investigation writeups in Tyler's shared experimental repo. `experimental-dir` (script on PATH) prints its canonical path (`~/code/git.netflix.net/tstapler/experimental`); clone it with `tyclone https://git.netflix.net/tstapler/experimental.git` if absent.
 - Existing repos outside this layout (e.g. `~/dotfiles` itself) are left in place — this convention only applies going forward, not as a retroactive migration
 
 ## Personal Notes (Logseq Wiki)
 
-Tyler's personal Logseq wiki — daily journals and topic Zettels — lives at `~/Documents/notes` (its own git repo, not under `~/code/`; not currently symlinked or cloned via this dotfiles repo's bootstrap). It has its own `CLAUDE.md` describing conventions; format anything written there per the `logseq-wiki-syntax` skill. Use it (not this repo, and not a project's own `docs/`) for durable personal-knowledge notes, cross-project research writeups, and decision rationale that should outlive any one project's lifetime — e.g. `pages/Personal App Stack (2026).md`, which the `code-new-project` skill's `reference.md` points to for its condensed stack-decision tables.
+Tyler's personal Logseq wiki — daily journals and topic Zettels — is its own git repo, not under `~/code/` and not cloned by this dotfiles repo's bootstrap. **Never hardcode its path — run `wiki-path` (script in `~/dotfiles/stapler-scripts/`, on PATH, honours `$WIKI_PATH`; it prints the repo root, currently `~/Documents/personal-wiki`) and write pages under `$(wiki-path)/logseq/pages/` and `.../logseq/journals/`.** Ignore the `logseq_path` shell function: its default, `~/Documents/notes`, does not exist. It has its own `CLAUDE.md` describing conventions; format anything written there per the `logseq-wiki-syntax` skill. Use it (not this repo, and not a project's own `docs/`) for durable personal-knowledge notes, cross-project research writeups, and decision rationale that should outlive any one project's lifetime — e.g. `pages/Personal App Stack (2026).md`, which the `code-new-project` skill's `reference.md` points to for its condensed stack-decision tables.
 
 ---
 
