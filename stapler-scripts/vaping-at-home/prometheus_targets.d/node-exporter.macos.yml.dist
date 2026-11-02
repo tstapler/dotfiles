@@ -1,0 +1,3 @@
+- targets: ['host.docker.internal:9100']
+  labels:
+    instance: 'macos-host'

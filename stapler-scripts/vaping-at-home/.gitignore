@@ -1,1 +1,2 @@
 textfile_collector/*.prom
+prometheus_targets.d/node-exporter.yml

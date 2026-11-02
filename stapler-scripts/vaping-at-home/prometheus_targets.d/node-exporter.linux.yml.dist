@@ -1,0 +1,4 @@
+# node_exporter must listen on the docker bridge gateway (172.17.0.1:9100); see systemd/node-exporter.service.
+- targets: ['host.docker.internal:9100']
+  labels:
+    instance: 'onyx'
