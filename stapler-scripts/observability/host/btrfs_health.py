@@ -17,6 +17,7 @@ Run on a schedule (systemd/btrfs-health.timer) so node_exporter's
 `--collector.textfile.directory` always has a fresh reading.
 """
 import argparse
+import os
 import socket
 import sys
 import time
@@ -137,6 +138,44 @@ def metadata_headroom_bytes(raw):
     return meta["total_bytes"] - held - (raw["global_rsv_size"] or 0)
 
 
+PSEUDO_FSTYPES = {
+    "proc", "sysfs", "devtmpfs", "tmpfs", "devpts", "cgroup", "cgroup2", "securityfs", "debugfs", "tracefs",
+    "configfs", "fusectl", "efivarfs", "bpf", "pstore", "mqueue", "hugetlbfs", "autofs", "binfmt_misc",
+    "overlay", "squashfs", "ramfs", "nsfs",
+}
+
+
+def parse_mountinfo(text):
+    """(mountpoint, fstype, source) for real filesystems; one entry per source so btrfs subvolume mounts collapse."""
+    best = {}
+    for line in text.splitlines():
+        left, sep, right = line.partition(" - ")
+        fields, rest = left.split(), right.split()
+        if not sep or len(fields) < 5 or len(rest) < 2:
+            continue
+        fstype, source = rest[0], rest[1]
+        if fstype in PSEUDO_FSTYPES or fstype.startswith("fuse."):
+            continue
+        mountpoint = fields[4].replace("\\040", " ")
+        key = (source, fstype)
+        if key not in best or len(mountpoint) < len(best[key][0]):
+            best[key] = (mountpoint, fstype, source)
+    return sorted(best.values())
+
+
+def read_mount_stats(mounts, statvfs=os.statvfs):
+    stats = []
+    for mountpoint, fstype, source in mounts:
+        try:
+            st = statvfs(mountpoint)
+        except OSError:
+            continue
+        stats.append({"mountpoint": mountpoint, "fstype": fstype, "device": source,
+                      "size": st.f_blocks * st.f_frsize, "avail": st.f_bavail * st.f_frsize,
+                      "files": st.f_files, "files_free": st.f_ffree})
+    return stats
+
+
 class _Writer:
     def __init__(self):
         self.lines = []
@@ -152,7 +191,7 @@ class _Writer:
         self.lines.append(f"{name}{{{label_str}}} {value}")
 
 
-def render(filesystems, now):
+def render(filesystems, now, mount_stats=()):
     w = _Writer()
     block_group = [
         ("total_bytes", "btrfs_block_group_total_bytes", "Logical size of all block groups of this type"),
@@ -188,6 +227,13 @@ def render(filesystems, now):
             w.sample("btrfs_exclusive_operation", "1 for the exclusive operation currently running (none/balance/...)",
                      {"uuid": uuid, "operation": op}, 1)
             w.sample("btrfs_balance_running", "1 while a balance is actively running", {"uuid": uuid}, int(op == "balance"))
+    for m in mount_stats:
+        labels = {"mountpoint": m["mountpoint"], "fstype": m["fstype"], "device": m["device"]}
+        w.sample("host_filesystem_size_bytes", "statfs total size", labels, m["size"])
+        w.sample("host_filesystem_avail_bytes", "statfs bytes available to unprivileged users", labels, m["avail"])
+        if m["files"]:  # btrfs reports 0 inodes: it allocates them dynamically
+            w.sample("host_filesystem_files", "statfs total inodes", labels, m["files"])
+            w.sample("host_filesystem_files_free", "statfs free inodes", labels, m["files_free"])
     w.sample("btrfs_exporter_filesystems", "Number of btrfs filesystems read in the last run", {}, len(filesystems))
     w.sample("btrfs_exporter_last_success_timestamp_seconds", "Unix time of the last completed run", {}, int(now))
     return "\n".join(w.lines) + "\n"
@@ -196,6 +242,7 @@ def render(filesystems, now):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--sysfs-root", type=Path, default=DEFAULT_SYSFS)
+    parser.add_argument("--mountinfo", type=Path, default=Path("/proc/self/mountinfo"))
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUT_DIR)
     parser.add_argument("--config-dir", type=Path, default=CONFIG_DIR)
     parser.add_argument("--stdout", action="store_true", help="print instead of writing the .prom file")
@@ -206,7 +253,8 @@ def main(argv=None):
         print("btrfs_health: no config.d/btrfs_health.d entry matches this host; nothing to do", file=sys.stderr)
         return 0
     filesystems = [read_filesystem(fs) for fs in find_filesystems(args.sysfs_root, uuids)]
-    text = render(filesystems, time.time())
+    mounts = read_mount_stats(parse_mountinfo(args.mountinfo.read_text())) if args.mountinfo.exists() else []
+    text = render(filesystems, time.time(), mounts)
 
     if args.stdout:
         sys.stdout.write(text)
@@ -215,6 +263,7 @@ def main(argv=None):
     out = args.output_dir / OUT_NAME
     tmp = out.with_suffix(".prom.tmp")
     tmp.write_text(text)
+    tmp.chmod(0o644)  # the Alloy container reads it as a different uid
     tmp.rename(out)  # atomic so node_exporter never scrapes a half-written file
     return 0
 

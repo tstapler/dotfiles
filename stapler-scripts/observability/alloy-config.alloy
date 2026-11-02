@@ -69,6 +69,43 @@ prometheus.scrape "host" {
   forward_to      = [prometheus.remote_write.victoriametrics.receiver]
 }
 
+// Host filesystem health. host/btrfs_health.py (run by systemd/btrfs-health.timer)
+// writes a Prometheus textfile into host/textfile_collector, bind-mounted here
+// read-only. Alloy's embedded node_exporter serves ONLY that collector, so no
+// host node_exporter, no host port and no host.docker.internal hop is needed.
+prometheus.exporter.unix "host_textfile" {
+  set_collectors = ["textfile"]
+
+  textfile {
+    directory = "/host-textfile"
+  }
+}
+
+// Pin `instance` so series identity survives container recreation (Alloy's
+// default is the container ID).
+discovery.relabel "host_textfile" {
+  targets = prometheus.exporter.unix.host_textfile.targets
+
+  rule {
+    target_label = "instance"
+    replacement  = "host"
+  }
+
+  // The exporter's targets arrive with job="integrations/unix", which wins over
+  // prometheus.scrape's job_name; the alert rules key on this one.
+  rule {
+    target_label = "job"
+    replacement  = "host-textfile"
+  }
+}
+
+prometheus.scrape "host_textfile" {
+  targets         = discovery.relabel.host_textfile.output
+  forward_to      = [prometheus.remote_write.victoriametrics.receiver]
+  job_name        = "host-textfile"
+  scrape_interval = "30s"
+}
+
 prometheus.remote_write "victoriametrics" {
   endpoint {
     url = "http://victoriametrics:8428/api/v1/write"

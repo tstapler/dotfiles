@@ -69,6 +69,56 @@ after the project.
   dashboard directory the same way stapler-squad's is, then add a provider
   block to `dashboards.yml` either way.
 
+## Host filesystem health (btrfs)
+
+Added after the 2026-11-01 incident on `onyx` (single-NVMe btrfs root): metadata filled (25G used of 26G allocated, 512 MiB global reserve, 1.1 MiB unallocated) while `df` still showed ~250 GiB free, and every read/unlink blocked in `reserve_bytes`. Nothing alerted.
+
+**Data path.** `host/btrfs_health.py` (user timer, every 60 s) reads `/sys/fs/btrfs/<uuid>/` and `/proc/self/mountinfo` and writes `host/textfile_collector/btrfs_health.prom`. The `alloy` service bind-mounts that directory read-only and runs `prometheus.exporter.unix` with only the `textfile` collector, then `prometheus.scrape` and `prometheus.remote_write` to `victoriametrics:8428/api/v1/write` (`alloy-config.alloy`, job `host-textfile`, instance pinned to `host`). Alloy `run` takes a single file here, so the block lives in `alloy-config.alloy` rather than a second file (a directory argument would also work).
+
+**Why this and not a host node_exporter** (evidence from `onyx`, node_exporter 1.12.1 via `brew install`):
+- Its btrfs collector exposes `node_btrfs_{size,used,reserved}_bytes`, `device_size`, `device_unused`, `global_rsv_size`, `device_errors_total`, `allocation_ratio`. It lacks `bytes_may_use`, pinned and readonly bytes and `global_rsv_reserved`, which are exactly what turned 529 MiB of raw headroom into a negative usable value. So a textfile exporter is needed regardless.
+- Given that, a second moving part (a host node_exporter on a docker-bridge address, plus firewall and boot-ordering concerns) buys nothing. The textfile path needs no host listener and no `host.docker.internal` hop for metrics. The exporter also writes statfs (`host_filesystem_*`) itself, because Alloy's container cannot see the host's mounts.
+
+**Metrics:** `btrfs_block_group_{total,used,disk_total,reserved,pinned,readonly,may_use}_bytes{uuid,type}`, `btrfs_device_size_bytes`, `btrfs_unallocated_bytes`, `btrfs_metadata_usable_headroom_bytes`, `btrfs_global_reserve_{size,reserved}_bytes`, `btrfs_device_errors_total{devid,type}`, `btrfs_device_missing`, `btrfs_balance_running`, `btrfs_exclusive_operation`, `host_filesystem_{size,avail}_bytes`, `host_filesystem_files{,_free}` (omitted where statfs reports 0 inodes, as btrfs does), `btrfs_exporter_last_success_timestamp_seconds`. Per-host config is `host/config.d/btrfs_health.d/*.yaml` (`hosts` allowlist, optional `uuids`); no matching config writes nothing. `make btrfs-health` runs it once, `make test` runs the fixture tests (`host/tests/fixtures/sysfs_btrfs` is a sysfs snapshot, never live `/sys`).
+
+- `unallocated = sum(devices/*/size) - sum(disk_total)`; `disk_total` already includes DUP copies.
+- `usable headroom = total - used - reserved - pinned - readonly - may_use - global_rsv_size`. Conservative: the kernel may already count the global reserve inside `bytes_may_use` (INFERRED, not checked against kernel source), so it can read low but not high.
+- **Headroom is noisy during a balance.** On `onyx` during a running balance it ranged 7.5 to 10.2 GiB in 4 s samples, and a direct sysfs read showed metadata `bytes_may_use` at 14.9 GiB, which would be negative on a healthy filesystem with tens of GiB unallocated. The headroom alerts are therefore gated on `unallocated < 20 GiB` (my choice, not a verified kernel threshold) with `for:` 10 m / 2 m.
+- Scrub state is not exported: it is not an `exclusive_operation` and its status needs root. Only balance is observable.
+- Not built: per-directory attribution from `metascope scan`.
+
+**Alerts** (`grafana/provisioning/alerting/rules.yml`, folder `Filesystem Health`, datasource uid `victoriametrics`): unallocated < 10 GiB warn / < 3 GiB critical; usable headroom < 2 GiB warn / < 256 MiB critical (gated, above); any `increase(btrfs_device_errors_total[15m])`; `btrfs exporter stale or missing` (`time() - last_success > 300`); `Alloy host-textfile scrape down` (`up{job="host-textfile"}`); and an always-firing `Dead mans switch heartbeat`.
+- VictoriaMetrics differences (the `increase()` behavior is INFERRED from MetricsQL docs, not tested here): the exporter being dead does not make series disappear, because Alloy keeps serving the last `.prom` file; staleness is therefore detected by the timestamp rule, with NoData as a second net. MetricsQL `increase()` does not extrapolate and looks at the sample before the window, so a counter that first appears already non-zero is not an increase; at `[15m]` with a 30 s scrape the window holds enough samples. `and on(uuid)` and `time()` behave as in PromQL.
+- Existing finding: `onyx` already reports `corruption_errs 14586` on devid 1. The alert fires on increase, so it stays quiet; the lifetime count is on the dashboard. Worth a `btrfs scrub` / `btrfs device stats` look.
+
+**Dashboard:** `Filesystem Health (btrfs)` in folder `Filesystem Health` (`grafana/dashboards/filesystem/`, mounted in `docker-compose.yml`, provider in `dashboards.yml`): allocation stacked by type plus unallocated, unallocated and usable headroom with threshold lines, raw total-used vs usable, metadata consumers, error counters, balance state, statfs usage, non-btrfs inode usage.
+
+### Desktop notifications (alert delivery)
+
+`host/desktop_alert_relay.py` (Python stdlib) receives Grafana's webhook POST and shows a desktop notification: `notify-send` on Linux (the same `org.freedesktop.Notifications` service gh-signal's notify-rust uses; on `onyx` that is Plasma, checked with `GetServerInformation`), `osascript display notification` on macOS (as gh-signal does). gh-signal sets no urgency or app name; the relay adds `--urgency` (critical for any critical alert, low for resolved, else normal) and `--app-name=vaping-at-home`. Title is `[FIRING] <alertname>` (`(+N more)` for grouped payloads), body is the `summary` annotations, truncated to 400 chars.
+
+- Security: binds only `172.17.0.1:8791` by default (`--bind`, `--port`), requires `Authorization: Bearer <token>` (constant-time compare), token from a 0600 file (`--token-file`, refused if group/other readable) or `DESKTOP_RELAY_TOKEN`, bodies over 64 KiB get 413, the token is never logged (checked: 0 occurrences in the relay log).
+- Why 172.17.0.1: inside the compose-network Grafana, `host.docker.internal` resolves to `172.17.0.1` via `extra_hosts: host-gateway` even though the project network's own gateway is `172.20.0.1` (VERIFIED in a throwaway project; the live Grafana has no such entry yet and does not resolve the name). If docker's `host-gateway-ip` is changed, change `--bind`.
+- `contactpoints.yml` provisions `desktop-relay` (webhook with bearer token `$__env{DESKTOP_RELAY_TOKEN}`) and a `heartbeat-placeholder` (`$__env{HEARTBEAT_URL}`, default an unresolvable `*.invalid`). `policies.yml` sends the `Filesystem Health` folder to `desktop-relay` and `severity=heartbeat` to the heartbeat; the root receiver stays Grafana's default.
+
+**The limit of this channel.** A desktop notification only reaches you if the graphical session is up and you are at the machine. On 2026-11-01 X would not start, so this channel would not have reached you at all, and it cannot fire if the machine hangs, because Grafana, Alloy and the relay all run on that machine. The external heartbeat is the only thing that covers a frozen host, and it is not chosen yet: the `deadmans-switch-heartbeat` rule re-sends every 5 minutes to `HEARTBEAT_URL`, which must be an off-machine service that alerts on absence (grace of about 10 to 15 minutes). It does not go through the relay.
+
+### Install on this host (nothing here has been done)
+
+```bash
+cd ~/dotfiles/stapler-scripts/observability
+mkdir -p ~/.local/state/observability && umask 077
+openssl rand -hex 24 > ~/.local/state/observability/relay.token
+printf 'DESKTOP_RELAY_TOKEN=%s\n' "$(cat ~/.local/state/observability/relay.token)" > .env   # gitignored; compose reads it
+mkdir -p ~/.config/systemd/user
+ln -s "$PWD"/systemd/{btrfs-health.service,btrfs-health.timer,desktop-alert-relay.service} ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable --now btrfs-health.timer desktop-alert-relay.service
+docker compose up -d --force-recreate grafana alloy   # picks up new mounts, extra_hosts, env, alloy config
+```
+
+Existing precedent: `llm-sync.timer` is rendered by `bootstrap-pyinfra/deploys/llm_sync.py` rather than stored in the repo; a pyinfra deploy for these units is not written. The last command names only `grafana` and `alloy`, so VictoriaMetrics and the other volumes are not recreated.
+
 ## Pointing a project's profiler at this stack
 
 Requires the project to expose a standard Go `net/http/pprof` endpoint

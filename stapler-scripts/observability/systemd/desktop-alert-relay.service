@@ -1,0 +1,17 @@
+[Unit]
+Description=Relay Grafana webhooks to local desktop notifications
+After=graphical-session.target
+
+[Service]
+# The user manager's environment already carries DBUS_SESSION_BUS_ADDRESS and
+# XDG_RUNTIME_DIR on a graphical login (checked with `systemctl --user
+# show-environment`), which notify-send needs.
+# Bound to the address host.docker.internal resolves to inside the Grafana
+# container (docker's host-gateway, 172.17.0.1), so :8791 is not on the LAN.
+ExecStart=/usr/bin/python3 %h/dotfiles/stapler-scripts/observability/host/desktop_alert_relay.py --token-file %h/.local/state/observability/relay.token
+# docker0 may not exist yet at login.
+Restart=on-failure
+RestartSec=15
+
+[Install]
+WantedBy=default.target

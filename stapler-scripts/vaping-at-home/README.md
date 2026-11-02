@@ -127,43 +127,6 @@ If the host is wired via a Thunderbolt/USB4 dock rather than built-in Ethernet, 
   ```
 - Dashboard: "Watched Process Memory (RSS)" and "Watched Process CPU" (timeseries) panels on `macOS System & Network Monitoring`.
 
-### Linux host and btrfs filesystem health
-
-Added after the 2026-11-01 incident on `onyx` (Manjaro, single-NVMe btrfs root): metadata filled (25G used of 26G allocated, 512 MiB global reserve, 1.1 MiB unallocated) while `df` still showed ~250 GiB free, and every read/unlink blocked in `reserve_bytes`. No filesystem metric existed to alert on.
-
-**Scraping a Linux host.** `prometheus.yml` reads its node-exporter target from `prometheus_targets.d/node-exporter.yml`, which `make build` copies from `node-exporter.macos.yml.dist` or `node-exporter.linux.yml.dist` by `uname -s` (the copy is gitignored). The Prometheus container gets `host.docker.internal:host-gateway` (`extra_hosts`) because only Docker Desktop defines that name itself. Verified on `onyx`: a containerized Prometheus 3.2.1 scraped a host node_exporter at `172.17.0.1:9100` and `up{job="node-exporter",instance="onyx"}` was `1`. The macOS path is unchanged in intent but **not tested on a Mac**, including whether Docker Desktop accepts the `host-gateway` entry (INFERRED fine).
-
-**Why both node_exporter and a textfile exporter.** node_exporter 1.12.1 (`brew install node_exporter`, no root) with `--collector.btrfs` exposes `node_btrfs_{size,used,reserved}_bytes{block_group_type,mode}`, `node_btrfs_device_size_bytes`, `node_btrfs_device_unused_bytes`, `node_btrfs_global_rsv_size_bytes`, `node_btrfs_device_errors_total{type}` and `node_btrfs_allocation_ratio`. It does not expose `bytes_may_use`, pinned/readonly bytes, or `global_rsv_reserved`, which are exactly what turned 529 MiB of raw headroom into a negative usable value. `btrfs_health.py` fills that gap by reading `/sys/fs/btrfs/<uuid>/` directly (no root, no btrfs-progs, no metascope). node_exporter still supplies `node_filesystem_*`. Note statfs on btrfs reports 0 inodes (`node_filesystem_files 0`), so the inode panel excludes btrfs.
-
-**`btrfs_health.py`** (textfile collector, same pattern as `process_watch.py`; per-host config in `config.d/btrfs_health.d/*.yaml` with a `hosts` allowlist and optional `uuids`; no matching config means it writes nothing). Metrics: `btrfs_block_group_{total,used,disk_total,reserved,pinned,readonly,may_use}_bytes{uuid,type}`, `btrfs_device_size_bytes`, `btrfs_unallocated_bytes`, `btrfs_metadata_usable_headroom_bytes`, `btrfs_global_reserve_{size,reserved}_bytes`, `btrfs_device_errors_total{devid,type}`, `btrfs_device_missing`, `btrfs_balance_running`, `btrfs_exclusive_operation`, and `btrfs_exporter_last_success_timestamp_seconds`. Run `make btrfs-health` once, `python3 btrfs_health.py --stdout` to print, `make test` for the fixture-based tests (`tests/fixtures/sysfs_btrfs` is a sysfs snapshot; `tests/test_btrfs_health.py` also builds an incident-shaped tree where raw total-used is 1 GiB but usable headroom is negative).
-
-- `unallocated = sum(devices/*/size) - sum(disk_total)`; `disk_total` already includes DUP copies.
-- `usable headroom = total - used - reserved - pinned - readonly - may_use - global_rsv_size`. Deliberately conservative: the kernel may already count the global reserve inside `bytes_may_use` (INFERRED, not checked against kernel source), so it can read low but not high.
-- **Headroom is noisy during a balance.** Sampling every 4 s on `onyx` during a running balance gave 7.5 to 10.2 GiB, and a direct sysfs read at another moment showed metadata `bytes_may_use` at 14.9 GiB, which would make it negative on a healthy filesystem with tens of GiB unallocated. The headroom alerts are therefore gated on `unallocated < 20 GiB` and use `for:` 10m/2m. The 20 GiB gate is my choice, not a verified kernel threshold; see open decisions below.
-- Scrub state is not exported: it is not an `exclusive_operation` and its status needs root. Only balance is observable.
-- Not built: per-directory metadata attribution from `metascope scan` (optional; expensive and infrequent, would need its own slower timer).
-
-**Scheduling (not installed).** Units live in `systemd/`: `btrfs-health.{service,timer}` (user-level, every 60 s, no root) and `node-exporter.service` (user-level; binds `172.17.0.1:9100`, the docker0 gateway, so the container reaches it without exposing :9100 on the LAN; `Restart=on-failure` covers boot before docker0 exists; a host firewall may still need to allow docker0 to 9100). Existing precedent: `llm-sync.timer` is not stored in the repo but rendered by `bootstrap-pyinfra/deploys/llm_sync.py` into `~/.config/systemd/user/` and enabled with `systemd.service`; `litellm-proxy.service` is stored in its project directory. Until a pyinfra deploy exists for these, install by hand:
-
-```bash
-mkdir -p ~/.config/systemd/user
-ln -s ~/dotfiles/stapler-scripts/vaping-at-home/systemd/{btrfs-health.service,btrfs-health.timer,node-exporter.service} ~/.config/systemd/user/
-systemctl --user daemon-reload
-systemctl --user enable --now node-exporter.service btrfs-health.timer
-```
-
-Hand-run `make run` (or `docker compose up -d`) afterwards. Units pass `systemd-analyze verify --user`; they have not been started.
-
-**Alerts** (`grafana/provisioning/alerting/rules.yml`, folder `Filesystem Health`): unallocated < 10 GiB warn / < 3 GiB critical; usable metadata headroom < 2 GiB warn / < 256 MiB critical (gated, above); any `increase(btrfs_device_errors_total[15m])`; `btrfs exporter stale or missing` (`time() - last_success > 300`, NoData = Alerting, so a dead exporter alerts); `node_exporter target down`; and an always-firing `Dead mans switch heartbeat`. Verified in a throwaway Grafana 11.5.2 container against live data: all 8 rules provisioned and evaluated with health `ok`, heartbeat `firing`, the rest `inactive`. Not tested: the stale/NoData and error-increase rules actually firing.
-
-- Existing finding: `onyx` already reports `corruption_errs 14586` on devid 1. The alert fires on increase, so it stays quiet; the lifetime count is shown in the dashboard. Worth a `btrfs scrub` / `btrfs device stats` look.
-
-**Notification channel: not chosen.** `contactpoints.yml` provisions two webhook placeholders (`ntfy-placeholder`, `heartbeat-placeholder`) reading `NTFY_WEBHOOK_URL` and `HEARTBEAT_URL` from the environment; unset, they default to unresolvable `*.invalid` URLs so delivery fails visibly in the Grafana log. `policies.yml` routes only the `Filesystem Health` folder (and `severity=heartbeat`) to them; existing network alerts keep the default receiver. Needed to finish: the ntfy server URL, topic, and whether auth is a bearer token (a commented hint is in `contactpoints.yml`; no credentials are invented).
-
-**Dead man's switch, and what a self-hosted monitor cannot cover.** If `onyx` freezes (the incident), Prometheus, Grafana and the exporter freeze with it, so no in-stack rule can fire. The `deadmans-switch-heartbeat` rule re-sends every 5 minutes to `heartbeat-placeholder`; that only helps if the receiver is **outside the machine** and alerts on absence. Needs: an external service that expects a ping every ~5 min and pages (for example a Healthchecks.io-style check or ntfy on a different host) with a grace period of ~10-15 min, the ping URL in `HEARTBEAT_URL`, and for ntfy a separate always-on host that runs the absence check. Grafana will also keep sending "firing" while the heartbeat rule fires, so the external side must treat silence, not content, as the signal.
-
-**Dashboard:** `Filesystem Health (btrfs)` (`grafana/dashboards/filesystem/filesystem_health.json`, folder `Filesystem Health`): allocation stacked by type plus unallocated, unallocated and usable headroom with threshold lines, metadata consumers, device error counters, balance state, statfs usage, non-btrfs inode usage. All 18 panel queries returned data against a live Prometheus; the dashboard was loaded by Grafana's file provisioner but not visually inspected.
-
 ## Troubleshooting
 
 If you experience issues:
