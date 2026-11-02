@@ -30,12 +30,13 @@ class AntigravityMcpTarget:
             if server.disabled:
                 continue
             if server.type == "http":
-                mcp_servers[server.name] = {"type": "http", "serverUrl": server.url}
+                entry: dict = {"type": "http", "serverUrl": server.url}
             else:
-                entry: dict = {"command": server.command, "args": server.args}
+                entry = {"command": server.command, "args": server.args}
                 if server.env:
                     entry["env"] = server.env
-                mcp_servers[server.name] = entry
+            entry.update(server.extra)
+            mcp_servers[server.name] = entry
 
         if dry_run:
             console.print(
