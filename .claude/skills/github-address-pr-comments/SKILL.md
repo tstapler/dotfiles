@@ -7,26 +7,16 @@ description: Systematically address all open GitHub PR review comments — fix c
 
 Load all unresolved review threads for a PR, then for each: decide whether to fix or decline, implement fixes when accepting, reply with a clear response, and resolve the thread. No comment goes unacknowledged.
 
-## Step 0: Bootstrap — Install `pr-threads.py`
+## Step 0: The helper script
 
-The skill uses a single permanent helper script at `~/.claude/scripts/pr-threads.py`.
-Check if it exists; if not, write it from [references/pr-threads-script.md](references/pr-threads-script.md), then `chmod +x` it.
-Once installed, all subsequent steps call `python3 ~/.claude/scripts/pr-threads.py <subcommand>` —
-pre-approved by `Bash(python3:*)` in settings, no prompts needed.
+All thread operations go through [`scripts/pr-threads.py`](scripts/pr-threads.py), which ships with this
+skill: there is nothing to install. Every step calls
+`python3 ~/.claude/skills/github-address-pr-comments/scripts/pr-threads.py <subcommand>`
+(pre-approved by `Bash(python3:*)` in settings, no prompts needed).
 
-```bash
-[ -f ~/.claude/scripts/pr-threads.py ] && echo "installed" || echo "missing — write it"
-```
-
-If missing, extract the Python source from `references/pr-threads-script.md` and write it to `~/.claude/scripts/pr-threads.py`.
-
-That reference file is the **single shared implementation** for viewing and aggregating
-live PR review threads — `/code:review` and `github:pr-ship` both call it
-instead of each hand-rolling their own GraphQL/jq. If it and
-`~/.claude/scripts/pr-threads.py` diverge, treat the reference file as the source
-of truth and re-sync the installed copy.
-
-After writing: `mkdir -p ~/.claude/scripts && chmod +x ~/.claude/scripts/pr-threads.py`
+It is the **single shared implementation** for viewing and aggregating live PR review threads and
+check runs: `/code:review` and `github:pr-ship` call it instead of each hand-rolling their own
+GraphQL/jq. Edit that file in place; there is no second copy to keep in sync.
 
 ---
 
@@ -44,7 +34,7 @@ Or the user provides the PR number directly.
 
 ```bash
 OUT="/tmp/review-threads-${OWNER}-${REPO}-${PR}.json"
-python3 ~/.claude/scripts/pr-threads.py fetch \
+python3 ~/.claude/skills/github-address-pr-comments/scripts/pr-threads.py fetch \
   --owner "$OWNER" --repo "$REPO" --pr "$PR" --out "$OUT"
 ```
 
@@ -86,7 +76,7 @@ Use Edit/Write tools. Group related fixes in the same file together before movin
 **`--comment-id` must be the numeric `databaseId` from `comments.nodes[0]`** — not the GraphQL node ID.
 
 ```bash
-python3 ~/.claude/scripts/pr-threads.py reply \
+python3 ~/.claude/skills/github-address-pr-comments/scripts/pr-threads.py reply \
   --owner "$OWNER" --repo "$REPO" --pr "$PR" \
   --comment-id 3183811072 \
   --body "Fixed. Added AtomicBoolean guard matching the tryStart pattern in IndexLifecycleCoordinator."
@@ -105,7 +95,7 @@ python3 ~/.claude/scripts/pr-threads.py reply \
 ### Resolve All Addressed Threads in One Call
 
 ```bash
-python3 ~/.claude/scripts/pr-threads.py resolve \
+python3 ~/.claude/skills/github-address-pr-comments/scripts/pr-threads.py resolve \
   --thread-id "PRRT_abc123" "PRRT_def456" "PRRT_ghi789"
 ```
 
@@ -125,7 +115,7 @@ git push
 ## Step 6: Check Merge Readiness
 
 ```bash
-python3 ~/.claude/scripts/pr-threads.py check \
+python3 ~/.claude/skills/github-address-pr-comments/scripts/pr-threads.py check \
   --owner "$OWNER" --repo "$REPO" --pr "$PR"
 ```
 
@@ -140,7 +130,7 @@ python3 ~/.claude/scripts/pr-threads.py check \
 ## Step 7: Re-fetch and Verify Zero Unresolved
 
 ```bash
-python3 ~/.claude/scripts/pr-threads.py fetch \
+python3 ~/.claude/skills/github-address-pr-comments/scripts/pr-threads.py fetch \
   --owner "$OWNER" --repo "$REPO" --pr "$PR"
 ```
 
@@ -183,4 +173,4 @@ X fixed, Y declined, Z deferred — N total threads addressed.
 | `code-review` (`/code:review`) | Apply structured review protocols before responding; also calls `pr-threads.py summary` in its own Step 0.5 to fold live threads into diff-based findings |
 | `github:pr-ship` | Gate 3 delegates thread fetch/fix/resolve to this skill; Gate 4 calls `pr-threads.py summary --since` (this skill's own script) to detect new comments after CI goes green |
 
-All three of the skills above share one aggregation implementation — `~/.claude/scripts/pr-threads.py` (`fetch`/`summary`/`reply`/`resolve`/`check`), canonically defined in [references/pr-threads-script.md](references/pr-threads-script.md). If you change its behavior, update that reference file first.
+All three of the skills above share one aggregation implementation — [`scripts/pr-threads.py`](scripts/pr-threads.py) (`fetch`/`summary`/`reply`/`react`/`resolve`/`check`/`checkruns`). Change its behavior there, in one place.
