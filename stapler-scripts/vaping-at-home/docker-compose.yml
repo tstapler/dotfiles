@@ -26,7 +26,11 @@ services:
       - "9791:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus_targets.d:/etc/prometheus/targets.d:ro
       - prometheus_data:/prometheus
+    extra_hosts:
+      # Docker Desktop defines this name itself; on Linux it must be mapped to the host.
+      - "host.docker.internal:host-gateway"
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -46,6 +50,9 @@ services:
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
+      # Placeholders until a notification channel is chosen (contactpoints.yml).
+      - NTFY_WEBHOOK_URL=${NTFY_WEBHOOK_URL:-http://ntfy.invalid/unset}
+      - HEARTBEAT_URL=${HEARTBEAT_URL:-http://heartbeat.invalid/unset}
       - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/network-monitoring/network_latency.json
     restart: unless-stopped
     depends_on:
