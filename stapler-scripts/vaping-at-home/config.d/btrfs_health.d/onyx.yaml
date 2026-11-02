@@ -1,0 +1,3 @@
+# Applies on onyx only; add `uuids:` to restrict to specific filesystems.
+hosts:
+  - onyx
