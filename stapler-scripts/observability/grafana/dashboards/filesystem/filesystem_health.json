@@ -24,7 +24,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "victoriametrics"
       },
       "id": 1,
       "gridPos": {
@@ -39,7 +39,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "victoriametrics"
           },
           "expr": "sum by (uuid) (btrfs_unallocated_bytes)",
           "legendFormat": "{{uuid}}",
@@ -92,7 +92,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "victoriametrics"
       },
       "id": 2,
       "gridPos": {
@@ -107,7 +107,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "victoriametrics"
           },
           "expr": "btrfs_metadata_usable_headroom_bytes",
           "legendFormat": "{{uuid}}",
@@ -160,7 +160,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "victoriametrics"
       },
       "id": 3,
       "gridPos": {
@@ -175,7 +175,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "victoriametrics"
           },
           "expr": "sum by (devid) (btrfs_device_errors_total{type=\"corruption\"})",
           "legendFormat": "dev {{devid}}",
@@ -224,7 +224,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "victoriametrics"
       },
       "id": 4,
       "gridPos": {
@@ -239,7 +239,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "victoriametrics"
           },
           "expr": "time() - btrfs_exporter_last_success_timestamp_seconds",
           "legendFormat": "age",
@@ -288,7 +288,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "victoriametrics"
       },
       "id": 5,
       "gridPos": {
@@ -303,7 +303,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "victoriametrics"
           },
           "expr": "sum by (type) (btrfs_block_group_disk_total_bytes)",
           "legendFormat": "{{type}}",
@@ -312,7 +312,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "victoriametrics"
           },
           "expr": "sum(btrfs_unallocated_bytes)",
           "legendFormat": "unallocated",
@@ -379,7 +379,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "victoriametrics"
       },
       "id": 6,
       "gridPos": {
@@ -394,7 +394,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "victoriametrics"
           },
           "expr": "btrfs_unallocated_bytes",
           "legendFormat": "{{uuid}}",
@@ -469,7 +469,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "victoriametrics"
       },
       "id": 7,
       "gridPos": {
@@ -484,7 +484,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "victoriametrics"
           },
           "expr": "btrfs_metadata_usable_headroom_bytes",
           "legendFormat": "usable headroom",
@@ -493,7 +493,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "victoriametrics"
           },
           "expr": "btrfs_block_group_total_bytes{type=\"metadata\"} - btrfs_block_group_used_bytes{type=\"metadata\"}",
           "legendFormat": "raw total - used",
@@ -568,7 +568,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "victoriametrics"
       },
       "id": 8,
       "gridPos": {
@@ -583,7 +583,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "victoriametrics"
           },
           "expr": "btrfs_block_group_used_bytes{type=\"metadata\"}",
           "legendFormat": "used",
@@ -592,7 +592,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "victoriametrics"
           },
           "expr": "btrfs_block_group_reserved_bytes{type=\"metadata\"}",
           "legendFormat": "reserved",
@@ -601,7 +601,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "victoriametrics"
           },
           "expr": "btrfs_block_group_pinned_bytes{type=\"metadata\"}",
           "legendFormat": "pinned",
@@ -610,7 +610,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "victoriametrics"
           },
           "expr": "btrfs_block_group_may_use_bytes{type=\"metadata\"}",
           "legendFormat": "may_use",
@@ -619,7 +619,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "victoriametrics"
           },
           "expr": "btrfs_global_reserve_size_bytes",
           "legendFormat": "global reserve",
@@ -685,7 +685,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "victoriametrics"
       },
       "id": 9,
       "gridPos": {
@@ -700,7 +700,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "victoriametrics"
           },
           "expr": "btrfs_device_errors_total",
           "legendFormat": "dev {{devid}} {{type}}",
@@ -767,7 +767,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "victoriametrics"
       },
       "id": 10,
       "gridPos": {
@@ -782,7 +782,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "victoriametrics"
           },
           "expr": "btrfs_balance_running",
           "legendFormat": "{{uuid}}",
@@ -851,7 +851,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "victoriametrics"
       },
       "id": 11,
       "gridPos": {
@@ -866,10 +866,10 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "victoriametrics"
           },
-          "expr": "100 * (1 - node_filesystem_avail_bytes{fstype!~\"tmpfs|overlay|squashfs|devtmpfs\"} / node_filesystem_size_bytes{fstype!~\"tmpfs|overlay|squashfs|devtmpfs\"})",
-          "legendFormat": "{{instance}} {{mountpoint}}",
+          "expr": "100 * (1 - host_filesystem_avail_bytes / host_filesystem_size_bytes)",
+          "legendFormat": "{{fstype}} {{mountpoint}}",
           "refId": "A"
         }
       ],
@@ -935,7 +935,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "victoriametrics"
       },
       "id": 12,
       "gridPos": {
@@ -950,10 +950,10 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "victoriametrics"
           },
-          "expr": "100 * (1 - node_filesystem_files_free{fstype!~\"tmpfs|overlay|squashfs|devtmpfs|btrfs\"} / node_filesystem_files{fstype!~\"tmpfs|overlay|squashfs|devtmpfs|btrfs\"})",
-          "legendFormat": "{{instance}} {{mountpoint}}",
+          "expr": "100 * (1 - host_filesystem_files_free / host_filesystem_files)",
+          "legendFormat": "{{fstype}} {{mountpoint}}",
           "refId": "A"
         }
       ],
@@ -999,7 +999,7 @@
         },
         "overrides": []
       },
-      "description": "btrfs allocates inodes dynamically and statfs reports 0 files, so it is excluded; metadata pressure on btrfs is the headroom panel.",
+      "description": "btrfs allocates inodes dynamically and statfs reports 0 files, so the exporter omits them; metadata pressure on btrfs is the headroom panel.",
       "options": {
         "legend": {
           "calcs": [

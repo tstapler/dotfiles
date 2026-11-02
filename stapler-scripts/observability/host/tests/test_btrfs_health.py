@@ -102,7 +102,42 @@ def test_main_writes_atomically_to_output_dir(tmp_path):
     cfg = tmp_path / "cfg"
     _write(cfg / "any.yaml", "{}\n")
 
-    assert bh.main(["--sysfs-root", str(FIXTURE_ROOT), "--output-dir", str(out), "--config-dir", str(cfg)]) == 0
+    assert bh.main(["--sysfs-root", str(FIXTURE_ROOT), "--mountinfo", str(tmp_path / "none"), "--output-dir", str(out), "--config-dir", str(cfg)]) == 0
 
     assert (out / "btrfs_health.prom").exists()
     assert not list(out.glob("*.tmp"))
+
+
+MOUNTINFO = r"""22 28 0:21 / /sys rw - sysfs sys rw
+24 28 0:22 / /run rw - tmpfs run rw
+26 1 0:26 / / rw - btrfs /dev/nvme0n1p2 rw,subvolid=256
+27 26 0:26 /@home /home rw - btrfs /dev/nvme0n1p2 rw,subvolid=257
+30 26 259:1 / /boot/efi rw - vfat /dev/nvme0n1p1 rw
+31 26 0:40 / /mnt/with\040space rw - ext4 /dev/sdb1 rw
+32 26 0:41 / /run/user/1000/doc rw - fuse.portal portal rw
+"""
+
+
+def test_parse_mountinfo_skips_pseudo_and_collapses_subvolumes():
+    assert bh.parse_mountinfo(MOUNTINFO) == [
+        ("/", "btrfs", "/dev/nvme0n1p2"),
+        ("/boot/efi", "vfat", "/dev/nvme0n1p1"),
+        ("/mnt/with space", "ext4", "/dev/sdb1"),
+    ]
+
+
+def test_mount_stats_render_and_skip_zero_inodes():
+    class St:
+        f_blocks, f_bavail, f_frsize, f_files, f_ffree = 1000, 400, 4096, 0, 0
+
+    def fake_statvfs(mountpoint):
+        if mountpoint != "/":
+            raise OSError("gone")
+        return St
+
+    stats = bh.read_mount_stats([("/", "btrfs", "/dev/x"), ("/gone", "ext4", "/dev/y")], statvfs=fake_statvfs)
+    text = bh.render([], now=1, mount_stats=stats)
+
+    assert 'host_filesystem_size_bytes{mountpoint="/",fstype="btrfs",device="/dev/x"} 4096000' in text
+    assert 'host_filesystem_avail_bytes{mountpoint="/",fstype="btrfs",device="/dev/x"} 1638400' in text
+    assert "host_filesystem_files" not in text and "/gone" not in text

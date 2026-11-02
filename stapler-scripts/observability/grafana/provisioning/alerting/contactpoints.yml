@@ -1,0 +1,27 @@
+apiVersion: 1
+
+contactPoints:
+  # Local desktop notification via the host-side relay (desktop_alert_relay.py).
+  # DESKTOP_RELAY_TOKEN must match the relay's token; compose passes it from .env.
+  - orgId: 1
+    name: desktop-relay
+    receivers:
+      - uid: desktop-relay
+        type: webhook
+        settings:
+          url: http://host.docker.internal:8791/grafana
+          httpMethod: POST
+          authorization_scheme: Bearer
+          authorization_credentials: $__env{DESKTOP_RELAY_TOKEN}
+
+  # PLACEHOLDER, still undecided: must point OUTSIDE this machine to catch a
+  # frozen host (see README "Dead man's switch"). Defaults to an unresolvable
+  # *.invalid URL so delivery fails visibly in the Grafana log.
+  - orgId: 1
+    name: heartbeat-placeholder
+    receivers:
+      - uid: heartbeat-placeholder
+        type: webhook
+        settings:
+          url: $__env{HEARTBEAT_URL}
+          httpMethod: POST
