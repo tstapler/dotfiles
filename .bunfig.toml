@@ -1,0 +1,9 @@
+# Global bun package-manager config (read by `bun install/add/update/pm`, not by `bun run`).
+# Project bunfig.toml keys override these.
+
+[install]
+# One shared copy of every package under <cache>/links/; each node_modules becomes a thin
+# symlink tree. Matters here because each git worktree otherwise materializes ~80K inodes
+# of node_modules, which exhausted btrfs metadata. Applies only to projects on
+# `linker = "isolated"` (the hoisted linker ignores it).
+globalStore = true
