@@ -1,0 +1,15 @@
+# macOS (Docker Desktop) only. Selected automatically by the Makefile on
+# Darwin, or by hand: docker compose -f docker-compose.yml -f docker-compose.macos.yml up -d
+# Kept out of the base file because /private/var/log and ~/Library don't
+# exist on Linux, where a missing bind source would be created root-owned.
+services:
+  alloy:
+    volumes:
+      - ./alloy.d/macos.alloy:/etc/alloy/macos.alloy:ro
+      - /private/var/log:/mac-logs/var-log:ro
+      - ${HOME}/Library/Logs/vaping-unified-logs:/mac-logs/unified:ro
+      # Tail positions, so a recreate doesn't re-ingest whole files.
+      - alloy_data:/var/lib/alloy/data
+
+volumes:
+  alloy_data:
