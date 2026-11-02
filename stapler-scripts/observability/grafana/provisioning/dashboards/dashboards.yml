@@ -30,6 +30,28 @@ providers:
     options:
       path: /var/lib/grafana/dashboards/general
 
+  - name: 'Filesystem Health'
+    orgId: 1
+    folder: 'Filesystem Health'
+    type: file
+    disableDeletion: false
+    editable: true
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards/filesystem
+
+  - name: 'Network Monitoring'
+    orgId: 1
+    folder: 'Network Monitoring'
+    type: file
+    disableDeletion: false
+    editable: true
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards/network-monitoring
+
   - name: 'stapler-squad'
     orgId: 1
     folder: 'stapler-squad'

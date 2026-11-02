@@ -1,0 +1,3 @@
+host/textfile_collector/*.prom
+.env
+__pycache__/

@@ -1,0 +1,49 @@
+// macOS-only pipeline; mounted by docker-compose.macos.yml, absent on Linux.
+
+// Native node_exporter on the Mac (brew services) with the textfile collector
+// pointed at ../vaping-at-home/textfile_collector. A container can only see
+// Docker Desktop's VM, so the host binary is scraped over host.docker.internal.
+prometheus.scrape "macos_node_exporter" {
+  targets = [
+    {"__address__" = "host.docker.internal:9100", "instance" = "macos-host"},
+  ]
+  forward_to      = [prometheus.remote_write.victoriametrics.receiver]
+  job_name        = "node-exporter"
+  scrape_interval = "15s"
+}
+
+// Log files written by macOS itself and by ../vaping-at-home/log_capture.sh.
+// `job` values match the old promtail config so the dashboards' stream
+// filters carry over unchanged.
+local.file_match "macos_logs" {
+  path_targets = [
+    {"__path__" = "/mac-logs/var-log/system.log", "job" = "system_logs"},
+    {"__path__" = "/mac-logs/var-log/wifi.log", "job" = "wifi_logs"},
+    {"__path__" = "/mac-logs/var-log/install.log", "job" = "install_logs"},
+    {"__path__" = "/mac-logs/unified/dhcp.log", "job" = "dhcp_logs"},
+    {"__path__" = "/mac-logs/unified/network_config.log", "job" = "network_config"},
+    {"__path__" = "/mac-logs/unified/power.log", "job" = "power_logs"},
+    {"__path__" = "/mac-logs/unified/usb_thunderbolt.log", "job" = "usb_thunderbolt_logs"},
+  ]
+}
+
+loki.source.file "macos_logs" {
+  targets    = local.file_match.macos_logs.targets
+  forward_to = [loki.process.macos_logs.receiver]
+}
+
+loki.process "macos_logs" {
+  // `log stream` prints this banner at every start; it isn't an event.
+  stage.drop {
+    expression = "Filtering the log data using"
+  }
+  forward_to = [loki.write.victorialogs.receiver]
+}
+
+// VictoriaLogs' Loki-compatible endpoint: every Loki label becomes a stream
+// field, the line becomes _msg, timestamps are taken as-is.
+loki.write "victorialogs" {
+  endpoint {
+    url = "http://victorialogs:9428/insert/loki/api/v1/push"
+  }
+}

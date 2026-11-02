@@ -1,8 +1,9 @@
 # Observability Stack
 
 A single, shared OpenTelemetry Collector + VictoriaMetrics + Grafana stack for
-**any** local project's metrics — not per-project like `../vaping-at-home` or
-`../litellm-proxy`. There's exactly one instance running for the whole machine,
+**any** local project's metrics — not per-project like `../litellm-proxy`. The
+`../vaping-at-home` network probe now reports here too (see "Network probe and
+macOS logs"). There's exactly one instance running for the whole machine,
 so it uses each tool's own standard port rather than a project-specific block.
 
 ## Start it
@@ -23,6 +24,7 @@ make clean   # stop and wipe all volumes
 | VictoriaMetrics query API | `http://localhost:8428` | Prometheus-compatible; `/api/v1/query`, `/api/v1/query_range` |
 | Tempo query API | `http://localhost:3200` | not usually queried directly — use Grafana's Explore |
 | Pyroscope query API | `http://localhost:4040` | continuous profiling storage; not usually queried directly — use Grafana's flamegraph panels/Explore |
+| VictoriaLogs | `http://localhost:9428` | LogsQL query API; Loki push at `/insert/loki/api/v1/push`, OTLP at `/insert/opentelemetry/v1/logs` |
 | Alloy debug UI | `http://localhost:12345` | component graph + per-target scrape health for the `pyroscope.scrape` jobs below |
 | Grafana | `http://localhost:48300` | `admin` / `admin` — change this if you ever expose the port beyond localhost. Non-standard port: `:3000` is one of the most commonly already-bound dev ports (Next.js, CRA, etc.) |
 
@@ -48,9 +50,9 @@ after the project.
   required in the target project. Query via Grafana's flamegraph panels or
   Explore using the Pyroscope datasource. See "Pointing a project's profiler
   at this stack" below to wire up a new project.
-- **Logs**: accepted by the collector (so a project exporting logs doesn't
-  error) but only routed to a `debug` exporter (collector's own stdout) — no
-  log backend (e.g. Loki) is wired up yet.
+- **Logs**: the collector still routes OTLP logs only to a `debug` exporter.
+  VictoriaLogs is the log store; today it is fed by Alloy's `loki.write` from
+  the macOS log files (below). Query via Grafana's `VictoriaLogs` datasource.
 - **Dashboards**: file-provisioned per project folder under
   `/var/lib/grafana/dashboards/<project>/` inside the container, each with
   its own explicit provider entry in
@@ -68,6 +70,67 @@ after the project.
   something with no repo of its own) or bind-mount that project's own
   dashboard directory the same way stapler-squad's is, then add a provider
   block to `dashboards.yml` either way.
+
+## Host filesystem health (btrfs)
+
+Added after the 2026-11-01 incident on `onyx` (single-NVMe btrfs root): metadata filled (25G used of 26G allocated, 512 MiB global reserve, 1.1 MiB unallocated) while `df` still showed ~250 GiB free, and every read/unlink blocked in `reserve_bytes`. Nothing alerted.
+
+**Data path.** `host/btrfs_health.py` (user timer, every 60 s) reads `/sys/fs/btrfs/<uuid>/` and `/proc/self/mountinfo` and writes `host/textfile_collector/btrfs_health.prom`. The `alloy` service bind-mounts that directory read-only and runs `prometheus.exporter.unix` with only the `textfile` collector, then `prometheus.scrape` and `prometheus.remote_write` to `victoriametrics:8428/api/v1/write` (`alloy-config.alloy`, job `host-textfile`, instance pinned to `host`). The block lives in `alloy-config.alloy`; Alloy now runs on the directory `/etc/alloy` (every `*.alloy` in it is loaded), which is how the macOS-only file below is added.
+
+**Why this and not a host node_exporter** (evidence from `onyx`, node_exporter 1.12.1 via `brew install`):
+- Its btrfs collector exposes `node_btrfs_{size,used,reserved}_bytes`, `device_size`, `device_unused`, `global_rsv_size`, `device_errors_total`, `allocation_ratio`. It lacks `bytes_may_use`, pinned and readonly bytes and `global_rsv_reserved`, which are exactly what turned 529 MiB of raw headroom into a negative usable value. So a textfile exporter is needed regardless.
+- Given that, a second moving part (a host node_exporter on a docker-bridge address, plus firewall and boot-ordering concerns) buys nothing. The textfile path needs no host listener and no `host.docker.internal` hop for metrics. The exporter also writes statfs (`host_filesystem_*`) itself, because Alloy's container cannot see the host's mounts.
+
+**Metrics:** `btrfs_block_group_{total,used,disk_total,reserved,pinned,readonly,may_use}_bytes{uuid,type}`, `btrfs_device_size_bytes`, `btrfs_unallocated_bytes`, `btrfs_metadata_usable_headroom_bytes`, `btrfs_global_reserve_{size,reserved}_bytes`, `btrfs_device_errors_total{devid,type}`, `btrfs_device_missing`, `btrfs_balance_running`, `btrfs_exclusive_operation`, `host_filesystem_{size,avail}_bytes`, `host_filesystem_files{,_free}` (omitted where statfs reports 0 inodes, as btrfs does), `btrfs_exporter_last_success_timestamp_seconds`. Per-host config is `host/config.d/btrfs_health.d/*.yaml` (`hosts` allowlist, optional `uuids`); no matching config writes nothing. `make btrfs-health` runs it once, `make test` runs the fixture tests (`host/tests/fixtures/sysfs_btrfs` is a sysfs snapshot, never live `/sys`).
+
+- `unallocated = sum(devices/*/size) - sum(disk_total)`; `disk_total` already includes DUP copies.
+- `usable headroom = total - used - reserved - pinned - readonly - may_use - global_rsv_size`. Conservative: the kernel may already count the global reserve inside `bytes_may_use` (INFERRED, not checked against kernel source), so it can read low but not high.
+- **Headroom is noisy during a balance.** On `onyx` during a running balance it ranged 7.5 to 10.2 GiB in 4 s samples, and a direct sysfs read showed metadata `bytes_may_use` at 14.9 GiB, which would be negative on a healthy filesystem with tens of GiB unallocated. The headroom alerts are therefore gated on `unallocated < 20 GiB` (my choice, not a verified kernel threshold) with `for:` 10 m / 2 m.
+- Scrub state is not exported: it is not an `exclusive_operation` and its status needs root. Only balance is observable.
+- Not built: per-directory attribution from `metascope scan`.
+
+**Alerts** (`grafana/provisioning/alerting/rules.yml`, folder `Filesystem Health`, datasource uid `victoriametrics`): unallocated < 10 GiB warn / < 3 GiB critical; usable headroom < 2 GiB warn / < 256 MiB critical (gated, above); any `increase(btrfs_device_errors_total[15m])`; `btrfs exporter stale or missing` (`time() - last_success > 300`); `Alloy host-textfile scrape down` (`up{job="host-textfile"}`); and an always-firing `Dead mans switch heartbeat`.
+- VictoriaMetrics differences (the `increase()` behavior is INFERRED from MetricsQL docs, not tested here): the exporter being dead does not make series disappear, because Alloy keeps serving the last `.prom` file; staleness is therefore detected by the timestamp rule, with NoData as a second net. MetricsQL `increase()` does not extrapolate and looks at the sample before the window, so a counter that first appears already non-zero is not an increase; at `[15m]` with a 30 s scrape the window holds enough samples. `and on(uuid)` and `time()` behave as in PromQL.
+- Existing finding: `onyx` already reports `corruption_errs 14586` on devid 1. The alert fires on increase, so it stays quiet; the lifetime count is on the dashboard. Worth a `btrfs scrub` / `btrfs device stats` look.
+
+**Dashboard:** `Filesystem Health (btrfs)` in folder `Filesystem Health` (`grafana/dashboards/filesystem/`, mounted in `docker-compose.yml`, provider in `dashboards.yml`): allocation stacked by type plus unallocated, unallocated and usable headroom with threshold lines, raw total-used vs usable, metadata consumers, error counters, balance state, statfs usage, non-btrfs inode usage.
+
+### Desktop notifications (alert delivery)
+
+`host/desktop_alert_relay.py` (Python stdlib) receives Grafana's webhook POST and shows a desktop notification: `notify-send` on Linux (the same `org.freedesktop.Notifications` service gh-signal's notify-rust uses; on `onyx` that is Plasma, checked with `GetServerInformation`), `osascript display notification` on macOS (as gh-signal does). gh-signal sets no urgency or app name; the relay adds `--urgency` (critical for any critical alert, low for resolved, else normal) and `--app-name=vaping-at-home`. Title is `[FIRING] <alertname>` (`(+N more)` for grouped payloads), body is the `summary` annotations, truncated to 400 chars.
+
+- Security: binds only `172.17.0.1:8791` by default (`--bind`, `--port`), requires `Authorization: Bearer <token>` (constant-time compare), token from a 0600 file (`--token-file`, refused if group/other readable) or `DESKTOP_RELAY_TOKEN`, bodies over 64 KiB get 413, the token is never logged (checked: 0 occurrences in the relay log).
+- Why 172.17.0.1: inside the compose-network Grafana, `host.docker.internal` resolves to `172.17.0.1` via `extra_hosts: host-gateway` even though the project network's own gateway is `172.20.0.1` (VERIFIED in a throwaway project; the live Grafana has no such entry yet and does not resolve the name). If docker's `host-gateway-ip` is changed, change `--bind`.
+- `contactpoints.yml` provisions `desktop-relay` (webhook with bearer token `$__env{DESKTOP_RELAY_TOKEN}`) and a `heartbeat-placeholder` (`$__env{HEARTBEAT_URL}`, default an unresolvable `*.invalid`). `policies.yml` sends the `Filesystem Health` folder to `desktop-relay` and `severity=heartbeat` to the heartbeat; the root receiver stays Grafana's default.
+
+**The limit of this channel.** A desktop notification only reaches you if the graphical session is up and you are at the machine. On 2026-11-01 X would not start, so this channel would not have reached you at all, and it cannot fire if the machine hangs, because Grafana, Alloy and the relay all run on that machine. The external heartbeat is the only thing that covers a frozen host, and it is not chosen yet: the `deadmans-switch-heartbeat` rule re-sends every 5 minutes to `HEARTBEAT_URL`, which must be an off-machine service that alerts on absence (grace of about 10 to 15 minutes). It does not go through the relay.
+
+### Install on this host (nothing here has been done)
+
+```bash
+cd ~/dotfiles/stapler-scripts/observability
+mkdir -p ~/.local/state/observability && umask 077
+openssl rand -hex 24 > ~/.local/state/observability/relay.token
+printf 'DESKTOP_RELAY_TOKEN=%s\n' "$(cat ~/.local/state/observability/relay.token)" > .env   # gitignored; compose reads it
+mkdir -p ~/.config/systemd/user
+ln -s "$PWD"/systemd/{btrfs-health.service,btrfs-health.timer,desktop-alert-relay.service} ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable --now btrfs-health.timer desktop-alert-relay.service
+docker compose up -d --force-recreate grafana alloy   # picks up new mounts, extra_hosts, env, alloy config
+```
+
+Existing precedent: `llm-sync.timer` is rendered by `bootstrap-pyinfra/deploys/llm_sync.py` rather than stored in the repo; a pyinfra deploy for these units is not written. The last command names only `grafana` and `alloy`, so VictoriaMetrics and the other volumes are not recreated.
+
+## Network probe and macOS logs (migrated from vaping-at-home)
+
+`../vaping-at-home` now runs only the `vaping` probe container. Storage, dashboards and alerts live here, in the one Grafana (`http://localhost:48300`). Historical Prometheus/Loki data was not migrated.
+
+- **Probe metrics**: `alloy-config.alloy` block `prometheus.scrape "vaping"` scrapes `host.docker.internal:9790` (the probe's published port; the probe is a separate compose project, so no service-name DNS) into VictoriaMetrics, `job="vaping"`, `instance="vaping"`. Metric names are unchanged. To run the probe: `cd ../vaping-at-home && make run`. While it is not running, `up{job="vaping"}` is 0 and the two network alert rules have no data.
+- **Dashboards**: `Network Latency Dashboard` (uid `network-latency`, folder `Network Monitoring`, `grafana/dashboards/network-monitoring/`) and `macOS System & Network Monitoring` (`grafana/dashboards/general/system_monitoring.json`). Datasources remapped `prometheus`→`victoriametrics`, `loki`→`victorialogs` (type `victoriametrics-logs-datasource`). Log annotations and log panels are LogsQL, e.g. `{job="dhcp_logs"}` and `{job="dhcp_logs"} ~"(?i)(DHCP|dhcp|bootpd)"` (LogQL `|~` became `~`). The consolidated Grafana has no home-dashboard setting; the old `GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH` pointing at the latency dashboard was not carried over.
+- **Alerts**: `grafana/provisioning/alerting/network-rules.yml` (folder `Network Monitoring`): `Sustained Packet Loss` and `Sustained High Latency`, unchanged except datasource uid. No policy matches that folder, so they use the default receiver (no delivery) exactly as before.
+- **Logs path**: Alloy `loki.source.file` → `loki.process` (drops the `log stream` banner) → `loki.write` to VictoriaLogs' Loki endpoint `/insert/loki/api/v1/push`. Chosen over OTLP because the files already carry Loki-style `job` labels and Alloy tails files natively over Loki; VictoriaLogs maps every Loki label to a stream field (`_stream_fields` unset), the line to `_msg` and uses the pushed timestamp ([docs](https://docs.victoriametrics.com/victorialogs/data-ingestion/promtail/)). The `job` values (`dhcp_logs`, `power_logs`, `wifi_logs`, `network_config`, `usb_thunderbolt_logs`, `system_logs`, `install_logs`) are unchanged; Alloy also adds `filename`.
+
+**Per-host pieces.** Alloy's config has no conditionals, but compose overrides do, so Mac-only pieces are separate files that exist only when selected: `alloy.d/macos.alloy` (host `node_exporter` scrape at `host.docker.internal:9100` with `instance="macos-host"`, and the log pipeline) and `docker-compose.macos.yml` (mounts it plus `/private/var/log` and `~/Library/Logs/vaping-unified-logs`, and an `alloy_data` volume for tail positions). `make` adds the override automatically on Darwin; otherwise `docker compose -f docker-compose.yml -f docker-compose.macos.yml up -d`. On Linux (`onyx`) nothing Mac-specific is mounted or scraped. The native node_exporter and the vaping-at-home textfile exporters/launchd agents are still set up on the Mac as described in `../vaping-at-home/README.md`.
 
 ## Pointing a project's profiler at this stack
 

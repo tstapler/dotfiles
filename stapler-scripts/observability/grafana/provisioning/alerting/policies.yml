@@ -1,0 +1,19 @@
+apiVersion: 1
+
+# Scoped to the Filesystem Health folder so the existing network alerts keep the
+# default receiver. The root receiver is Grafana's built-in default.
+policies:
+  - orgId: 1
+    receiver: grafana-default-email
+    routes:
+      - receiver: heartbeat-placeholder
+        object_matchers:
+          - ["severity", "=", "heartbeat"]
+        group_wait: 0s
+        group_interval: 1m
+        repeat_interval: 5m
+      - receiver: desktop-relay
+        object_matchers:
+          - ["grafana_folder", "=", "Filesystem Health"]
+        group_by: ["alertname", "uuid"]
+        repeat_interval: 4h

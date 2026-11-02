@@ -1,0 +1,9 @@
+[Unit]
+Description=Write btrfs allocation/health metrics for Alloy's textfile collector
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/dotfiles/stapler-scripts/observability/host
+ExecStart=/home/linuxbrew/.linuxbrew/bin/uv run --no-project --quiet --with pyyaml python3 btrfs_health.py
+# Reads world-readable sysfs only; no root needed.
+NoNewPrivileges=yes

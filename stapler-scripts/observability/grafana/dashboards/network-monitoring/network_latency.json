@@ -1,0 +1,411 @@
+{
+  "uid": "network-latency",
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": false,
+        "iconColor": "rgba(255, 0, 0, 1)",
+        "name": "Outage (manual)",
+        "type": "dashboard"
+      },
+      {
+        "datasource": { "type": "victoriametrics-logs-datasource", "uid": "victorialogs" },
+        "enable": true,
+        "iconColor": "rgba(255, 96, 96, 1)",
+        "name": "DHCP events",
+        "target": { "expr": "{job=\"dhcp_logs\"}", "refId": "Anno" }
+      },
+      {
+        "datasource": { "type": "victoriametrics-logs-datasource", "uid": "victorialogs" },
+        "enable": true,
+        "iconColor": "rgba(255, 178, 96, 1)",
+        "name": "Power/sleep-wake events",
+        "target": { "expr": "{job=\"power_logs\"}", "refId": "Anno" }
+      },
+      {
+        "datasource": { "type": "victoriametrics-logs-datasource", "uid": "victorialogs" },
+        "enable": true,
+        "iconColor": "rgba(96, 178, 255, 1)",
+        "name": "Wi-Fi events",
+        "target": { "expr": "{job=\"wifi_logs\"}", "refId": "Anno" }
+      },
+      {
+        "datasource": { "type": "victoriametrics-logs-datasource", "uid": "victorialogs" },
+        "enable": true,
+        "iconColor": "rgba(178, 96, 255, 1)",
+        "name": "Network config changes",
+        "target": { "expr": "{job=\"network_config\"}", "refId": "Anno" }
+      },
+      {
+        "datasource": { "type": "victoriametrics-logs-datasource", "uid": "victorialogs" },
+        "enable": true,
+        "iconColor": "rgba(255, 215, 0, 1)",
+        "name": "USB/Thunderbolt kernel events",
+        "target": { "expr": "{job=\"usb_thunderbolt_logs\"}", "refId": "Anno" }
+      }
+    ]
+  },
+  "editable": true,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Latency (ms)",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "legend": {
+          "calcs": ["mean", "max", "min"],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "expr": "rate(average_latency_milliseconds_sum[5m]) / rate(average_latency_milliseconds_count[5m])",
+          "legendFormat": "{{host}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Average Latency by Host",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Packet Loss %",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "id": 2,
+      "options": {
+        "legend": {
+          "calcs": ["mean", "max", "min"],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "expr": "packet_loss",
+          "legendFormat": "{{host}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Packet Loss Rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisLabel": "Latency (ms)",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 1,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": false
+          },
+          "mappings": [],
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 16 },
+      "id": 3,
+      "options": {
+        "legend": {
+          "calcs": ["mean", "max"],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "expr": "mtr_hop_average_latency_milliseconds",
+          "legendFormat": "{{hop_index}}: {{hop}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Path to 8.8.8.8 by Hop (fping_mtr)",
+      "description": "Ordered hop-by-hop latency. A jump that starts at a specific hop and holds for all later hops points at that hop (often the ISP edge); loss/latency only on the very first hop points at the local network instead.",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisLabel": "Loss %",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 1,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": false
+          },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 24 },
+      "id": 4,
+      "options": {
+        "legend": {
+          "calcs": ["mean", "max"],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "expr": "mtr_hop_packet_loss",
+          "legendFormat": "{{hop_index}}: {{hop}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Path to 8.8.8.8 Loss by Hop (fping_mtr)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisLabel": "Resolution time (ms)",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 1,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": false
+          },
+          "mappings": [],
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 32 },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": ["mean", "max"],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "expr": "rate(average_latency_milliseconds_sum{host=~\"google.com|cloudflare.com|github.com\"}[5m]) / rate(average_latency_milliseconds_count{host=~\"google.com|cloudflare.com|github.com\"}[5m])",
+          "legendFormat": "{{host}}",
+          "refId": "A"
+        }
+      ],
+      "title": "DNS Resolution Time",
+      "description": "Resolver latency via the container's system resolver -- distinct from ICMP round-trip time. Subject to local resolver caching.",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisLabel": "RSSI (dBm)",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 1,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "mappings": [],
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 40 },
+      "id": 6,
+      "options": {
+        "legend": {
+          "calcs": ["mean", "min"],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "expr": "wifi_rssi_dbm",
+          "legendFormat": "{{ssid}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Wi-Fi Signal Strength (RSSI)",
+      "description": "Populated by wifi_signal_exporter.py running on the macOS host (not in a container -- Wi-Fi RSSI isn't visible from the Docker Desktop Linux VM). Requires host-side scheduling; see README.",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "title": "Network Latency Dashboard",
+  "version": 1
+}

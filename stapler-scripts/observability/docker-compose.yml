@@ -71,9 +71,15 @@ services:
     command:
       - run
       - --server.http.listen-addr=0.0.0.0:12345
-      - /etc/alloy/config.alloy
+      - --storage.path=/var/lib/alloy/data
+      # A directory: Alloy loads every *.alloy in it, so per-host pieces
+      # (docker-compose.macos.yml mounts alloy.d/macos.alloy) just add a file.
+      - /etc/alloy
     volumes:
       - ./alloy-config.alloy:/etc/alloy/config.alloy
+      # Written on the host by host/btrfs_health.py; the dir is committed (.gitkeep)
+      # so Docker doesn't create it root-owned on first start.
+      - ./host/textfile_collector:/host-textfile:ro
     depends_on:
       - pyroscope
     logging: *default-logging
@@ -88,7 +94,10 @@ services:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
       - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/provisioning/alerting:/etc/grafana/provisioning/alerting
       - ./grafana/dashboards/general:/var/lib/grafana/dashboards/general
+      - ./grafana/dashboards/filesystem:/var/lib/grafana/dashboards/filesystem
+      - ./grafana/dashboards/network-monitoring:/var/lib/grafana/dashboards/network-monitoring
       # stapler-squad's dashboards now live in that repo (docs/observability/),
       # not here — bind-mounted directly so there's one copy, not two kept in
       # sync by hand. allowUiUpdates writes straight into that repo's working
@@ -100,6 +109,13 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_USERS_ALLOW_SIGN_UP=false
       - GF_INSTALL_PLUGINS=victoriametrics-logs-datasource
+      # Bearer token for host/desktop_alert_relay.py, from the gitignored .env (README).
+      - DESKTOP_RELAY_TOKEN=${DESKTOP_RELAY_TOKEN:-unset}
+      # Placeholder until an external dead-man's-switch receiver is chosen.
+      - HEARTBEAT_URL=${HEARTBEAT_URL:-http://heartbeat.invalid/unset}
+    # Reaches the host-side desktop_alert_relay.py (contactpoints.yml).
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       - victoriametrics
       - pyroscope
