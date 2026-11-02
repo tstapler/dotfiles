@@ -1,0 +1,10 @@
+[Unit]
+Description=Run btrfs-health every minute
+
+[Timer]
+OnBootSec=30s
+OnUnitActiveSec=60s
+AccuracySec=5s
+
+[Install]
+WantedBy=timers.target
