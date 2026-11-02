@@ -1,4 +1,5 @@
 {
+  "uid": "network-latency",
   "annotations": {
     "list": [
       {
@@ -11,35 +12,35 @@
         "type": "dashboard"
       },
       {
-        "datasource": { "type": "loki", "uid": "loki" },
+        "datasource": { "type": "victoriametrics-logs-datasource", "uid": "victorialogs" },
         "enable": true,
         "iconColor": "rgba(255, 96, 96, 1)",
         "name": "DHCP events",
         "target": { "expr": "{job=\"dhcp_logs\"}", "refId": "Anno" }
       },
       {
-        "datasource": { "type": "loki", "uid": "loki" },
+        "datasource": { "type": "victoriametrics-logs-datasource", "uid": "victorialogs" },
         "enable": true,
         "iconColor": "rgba(255, 178, 96, 1)",
         "name": "Power/sleep-wake events",
         "target": { "expr": "{job=\"power_logs\"}", "refId": "Anno" }
       },
       {
-        "datasource": { "type": "loki", "uid": "loki" },
+        "datasource": { "type": "victoriametrics-logs-datasource", "uid": "victorialogs" },
         "enable": true,
         "iconColor": "rgba(96, 178, 255, 1)",
         "name": "Wi-Fi events",
         "target": { "expr": "{job=\"wifi_logs\"}", "refId": "Anno" }
       },
       {
-        "datasource": { "type": "loki", "uid": "loki" },
+        "datasource": { "type": "victoriametrics-logs-datasource", "uid": "victorialogs" },
         "enable": true,
         "iconColor": "rgba(178, 96, 255, 1)",
         "name": "Network config changes",
         "target": { "expr": "{job=\"network_config\"}", "refId": "Anno" }
       },
       {
-        "datasource": { "type": "loki", "uid": "loki" },
+        "datasource": { "type": "victoriametrics-logs-datasource", "uid": "victorialogs" },
         "enable": true,
         "iconColor": "rgba(255, 215, 0, 1)",
         "name": "USB/Thunderbolt kernel events",
@@ -53,10 +54,7 @@
   "links": [],
   "panels": [
     {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -127,10 +125,7 @@
       },
       "targets": [
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
           "expr": "rate(average_latency_milliseconds_sum[5m]) / rate(average_latency_milliseconds_count[5m])",
           "legendFormat": "{{host}}",
           "refId": "A"
@@ -140,10 +135,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -224,10 +216,7 @@
       },
       "targets": [
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
           "expr": "packet_loss",
           "legendFormat": "{{host}}",
           "refId": "A"
@@ -237,7 +226,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -268,7 +257,7 @@
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
           "expr": "mtr_hop_average_latency_milliseconds",
           "legendFormat": "{{hop_index}}: {{hop}}",
           "refId": "A"
@@ -279,7 +268,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -312,7 +301,7 @@
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
           "expr": "mtr_hop_packet_loss",
           "legendFormat": "{{hop_index}}: {{hop}}",
           "refId": "A"
@@ -322,7 +311,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -353,7 +342,7 @@
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
           "expr": "rate(average_latency_milliseconds_sum{host=~\"google.com|cloudflare.com|github.com\"}[5m]) / rate(average_latency_milliseconds_count{host=~\"google.com|cloudflare.com|github.com\"}[5m])",
           "legendFormat": "{{host}}",
           "refId": "A"
@@ -364,7 +353,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -395,7 +384,7 @@
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
           "expr": "wifi_rssi_dbm",
           "legendFormat": "{{ssid}}",
           "refId": "A"

@@ -71,7 +71,10 @@ services:
     command:
       - run
       - --server.http.listen-addr=0.0.0.0:12345
-      - /etc/alloy/config.alloy
+      - --storage.path=/var/lib/alloy/data
+      # A directory: Alloy loads every *.alloy in it, so per-host pieces
+      # (docker-compose.macos.yml mounts alloy.d/macos.alloy) just add a file.
+      - /etc/alloy
     volumes:
       - ./alloy-config.alloy:/etc/alloy/config.alloy
       # Written on the host by host/btrfs_health.py; the dir is committed (.gitkeep)
@@ -96,6 +99,7 @@ services:
       - ./grafana/dashboards/general:/var/lib/grafana/dashboards/general
       - ./grafana/dashboards/host:/var/lib/grafana/dashboards/host
       - ./grafana/dashboards/filesystem:/var/lib/grafana/dashboards/filesystem
+      - ./grafana/dashboards/network-monitoring:/var/lib/grafana/dashboards/network-monitoring
       # stapler-squad's dashboards now live in that repo (docs/observability/),
       # not here — bind-mounted directly so there's one copy, not two kept in
       # sync by hand. allowUiUpdates writes straight into that repo's working

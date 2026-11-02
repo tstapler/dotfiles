@@ -1,5 +1,7 @@
 # Run Vaping in Docker
 
+> **Storage, dashboards and alerts moved to [`../observability`](../observability/README.md).** This directory now runs only the `vaping` probe container plus the host-side exporters. The probe's metrics are scraped by that stack's Alloy from `host.docker.internal:9790` and shown in its single Grafana (`http://localhost:48300`, dashboards `Network Latency Dashboard` and `macOS System & Network Monitoring`; alert rules `Network Monitoring` folder). VictoriaMetrics is `http://localhost:8428`, VictoriaLogs `http://localhost:9428`. The old ports (Grafana 3719, Prometheus 9791, Loki 3792, promtail 9793) are gone. See "Decommission checklist" at the bottom for the leftovers of the old stack.
+
 This project provides a containerized setup for running [Vaping](https://github.com/20c/vaping), a network monitoring tool that can perform ping and HTTP checks. This setup only configures the `fping` ping probe (see `config.yaml.template`) — Vaping's HTTP-check capability is available upstream but not wired up here.
 
 ## Features
@@ -7,10 +9,10 @@ This project provides a containerized setup for running [Vaping](https://github.
 - Runs Vaping in an isolated Docker container
 - Automatically detects and monitors your default gateway (`net_discovery.py`)
 - Pre-configured to monitor common DNS servers (Google, Cloudflare, OpenDNS) and auto-discovered ISP hops via `fping`
-- Packet loss and latency graphed in Grafana, with sustained-loss/sustained-latency alert rules
+- Packet loss and latency exposed as Prometheus metrics (graphed and alerted on in the observability stack's Grafana)
 - Hop-by-hop latency/loss via `fping_mtr` (traceroute + fping per hop) to distinguish local-network issues from upstream ISP issues
 - DNS resolution timing tracked as its own probe, separate from ICMP reachability
-- Loki-backed log annotations overlaid on the latency dashboard
+- macOS log files (via `log_capture.sh`) feed VictoriaLogs through the observability stack's Alloy, shown as annotations on the latency dashboard
 - Optional Wi-Fi RSSI/noise/tx-rate export via a host-side textfile-collector script, correlatable against latency panels
 - Persistent configuration through Docker volumes
 - Automatic container restart on failure
@@ -30,8 +32,8 @@ make run
 
 This will:
 - Generate `config.yaml` from `config.yaml.template` via `generate_config.py`, auto-detecting your default gateway and ISP hops (`net_discovery.py`)
-- Build the Docker images
-- Start the Vaping, Grafana, Prometheus, Loki, promtail, and node-exporter containers via `docker compose`
+- Build the Docker image
+- Start the Vaping container via `docker compose` (start `../observability` too, with `make up` there, for storage and dashboards)
 
 ## Monitoring Logs
 
@@ -57,15 +59,13 @@ Re-run `make run` (or `make config.yaml`) to regenerate `config.yaml` after edit
 - Rebuild and restart: `make run`
 - Run in the foreground with logs attached: `make debug`
 - Open a shell in the vaping container: `make shell`
-- Remove images/volumes: `make clean`
+- Remove the image: `make clean`
 
 ## Security Notes
 
-Grafana, Prometheus, Loki, and promtail all bind to `0.0.0.0` with no auth in front of them, and Grafana ships with the default `admin`/`admin` credentials (`docker-compose.yml`). This is fine on a trusted home network but exposes host metrics and system log contents to anyone else on the LAN. If your machine is on a shared or untrusted network, change `GF_SECURITY_ADMIN_PASSWORD` in `docker-compose.yml` and consider binding the exposed ports to `127.0.0.1` instead of all interfaces.
+The probe's metrics port is published on `0.0.0.0:9790` with no auth, which is fine on a trusted home network (it carries only latency/loss numbers). Grafana, VictoriaMetrics and VictoriaLogs now belong to the observability stack; see its README for their exposure.
 
-node-exporter also mounts the entire host filesystem read-only (`/:/host:ro`) and runs with `pid: host` so it can report filesystem and process metrics — standard practice for that image, but worth knowing it gives the container broad visibility into the host.
-
-**On Docker Desktop for Mac/Windows, "host" metrics are really VM metrics.** Docker Desktop runs containers inside a Linux VM (LinuxKit), so `/:/host:ro` and `pid: host` expose that VM's root filesystem and process namespace, not the real macOS/Windows host. Verified: `node_uname_info` reports `sysname="Linux"`, `release="*-linuxkit"`; `node_network_up` only shows the VM's virtual interfaces (`eth0`, `docker0`, `veth*`, `br-*`), never the Mac's real `en0`/Wi-Fi adapter. CPU, memory, and disk numbers in the "System Monitoring" Grafana dashboard reflect the VM, which tracks the host loosely (shared memory/CPU pool) but is not literally "your Mac's metrics." The `instance: 'macos-host'` label in `prometheus.yml` is aspirational, not accurate, on Docker Desktop — on native Linux Docker this setup does report true host metrics.
+**Host metrics on Docker Desktop for Mac come from a native node_exporter, not a container.** A containerized node-exporter only sees Docker Desktop's LinuxKit VM (verified earlier: `node_uname_info` reported `*-linuxkit` and only virtual interfaces), so the Mac's real interfaces come from `brew services` node_exporter, scraped by the observability stack's `alloy.d/macos.alloy` at `host.docker.internal:9100` with `instance="macos-host"`. Start that stack with `make up` there on macOS (it adds `docker-compose.macos.yml` automatically).
 
 ## Network Debugging Additions
 
@@ -89,19 +89,19 @@ The `dns_resolution_timing` probe (`type: command`) shells out to `dns_probe.py 
 - `command_plugin.py` overrides the fork's vendored `command.py`, which has two bugs: `CommandProbe.init()` never initializes `self.hosts` before `.extend()`-ing onto it (`AttributeError` on startup), and it never unwraps dict-shaped `hosts: [{host: ..., name: ...}]` entries the way `fping.py` does (would have broken `self.command.format(host=host)` on the next call). Both fixed in the override.
 - Each `dns_probe.py` invocation does a fresh resolution; OS/resolver caching may still mask real upstream DNS latency depending on your system's resolver config.
 
-### Loki log annotations
+### Log annotations
 
-Log lines from `promtail` (host syslog) are queried via the `loki` datasource and overlaid as annotations on the Grafana latency dashboard, so a latency/loss spike can be cross-referenced against what else was happening on the host at that moment.
+Log lines tailed by the observability stack's Alloy (host syslog and the `log_capture.sh` files) are stored in VictoriaLogs, queried via the `victorialogs` datasource with LogsQL, and overlaid as annotations on the Grafana latency dashboard, so a latency/loss spike can be cross-referenced against what else was happening on the host at that moment.
 
-### Alerting (`grafana/provisioning/alerting/rules.yml`)
+### Alerting (`../observability/grafana/provisioning/alerting/network-rules.yml`)
 
 Two unified-alerting rules are provisioned into a `Network Monitoring` folder: `Sustained Packet Loss` (`packet_loss > 5` for 5m) and `Sustained High Latency` (5m rate of `average_latency_milliseconds` > 150ms for 5m). Verified firing against real data — `Sustained Packet Loss` triggered correctly during testing when a discovered ISP hop showed 40-80% loss.
 
-- **No notification channel is configured.** The rules use Grafana's built-in default receiver, which has no SMTP/Slack/etc. wired up, so firing alerts are visible in the Alerting UI but nothing gets delivered — you'll see `SMTP not configured` errors in the Grafana logs, which is expected. Add a contact point (`grafana/provisioning/alerting/contactpoints.yml` or via the UI) if you want actual notifications.
+- **No notification channel is configured.** The rules use Grafana's built-in default receiver, which has no SMTP/Slack/etc. wired up, so firing alerts are visible in the Alerting UI but nothing gets delivered — you'll see `SMTP not configured` errors in the Grafana logs, which is expected. Routing is in `../observability/grafana/provisioning/alerting/policies.yml`; only the Filesystem Health folder is routed to the desktop relay so far.
 
 ### Wi-Fi RSSI correlation
 
-`wifi_signal_exporter.py` reads the host's Wi-Fi signal (RSSI, noise, tx rate) and writes Prometheus textfile-collector output to `textfile_collector/wifi_signal.prom`, which node-exporter picks up via `--collector.textfile.directory`. This lets you overlay `wifi_rssi_dbm` against latency panels to see if degraded signal correlates with ping spikes.
+`wifi_signal_exporter.py` reads the host's Wi-Fi signal (RSSI, noise, tx rate) and writes Prometheus textfile-collector output to `textfile_collector/wifi_signal.prom`, which the native node_exporter picks up via `--collector.textfile.directory`. This lets you overlay `wifi_rssi_dbm` against latency panels to see if degraded signal correlates with ping spikes.
 
 - The exporter is host-only (reads the Mac's/Linux box's own Wi-Fi interface) and is not run automatically — schedule it yourself (e.g. `cron`/`launchd`) at whatever interval you want fresh samples; node-exporter will serve whatever the last-written `.prom` file contains between runs.
 
@@ -110,7 +110,7 @@ Two unified-alerting rules are provisioned into a `Network Monitoring` folder: `
 If the host is wired via a Thunderbolt/USB4 dock rather than built-in Ethernet, a dock disconnect or re-enumeration (bad cable seating, firmware hiccup, power event) drops the network exactly like a generic outage, but needs a different signal to diagnose.
 
 - `thunderbolt_watch.py` polls `system_profiler SPThunderboltDataType` and writes `thunderbolt_device_connected` (gauge) and `thunderbolt_device_reenumerations_total` (counter) to `textfile_collector/thunderbolt.prom`, comparing each poll against previous state persisted in `/tmp/vaping-thunderbolt-state.json`. Host-only, not run automatically — schedule it (e.g. `launchd`, ~30s interval; a full poll takes ~2s).
-- `log_capture.sh usb_thunderbolt` tails unified-logging kernel messages mentioning `Thunderbolt`/`USB` to `~/Library/Logs/vaping-unified-logs/usb_thunderbolt.log`, scraped by promtail as the `usb_thunderbolt_logs` job and overlaid as a Loki annotation layer (same pattern as the DHCP/power/network-config logs above).
+- `log_capture.sh usb_thunderbolt` tails unified-logging kernel messages mentioning `Thunderbolt`/`USB` to `~/Library/Logs/vaping-unified-logs/usb_thunderbolt.log`, tailed by Alloy as the `usb_thunderbolt_logs` job and overlaid as a VictoriaLogs annotation layer (same pattern as the DHCP/power/network-config logs above).
 - Dashboard: "Thunderbolt Device State" (state-timeline) and "Thunderbolt Re-enumerations" (stat) panels on `macOS System & Network Monitoring`.
 
 ### Per-process resource watch
@@ -136,3 +136,18 @@ If you experience issues:
 3. Verify `config.yaml`'s syntax
 4. Make sure fping is working within the container
 
+## Decommission checklist (not executed)
+
+The old Prometheus, Loki, promtail and Grafana containers are gone from `docker-compose.yml`, but their Docker leftovers remain. Historical Prometheus and Loki data was **not** migrated. If you want the old series in VictoriaMetrics, `vmctl` can backfill from a Prometheus snapshot (not done; see https://docs.victoriametrics.com/vmctl/). Loki data has no such path and would be lost.
+
+Found with `docker volume ls` / `docker images` on `onyx`:
+
+- Volumes: `vaping-at-home_prometheus_data`, `vaping-at-home_grafana_data` (no `loki_data` / `promtail_positions` volume exists on `onyx`; on the Mac, `docker volume ls | grep vaping-at-home` will list those too).
+- Image: `mirror.gcr.io/prom/prometheus:v3.2.1`. Keep `vaping:local` (still used) and `mirror.gcr.io/grafana/grafana:11.5.2` (the observability Grafana uses it). On the Mac also the `grafana/loki:3.3.2` and `grafana/promtail:3.3.2` images.
+
+**DESTRUCTIVE, irreversible.** Run only after confirming the observability stack has what you need, and after confirming the old containers are stopped (`docker ps -a | grep vaping-at-home`):
+
+```bash
+docker volume rm vaping-at-home_prometheus_data vaping-at-home_grafana_data   # plus vaping-at-home_loki_data vaping-at-home_promtail_positions on the Mac
+docker rmi mirror.gcr.io/prom/prometheus:v3.2.1                               # plus the loki/promtail images on the Mac
+```

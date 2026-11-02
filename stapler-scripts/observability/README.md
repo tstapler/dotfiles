@@ -1,8 +1,9 @@
 # Observability Stack
 
 A single, shared OpenTelemetry Collector + VictoriaMetrics + Grafana stack for
-**any** local project's metrics — not per-project like `../vaping-at-home` or
-`../litellm-proxy`. There's exactly one instance running for the whole machine,
+**any** local project's metrics — not per-project like `../litellm-proxy`. The
+`../vaping-at-home` network probe now reports here too (see "Network probe and
+macOS logs"). There's exactly one instance running for the whole machine,
 so it uses each tool's own standard port rather than a project-specific block.
 
 ## Start it
@@ -23,6 +24,7 @@ make clean   # stop and wipe all volumes
 | VictoriaMetrics query API | `http://localhost:8428` | Prometheus-compatible; `/api/v1/query`, `/api/v1/query_range` |
 | Tempo query API | `http://localhost:3200` | not usually queried directly — use Grafana's Explore |
 | Pyroscope query API | `http://localhost:4040` | continuous profiling storage; not usually queried directly — use Grafana's flamegraph panels/Explore |
+| VictoriaLogs | `http://localhost:9428` | LogsQL query API; Loki push at `/insert/loki/api/v1/push`, OTLP at `/insert/opentelemetry/v1/logs` |
 | Alloy debug UI | `http://localhost:12345` | component graph + per-target scrape health for the `pyroscope.scrape` jobs below |
 | Grafana | `http://localhost:48300` | `admin` / `admin` — change this if you ever expose the port beyond localhost. Non-standard port: `:3000` is one of the most commonly already-bound dev ports (Next.js, CRA, etc.) |
 
@@ -48,9 +50,9 @@ after the project.
   required in the target project. Query via Grafana's flamegraph panels or
   Explore using the Pyroscope datasource. See "Pointing a project's profiler
   at this stack" below to wire up a new project.
-- **Logs**: accepted by the collector (so a project exporting logs doesn't
-  error) but only routed to a `debug` exporter (collector's own stdout) — no
-  log backend (e.g. Loki) is wired up yet.
+- **Logs**: the collector still routes OTLP logs only to a `debug` exporter.
+  VictoriaLogs is the log store; today it is fed by Alloy's `loki.write` from
+  the macOS log files (below). Query via Grafana's `VictoriaLogs` datasource.
 - **Dashboards**: file-provisioned per project folder under
   `/var/lib/grafana/dashboards/<project>/` inside the container, each with
   its own explicit provider entry in
@@ -73,7 +75,7 @@ after the project.
 
 Added after the 2026-11-01 incident on `onyx` (single-NVMe btrfs root): metadata filled (25G used of 26G allocated, 512 MiB global reserve, 1.1 MiB unallocated) while `df` still showed ~250 GiB free, and every read/unlink blocked in `reserve_bytes`. Nothing alerted.
 
-**Data path.** `host/btrfs_health.py` (user timer, every 60 s) reads `/sys/fs/btrfs/<uuid>/` and `/proc/self/mountinfo` and writes `host/textfile_collector/btrfs_health.prom`. The `alloy` service bind-mounts that directory read-only and runs `prometheus.exporter.unix` with only the `textfile` collector, then `prometheus.scrape` and `prometheus.remote_write` to `victoriametrics:8428/api/v1/write` (`alloy-config.alloy`, job `host-textfile`, instance pinned to `host`). Alloy `run` takes a single file here, so the block lives in `alloy-config.alloy` rather than a second file (a directory argument would also work).
+**Data path.** `host/btrfs_health.py` (user timer, every 60 s) reads `/sys/fs/btrfs/<uuid>/` and `/proc/self/mountinfo` and writes `host/textfile_collector/btrfs_health.prom`. The `alloy` service bind-mounts that directory read-only and runs `prometheus.exporter.unix` with only the `textfile` collector, then `prometheus.scrape` and `prometheus.remote_write` to `victoriametrics:8428/api/v1/write` (`alloy-config.alloy`, job `host-textfile`, instance pinned to `host`). The block lives in `alloy-config.alloy`; Alloy now runs on the directory `/etc/alloy` (every `*.alloy` in it is loaded), which is how the macOS-only file below is added.
 
 **Why this and not a host node_exporter** (evidence from `onyx`, node_exporter 1.12.1 via `brew install`):
 - Its btrfs collector exposes `node_btrfs_{size,used,reserved}_bytes`, `device_size`, `device_unused`, `global_rsv_size`, `device_errors_total`, `allocation_ratio`. It lacks `bytes_may_use`, pinned and readonly bytes and `global_rsv_reserved`, which are exactly what turned 529 MiB of raw headroom into a negative usable value. So a textfile exporter is needed regardless.
@@ -118,6 +120,17 @@ docker compose up -d --force-recreate grafana alloy   # picks up new mounts, ext
 ```
 
 Existing precedent: `llm-sync.timer` is rendered by `bootstrap-pyinfra/deploys/llm_sync.py` rather than stored in the repo; a pyinfra deploy for these units is not written. The last command names only `grafana` and `alloy`, so VictoriaMetrics and the other volumes are not recreated.
+
+## Network probe and macOS logs (migrated from vaping-at-home)
+
+`../vaping-at-home` now runs only the `vaping` probe container. Storage, dashboards and alerts live here, in the one Grafana (`http://localhost:48300`). Historical Prometheus/Loki data was not migrated.
+
+- **Probe metrics**: `alloy-config.alloy` block `prometheus.scrape "vaping"` scrapes `host.docker.internal:9790` (the probe's published port; the probe is a separate compose project, so no service-name DNS) into VictoriaMetrics, `job="vaping"`, `instance="vaping"`. Metric names are unchanged. To run the probe: `cd ../vaping-at-home && make run`. While it is not running, `up{job="vaping"}` is 0 and the two network alert rules have no data.
+- **Dashboards**: `Network Latency Dashboard` (uid `network-latency`, folder `Network Monitoring`, `grafana/dashboards/network-monitoring/`) and `macOS System & Network Monitoring` (`grafana/dashboards/general/system_monitoring.json`). Datasources remapped `prometheus`→`victoriametrics`, `loki`→`victorialogs` (type `victoriametrics-logs-datasource`). Log annotations and log panels are LogsQL, e.g. `{job="dhcp_logs"}` and `{job="dhcp_logs"} ~"(?i)(DHCP|dhcp|bootpd)"` (LogQL `|~` became `~`). The consolidated Grafana has no home-dashboard setting; the old `GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH` pointing at the latency dashboard was not carried over.
+- **Alerts**: `grafana/provisioning/alerting/network-rules.yml` (folder `Network Monitoring`): `Sustained Packet Loss` and `Sustained High Latency`, unchanged except datasource uid. No policy matches that folder, so they use the default receiver (no delivery) exactly as before.
+- **Logs path**: Alloy `loki.source.file` → `loki.process` (drops the `log stream` banner) → `loki.write` to VictoriaLogs' Loki endpoint `/insert/loki/api/v1/push`. Chosen over OTLP because the files already carry Loki-style `job` labels and Alloy tails files natively over Loki; VictoriaLogs maps every Loki label to a stream field (`_stream_fields` unset), the line to `_msg` and uses the pushed timestamp ([docs](https://docs.victoriametrics.com/victorialogs/data-ingestion/promtail/)). The `job` values (`dhcp_logs`, `power_logs`, `wifi_logs`, `network_config`, `usb_thunderbolt_logs`, `system_logs`, `install_logs`) are unchanged; Alloy also adds `filename`.
+
+**Per-host pieces.** Alloy's config has no conditionals, but compose overrides do, so Mac-only pieces are separate files that exist only when selected: `alloy.d/macos.alloy` (host `node_exporter` scrape at `host.docker.internal:9100` with `instance="macos-host"`, and the log pipeline) and `docker-compose.macos.yml` (mounts it plus `/private/var/log` and `~/Library/Logs/vaping-unified-logs`, and an `alloy_data` volume for tail positions). `make` adds the override automatically on Darwin; otherwise `docker compose -f docker-compose.yml -f docker-compose.macos.yml up -d`. On Linux (`onyx`) nothing Mac-specific is mounted or scraped. The native node_exporter and the vaping-at-home textfile exporters/launchd agents are still set up on the Mac as described in `../vaping-at-home/README.md`.
 
 ## Pointing a project's profiler at this stack
 

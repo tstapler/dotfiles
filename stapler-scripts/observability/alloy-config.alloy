@@ -106,6 +106,19 @@ prometheus.scrape "host_textfile" {
   scrape_interval = "30s"
 }
 
+// Network probe (../vaping-at-home). The probe publishes :9790 on the host; a
+// separate compose project can't use service-name DNS, so go via the host
+// gateway. `up` is 0 (and the network alerts see no data) while the probe
+// isn't running. Metric names are unchanged from the old Prometheus setup.
+prometheus.scrape "vaping" {
+  targets = [
+    {"__address__" = "host.docker.internal:9790", "instance" = "vaping"},
+  ]
+  forward_to      = [prometheus.remote_write.victoriametrics.receiver]
+  job_name        = "vaping"
+  scrape_interval = "15s"
+}
+
 prometheus.remote_write "victoriametrics" {
   endpoint {
     url = "http://victoriametrics:8428/api/v1/write"

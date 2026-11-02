@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
-# Tails macOS's unified logging system (log stream) into a flat file promtail
-# can scrape. Needed because /private/var/log/system.log no longer receives
+# Tails macOS's unified logging system (log stream) into a flat file Alloy
+# (observability stack, alloy.d/macos.alloy) can tail. Needed because /private/var/log/system.log no longer receives
 # DHCP/configd/networkd/powerd output on modern macOS - those subsystems
 # moved to unified logging (verified: system.log has 187 lines total, only
 # syslogd's own heartbeat). $1 selects which predicate/output file to use.
 set -euo pipefail
 
-# NOT /tmp - promtail's container mounts a named volume over its own /tmp
-# (see promtail_positions in docker-compose.yml), which shadows the host's
-# /tmp and would make files written there invisible to promtail.
+# NOT /tmp - the container can't see the host's /tmp; this directory is the one
+# docker-compose.macos.yml in the observability stack bind-mounts into Alloy.
 LOG_DIR="$HOME/Library/Logs/vaping-unified-logs"
 mkdir -p "$LOG_DIR"
 
