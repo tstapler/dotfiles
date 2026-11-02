@@ -1,0 +1,18 @@
+{
+  "project": "demo-export",
+  "gaps": [
+    {"id": "B1", "lens": "product", "severity": "blocker", "find": "success metric|metrics?\\b|measur|KPI|how (do|will) we know", "fixed_in": ["project_plans/demo-export/requirements.md"], "fixed": "success metric|metrics?:|target:|\\d+ ?%|adoption"},
+    {"id": "B2", "lens": "ux", "severity": "blocker", "find": "error state|fail(ed|ure)? (state|export)|empty state|no (schedules|exports)|error handling", "fixed_in": ["project_plans/demo-export/design/ux.md"], "fixed_all": ["error|fail", "empty|no schedules|no exports"]},
+    {"id": "B3", "lens": "engineering", "severity": "blocker", "find": "export_jobs.{0,200}(migration|schema|no task|not created|never created|missing)|(migration|schema|no task|missing).{0,200}export_jobs", "fixed_in": ["project_plans/demo-export/implementation/plan.md", "src/reportsvc/store.py"], "fixed": "migration|create table|schema (change|migration)"},
+    {"id": "G4", "lens": "product", "severity": "polish", "find": "non-goals?|out[- ]of[- ]scope|scope (is )?(not )?(explicit|defined)"},
+    {"id": "G5", "lens": "product", "severity": "polish", "find": "target user|which admins?|user (segment|persona)|admins? (is|are) (too )?(vague|broad)"},
+    {"id": "G6", "lens": "product", "severity": "polish", "find": "risky assumption|assumption.{0,80}(unvalidated|untested|not validated|large account|fast enough)"},
+    {"id": "G7", "lens": "ux", "severity": "polish", "find": "accessib|a11y|WCAG|screen reader|keyboard"},
+    {"id": "G8", "lens": "ux", "severity": "polish", "find": "loading|in[- ]progress|progress (state|indicator)|pending state|generating"},
+    {"id": "G9", "lens": "ux", "severity": "polish", "find": "time ?zone|timezone|UTC"},
+    {"id": "G10", "lens": "engineering", "severity": "polish", "find": "hours?\\b.{0,80}(estimate|cost class|price)|cost class|price-weighted|estimate.{0,60}hours"},
+    {"id": "G11", "lens": "engineering", "severity": "major", "find": "performance|row limit|timeout|large (export|account|dataset)|non-functional|NFR|memory"},
+    {"id": "G12", "lens": "engineering", "severity": "major", "find": "authori[sz]|access control|IDOR|signed (url|link)|link expir|expir(y|es|ation)"}
+  ],
+  "verdicts": ["READY TO BUILD", "NEEDS WORK", "NOT READY"]
+}

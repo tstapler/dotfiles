@@ -1,0 +1,9 @@
+{
+  "name": "triad-demo-export",
+  "description": "Run step 6 of sdd:4-validate (triad review + repair loop) on a plan with 12 seeded gaps.",
+  "workdir": "workdir",
+  "prompt": "This is a benchmark run in a throwaway directory. Invoke the sdd:4-validate skill, but execute ONLY its step 6 (the Product Triad Review gate and its repair loop) for project demo-export; skip every other step. Complexity is 3. Run non-interactively: do not ask the user questions, and make your own call wherever the skill would ask. Finish by printing the final triad verdict (one of READY TO BUILD, NEEDS WORK, NOT READY) on its own line prefixed with 'FINAL VERDICT:'.",
+  "check": "check_triad.py",
+  "max_budget_usd": 25,
+  "timeout_s": 3600
+}

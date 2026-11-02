@@ -68,6 +68,14 @@ This produces two rankings that matter for different reasons:
 Neither ranking alone is the priority signal — Step 4 combines them with
 the dimension scores from Step 3.
 
+**Per-phase breakdown with every token bucket, cache-hit share, active
+wall-clock and parallelism:** `scripts/phase_cost_report.py` reads each
+subagent's own transcript instead of a lump sum, and fits $/token rates to your
+billed `cost-state` totals. Its phase labels are an upper or lower bound, not a
+cost: strict windows end at each human prompt, and carry-forward does not.
+Measure a skill's own cost from its invocation to the end of its own agents
+before drawing conclusions.
+
 ## Step 2 — Sanity-Check the Top Candidates Against Raw Transcripts
 
 A high token count is a symptom, not a diagnosis. Before scoring anything,
