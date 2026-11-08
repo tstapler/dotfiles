@@ -5,8 +5,10 @@ test_x.py`) or via `make pyinfra-test`. Not itself a test file (leading
 underscore keeps it out of both globs).
 """
 
+from typing import Any
 
-def run_tests(namespace: dict) -> None:
+
+def run_tests(namespace: dict[str, Any]) -> None:
     tests = [value for key, value in namespace.items() if key.startswith("test_")]
     for test in tests:
         test()

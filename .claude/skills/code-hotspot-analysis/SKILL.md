@@ -23,9 +23,10 @@ This is a **prioritization** tool, not a judgment tool. It tells you where to po
 
 Run all of these against the whole repo or a suspect package; save `dot`/`svg`/`.puml` output somewhere durable if the finding is worth referencing later (this repo's convention: `docs/architecture-audit-<date>.md` plus any generated artifacts alongside it).
 
-**Check kibitzer first.** If the repo has a `.claude/inspect.json` and `kibitzer` is on `PATH`
-(or its MCP server is connected — same underlying tool, use whichever this session has), it
-covers most of the table above with no per-repo tool install:
+**Check kibitzer first.** If `kibitzer` is on `PATH` (or its MCP server is connected — same
+underlying tool, use whichever this session has), use it. It covers most of the table above with no
+per-repo tool install and no per-repo config (see the throwaway-worktree note below if the tool asks
+for an `inspect.json`):
 
 | Signal | kibitzer command | Covers | Doesn't cover |
 |---|---|---|---|
@@ -34,9 +35,23 @@ covers most of the table above with no per-repo tool install:
 | Complexity | Same `kibitzer run --trigger batch` output as row 1 — filter for `long-function` (>40 lines), `deep-nesting` (>4 levels) | A real, zero-install signal for ranking hotspots. Go/TS/TSX/JS/Python/Java/Kotlin. | Not true cyclomatic/cognitive complexity, just a line-count/nesting heuristic — use `gocyclo`/`gocognit` when you need the actual metric, not just a ranking |
 | One symbol's exact definition | CLI: grep the `architecture export` JSON for the symbol id — MCP: `get_architecture_node` (`node: "<pkg>::<Type>.<Method>"` or a package path) | Single lookup, no repo-wide grep | Same Go/TS/TSX/JS limit as the row above |
 
-Fall back to the Go-specific toolchain below only when kibitzer isn't configured for this repo,
-or a finding genuinely needs a real call graph, a true cyclomatic/cognitive number, or symbol-level
-detail in a language kibitzer's symbol export doesn't cover yet.
+**Never skip kibitzer because the repo has no `.claude/inspect.json`, and never hand-roll a
+complexity counter.** Today the MCP tools fail on such a repo with `no .claude/inspect.json found above this path` (tracked in
+[kibitzer#168](https://github.com/tstapler/kibitzer/issues/168), which asks for built-in defaults). Until that
+lands: `git worktree add --detach /tmp/<repo>-kib origin/main`, write `{}` to
+`/tmp/<repo>-kib/.claude/inspect.json`, and point the MCP tools at that throwaway worktree (never
+commit the file into the repo under analysis). With the empty config it runs the default checks and the
+output is the same as a configured repo. Verified on a Go service: `architecture_assessment` with
+`scope: "pkg/x/**"` and `include_diagram: false` returned 188 findings across 123 files in one call, and
+its biggest function (998 lines) matched a hand-written AST counter's number for the same function. Redirect or filter the output
+(it is long): group findings by file and rank by `long-function` body size, `deep-nesting`, and
+`long-parameter-list`. Then add churn from `git log --since=6.months --name-only`. Reach for
+`gocyclo`/`gocognit` only if you need a true cyclomatic number.
+
+Fall back to the Go-specific toolchain below only when kibitzer isn't available in this session
+(and the throwaway-worktree workaround above isn't possible), or a finding genuinely needs a real
+call graph, a true cyclomatic/cognitive number, or symbol-level detail in a language kibitzer's symbol
+export doesn't cover yet.
 
 **Working commands and gotchas actually hit running this stack** (Go 1.25, this repo):
 

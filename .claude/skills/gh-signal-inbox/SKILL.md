@@ -20,9 +20,16 @@ If it fails: `systemctl --user status gh-signal-inbox` (unit at
 `~/.config/systemd/user/gh-signal-inbox.service`; start with
 `systemctl --user start gh-signal-inbox`). Do not edit the token file.
 
-Events only arrive if the `gh-signal-bridge` webhook feed (or `/v1/ingest`) is
-running for that repo. A quiet inbox with no bridge is not "nothing happened";
-if you need certainty, check the PR directly with `gh pr view`.
+Events arrive from two sources: the `gh-signal-bridge` webhook feed (or `/v1/ingest`)
+and the inbox's built-in polling fallback, which is on by default and only polls
+while a PR is subscribed (about every 15-30s while a `wait` is running, every
+5 min otherwise). Check polling with `gh-signal inbox health` and read
+`ingress.poll.status`: `active` or `idle` is healthy; `disabled`, `unavailable`
+or `rate_limited` has a `reason` (for example no `[hosts.*]` token, or a 1Password
+read failure). `wait` also prints a stderr warning when polling is disabled or
+unavailable. Exit 2 means the server was reachable and nothing was pending, so
+the PR was quiet; that is only trustworthy when polling is healthy or webhooks
+reach the inbox. If you need certainty, check the PR directly with `gh pr view`.
 
 ## Workflow
 
