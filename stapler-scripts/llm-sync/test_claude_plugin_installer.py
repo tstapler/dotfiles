@@ -60,6 +60,33 @@ def test_merge_still_adds_genuinely_new_hooks():
     assert existing["PostToolUse"][0]["hooks"][0]["command"] == "kibitzer hook"
 
 
+def test_effective_command_normalizes_home_and_bin_dir():
+    home = str(Path.home())
+    assert _effective_command("$HOME/.cargo/bin/kibitzer hook") == "kibitzer hook"
+    assert _effective_command(f"{home}/.local/bin/ssq-hooks check") == "ssq-hooks check"
+    assert _effective_command("${HOME}/.claude/hooks/x.sh") == f"{home}/.claude/hooks/x.sh"
+
+
+def test_merge_does_not_duplicate_home_prefixed_hook():
+    installer = ClaudePluginInstaller()
+    existing = {
+        "PreToolUse": [
+            {
+                "matcher": ".*",
+                "hooks": [{"type": "command", "command": f"{Path.home()}/.local/bin/ssq-hooks check"}],
+            }
+        ]
+    }
+    plugin_hooks = {
+        "PreToolUse": [
+            {"matcher": ".*", "hooks": [{"type": "command", "command": "$HOME/.local/bin/ssq-hooks check"}]}
+        ]
+    }
+
+    assert installer._merge_hooks(existing, plugin_hooks, "core-hooks") == 0
+    assert len(existing["PreToolUse"]) == 1
+
+
 if __name__ == "__main__":
     from _test_runner import run_tests
 

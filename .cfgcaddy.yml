@@ -67,6 +67,8 @@ links:
     os: "Linux Darwin"
   - src: .claude/hooks/cmdcrush-wrap.sh
     os: "Linux Darwin"
+  - src: .claude/hooks/pr-review-reminder.sh
+    os: "Linux Darwin"
   - src: .config/ssq-hooks
     os: "Linux Darwin"
   - src: .config/finicky/finicky.js

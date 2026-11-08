@@ -40,3 +40,14 @@ providers:
     allowUiUpdates: true
     options:
       path: /var/lib/grafana/dashboards/stapler-squad
+
+  - name: 'host'
+    orgId: 1
+    folder: 'host'
+    type: file
+    disableDeletion: false
+    editable: true
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards/host

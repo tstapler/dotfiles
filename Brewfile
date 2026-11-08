@@ -358,6 +358,8 @@ brew "tstapler/homebrew-tap/kibitzer"
 brew "tstapler/homebrew-tap/consolette"
 # Rust toolchain used to build the pinned stapler-mcp source release
 brew "rust"
+# Compilation cache wired in via ~/.cargo/config.toml's rustc-wrapper
+brew "sccache"
 # Manage multiple AI terminal agents like Claude Code, Aider, Codex, OpenCode, and Amp.
 brew "tstapler/stapler-squad/stapler-squad"
 # Markdown-based outliner and note-taking app (Kotlin Multiplatform)

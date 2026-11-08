@@ -53,3 +53,24 @@ pyroscope.write "local" {
     url = "http://pyroscope:4040"
   }
 }
+
+// Host-contention metrics from the native macOS collector (host-collector/).
+// It must run outside Docker: prometheus.exporter.unix here would describe the
+// Docker VM, not the Mac. job="host" is what the host-contention dashboard and
+// alert rules key on.
+prometheus.scrape "host" {
+  targets = [
+    {"__address__" = "host.docker.internal:64891", "instance" = "macos-host"},
+  ]
+  job_name        = "host"
+  metrics_path    = "/metrics"
+  scrape_interval = "15s"
+  scrape_timeout  = "10s"
+  forward_to      = [prometheus.remote_write.victoriametrics.receiver]
+}
+
+prometheus.remote_write "victoriametrics" {
+  endpoint {
+    url = "http://victoriametrics:8428/api/v1/write"
+  }
+}

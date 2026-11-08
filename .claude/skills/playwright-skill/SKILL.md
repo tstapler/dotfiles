@@ -393,6 +393,7 @@ For comprehensive Playwright API documentation, see [API_REFERENCE.md](API_REFER
 - **Parameterize URLs** - Put detected/provided URL in a `TARGET_URL` constant at the top of every script
 - **DEFAULT: Visible browser** - Always use `headless: false` unless user explicitly asks for headless mode
 - **Headless mode** - Only use `headless: true` when user specifically requests "headless" or "background" execution
+- **GPU acceleration** - Headed Chromium uses the GPU by default. Playwright's default headless mode (the headless shell) renders in software (SwiftShader), so for headless runs that need real GPU (WebGL, canvas, perf timing) launch with `channel: 'chromium'` (new headless) or add `args: ['--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist']` (macOS; use `--use-angle=gl`/`vulkan` per platform). Don't pass `--disable-gpu` unless Chrome's GPU process crashes on that machine. Verify with CDP: `const { gpu } = await (await browser.newBrowserCDPSession()).send('SystemInfo.getInfo'); console.log(gpu.devices, gpu.featureStatus)` and look for `gpu_compositing: "enabled"` and a real device instead of SwiftShader (checked on Apple Silicon macOS: headed and `channel: 'chromium'` both report the Metal device; the default headless shell reports SwiftShader)
 - **Slow down:** Use `slowMo: 100` to make actions visible and easier to follow
 - **Wait strategies:** Use `waitForURL`, `waitForSelector`, `waitForLoadState` instead of fixed timeouts
 - **Error handling:** Always use try-catch for robust automation
@@ -411,6 +412,19 @@ Ensure running from skill directory via `run.js` wrapper
 
 **Browser doesn't open:**
 Check `headless: false` and ensure display available
+
+**Headed window renders only part of the page:**
+A fixed `viewport` (or `setViewportSize`) larger than the actual window clips what the user sees. For
+visible, user-driven sessions launch with `viewport: null` and `args: ['--start-maximized']` so the page
+follows the window size (verified: switching from `viewport: { width: 1600, height: 1000 }` to this
+rendered the full page). Keep explicit viewports for headless or screenshot-at-size runs.
+
+**Page behind SSO / login you can't script:**
+Use `chromium.launchPersistentContext(profileDir, { headless: false, viewport: null, args: ['--start-maximized'] })`
+with a private profile dir (`mkdir -m 700`), let the user sign in once in the window, and poll `page.url()`
+until the app URL is reached before measuring. Reuse the same profile on later runs. To record traffic add
+`recordHar: { path, content: 'omit' }` (keeps sizes/timings, drops bodies); the HAR still contains auth
+headers, so keep it local and never print header values.
 
 **Element not found:**
 Add wait: `await page.waitForSelector('.element', { timeout: 10000 })`

@@ -24,6 +24,7 @@ from deploys.memory_optimizer import memory_optimizer
 from deploys.nix import nix
 from deploys.overlays import overlays
 from deploys.pi import pi
+from deploys.sccache import sccache
 from deploys.secrets import secrets
 from deploys.shell import shell
 from deploys.ssh_bastion_client import ssh_bastion_client
@@ -35,6 +36,7 @@ claude()
 homebrew()
 ai_tools()
 pi()
+sccache()
 
 if host.data.get("zerobrew_enabled"):
     zerobrew()

@@ -1,0 +1,252 @@
+apiVersion: 1
+
+# Grafana-managed alerts for the host-contention dashboard. No contact point is
+# provisioned: alerts show in Grafana (Alerting > Alert rules) and fall to the
+# default policy. noDataState is Alerting only for the collector-down rule.
+
+groups:
+  - orgId: 1
+    name: host-contention
+    folder: host
+    interval: 1m
+    rules:
+      - uid: host-disk-free-lt-5gb
+        title: "Host: data volume free < 5 GB"
+        condition: C
+        for: 2m
+        noDataState: OK
+        execErrState: OK
+        labels:
+          severity: warning
+          source: host-collector
+        annotations:
+          summary: "Host: data volume free < 5 GB"
+          description: "Data volume has under 5 GB free. Builds, Docker and swap start failing near zero; run disk cleanup."
+        data:
+          - refId: A
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: victoriametrics
+            model:
+              refId: A
+              expr: 'host_filesystem_free_bytes{mount="/System/Volumes/Data"}'
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+              datasource: {type: __expr__, uid: __expr__}
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              datasource: {type: __expr__, uid: __expr__}
+              conditions:
+                - evaluator: {type: lt, params: [5e+09]}
+
+      - uid: host-disk-free-lt-1gb
+        title: "Host: data volume free < 1 GB"
+        condition: C
+        for: 1m
+        noDataState: OK
+        execErrState: OK
+        labels:
+          severity: critical
+          source: host-collector
+        annotations:
+          summary: "Host: data volume free < 1 GB"
+          description: "Data volume has under 1 GB free. Free space now."
+        data:
+          - refId: A
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: victoriametrics
+            model:
+              refId: A
+              expr: 'host_filesystem_free_bytes{mount="/System/Volumes/Data"}'
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+              datasource: {type: __expr__, uid: __expr__}
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              datasource: {type: __expr__, uid: __expr__}
+              conditions:
+                - evaluator: {type: lt, params: [1e+09]}
+
+      - uid: host-swap-gt-90pct
+        title: "Host: swap > 90% used"
+        condition: C
+        for: 10m
+        noDataState: OK
+        execErrState: OK
+        labels:
+          severity: warning
+          source: host-collector
+        annotations:
+          summary: "Host: swap > 90% used"
+          description: "Swap above 90% of the allocated swap for 10 minutes. macOS grows swap on demand, so confirm with memory pressure and swap-out rate."
+        data:
+          - refId: A
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: victoriametrics
+            model:
+              refId: A
+              expr: '100 * host_swap_used_bytes / host_swap_total_bytes'
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+              datasource: {type: __expr__, uid: __expr__}
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              datasource: {type: __expr__, uid: __expr__}
+              conditions:
+                - evaluator: {type: gt, params: [90]}
+
+      - uid: host-memory-pressure-ge-2
+        title: "Host: memory pressure >= warn"
+        condition: C
+        for: 10m
+        noDataState: OK
+        execErrState: OK
+        labels:
+          severity: warning
+          source: host-collector
+        annotations:
+          summary: "Host: memory pressure >= warn"
+          description: "kern.memorystatus_vm_pressure_level is 2 (warn) or 4 (critical) for 10 minutes."
+        data:
+          - refId: A
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: victoriametrics
+            model:
+              refId: A
+              expr: 'host_memory_pressure_level'
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+              datasource: {type: __expr__, uid: __expr__}
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              datasource: {type: __expr__, uid: __expr__}
+              conditions:
+                - evaluator: {type: gt, params: [1.5]}
+
+      - uid: host-load-per-core-gt-4
+        title: "Host: load per core > 4"
+        condition: C
+        for: 15m
+        noDataState: OK
+        execErrState: OK
+        labels:
+          severity: warning
+          source: host-collector
+        annotations:
+          summary: "Host: load per core > 4"
+          description: "1-minute load divided by cores stayed above 4 for 15 minutes; see the host-contention dashboard for the offenders."
+        data:
+          - refId: A
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: victoriametrics
+            model:
+              refId: A
+              expr: 'host_load1 / host_cpu_count'
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+              datasource: {type: __expr__, uid: __expr__}
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              datasource: {type: __expr__, uid: __expr__}
+              conditions:
+                - evaluator: {type: gt, params: [4]}
+
+      - uid: host-collector-down
+        title: "Host: collector not scraped"
+        condition: C
+        for: 5m
+        noDataState: Alerting
+        execErrState: OK
+        labels:
+          severity: warning
+          source: host-collector
+        annotations:
+          summary: "Host: collector not scraped"
+          description: "Alloy cannot scrape the host collector, so every host alert above is blind. See stapler-scripts/observability/README.md."
+        data:
+          - refId: A
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: victoriametrics
+            model:
+              refId: A
+              expr: 'up{job="host"}'
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+              datasource: {type: __expr__, uid: __expr__}
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              datasource: {type: __expr__, uid: __expr__}
+              conditions:
+                - evaluator: {type: lt, params: [1]}
+

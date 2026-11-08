@@ -76,6 +76,7 @@ services:
       - ./alloy-config.alloy:/etc/alloy/config.alloy
     depends_on:
       - pyroscope
+      - victoriametrics
     logging: *default-logging
 
   grafana:
@@ -88,13 +89,16 @@ services:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
       - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/provisioning/alerting:/etc/grafana/provisioning/alerting
       - ./grafana/dashboards/general:/var/lib/grafana/dashboards/general
+      - ./grafana/dashboards/host:/var/lib/grafana/dashboards/host
       # stapler-squad's dashboards now live in that repo (docs/observability/),
       # not here — bind-mounted directly so there's one copy, not two kept in
       # sync by hand. allowUiUpdates writes straight into that repo's working
       # tree; `git diff` there after a UI edit. See stapler-squad's
-      # docs/observability/README.md.
-      - /home/tstapler/Programming/stapler-squad/docs/observability/grafana/dashboards:/var/lib/grafana/dashboards/stapler-squad
+      # docs/observability/README.md. Override the checkout location with
+      # STAPLER_SQUAD_DASHBOARDS_DIR (e.g. a worktree or a non-default clone).
+      - ${STAPLER_SQUAD_DASHBOARDS_DIR:-${HOME}/code/github.com/tstapler/stapler-squad/docs/observability/grafana/dashboards}:/var/lib/grafana/dashboards/stapler-squad
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
