@@ -85,10 +85,12 @@ _timeout() {
 # NetworkSubcommand detection
 # ---------------------------------------------------------------------------
 
-_extract_subcommand() {
-  # Return the first non-flag token from git's argument list.
+_set_subcommand() {
+  # Set _SUBCMD to the first non-flag token from git's argument list (empty if
+  # none). Assigns instead of printing so the hot path needs no $(...) fork.
   # Handles flags-with-arguments: -C <path>, -c <k=v>, --git-dir <path>, etc.
   local skip_next=0
+  _SUBCMD=""
   for arg in "$@"; do
     if [ "$skip_next" -eq 1 ]; then
       skip_next=0
@@ -100,9 +102,15 @@ _extract_subcommand() {
         skip_next=1; continue ;;
       --*=*) continue ;;  # --flag=value (self-contained)
       -*)    continue ;;  # other flags
-      *)     printf '%s' "$arg"; return 0 ;;
+      *)     _SUBCMD="$arg"; return 0 ;;
     esac
   done
+}
+
+_extract_subcommand() {
+  # Return the first non-flag token from git's argument list.
+  _set_subcommand "$@"
+  printf '%s' "$_SUBCMD"
 }
 
 _is_network_op() {
@@ -341,7 +349,33 @@ _is_gh_managed_host() {
 # Main execution
 # ---------------------------------------------------------------------------
 
+# Sets REAL_GIT without any subprocess: `-ef` compares inodes (following
+# symlinks), so the wrapper is skipped without calling readlink per PATH entry.
+_find_real_git_fast() {
+  local IFS=:
+  local dir
+  REAL_GIT=/usr/bin/git
+  for dir in $PATH; do
+    [ -x "$dir/git" ] || continue
+    [ "$dir/git" -ef "$0" ] && continue
+    REAL_GIT="$dir/git"
+    return 0
+  done
+}
+
 _main() {
+  # Fast path: local subcommands (status, rev-parse, log, ...) need no auth or
+  # URL logic. Agents run these constantly, and under EDR every extra spawn
+  # (readlink/subshells in _find_real_git) is expensive.
+  if [ "${1:-}" != "--self-test" ]; then
+    _set_subcommand "$@"
+    if ! _is_network_op "$_SUBCMD"; then
+      _find_real_git_fast
+      export GIT_SSH_FALLBACK_ACTIVE=1
+      exec "$REAL_GIT" "$@"
+    fi
+  fi
+
   REAL_GIT="$(_find_real_git)"
   _log "wrapper: $0 | real git: $REAL_GIT"
 

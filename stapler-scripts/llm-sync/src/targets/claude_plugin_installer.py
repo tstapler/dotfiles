@@ -21,7 +21,15 @@ _HOOK_WRAPPER_RE = re.compile(r"^\S*/?hookmetrics\s+\S+\s+--\s+")
 
 
 def _effective_command(command: str) -> str:
-    return _HOOK_WRAPPER_RE.sub("", command, count=1)
+    """Canonical form for dedup: no metrics wrapper, $HOME expanded, and
+    ~/.cargo/bin or ~/.local/bin dropped from the front of the command, so
+    `$HOME/.cargo/bin/kibitzer hook` equals an installed `kibitzer hook`."""
+    command = _HOOK_WRAPPER_RE.sub("", command, count=1)
+    home = str(Path.home())
+    command = re.sub(r"^(\$HOME|\$\{HOME\}|~)(?=/)", lambda _: home, command)
+    for bin_dir in (".cargo/bin", ".local/bin"):
+        command = command.removeprefix(f"{home}/{bin_dir}/")
+    return command
 
 
 class ClaudePluginInstaller:
