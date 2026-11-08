@@ -22,7 +22,7 @@ Governing standard for the main body: Dieter Rams' "as little design as possible
 
 ### What to flag in the MAIN BODY
 
-- **Buried decision/ask** — the thing the reader must decide is not in the first third of the doc, or is stated as narrative rather than named as a decision (compare to the "Decision requested" pattern: numbered asks, one owner, one default-if-silent, each per row)
+- **Buried decision/ask** — the thing the reader must decide is not in the first third of the doc, or is stated as narrative rather than named as a decision (compare to the "Decision requested" pattern: numbered asks, each a short section that says why it needs deciding, what we recommend, and what happens if nobody objects; not a wide table)
 - **Filler and hedge padding** — "very", "basically", "in order to", "it should be noted that", "due to the fact that" — cut-and-replace, not a style nit
 - **Show-my-work** — investigation narrative left in the main body where a conclusion would do. (Exception: if the doc's own convention — e.g. an evidence/appendix split — already routes this to an appendix, that's correct and should NOT be flagged again.)
 - **Unquantified risk language** — "significant risk", "should be fine" without a number, a measured event, or a link backing it. Ties to CLAUDE.md's "Evidence and Claims": a claim without a source the reader can check is the same defect whether it's a code comment or a design doc.

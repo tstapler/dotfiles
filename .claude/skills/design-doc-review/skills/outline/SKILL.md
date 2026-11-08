@@ -1,5 +1,5 @@
 ---
-description: Check a design doc / RFC's structure against the required topic set (problem, non-goals, alternatives, risks, rollout) AND verify every open question/decision ask names a decider, deadline, and default-if-silence. Flags missing or weak sections. One check in the design-doc-review pipeline — run standalone or via design-doc-review:review.
+description: Check a design doc / RFC's structure against the required topic set (problem, non-goals, alternatives, risks, rollout) AND verify every open question/decision ask is a concrete decision with a reason to decide it, in a readable format. Flags missing or weak sections. One check in the design-doc-review pipeline — run standalone or via design-doc-review:review.
 ---
 
 # design-doc-review:outline
@@ -36,13 +36,14 @@ The whole point of a design doc review is a room full of people's time spent ext
 For **every** open question, decision request, or "needs review input" flag in the doc (usually but not always in an Open Questions / Decision Needed section):
 
 - [ ] It is phrased as a concrete decision, not a topic — "should we scope this to Alternative B or the full process?" not "there's some ambiguity about scope"
-- [ ] It names who decides (a person, a role, or "this review") — not left implicit
-- [ ] It states a deadline or trigger ("before Wk 0 starts", "by end of review") — not open-ended
-- [ ] It states a default-if-silence — what happens if nobody answers by the deadline. Absence of a default is what turns a question into permanent bikeshedding.
-- [ ] Blocking questions (ones that gate the rest of the doc/plan) are visibly distinguished from informational ones — a reader shouldn't have to guess which of five "Open Questions" is load-bearing
+- [ ] It says **why it needs deciding**: what it blocks, or what goes wrong if it's left open. A reader should learn the stakes from the text, not infer them from the question.
+- [ ] It states a recommendation when the author has one, and what happens if nobody objects (the default). Absence of a default is what turns a question into permanent bikeshedding.
+- [ ] It is NOT required to name a named decider or a deadline. Many teams don't work that way, and a ritual "owner / due date" cell reads as process theater. Flag a missing owner or date only if the doc's own surrounding text says one matters.
+- [ ] Blocking questions (ones that gate the rest of the doc/plan) are visibly distinguished from informational ones, best done by grouping the asks by what they block ("Needed before stage 1"), not by a column
 - [ ] The set of asks is complete and non-redundant — every genuine decision point the doc raises anywhere in its body (not just ones the author happened to list) shows up in this set once, in one place, not scattered
+- [ ] **Format:** each decision is a short headed section with one or two short paragraphs, not a row in a wide table. A table is fine for short, parallel facts. It is the wrong shape when cells hold sentences. See `../../../writing/CHECKLIST.md` ("Long prose in table cells") for the sources.
 
-This is the same "Decision requested" pattern `design-doc-review:readability` looks for in the main body (numbered asks, one owner, one default-if-silence, each per row) — that skill flags *prose* burying the ask; this check verifies the ask actually *exists* and is *complete* as a structural matter, independent of how well it reads.
+This is the same "Decision requested" pattern `design-doc-review:readability` looks for in the main body (numbered asks, a reason to decide each, one default each) — that skill flags *prose* burying the ask; this check verifies the ask actually *exists* and is *complete* as a structural matter, independent of how well it reads.
 
 ## Checklist
 
@@ -55,7 +56,7 @@ This is the same "Decision requested" pattern `design-doc-review:readability` lo
 - [ ] L3: Operational concerns addressed
 - [ ] L3: Rollback / reversal plan stated
 - [ ] L3: Prior org decisions acknowledged
-- [ ] Decision Ask: every open question/decision request names a decider, a deadline, and a default-if-silence (see Decision Ask section above)
+- [ ] Decision Ask: every open question/decision request is concrete, says why it needs deciding, and gives a recommendation or default (see Decision Ask section above). No decider/deadline required
 - [ ] Decision Ask: blocking vs. informational questions are distinguishable, and the set is complete/non-redundant
 - [ ] Doc is not too long to read in one sitting for its stakes — if it is, does it push detail to an appendix rather than the main body (see the Proportionality note in CLAUDE.md: comments/PRs/docs should carry only what a reviewer of *this* artifact would ask for)
 
@@ -82,7 +83,7 @@ Return only this structured summary (this is what a coordinator running this as 
   "count": <number of missing+weak findings>,
   "findings": [
     {"layer": 1, "topic": "non-goals", "severity": "missing", "note": "one line, specific"},
-    {"layer": "decision-ask", "topic": "open-question-1", "severity": "weak", "note": "one line, specific — e.g. missing default-if-silence"}
+    {"layer": "decision-ask", "topic": "open-question-1", "severity": "weak", "note": "one line, specific — e.g. no reason given for why it needs deciding"}
   ]
 }
 ```
