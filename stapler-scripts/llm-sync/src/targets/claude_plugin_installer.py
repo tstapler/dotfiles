@@ -86,7 +86,9 @@ class ClaudePluginInstaller:
         return count
 
     def _install_hooks(self, plugin: Plugin, dry_run: bool) -> int:
-        if not plugin.hooks:
+        # Claude registers marketplace plugins' hooks itself; a copy in settings.json
+        # duplicates them and runs with ${CLAUDE_PLUGIN_ROOT} unset, so it fails.
+        if not plugin.hooks or plugin.from_marketplace:
             return 0
 
         settings = {}

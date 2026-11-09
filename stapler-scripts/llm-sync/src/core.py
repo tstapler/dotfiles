@@ -112,6 +112,9 @@ class Plugin:
     # hooks: event_type -> list of hook entries (each entry has optional matcher + hooks list)
     hooks: Dict[str, List[Dict[str, Any]]] = field(default_factory=dict)
     source_dir: Optional[str] = None
+    # Installed via Claude Code's `/plugin install`: Claude loads its hooks natively
+    # (with ${CLAUDE_PLUGIN_ROOT} set), so the Claude target must not copy them.
+    from_marketplace: bool = False
 
 class SyncSource(ABC):
     def load_agents(self) -> List[Agent]:

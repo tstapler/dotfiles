@@ -8,6 +8,7 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent / "src"))
 
+from core import Plugin
 from targets.claude_plugin_installer import ClaudePluginInstaller, _effective_command
 
 
@@ -91,3 +92,42 @@ if __name__ == "__main__":
     from _test_runner import run_tests
 
     run_tests(globals())
+
+
+def test_install_hooks_skips_marketplace_plugins(tmp_path):
+    settings = tmp_path / "settings.json"
+    installer = ClaudePluginInstaller()
+    installer.settings_file = settings
+    plugin = Plugin(
+        name="claude-magic-compact",
+        description="",
+        version="1.3.1",
+        hooks={
+            "UserPromptSubmit": [
+                {"hooks": [{"type": "command", "command": "bun ${CLAUDE_PLUGIN_ROOT}/src/hook.ts"}]}
+            ]
+        },
+        from_marketplace=True,
+    )
+
+    added = installer._install_hooks(plugin, dry_run=False)
+
+    assert added == 0
+    assert not settings.exists()
+
+
+def test_install_hooks_still_installs_dotfiles_plugins(tmp_path):
+    settings = tmp_path / "settings.json"
+    installer = ClaudePluginInstaller()
+    installer.settings_file = settings
+    plugin = Plugin(
+        name="core-hooks",
+        description="",
+        version="1",
+        hooks={"Stop": [{"hooks": [{"type": "command", "command": "echo done"}]}]},
+    )
+
+    added = installer._install_hooks(plugin, dry_run=False)
+
+    assert added == 1
+    assert "echo done" in settings.read_text()

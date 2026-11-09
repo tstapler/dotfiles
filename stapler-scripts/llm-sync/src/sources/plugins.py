@@ -149,6 +149,8 @@ class PluginSource:
         # Marketplace plugins load first so dotfiles-committed global/local plugins
         # keep winning on a name collision (see the comment in __init__ above).
         marketplace_loaded = self._load_entries(self.marketplace_plugin_dirs)
+        for p in marketplace_loaded:
+            p.from_marketplace = True
         plugins.update({p.name: p for p in marketplace_loaded})
         if marketplace_loaded:
             console.print(
