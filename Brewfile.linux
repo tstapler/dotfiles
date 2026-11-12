@@ -38,4 +38,5 @@ brew "vim"
 brew "wget"
 brew "zsh"
 brew "tstapler/homebrew-tap/consolette"
+brew "tstapler/homebrew-tap/dunnage"  # disk cleaner + explorer; replaces stapler-scripts/disk-cleanup-legacy
 brew "tstapler/homebrew-tap/kibitzer"
