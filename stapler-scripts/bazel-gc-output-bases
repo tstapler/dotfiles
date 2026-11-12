@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# Delete Bazel output bases whose workspace directory no longer exists (deleted git worktrees) and that have no
+# live server. Bazel never GCs output bases; each workspace path gets its own 5-18 GB one.
+#   bazel-gc-output-bases [-n]        -n: list only
+#   bazel-gc-output-bases --install   symlink and enable the weekly user timer (bazel-gc/)
+set -euo pipefail
+here=$(dirname "$(readlink -f "$0")")
+if [ "${1:-}" = "--install" ]; then
+  mkdir -p ~/.config/systemd/user
+  ln -sf "$here/bazel-gc/bazel-gc.service" "$here/bazel-gc/bazel-gc.timer" ~/.config/systemd/user/
+  systemctl --user daemon-reload && systemctl --user enable --now bazel-gc.timer
+  exit
+fi
+dry=false; [ "${1:-}" = "-n" ] && dry=true
+removed=0
+for root in "$HOME"/.cache/bazel/_bazel_*; do
+  [ -d "$root" ] || continue
+  for d in "$root"/*/; do
+    d=${d%/}
+    [ -f "$d/DO_NOT_BUILD_HERE" ] || continue
+    ws=$(<"$d/DO_NOT_BUILD_HERE")
+    [ -d "$ws" ] && continue
+    pidf=$d/server/server.pid.txt
+    if [ -f "$pidf" ] && kill -0 "$(<"$pidf")" 2>/dev/null; then echo "skip (live server): $ws"; continue; fi
+    if $dry; then echo "would remove: $ws"; else
+      chmod -R u+w "$d" 2>/dev/null || true
+      rm -rf -- "$d"; echo "removed: $ws"
+    fi
+    removed=$((removed + 1))
+  done
+done
+echo "$removed orphaned output base(s) $($dry && echo found || echo removed)"

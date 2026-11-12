@@ -1,0 +1,8 @@
+[Unit]
+Description=Delete Bazel output bases of deleted workspaces
+
+[Service]
+Type=oneshot
+Nice=15
+IOSchedulingClass=idle
+ExecStart=%h/bin/scripts/bazel-gc-output-bases
