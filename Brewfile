@@ -356,6 +356,7 @@ brew "tilt-dev/tap/tilt"
 brew "tstapler/homebrew-tap/kibitzer"
 # Local AI gateway, compaction utilities, and MCP server
 brew "tstapler/homebrew-tap/consolette"
+brew "tstapler/homebrew-tap/dunnage"  # disk cleaner + explorer; replaces stapler-scripts/disk-cleanup-legacy
 # Rust toolchain used to build the pinned stapler-mcp source release
 brew "rust"
 # Manage multiple AI terminal agents like Claude Code, Aider, Codex, OpenCode, and Amp.
