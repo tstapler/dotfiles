@@ -100,7 +100,7 @@ if [[ "$KIND" == "lib-cli-mcp" ]]; then
     case "$target" in
       crates) echo "    Publish target: crates.io — set a CARGO_REGISTRY_TOKEN repo secret." ;;
       npm) echo "    Publish target: npm — set an NPM_TOKEN repo secret." ;;
-      homebrew) echo "    Publish target: Homebrew tap ${GITHUB_USER}/homebrew-tap — set a HOMEBREW_TAP_TOKEN repo secret." ;;
+      homebrew) echo "    Publish target: Homebrew tap ${GITHUB_USER}/homebrew-tap — preferred: the tstapler-homebrew-tap-writer GitHub App — run: set-homebrew-tap-app-credentials ${GITHUB_USER}/${PROJECT_NAME} (sets repo variable HOMEBREW_TAP_APP_CLIENT_ID + secret HOMEBREW_TAP_APP_PRIVATE_KEY; add -n first for a dry run); fallback: a HOMEBREW_TAP_TOKEN PAT secret. See RELEASE.md." ;;
       *) echo "    Unknown publish target: $target" >&2 ;;
     esac
   done
