@@ -70,7 +70,7 @@ The script:
 - Adds `lefthook.yml` (fmt + clippy pre-commit, test pre-push)
 - Generates `README.md` (install/usage/license — originally added as a gap fix; kibitzer has since added its own), `LICENSE` (MIT), `CLAUDE.md`, `AGENTS.md`
 
-After running, tell the user what still needs manual setup: `dist init` + `dist generate`, creating the Homebrew tap repo and/or crates.io/npm tokens per the chosen publish targets, and `cargo check` to confirm the scaffold builds (this skill's own smoke test validated TOML/YAML syntax of the generated files but could not run `cargo build` — no `cargo` binary was available in the environment used to author it; run it yourself before trusting the scaffold compiles).
+After running, tell the user what still needs manual setup: `dist init` + `dist generate`, creating the Homebrew tap repo (and setting `HOMEBREW_TAP_APP_CLIENT_ID` / `HOMEBREW_TAP_APP_PRIVATE_KEY` for the `tstapler-homebrew-tap-writer` GitHub App by having the user run `set-homebrew-tap-app-credentials <owner>/<repo>` themselves — dry-run with `-n` first; it handles credentials, so never run it for them — or a `HOMEBREW_TAP_TOKEN` PAT as the fallback — see `RELEASE.md`) and/or crates.io/npm tokens per the chosen publish targets, and `cargo check` to confirm the scaffold builds (this skill's own smoke test validated TOML/YAML syntax of the generated files but could not run `cargo build` — no `cargo` binary was available in the environment used to author it; run it yourself before trusting the scaffold compiles).
 
 ### 1. Run the decision interview (web app)
 

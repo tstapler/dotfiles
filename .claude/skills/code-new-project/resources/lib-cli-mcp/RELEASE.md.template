@@ -21,8 +21,31 @@ yourself sidesteps this entirely.
    hand-write that workflow; regenerate it whenever `dist-workspace.toml`
    changes.
 3. If publishing to a Homebrew tap: create `{{GITHUB_USER}}/homebrew-tap` on
-   GitHub if it doesn't exist yet, and add a `HOMEBREW_TAP_TOKEN` repo secret
-   (a PAT with push access to that tap repo).
+   GitHub if it doesn't exist yet, then pick how CI gets write access to it:
+   - **Preferred: the `tstapler-homebrew-tap-writer` GitHub App**
+     (https://github.com/settings/apps/tstapler-homebrew-tap-writer; needs
+     Contents read/write on the tap repo). Short-lived tokens, no stored PAT.
+     Set the repo variable `HOMEBREW_TAP_APP_CLIENT_ID` (the app's Client ID)
+     and the repo secret `HOMEBREW_TAP_APP_PRIVATE_KEY` (a private key
+     generated on the app's page) by running, from a shell where `op` works:
+     `set-homebrew-tap-app-credentials -n {{GITHUB_USER}}/{{PROJECT_NAME}}`
+     (dry run: shows the Client ID and `.pem` it found), then the same command
+     without `-n`. It finds both on the 1Password item "tstapler Homebrew Tap"
+     (override with `-i`), asks you to choose if that is ambiguous, and pipes
+     the key from `op` to `gh` without ever printing it. The script lives in
+     the dotfiles repo's `stapler-scripts/`; `op` must be the setgid
+     `/usr/local/bin/op` install from the dotfiles `secrets` deploy. Then mint
+     the token with
+     `actions/create-github-app-token` (pin its SHA) scoped to
+     `repositories: homebrew-tap`, `permission-contents: write`. A personal
+     account has no account-wide secrets, so those two are set per repo.
+     Reference implementation: `update-homebrew` in tstapler/tymux's
+     `.github/workflows/release.yml` plus `scripts/render-homebrew-formula.sh`.
+   - **Fallback: a `HOMEBREW_TAP_TOKEN` PAT repo secret** (push access to the
+     tap repo only). This is what cargo-dist's built-in homebrew publish job
+     reads, and what tstapler/kibitzer uses today. The built-in job has no
+     GitHub App option, so to use the app with cargo-dist, drop `homebrew`
+     from `publish-jobs` and publish the formula from a job of your own.
 4. If publishing to crates.io: `cargo login`, and add a `CARGO_REGISTRY_TOKEN`
    repo secret for CI.
 5. If publishing to npm (e.g. wrapping the binary for `npx`): add an
