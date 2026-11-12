@@ -5,4 +5,4 @@ Description=Delete Bazel output bases of deleted workspaces
 Type=oneshot
 Nice=15
 IOSchedulingClass=idle
-ExecStart=%h/bin/scripts/bazel-gc-output-bases
+ExecStart=%h/dotfiles/stapler-scripts/bazel-gc-output-bases
