@@ -2,7 +2,7 @@
 # steam-clean launcher (Story 5.2.1, Task 5.2.1c): list passthrough, tidy retired, legacy fallback.
 # shellcheck source=lib.sh
 . "$(dirname "$0")/lib.sh"
-SC="$SCRIPTS/steam-clean/steam-clean"
+SC="$SCRIPTS/steam-clean"
 use_shim
 
 # S-08: steam_clean_list_sort_size_should_map_to_steam_list_and_tidy_should_exit_64_When_wrapped

@@ -24,6 +24,10 @@ I use [zplug](https://github.com/zplug/zplug) as my package manager, you can fin
 
 The directory [.shell](./shell) contains several scripts that are sourced in the [`.zshrc`](./.zshrc), their names should be fairly self explanatory.
 
+### Disk cleanup (dunnage)
+
+`disk-cleanup`, `buildclean.py` and `steam-clean` in [stapler-scripts](./stapler-scripts) are thin wrappers over [dunnage](https://github.com/tstapler/homebrew-tap) (`brew "tstapler/homebrew-tap/dunnage"` in the Brewfiles). Dunnage is a dry run by default; copy a `Next:` line to delete. The wrappers fall back to the old tools when dunnage is missing or `DUNNAGE_LEGACY=1`. On macOS they stay on the old tools until a human verifies the binary on that Mac and records its hash: `shasum -a 256 "$(command -v dunnage)" | cut -d' ' -f1 > ~/.local/state/dunnage/darwin-verified` (a rebuilt binary falls back again). The old `steam-clean` binary's source is `stapler-scripts/steam-clean-legacy`; rebuild it with `cargo install --path stapler-scripts/steam-clean-legacy --root ~/.local/share/dunnage/legacy` and link `legacy/bin/steam-clean` to `legacy/steam-clean`.
+
 ### Vim (Neovim)
 
 I'm a heavy Vim user, so I have configuration for [Intellij's vim plugin](./.ideavimrc) as well as [actual Vim](./.vimrc) split across a few different files
