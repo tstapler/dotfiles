@@ -11,12 +11,16 @@ from __future__ import annotations
 import argparse
 import functools
 import json
+import math
 import os
+import shutil
+import subprocess
 import sys
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
 
 HOME = Path.home()
@@ -377,6 +381,70 @@ def run(args: argparse.Namespace) -> int:
     return 1 if errs else 0
 
 
+# ── delegation to dunnage ────────────────────────────────────────────────────
+PLAN_ID_NOTE = ("NOTE: build dirs now need --plan-id from a dry run "
+                "(run the same command without --apply first)")
+
+
+def dunnage_bin() -> str | None:
+    """The dunnage binary to delegate to, or None to keep the legacy scanner.
+
+    DUNNAGE_LEGACY=1 forces legacy; Darwin stays legacy until the Story 5.2.1e marker check lands.
+    """
+    if os.environ.get("DUNNAGE_LEGACY") == "1" or sys.platform == "darwin":
+        return None
+    explicit = os.environ.get("DUNNAGE_BIN")
+    if explicit:
+        return explicit if os.access(explicit, os.X_OK) else None
+    return shutil.which("dunnage")
+
+
+def log_wrapper_use(event: str) -> None:
+    """Append `<iso-time> buildclean.py <event>` for outcome metric O-2; write failures are ignored."""
+    try:
+        state = Path(os.environ.get("XDG_STATE_HOME") or HOME / ".local/state") / "dunnage"
+        state.mkdir(parents=True, exist_ok=True)
+        with open(state / "wrapper-use.log", "a") as f:
+            f.write(f"{datetime.now(timezone.utc).isoformat(timespec='seconds')} buildclean.py {event}\n")
+    except OSError:
+        pass
+
+
+def translate(args: argparse.Namespace) -> tuple[list[str], None] | tuple[None, str]:
+    """Old buildclean flags to dunnage argv, or (None, guidance) for a flag that has no mapping."""
+    if args.remove:
+        return None, ("--remove is retired: dunnage deletes only items from its own plan. "
+                      "Run `dunnage --kinds build-dirs --root <dir>` and copy the Next: line.")
+    if args.json:
+        return None, f"--json FILE is not mapped: run `dunnage --kinds build-dirs --json > {args.json}`."
+    if args.scan_jobs != 16:
+        return None, "--scan-jobs has no dunnage equivalent; drop it (the scan sizes its own workers)."
+    argv = ["--kinds", "build-dirs", "--jobs", str(args.jobs), "--top", str(args.top),
+            "--min-age", f"{max(1, math.ceil(args.min_age_min))}m"]
+    if args.apply:
+        argv.append("--apply")
+    for root in args.roots if args.roots != DEFAULT_ROOTS else []:
+        argv += ["--root", str(root)]
+    return argv, None
+
+
+def delegate(binary: str, args: argparse.Namespace) -> int:
+    argv, refusal = translate(args)
+    if argv is None:
+        log_wrapper_use("retired")
+        print(f"buildclean.py: {refusal}", file=sys.stderr)
+        return 64
+    if args.force:
+        print("NOTE: --force is not forwarded; dunnage's starvation preflight cannot be skipped.", file=sys.stderr)
+        log_wrapper_use("note")
+    env = {**os.environ, "DUNNAGE_VIA": "buildclean.py", "DISK_CLEANUP_VIA": "buildclean.py"}
+    rc = subprocess.run([binary, *argv], env=env).returncode
+    if args.apply and rc == 64:
+        print(PLAN_ID_NOTE, file=sys.stderr)
+        log_wrapper_use("note")
+    return rc
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("roots", nargs="*", type=Path, default=DEFAULT_ROOTS)
@@ -391,8 +459,12 @@ def main() -> int:
     ap.add_argument("--top", type=int, default=20)
     ap.add_argument("--json", help="write per-dir results here")
     ap.add_argument("--force", action="store_true", help="skip the starvation preflight")
+    args = ap.parse_args()
     sys.stdout.reconfigure(line_buffering=True)
-    return run(ap.parse_args())
+    binary = dunnage_bin()
+    if binary:
+        return delegate(binary, args)
+    return run(args)
 
 
 if __name__ == "__main__":
