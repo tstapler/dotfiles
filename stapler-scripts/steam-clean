@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# steam-clean launcher: delegates to `dunnage steam` when dunnage is installed, otherwise runs the old compiled
+# steam-clean. Legacy binary lookup: $DUNNAGE_STEAM_LEGACY_BIN, then ~/.local/share/dunnage/legacy/steam-clean,
+# then ~/.cargo/bin/steam-clean. Rebuild it with:
+#   cargo install --path ~/dotfiles/stapler-scripts/steam-clean-legacy --root ~/.local/share/dunnage/legacy
+# (installs to .../legacy/bin/steam-clean; copy or link it to .../legacy/steam-clean).
+# DUNNAGE_BIN overrides the binary, DUNNAGE_LEGACY=1 forces legacy. Darwin delegates only when
+# ${XDG_STATE_HOME:-~/.local/state}/dunnage/darwin-verified holds the dunnage binary's sha256 (plan Story 5.2.1).
+set -euo pipefail
+
+self="$(readlink -f "$0")"
+
+log_use() { # append-only outcome log; a write failure is ignored
+  local dir="${XDG_STATE_HOME:-$HOME/.local/state}/dunnage"
+  { mkdir -p "$dir" && printf '%s steam-clean %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$1" >>"$dir/wrapper-use.log"; } 2>/dev/null || true
+}
+
+bin="${DUNNAGE_BIN:-}"
+[ -n "$bin" ] || bin="$(command -v dunnage || true)"
+
+verified_here() {
+  [ "$(uname -s)" = Darwin ] || return 0
+  local marker="${XDG_STATE_HOME:-$HOME/.local/state}/dunnage/darwin-verified" want got
+  [ -f "$marker" ] || return 1
+  read -r want _ <"$marker" || true
+  if command -v shasum >/dev/null 2>&1; then got="$(shasum -a 256 "$1" | cut -d' ' -f1)"; else got="$(sha256sum "$1" | cut -d' ' -f1)"; fi
+  [ -n "$want" ] && [ "$want" = "$got" ]
+}
+
+if [ -n "$bin" ] && [ -x "$bin" ] && [ "${DUNNAGE_LEGACY:-}" != 1 ] && verified_here "$bin"; then
+  case "${1:-list}" in
+    tidy)
+      log_use retired
+      echo "steam-clean: the tidy TUI is retired. Rank with 'steam-clean list'; delete with 'dunnage --kinds steam' (dry run), then the Next: line." >&2
+      exit 64
+      ;;
+    list) [ "$#" -eq 0 ] || shift; set -- steam list "$@" ;;
+    *) set -- steam "$@" ;;
+  esac
+  export DUNNAGE_VIA=steam-clean DISK_CLEANUP_VIA=steam-clean
+  exec "$bin" "$@"
+fi
+
+legacy="${DUNNAGE_STEAM_LEGACY_BIN:-}"
+if [ -z "$legacy" ]; then
+  for cand in "${XDG_DATA_HOME:-$HOME/.local/share}/dunnage/legacy/steam-clean" "$HOME/.cargo/bin/steam-clean"; do
+    if [ -x "$cand" ] && [ "$(readlink -f "$cand")" != "$self" ]; then legacy="$cand"; break; fi
+  done
+fi
+if [ -n "$legacy" ] && [ -x "$legacy" ] && [ "$(readlink -f "$legacy")" != "$self" ]; then
+  exec "$legacy" "$@"
+fi
+echo "steam-clean: refusing to exec itself or no legacy binary found (${legacy:-none}); install dunnage (brew install tstapler/homebrew-tap/dunnage)" >&2
+exit 2

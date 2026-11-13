@@ -1,10 +1,21 @@
 #!/usr/bin/env bash
 # Disk management front door: runs `dunnage` (tstapler/homebrew-tap, Brewfile) and falls back to the old
-# bash cleaner (disk-cleanup-legacy) only while dunnage is not installed.
+# bash cleaner (disk-cleanup-legacy) when dunnage is absent, DUNNAGE_LEGACY=1, or on an unverified Darwin.
 # dunnage is a dry run by default; pass --apply to delete (plan-id rules: `dunnage --help`).
 set -euo pipefail
 
-if command -v dunnage >/dev/null 2>&1; then
+# Darwin stays on the legacy cleaner until a human on a real Mac records this binary's sha256 in
+# ${XDG_STATE_HOME:-~/.local/state}/dunnage/darwin-verified (plan Story 5.2.1); CI never writes it.
+verified_here() {
+  [ "$(uname -s)" = Darwin ] || return 0
+  local marker="${XDG_STATE_HOME:-$HOME/.local/state}/dunnage/darwin-verified" want got
+  [ -f "$marker" ] || return 1
+  read -r want _ <"$marker" || true
+  if command -v shasum >/dev/null 2>&1; then got="$(shasum -a 256 "$1" | cut -d' ' -f1)"; else got="$(sha256sum "$1" | cut -d' ' -f1)"; fi
+  [ -n "$want" ] && [ "$want" = "$got" ]
+}
+
+if command -v dunnage >/dev/null 2>&1 && [ "${DUNNAGE_LEGACY:-}" != 1 ] && verified_here "$(command -v dunnage)"; then
   args=()
   for a in "$@"; do
     [ "$a" = "-v" ] || args+=("$a") # legacy verbose flag; dunnage always itemises
@@ -12,5 +23,5 @@ if command -v dunnage >/dev/null 2>&1; then
   exec dunnage "${args[@]+"${args[@]}"}"
 fi
 
-echo "disk-cleanup: dunnage not installed (brew install tstapler/homebrew-tap/dunnage); using the legacy cleaner" >&2
+echo "disk-cleanup: using the legacy cleaner (dunnage not installed, DUNNAGE_LEGACY=1, or Darwin binary not verified)" >&2
 exec "$(dirname "$(readlink -f "$0")")/disk-cleanup-legacy" "$@"

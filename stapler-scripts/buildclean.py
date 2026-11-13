@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import functools
+import hashlib
 import json
 import math
 import os
@@ -389,14 +390,29 @@ PLAN_ID_NOTE = ("NOTE: build dirs now need --plan-id from a dry run "
 def dunnage_bin() -> str | None:
     """The dunnage binary to delegate to, or None to keep the legacy scanner.
 
-    DUNNAGE_LEGACY=1 forces legacy; Darwin stays legacy until the Story 5.2.1e marker check lands.
+    DUNNAGE_LEGACY=1 forces legacy; Darwin delegates only when the machine-local darwin-verified marker
+    holds the sha256 of the dunnage binary (Story 5.2.1), which only a human on a real Mac writes.
     """
-    if os.environ.get("DUNNAGE_LEGACY") == "1" or sys.platform == "darwin":
+    if os.environ.get("DUNNAGE_LEGACY") == "1":
         return None
     explicit = os.environ.get("DUNNAGE_BIN")
     if explicit:
-        return explicit if os.access(explicit, os.X_OK) else None
-    return shutil.which("dunnage")
+        binary = explicit if os.access(explicit, os.X_OK) else None
+    else:
+        binary = shutil.which("dunnage")
+    if binary and sys.platform == "darwin" and not darwin_verified(binary):
+        return None
+    return binary
+
+
+def darwin_verified(binary: str) -> bool:
+    marker = Path(os.environ.get("XDG_STATE_HOME") or HOME / ".local/state") / "dunnage" / "darwin-verified"
+    try:
+        want = marker.read_text().split()[0]
+        got = hashlib.sha256(Path(binary).read_bytes()).hexdigest()
+    except (OSError, IndexError):
+        return False
+    return want == got
 
 
 def log_wrapper_use(event: str) -> None:

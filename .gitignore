@@ -384,3 +384,6 @@ uploads/
 stapler-scripts/gphotos-organizer/album_mapping.json
 stapler-scripts/gphotos-organizer/album_report.md
 stapler-scripts/gphotos-organizer/upload_manifest.json
+
+# retired in-repo Darwin marker (the verified marker is machine-local: ~/.local/state/dunnage/darwin-verified)
+stapler-scripts/.disk-cleanup-darwin-ok
