@@ -4,3 +4,11 @@ git-fetch-with-cli = true
 [build]
 rustc-wrapper = "sccache"
 incremental = false
+
+# Smaller target dirs: dev debuginfo measured 8.2G (full) -> 2.8G (line tables) -> 0.95G (none) on one workspace.
+# Line tables keep backtraces with file:line; dependencies get none. A project's own [profile] overrides these.
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+debug = 0
