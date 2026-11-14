@@ -1,0 +1,8 @@
+[Unit]
+Description=Delete idle Cargo build output via dunnage
+
+[Service]
+Type=oneshot
+Nice=15
+IOSchedulingClass=idle
+ExecStart=%h/dotfiles/stapler-scripts/cargo-gc-targets

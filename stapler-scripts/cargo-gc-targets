@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Weekly: delete idle Cargo build output through dunnage's reviewed apply flow (dry run -> plan-id -> apply).
+# Only Cargo kinds (cargo-target, cargo-artifact) are selected, never node_modules or other build dirs.
+#   cargo-gc-targets [-n]        -n: dry run only, print what would be freed
+#   cargo-gc-targets --install   symlink and enable the weekly user timer (cargo-gc/)
+set -euo pipefail
+here=$(dirname "$(readlink -f "$0")")
+if [ "${1:-}" = "--install" ]; then
+  mkdir -p ~/.config/systemd/user
+  ln -sf "$here/cargo-gc/cargo-gc.service" "$here/cargo-gc/cargo-gc.timer" ~/.config/systemd/user/
+  systemctl --user daemon-reload && systemctl --user enable --now cargo-gc.timer
+  exit
+fi
+dry=false; [ "${1:-}" = "-n" ] && dry=true
+export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"
+min_age=${CARGO_GC_MIN_AGE:-14d}
+common=(--kinds build-dirs --min-age "$min_age" --json)
+paths=()
+while IFS= read -r p; do paths+=("$p"); done < <(
+  dunnage "${common[@]}" |
+    jq -r '.items[] | select(.status == "would_free" and (.kind == "cargo-target" or .kind == "cargo-artifact")) | .path')
+if [ "${#paths[@]}" -eq 0 ]; then echo "nothing idle for $min_age"; exit 0; fi
+only=(); for p in "${paths[@]}"; do only+=(--only "$p"); done
+plan=$(dunnage "${common[@]}" "${only[@]}" | jq -r '.plan_id')
+echo "${#paths[@]} idle cargo path(s), plan-id $plan"
+printf '  %s\n' "${paths[@]}"
+$dry && exit 0
+exec dunnage --apply "${common[@]}" "${only[@]}" --plan-id "$plan"
