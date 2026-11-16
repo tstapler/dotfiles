@@ -15,14 +15,24 @@ dry=false; [ "${1:-}" = "-n" ] && dry=true
 export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"
 min_age=${CARGO_GC_MIN_AGE:-14d}
 common=(--kinds build-dirs --min-age "$min_age" --json)
+batch_max=20   # dunnage accepts at most 20 --only values per run
+
+# Capture first so a missing dunnage/jq or a crashed scan fails the unit instead of reading as "nothing idle".
+out=$(dunnage "${common[@]}")
+jq -e '.items | type == "array"' >/dev/null <<<"$out" || { echo "dunnage returned no .items array" >&2; exit 1; }
 paths=()
-while IFS= read -r p; do paths+=("$p"); done < <(
-  dunnage "${common[@]}" |
-    jq -r '.items[] | select(.status == "would_free" and (.kind == "cargo-target" or .kind == "cargo-artifact")) | .path')
+# NUL-delimited so a path with a newline cannot split; such a path is skipped, not fatal.
+while IFS= read -r -d '' p; do
+  case $p in *$'\n'*) echo "skip (newline in path): ${p//$'\n'/?}" >&2 ;; *) paths+=("$p") ;; esac
+done < <(jq -j '.items[] | select(.status == "would_free" and (.kind == "cargo-target" or .kind == "cargo-artifact")) | .path + "\u0000"' <<<"$out")
 if [ "${#paths[@]}" -eq 0 ]; then echo "nothing idle for $min_age"; exit 0; fi
-only=(); for p in "${paths[@]}"; do only+=(--only "$p"); done
-plan=$(dunnage "${common[@]}" "${only[@]}" | jq -r '.plan_id')
-echo "${#paths[@]} idle cargo path(s), plan-id $plan"
-printf '  %s\n' "${paths[@]}"
-$dry && exit 0
-exec dunnage --apply "${common[@]}" "${only[@]}" --plan-id "$plan"
+echo "${#paths[@]} idle cargo path(s)"
+
+for ((i = 0; i < ${#paths[@]}; i += batch_max)); do
+  batch=("${paths[@]:i:batch_max}")
+  only=(); for p in "${batch[@]}"; do only+=(--only "$p"); done
+  plan=$(dunnage "${common[@]}" "${only[@]}" | jq -er '.plan_id')
+  echo "batch $((i / batch_max + 1)): plan-id $plan"
+  printf '  %s\n' "${batch[@]}"
+  $dry || dunnage --apply "${common[@]}" "${only[@]}" --plan-id "$plan" >/dev/null
+done
