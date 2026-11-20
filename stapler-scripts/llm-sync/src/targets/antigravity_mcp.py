@@ -27,7 +27,7 @@ class AntigravityMcpTarget:
     def save_mcp_servers(self, servers: List[MCPServer], dry_run: bool = False) -> int:
         mcp_servers = {}
         for server in servers:
-            if server.disabled:
+            if server.disabled or not server.applies_to("antigravity"):
                 continue
             if server.type == "http":
                 entry: dict = {"type": "http", "serverUrl": server.url}

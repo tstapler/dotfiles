@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "stapler-squad-dispatch": {
+      "_comment": "Local stapler-squad MCP (create_session, list_sessions, ...) for Pi/Aimee. Pi-only so other agents keep their per-session stapler-squad entry.",
+      "_targets": ["pi"],
+      "type": "http",
+      "url": "http://localhost:8543/mcp"
+    }
+  }
+}

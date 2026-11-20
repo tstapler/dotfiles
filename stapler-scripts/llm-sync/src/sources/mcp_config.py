@@ -106,6 +106,7 @@ class McpConfigSource:
                     type=config.get("type"),
                     url=config.get("url"),
                     disabled=config.get("disabled", False),
+                    targets=config.get("_targets"),
                     extra=extra,
                 )
             return result

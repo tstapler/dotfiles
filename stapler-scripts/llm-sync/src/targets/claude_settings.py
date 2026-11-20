@@ -28,7 +28,7 @@ class ClaudeSettingsTarget:
 
         mcp_servers = {}
         for server in servers:
-            if server.disabled:
+            if server.disabled or not server.applies_to("claude"):
                 continue
             if server.type == "http":
                 entry = {"type": "http", "url": server.url}

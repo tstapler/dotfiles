@@ -37,6 +37,7 @@ try:
     from .targets.claude_plugin_installer import ClaudePluginInstaller
     from .targets.antigravity_plugin_installer import AntigravityPluginInstaller
     from .targets.antigravity_mcp import AntigravityMcpTarget
+    from .targets.pi_mcp import PiMcpTarget
     from .core import Agent, Skill, Command
     from .state import SyncStateManager
 except ImportError:
@@ -58,6 +59,7 @@ except ImportError:
     from targets.claude_plugin_installer import ClaudePluginInstaller
     from targets.antigravity_plugin_installer import AntigravityPluginInstaller
     from targets.antigravity_mcp import AntigravityMcpTarget
+    from targets.pi_mcp import PiMcpTarget
     from core import Agent, Skill, Command
     from state import SyncStateManager
 
@@ -530,6 +532,7 @@ def main():
                 console.print("[dim]Pi-only run: skipping Claude/Antigravity MCP writes.[/dim]")
 
             if args.target in ['pi', 'all'] and args.direction in ['to-target', 'both']:
+                sync_mcp(mcp_source, PiMcpTarget(agent_dir=args.pi_dir), sync_mode)
                 sync_pi_settings(args)
 
         if not args.dry_run:

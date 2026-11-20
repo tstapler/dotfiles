@@ -99,6 +99,15 @@ class MCPServer:
     # explicitly (e.g. Claude Code's "enabled"/"zone"/"name" on gateway-
     # proxied servers) so round-tripping through a target doesn't drop them.
     extra: Dict[str, Any] = field(default_factory=dict)
+    # Optional allowlist of sync targets ("claude", "antigravity", "pi"). Unset
+    # means every target except "pi": Pi's mcp.json is shared with a work-managed
+    # wrapper, so only servers that opt in by name are written there.
+    targets: Optional[List[str]] = None
+
+    def applies_to(self, target: str) -> bool:
+        if self.targets is None:
+            return target != "pi"
+        return target in self.targets
 
 
 @dataclass
