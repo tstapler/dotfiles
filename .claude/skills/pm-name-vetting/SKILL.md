@@ -1,5 +1,5 @@
 ---
-description: "Vet candidate project names for conflicts with existing software projects and return a clean shortlist. Use standalone or from a pm-brand-strategy session."
+description: "Generate candidate project names from researched themes (mythology, trade metaphors, foreign-language words, puns, jargon — mined via web research, thesauruses and sub-agent rounds, not model recall), then vet them for conflicts with existing software projects and return a clean shortlist. Use standalone or from a pm-brand-strategy session."
 ---
 # Project Name Vetting
 
@@ -16,7 +16,23 @@ Names can come from:
 2. **Brand context** — read `.claude/product-marketing-context.md` and extract the `name_candidates` section if present
 3. **Inline brainstorm** — names generated during the current conversation
 
-Always confirm the list before beginning: *"Vetting these N names: [list]. Starting searches now."*
+Always confirm the list before beginning: *"Vetting these N names: <list>. Starting searches now."*
+
+**Default when no explicit list is given: run the Generation Protocol below first.** Do not fill the list from whatever names come to mind — model recall clusters on the same overused names (Atlas, Hermes, Forge, Nexus…). Candidates must come from researched sources.
+
+---
+
+## Generation Protocol (build the candidate list from research, not memory)
+
+Read [naming-patterns.md](naming-patterns.md) first: it catalogues the naming patterns (mythology, trade-tool metaphor, descriptive, pun/portmanteau, foreign-language, jargon, geography, taxonomy, coinage, and more), with how to mine each. Run these rounds, using background sub-agents (general-purpose, one per theme, in a single parallel message) for rounds 2–3:
+
+1. **Brief.** From the project's purpose, derive: what it does (verbs/nouns), who uses it, the feel (tool, craft, exploration…), and constraints (CLI-typeable, short, pronounceable). Write 5–8 **themes**, each tied to a pattern in `naming-patterns.md` (e.g. "surveyor's trade tools" = metaphor; "minor Greek deities of measure/boundary" = mythology; "Latin/Welsh words for 'to see/measure'" = foreign language; plus at least one pun/portmanteau theme and one descriptive-but-distinctive theme).
+2. **Mine (web research, per theme).** Each sub-agent searches for source material — Wikipedia/Theoi/Perseus pantheon pages, Wiktionary/etymonline, trade glossaries, taxonomy and place-name lists — and records **raw terms with the source URL**. Minimum ~30 raw terms per theme. Prefer minor figures, epithets, and obscure-but-pronounceable terms over famous ones.
+3. **Expand.** Run each promising term through related-word sources: Datamuse (`https://api.datamuse.com/words?ml=<meaning>`, `rel_trg=`, `sl=` for sounds-like), thesaurus sites, Wiktionary translations/derived terms, and a second sub-agent round per theme that explicitly avoids terms already seen. Cross-pollinate patterns (mythology × tool metaphor, jargon × affix coinage).
+4. **Filter.** Drop terms that fail the criteria in `naming-patterns.md` (pronounceable, spellable, typeable, short, no bad meaning in major languages, not a household brand). Keep ≤ 20 finalists with the pattern and source recorded for each so the choice is explainable.
+5. **Hand off** the finalists to the Search Protocol below.
+
+Record the themes, raw-term sources, and finalists in the vetting output so the list is auditable.
 
 ---
 
@@ -37,7 +53,7 @@ Flag as **AMBIGUOUS** if:
 - The name is used in a different technical domain (e.g., a name used for a Rust game engine that you're positioning as a Go CLI tool)
 
 ### Check 2: Package registries
-Search: `"{name}" npm` and `"{name}" homebrew formula`
+Run the registries directly — WebSearch cannot query them. Where the CLIs exist: `npm view {name} name version`, `cargo search {name} --limit 3` (look for an exact-name crate), `brew search /^{name}$/`, `pip index versions {name}`. Treat a CLI 404 / no exact match as "free"; fall back to `"{name}" npm` / `"{name}" homebrew formula` web searches only when a CLI is unavailable, and then mark the result unverified.
 
 Flag as **CONFLICTED** if an npm package or Homebrew formula with the exact name exists and has significant usage (downloads > 1k/week or formula is in homebrew-core).
 

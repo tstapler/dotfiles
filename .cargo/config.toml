@@ -4,6 +4,10 @@ git-fetch-with-cli = true
 [build]
 rustc-wrapper = "sccache"
 incremental = false
+# One central place for intermediate build output (the bulk of disk use): a per-workspace subdirectory keyed by a hash of
+# the workspace path, so parallel worktrees do not block each other on one lock. Final binaries stay in each target/.
+# Cap and clean it with scripts/cargo-central-prune.sh in the steam-controls repo (cargo has no size cap of its own).
+build-dir = "/home/tstapler/.cache/cargo-build/{workspace-path-hash}"
 
 # Smaller target dirs: dev debuginfo measured 8.2G (full) -> 2.8G (line tables) -> 0.95G (none) on one workspace.
 # Line tables keep backtraces with file:line; dependencies get none. A project's own [profile] overrides these.
